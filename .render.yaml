@@ -1,0 +1,8 @@
+﻿services:
+  - type: web
+    name: auditdna-backend-1
+    env: node
+    plan: starter
+    buildCommand: npm install
+    startCommand: node server.js
+    rootDir: .
