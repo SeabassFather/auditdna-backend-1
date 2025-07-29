@@ -22,9 +22,9 @@ app.use('/api/loan/match', loanMatchRoutes);
 app.use('/api/upload', uploadRoutes);
 
 app.get('/api/test', (req, res) => {
-  res.json({ message: ' AuditDNA Backend is live!' });
+  res.json({ message: '✅ AuditDNA Backend is live!' });
 });
 
 app.listen(PORT, () => {
-  console.log(\ AuditDNA Backend running on http://localhost:\\);
+  console.log(`✅ AuditDNA Backend running on http://localhost:${PORT}`);
 });
