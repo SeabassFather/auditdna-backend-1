@@ -16,5 +16,8 @@
     "url": "https://github.com/SeabassFather/auditdna-backend-1/issues"
   },
   "homepage": "https://github.com/SeabassFather/auditdna-backend-1#readme",
-  "description": "Backend for AuditDNA platform"
+  "description": "Backend for AuditDNA platform",
+  "dependencies": {
+    "express": "^5.1.0"
+  }
 }
