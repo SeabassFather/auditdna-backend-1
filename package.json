@@ -1,0 +1,20 @@
+{
+  "name": "auditdna-backend",
+  "version": "1.0.0",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/SeabassFather/auditdna-backend-1.git"
+  },
+  "keywords": [],
+  "author": "AuditDNA",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/SeabassFather/auditdna-backend-1/issues"
+  },
+  "homepage": "https://github.com/SeabassFather/auditdna-backend-1#readme",
+  "description": "Backend for AuditDNA platform"
+}
