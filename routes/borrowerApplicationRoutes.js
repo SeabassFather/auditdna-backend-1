@@ -1,11 +1,18 @@
-﻿const express = require("express");
+const express = require('express');
+const { body, validationResult } = require('express-validator');
+const { submitBorrowerApplication } = require('../controllers/borrowerApplicationController');
+
 const router = express.Router();
-
-// Borrower application submission route
-router.post("/borrower/application", (req, res) => {
-  console.log("New borrower application received:", req.body);
-  // Add validation, processing, and storage logic here
-  res.status(200).json({ message: "Application received. Please proceed to payment and credit report authorization." });
-});
-
+router.post('/',
+  [
+    body('name').isString().notEmpty(),
+    body('email').isEmail(),
+    body('phone').isString().notEmpty(),
+  ],
+  (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
+    submitBorrowerApplication(req, res);
+  }
+);
 module.exports = router;
