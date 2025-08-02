@@ -1,37 +1,33 @@
-﻿const express = require('express');
-const cors = require('cors');
-
-const loanMatchRoutes = require('./routes/loanMatchRoutes');
-const borrowerApplicationRoutes = require('./routes/borrowerApplicationRoutes');
+﻿require('dotenv').config();
+const express = require('express');
+const mongoose = require('mongoose');
+const path = require('path');
 
 const app = express();
 
-app.use(cors());
+// Connect to MongoDB
+mongoose.connect(process.env.MONGO_URI)
+  .then(() => console.log('✅ MongoDB connected successfully'))
+  .catch(err => console.error('❌ MongoDB connection error:', err));
+
+// Middleware
 app.use(express.json());
 
-app.get('/', (req, res) => {
-  res.send(' AuditDNA Backend is Running');
+// Serve frontend build folder
+app.use(express.static(path.join(__dirname, '../auditdna-frontend/Frontend/build')));
+
+// Test route
+app.get('/api/test', (req, res) => {
+  res.json({ message: '✅ Backend API is working' });
 });
 
-app.use('/api', loanMatchRoutes);
-app.use('/api', borrowerApplicationRoutes);
-
-app.use((err, req, res, next) => {
-  console.error('Error:', err.stack);
-  res.status(500).json({ 
-    success: false,
-    error: 'Something went wrong!'
-  });
+// Catch-all: serve frontend index.html
+app.get('*', (req, res) => {
+  res.sendFile(path.join(__dirname, '../auditdna-frontend/Frontend/build/index.html'));
 });
 
-app.use('*', (req, res) => {
-  res.status(404).json({ 
-    success: false,
-    error: 'Route not found' 
-  });
-});
-
+// Start server
 const PORT = process.env.PORT || 3002;
 app.listen(PORT, () => {
-  console.log( AuditDNA backend running on port );
+  console.log(`🚀 Full AuditDNA app running at http://localhost:${PORT}`);
 });
