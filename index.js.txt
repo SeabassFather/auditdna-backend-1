@@ -1,0 +1,61 @@
+// index.js
+
+// 1. Load environment variables
+require('dotenv').config();
+
+const express = require('express');
+const { MongoClient, ServerApiVersion } = require('mongodb');
+
+const app = express();
+const port = process.env.PORT || 3002;
+
+// 2. MongoDB connection URI from .env
+const uri = process.env.MONGO_URI;
+if (!uri) {
+  console.error('🔴 MONGO_URI not set in .env');
+  process.exit(1);
+}
+
+// 3. Create MongoClient with Stable API v1
+const client = new MongoClient(uri, {
+  serverApi: {
+    version: ServerApiVersion.v1,
+    strict: true,
+    deprecationErrors: true,
+  }
+});
+
+// 4. Connect to MongoDB and ping
+async function connectMongo() {
+  try {
+    await client.connect();
+    await client.db("admin").command({ ping: 1 });
+    console.log("✅ MongoDB connection is live");
+  } catch (err) {
+    console.error("🔴 MongoDB connection error:", err);
+    process.exit(1);
+  }
+}
+connectMongo();
+
+// 5. Middleware
+app.use(express.json());
+
+// 6. Health-check route
+app.get('/api/test', async (req, res) => {
+  try {
+    await client.db("admin").command({ ping: 1 });
+    res.json({ message: "✅ Backend API is working and MongoDB connected" });
+  } catch (err) {
+    console.error("🔴 Ping test failed:", err);
+    res.status(500).json({ error: "MongoDB ping failed" });
+  }
+});
+
+// 7. Your other routes go here
+// e.g. app.use('/api/upload', uploadRoutes);
+
+// 8. Start server
+app.listen(port, () => {
+  console.log(`✅ AuditDNA Backend running on http://localhost:${port}`);
+});

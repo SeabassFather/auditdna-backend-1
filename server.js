@@ -1,33 +1,48 @@
-﻿require('dotenv').config();
-const express = require('express');
+﻿// server.js
+
+require('dotenv').config();
+const express  = require('express');
 const mongoose = require('mongoose');
-const path = require('path');
 
-const app = express();
+// 1. Import your route modules
+const uploadRoutes    = require('./routes/uploadRoutes');
+const loanMatchRoutes = require('./routes/loanMatchRoutes');
 
-// Connect to MongoDB
-mongoose.connect(process.env.MONGO_URI)
-  .then(() => console.log('✅ MongoDB connected successfully'))
-  .catch(err => console.error('❌ MongoDB connection error:', err));
+const app  = express();
+const port = process.env.PORT || 3002;
 
-// Middleware
+// 2. Connect to MongoDB
+const mongoUri = process.env.MONGO_URI;
+if (!mongoUri) {
+  console.error('🔴 MONGO_URI not defined in .env');
+  process.exit(1);
+}
+console.log('🔑 Using MongoDB URI:', mongoUri);
+
+mongoose
+  .connect(mongoUri)
+  .then(() => console.log('✅ MongoDB connected'))
+  .catch(err => {
+    console.error('❌ MongoDB connection error:', err);
+    process.exit(1);
+  });
+
+// 3. Middleware
 app.use(express.json());
 
-// Serve frontend build folder
-app.use(express.static(path.join(__dirname, '../auditdna-frontend/Frontend/build')));
-
-// Test route
+// 4. Health-check
 app.get('/api/test', (req, res) => {
-  res.json({ message: '✅ Backend API is working' });
+  res.json({ message: '✅ Backend API is working and MongoDB connected' });
 });
 
-// Catch-all: serve frontend index.html
-app.get('*', (req, res) => {
-  res.sendFile(path.join(__dirname, '../auditdna-frontend/Frontend/build/index.html'));
-});
+// 5. Mount your routers
+app.use('/api/upload', uploadRoutes);
+console.log('🔀 Mounted: POST /api/upload');
 
-// Start server
-const PORT = process.env.PORT || 3002;
-app.listen(PORT, () => {
-  console.log(`🚀 Full AuditDNA app running at http://localhost:${PORT}`);
+app.use('/api/loan-match', loanMatchRoutes);
+console.log('🔀 Mounted: POST /api/loan-match');
+
+// 6. Start server
+app.listen(port, () => {
+  console.log(`🚀 AuditDNA Backend running on http://localhost:${port}`);
 });
