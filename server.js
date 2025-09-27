@@ -8,6 +8,10 @@ const loanMatchRoutes      = require('./routes/loanMatchRoutes');
 const borrowerAppRoutes    = require('./routes/borrowerApplicationRoutes');
 const loanFormRoutes       = require('./routes/loanFormRoutes');
 
+// 1.1. Import AuditDNA Engine routers
+const engineRoutes         = require('./routes/engineRoutes');
+const usdaRoutes          = require('./engines/usda_pricing/routes/usdaRoutes');
+
 const app  = express();
 const port = process.env.PORT || 3002;
 
@@ -47,6 +51,13 @@ console.log('🔀 Mounted: POST /api/borrower-application');
 
 app.use('/api/loan-form',            loanFormRoutes);
 console.log('🔀 Mounted: POST /api/loan-form');
+
+// 5.1. Mount AuditDNA Engine routers
+app.use('/api/engines',              engineRoutes);
+console.log('🔀 Mounted: /api/engines/* - All AuditDNA Engines');
+
+app.use('/api/engines/usda_pricing', usdaRoutes);
+console.log('🔀 Mounted: /api/engines/usda_pricing/* - USDA Pricing Engine');
 
 // 6. Start server
 app.listen(port, () => {
