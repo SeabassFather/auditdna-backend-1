@@ -1,0 +1,62 @@
+{
+  "engines": {
+    "usda_pricing": {
+      "name": "USDA Pricing Engine",
+      "description": "Agricultural commodity pricing analysis and risk assessment",
+      "capabilities": ["pricing_analysis", "risk_assessment", "compliance_check", "historical_data"],
+      "endpoints": ["/search", "/upload", "/analyze", "/report"],
+      "data_types": ["commodity_prices", "market_data", "historical_trends", "risk_factors"]
+    },
+    "water_tech": {
+      "name": "Water Tech Upload/Analysis",
+      "description": "Water quality testing and environmental compliance analysis",
+      "capabilities": ["water_quality_analysis", "contamination_detection", "compliance_validation", "reporting"],
+      "endpoints": ["/search", "/upload", "/analyze", "/report"],
+      "data_types": ["water_samples", "test_results", "compliance_reports", "environmental_data"]
+    },
+    "global_compliance": {
+      "name": "Global Compliance & Ethics",
+      "description": "International compliance monitoring and ethics validation",
+      "capabilities": ["compliance_monitoring", "ethics_validation", "regulatory_tracking", "audit_trail"],
+      "endpoints": ["/search", "/upload", "/validate", "/report"],
+      "data_types": ["compliance_documents", "regulatory_updates", "ethics_reports", "audit_logs"]
+    },
+    "search_meta": {
+      "name": "Search Engines (Meta-layer)",
+      "description": "Unified search across all AuditDNA engines and data sources",
+      "capabilities": ["cross_engine_search", "data_aggregation", "intelligent_routing", "unified_results"],
+      "endpoints": ["/search", "/aggregate", "/route", "/insights"],
+      "data_types": ["search_queries", "aggregated_results", "engine_metadata", "search_analytics"]
+    },
+    "mortgage_realestate": {
+      "name": "Mortgage & Real Estate",
+      "description": "Real estate valuation and mortgage risk assessment",
+      "capabilities": ["property_valuation", "mortgage_analysis", "risk_assessment", "market_trends"],
+      "endpoints": ["/search", "/upload", "/valuate", "/report"],
+      "data_types": ["property_data", "mortgage_applications", "market_valuations", "risk_profiles"]
+    },
+    "factoring": {
+      "name": "Factoring",
+      "description": "Invoice factoring and accounts receivable analysis",
+      "capabilities": ["invoice_analysis", "credit_assessment", "risk_evaluation", "cash_flow_analysis"],
+      "endpoints": ["/search", "/upload", "/analyze", "/report"],
+      "data_types": ["invoices", "credit_reports", "payment_histories", "cash_flow_data"]
+    },
+    "compliance": {
+      "name": "Compliance",
+      "description": "General compliance monitoring and regulatory adherence",
+      "capabilities": ["regulatory_monitoring", "compliance_tracking", "violation_detection", "remediation_planning"],
+      "endpoints": ["/search", "/upload", "/monitor", "/report"],
+      "data_types": ["compliance_documents", "regulatory_requirements", "violation_reports", "remediation_plans"]
+    }
+  },
+  "common_capabilities": {
+    "data_storage": "MongoDB with engine-specific collections",
+    "audit_workflows": "Complete audit trail for all operations",
+    "evidence_uploads": "Secure file upload with metadata tracking",
+    "compliance_validation": "Automated compliance checks against regulations",
+    "reporting": "PDF and JSON report generation",
+    "search": "Full-text search with filtering and sorting",
+    "demo_data": "Sample data for UI integration testing"
+  }
+}

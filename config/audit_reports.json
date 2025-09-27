@@ -1,0 +1,76 @@
+{
+  "report_templates": {
+    "usda_pricing": {
+      "executive_summary": "USDA Pricing Analysis Report",
+      "sections": ["market_overview", "price_trends", "risk_assessment", "recommendations"],
+      "metrics": ["price_volatility", "market_risk_score", "compliance_status", "forecast_accuracy"]
+    },
+    "water_tech": {
+      "executive_summary": "Water Quality Analysis Report",
+      "sections": ["sample_analysis", "contamination_levels", "compliance_status", "remediation_plan"],
+      "metrics": ["contamination_score", "safety_rating", "compliance_percentage", "risk_level"]
+    },
+    "global_compliance": {
+      "executive_summary": "Global Compliance Assessment",
+      "sections": ["regulatory_overview", "compliance_gaps", "risk_analysis", "action_plan"],
+      "metrics": ["compliance_score", "violation_count", "risk_rating", "remediation_timeline"]
+    },
+    "search_meta": {
+      "executive_summary": "Search Analytics Report",
+      "sections": ["search_patterns", "data_usage", "engine_performance", "insights"],
+      "metrics": ["search_volume", "success_rate", "response_time", "user_satisfaction"]
+    },
+    "mortgage_realestate": {
+      "executive_summary": "Mortgage & Real Estate Analysis",
+      "sections": ["property_valuation", "market_analysis", "risk_assessment", "recommendations"],
+      "metrics": ["valuation_accuracy", "market_risk_score", "loan_approval_rate", "default_probability"]
+    },
+    "factoring": {
+      "executive_summary": "Factoring Risk Assessment",
+      "sections": ["invoice_analysis", "credit_evaluation", "cash_flow_projection", "risk_mitigation"],
+      "metrics": ["credit_score", "payment_reliability", "cash_flow_stability", "default_risk"]
+    },
+    "compliance": {
+      "executive_summary": "Compliance Monitoring Report",
+      "sections": ["regulatory_status", "violation_tracking", "remediation_progress", "future_planning"],
+      "metrics": ["compliance_percentage", "violation_severity", "remediation_success", "regulatory_changes"]
+    }
+  },
+  "demo_data": {
+    "sample_reports": {
+      "usda_pricing": {
+        "reportId": "USDA-2024-001",
+        "date": "2024-01-15",
+        "status": "completed",
+        "metrics": {
+          "price_volatility": 15.2,
+          "market_risk_score": 7.3,
+          "compliance_status": "compliant",
+          "forecast_accuracy": 87.5
+        }
+      },
+      "water_tech": {
+        "reportId": "WATER-2024-001",
+        "date": "2024-01-15",
+        "status": "completed",
+        "metrics": {
+          "contamination_score": 2.1,
+          "safety_rating": "excellent",
+          "compliance_percentage": 98.5,
+          "risk_level": "low"
+        }
+      },
+      "global_compliance": {
+        "reportId": "COMP-2024-001",
+        "date": "2024-01-15",
+        "status": "completed",
+        "metrics": {
+          "compliance_score": 94.2,
+          "violation_count": 3,
+          "risk_rating": "medium",
+          "remediation_timeline": "30 days"
+        }
+      }
+    }
+  }
+}
