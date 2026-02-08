@@ -1,0 +1,7 @@
+[
+  {"id":"sub_001","email":"buyer@wholesalefoods.com","name":"John Martinez","company":"Wholesale Foods Inc","region":"west","schedule":"weekly","status":"active","consent":true,"opens":12,"clicks":8},
+  {"id":"sub_002","email":"procurement@freshmart.com","name":"Sarah Chen","company":"FreshMart Distribution","region":"midwest","schedule":"mwf","status":"active","consent":true,"opens":18,"clicks":14},
+  {"id":"sub_003","email":"ops@organicproduce.net","name":"Mike Thompson","company":"Organic Produce Co","region":"east","schedule":"daily","status":"active","consent":true,"opens":45,"clicks":32},
+  {"id":"sub_004","email":"purchasing@biggrocer.com","name":"Lisa Wong","company":"Big Grocer Chain","region":"south","schedule":"weekly","status":"active","consent":true,"opens":2,"clicks":1},
+  {"id":"sub_005","email":"import@tropicalfoods.mx","name":"Carlos Ruiz","company":"Tropical Foods MX","region":"mexico","schedule":"mwf","status":"active","consent":true,"opens":28,"clicks":19}
+]

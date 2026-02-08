@@ -1,0 +1,10 @@
+[
+  {
+    "traceId": "TRC-20251107001",
+    "grower": "Rancho Los Aguacates",
+    "product": "Avocado",
+    "events": [
+      {"date": "2025-11-06", "actor": "Juan Martinez", "action": "Sample Collected", "location": "Block 7A"}
+    ]
+  }
+]

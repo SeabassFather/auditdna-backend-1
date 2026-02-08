@@ -1,0 +1,68 @@
+﻿AUDITDNA FRONTEND  BACKEND API MAPPING
+Generated: 2026-01-27 23:57:41
+
+BACKEND STATUS:
+Port: 5000
+Routes Loaded: 46
+Routes Failed: 7
+
+FRONTEND EXPECTS (from config/api.js):
+ /api/auth/* (login, logout, register, refresh, verify)
+  /api/usda/* (growers, prices, commodities, analytics)
+  /api/food-safety/* (alerts, compliance, haccp, temperature)
+  /api/market/* (prices, trends, forecasts, reports)
+  /api/ports/* (status, vessels, congestion, customs)
+  /api/compliance/* (check, reports, certifications, audit)
+  /api/admin/* (users, roles, settings, logs)
+  /api/notifications/*
+  /api/reports/*
+
+BACKEND PROVIDES:
+ /api/accounting
+ /api/agIntelligence
+ /api/aiAgentDashboard
+ /api/Audit
+ /api/auth.routes
+ /api/authApi.routes
+ /api/Authroutes
+ /api/buyers
+ /api/cogs
+ /api/Complianceroutes
+ /api/crm.routes
+ /api/crossBorderRealEstate
+ /api/dataIntake
+ /api/disputeRecovery
+ /api/entityResolution
+ /api/escrowGatekeeper
+ /api/factoringRoutes
+ /api/Fertilizer
+ /api/fieldOps
+ /api/foodSafety
+ /api/Fraudapi.routes
+ /api/globalCompliance
+ /api/growers
+ /api/inventoryManifest
+ /api/mobileSales
+ /api/MortgageRoutes
+ /api/PriceFeed
+ /api/produce
+ /api/ProduceIntelligence
+ /api/seed
+ /api/Shippers
+ /api/sii_mx
+ /api/smallGrowerRoutes
+ /api/soilIntelligence
+ /api/tenants
+ /api/Traceability
+ /api/triangularRisk
+ /api/unifiedCRM.routes
+ /api/upload
+ /api/uploadRoutes
+ /api/usdaRoutes
+ /api/userApi.routes
+ /api/waterRoutes
+ /api/Watertech
+ /api/workflowApi.routes
+
+
+CONNECTION ANALYSIS NEXT...

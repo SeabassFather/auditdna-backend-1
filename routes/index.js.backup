@@ -1,0 +1,87 @@
+const express = require('express');
+const router = express.Router();
+
+// ===========================================================================
+// CORE ROUTES (Verified Working)
+// ===========================================================================
+const authRoutes = require('./authRoutes');
+const complianceRoutes = require('./complianceRoutes');
+const factoringRoutes = require('./factoringRoutes');
+const mortgageRoutes = require('./mortgageRoutes');
+const uploadRoutes = require('./uploadRoutes');
+const usdaRoutes = require('./usdaRoutes');
+const waterRoutes = require('./waterRoutes');
+const traceabilityRoutes = require('./traceability');
+const accountingRoutes = require('./accounting');
+const fieldOpsRoutes = require('./fieldOps');
+const cogsRoutes = require('./cogs');
+const mobileSalesRoutes = require('./mobileSales');
+const fertilizerRoutes = require('./fertilizer');
+const seedRoutes = require('./seed');
+
+// ===========================================================================
+// NEW ROUTES (Jan 15, 2026)
+// ===========================================================================
+const fraudRoutes = require('./fraudApi.routes');
+const userRoutes = require('./userApi.routes');
+const workflowRoutes = require('./workflowApi.routes');
+const growerRoutes = require('./growers');
+
+// ===========================================================================
+// MOUNT CORE ROUTES
+// ===========================================================================
+router.use('/auth', authRoutes);
+router.use('/compliance', complianceRoutes);
+router.use('/factoring', factoringRoutes);
+router.use('/mortgage', mortgageRoutes);
+router.use('/upload', uploadRoutes);
+router.use('/usda', usdaRoutes);
+router.use('/water', waterRoutes);
+router.use('/traceability', traceabilityRoutes);
+router.use('/accounting', accountingRoutes);
+router.use('/field-ops', fieldOpsRoutes);
+router.use('/cogs', cogsRoutes);
+router.use('/mobile-sales', mobileSalesRoutes);
+router.use('/fertilizer', fertilizerRoutes);
+router.use('/seed', seedRoutes);
+
+// ===========================================================================
+// MOUNT NEW ROUTES
+// ===========================================================================
+router.use('/fraud', fraudRoutes);
+router.use('/users', userRoutes);
+router.use('/workflows', workflowRoutes);
+router.use('/growers', growerRoutes);
+
+// ===========================================================================
+// API INFO
+// ===========================================================================
+router.get('/', (req, res) => {
+    res.json({
+        name: 'AuditDNA API',
+        version: '3.2.0',
+        status: 'running',
+        endpoints: {
+            auth: '/api/auth/*',
+            compliance: '/api/compliance/*',
+            factoring: '/api/factoring/*',
+            mortgage: '/api/mortgage/*',
+            upload: '/api/upload/*',
+            usda: '/api/usda/*',
+            water: '/api/water/*',
+            traceability: '/api/traceability/*',
+            accounting: '/api/accounting/*',
+            fieldOps: '/api/field-ops/*',
+            cogs: '/api/cogs/*',
+            mobileSales: '/api/mobile-sales/*',
+            fertilizer: '/api/fertilizer/*',
+            seed: '/api/seed/*',
+            fraud: '/api/fraud/*',
+            users: '/api/users/*',
+            workflows: '/api/workflows/*',
+            growers: '/api/growers/*'
+        }
+    });
+});
+
+module.exports = router;

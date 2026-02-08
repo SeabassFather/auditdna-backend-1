@@ -1,0 +1,131 @@
+# Backend Documentation for AuditDNA Agricultural Compliance Platform
+
+## Installation Instructions
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/SeabassFather/audit-frontend.git
+   cd audit-frontend
+   ```
+2. Install dependencies:
+   ```bash
+   npm install
+   ```
+3. Set up your environment variables. See the **Environment Variables** section for more details.
+4. Start the server:
+   ```bash
+   npm start
+   ```
+
+## API Modules & Endpoints
+### 1. User Management
+- **POST** /api/users/register - User registration  
+- **POST** /api/users/login - User login  
+- **GET** /api/users/profile - Get user profile  
+
+### 2. Compliance Check
+- **POST** /api/compliance/check - Check compliance status  
+- **GET** /api/compliance/history - Get compliance history  
+
+### 3. Audit Management
+- **POST** /api/audits/create - Create a new audit  
+- **GET** /api/audits/:id - Get audit details  
+
+### 4. Report Generation
+- **POST** /api/reports/generate - Generate compliance report  
+- **GET** /api/reports/:id - Get report details  
+
+### 5. Notification Service
+- **POST** /api/notifications/send - Send notifications  
+- **GET** /api/notifications/history - Get notification history  
+
+### 6. Payment Processing
+- **POST** /api/payments/submit - Submit payment  
+- **GET** /api/payments/:id - Get payment details  
+
+### 7. Document Management
+- **POST** /api/documents/upload - Upload document  
+- **GET** /api/documents/:id - Get document details  
+
+### 8. Reporting Dashboard
+- **GET** /api/dashboard/summary - Get dashboard summary  
+- **GET** /api/dashboard/details - Get detailed report  
+
+### 9. User Feedback
+- **POST** /api/feedback/submit - Submit feedback  
+- **GET** /api/feedback/history - Get feedback history  
+
+### 10. Integration Manager
+- **POST** /api/integrations/setup - Setup integration  
+- **GET** /api/integrations/status - Get integration status  
+
+### 11. Data Export
+- **POST** /api/data/export - Export data  
+- **GET** /api/data/download/:id - Download exported data  
+
+## Database Schemas
+1. Users
+2. Compliance
+3. Audits
+4. Reports
+5. Notifications
+6. Payments
+7. Documents
+8. Feedback
+9. Integrations
+10. Dashboard
+11. Settings
+12. Logs
+13. History
+
+## Technology Stack
+- Node.js  
+- Express  
+- MongoDB  
+- OpenAI GPT-4  
+- AWS S3  
+- Stripe  
+- SendGrid  
+- JWT  
+
+## Environment Variables
+- `PORT` - Port number for the application  
+- `DB_URI` - MongoDB connection string  
+- `JWT_SECRET` - Secret for JWT signing  
+- `STRIPE_SECRET_KEY` - Stripe secret key  
+- `SENDGRID_API_KEY` - API key for SendGrid  
+- `AWS_ACCESS_KEY_ID` - AWS S3 access key  
+- `AWS_SECRET_ACCESS_KEY` - AWS S3 secret access key  
+
+## Project Structure
+- `/src` - Source code  
+- `/routes` - API routes  
+- `/models` - Database models  
+- `/controllers` - Business logic  
+- `/config` - Configuration files  
+
+## Patent-Eligible Systems Notice
+This project includes systems that may be patent-eligible under applicable jurisdictions. Consult with legal counsel for guidance.
+
+## Health Check
+To check if the server is running, visit:  `http://localhost:{PORT}/api/health`
+
+## Testing Commands
+To run tests, use the following command:
+```bash
+npm test
+```
+
+## Contributing Guidelines
+1. Fork the repository.  
+2. Create a new branch: `git checkout -b feature/AmazingFeature`  
+3. Make your changes.  
+4. Commit your changes: `git commit -m 'Add some AmazingFeature'`  
+5. Push to the branch: `git push origin feature/AmazingFeature`  
+6. Open a pull request.
+
+## License
+This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
+
+## Author
+**SeabassFather**  
+For inquiries, contact: [Your Email]

@@ -1,0 +1,5 @@
+date,commodity_desc,price,region
+2025-10-01,CORN,4.35,Midwest
+2025-10-02,CORN,4.42,Midwest
+2025-10-01,AVOCADO,22.10,West
+...

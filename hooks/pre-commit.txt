@@ -1,0 +1,18 @@
+#!/bin/sh
+BAD_PATTERN='type="module".*\/src\/main.jsx\|\/src\/main.jsx'
+STAGED=$(git diff --cached --name-only --diff-filter=ACM | tr '\n' ' ')
+if [ -z "$STAGED" ]; then exit 0; fi
+FOUND=""
+for f in $STAGED; do
+  if [ -f "$f" ]; then
+    if grep -E "$BAD_PATTERN" "$f" >/dev/null 2>&1; then
+      FOUND="$FOUND\n$f"
+    fi
+  fi
+done
+if [ -n "$FOUND" ]; then
+  echo "ERROR: Commit blocked. Files contain Vite-style module tag or /src/main.jsx:"
+  echo -e "$FOUND"
+  exit 1
+fi
+exit 0
