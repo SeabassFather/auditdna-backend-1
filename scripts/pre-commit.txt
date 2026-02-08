@@ -1,0 +1,30 @@
+#!/bin/sh
+# pre-commit hook: prevents committing files that contain the Vite module tag or direct /src/main.jsx references.
+
+set -e
+
+BAD_PATTERN='type="module".*\/src\/main.jsx\|\/src\/main.jsx'
+
+STAGED=$(git diff --cached --name-only --diff-filter=ACM | tr '\n' ' ')
+if [ -z "$STAGED" ]; then
+  exit 0
+fi
+
+FOUND=""
+for f in $STAGED; do
+  # only check text files to avoid binary noise
+  if [ -f "$f" ]; then
+    if grep -E "$BAD_PATTERN" "$f" >/dev/null 2>&1; then
+      FOUND="$FOUND\n$f"
+    fi
+  fi
+done
+
+if [ -n "$FOUND" ]; then
+  echo "ERROR: Commit blocked. The following staged file(s) contain a Vite-style module tag or direct /src/main.jsx reference:"
+  echo -e "$FOUND"
+  echo "Remove the offending tag (e.g. <script type=\"module\" src=\"/src/main.jsx\">) before committing."
+  exit 1
+fi
+
+exit 0

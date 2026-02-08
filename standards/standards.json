@@ -1,0 +1,30 @@
+```json
+{
+  "DEFAULT": {
+    "DEFAULT": {
+      "Lead (Pb)": { "limit": 0.1, "unit": "mg/kg", "uncertainty": 0.05 },
+      "E.coli": { "limit": 100, "unit": "CFU/100g", "uncertainty": 10 },
+      "Glyphosate": { "limit": 0.1, "unit": "mg/kg", "uncertainty": 0.02 }
+    }
+  },
+  "USA": {
+    "Avocados": {
+      "Lead (Pb)": { "limit": 0.1, "unit": "mg/kg", "uncertainty": 0.05 },
+      "E.coli": { "limit": 100, "unit": "CFU/100g", "uncertainty": 10 },
+      "Glyphosate": { "limit": 0.05, "unit": "mg/kg", "uncertainty": 0.01 }
+    },
+    "DEFAULT": {
+      "Lead (Pb)": { "limit": 0.2, "unit": "mg/kg" },
+      "E.coli": { "limit": 100, "unit": "CFU/100g" }
+    }
+  },
+  "EU": {
+    "Avocados": {
+      "Glyphosate": { "limit": 0.02, "unit": "mg/kg" },
+      "Lead (Pb)": { "limit": 0.05, "unit": "mg/kg" }
+    },
+    "DEFAULT": {
+      "Lead (Pb)": { "limit": 0.05, "unit": "mg/kg" }
+    }
+  }
+}

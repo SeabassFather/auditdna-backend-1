@@ -1,0 +1,4 @@
+Parameter,Result,Unit,Method,Lab
+Lead (Pb),0.02,mg/kg,EPA 200.8,AcmeLab
+E.coli,12,CFU/100g,ISO 16649,AcmeLab
+Glyphosate,0.04,mg/kg,QuEChERS,AcmeLab

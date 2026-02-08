@@ -1,0 +1,9 @@
+[
+  {
+    "sensorId": "PH-001",
+    "name": "pH Sensor",
+    "range": "0-14 pH",
+    "value": 7.4,
+    "timestamp": "2025-11-07 07:39:00"
+  }
+]

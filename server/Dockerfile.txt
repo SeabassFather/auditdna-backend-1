@@ -1,0 +1,10 @@
+# server/Dockerfile - Node 18 LTS production image for AuditDNA dev-stub
+FROM node:18-alpine AS builder
+WORKDIR /usr/src/app
+COPY package.json package-lock.json* ./
+RUN npm ci --production
+COPY . .
+# expose app port
+EXPOSE 4000
+ENV NODE_ENV=production
+CMD ["node", "server.js"]
