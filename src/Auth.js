@@ -62,7 +62,7 @@ async function ensureAuthTable() {
         username VARCHAR(100) UNIQUE NOT NULL,
         password_hash VARCHAR(255) NOT NULL,
         access_code VARCHAR(20) NOT NULL,
-        pin VARCHAR(10) NOT NULL DEFAULT '',
+        pin VARCHAR(20) NOT NULL DEFAULT '',
         display_name VARCHAR(200),
         role VARCHAR(50) DEFAULT 'owner',
         is_active BOOLEAN DEFAULT true,
@@ -80,7 +80,7 @@ async function ensureAuthTable() {
       await pool.query(
         `INSERT INTO auth_users (username, password_hash, access_code, pin, display_name, role)
          VALUES ($1, $2, $3, $4, $5, $6)`,
-        ['saul', hash, '060905#321', '060905', 'Saul Garcia', 'owner']
+        ['saul', hash, '060905Dsg#321', '0609051974', 'Saul Garcia', 'owner']
       );
       console.log('AUTH: Default user "saul" created');
     }
@@ -117,8 +117,8 @@ router.post('/login', async (req, res) => {
   if (!pool) {
     // Fallback: env-based auth if DB is down
     const envPass = process.env.AUTH_PASSWORD || 'Dsg060905#321';
-    const envCode = process.env.AUTH_CODE || '060905#321';
-    if (password === envPass && accessCode === envCode && pin === (process.env.AUTH_PIN || '060905')) {
+    const envCode = process.env.AUTH_CODE || '060905Dsg#321';
+    if (password === envPass && accessCode === envCode && pin === (process.env.AUTH_PIN || '0609051974')) {
       clearAttempts(ip);
       const token = jwt.sign(
         { userId: 0, username: 'saul', role: 'owner', displayName: 'Saul Garcia' },

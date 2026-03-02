@@ -1,4 +1,4 @@
-﻿// AUDITDNA BACKEND SERVER v3.2 - ENTERPRISE + AI LEARNING (STABLE)
+// AUDITDNA BACKEND SERVER v3.2 - ENTERPRISE + AI LEARNING (STABLE)
 const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
@@ -40,7 +40,7 @@ const NODE_ENV = process.env.NODE_ENV || 'development';
 
 app.use(helmet({ contentSecurityPolicy: false }));
 app.use(compression());
-app.use(cors({ origin: '*', credentials: true }));
+app.use(cors({ origin: ['http://localhost:3000', 'https://mexausafg.com', 'https://www.mexausafg.com'], credentials: true }));
 app.use(morgan(NODE_ENV === 'development' ? 'dev' : 'combined'));
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: true, limit: '50mb' }));
@@ -104,6 +104,14 @@ function loadRoutes(dir, base = '/api') {
   }
 }
 
+app.get('/health', (req, res) => {
+  res.json({ status: 'healthy', uptime: process.uptime(), routesLoaded: loadedRoutes.length, routesFailed: failedRoutes.length });
+});
+app.get('/metrics', (req, res) => {
+  res.json({ requests: requestStats, memory: process.memoryUsage(), uptime: process.uptime() });
+});
+
+let server;
 (async () => {
   try {
     await pool.query('SELECT 1');
@@ -117,18 +125,11 @@ function loadRoutes(dir, base = '/api') {
     console.log('\n[>>] Loading routes anyway...\n');
     loadRoutes(routesDir);
   }
+
+  server = app.listen(PORT, () => {
+    console.log(`\n AUDITDNA BACKEND SERVER v3.2\n Port: ${PORT}\n Env: ${NODE_ENV}\n PID: ${process.pid}\n Routes: ${loadedRoutes.length}\n YEEHAW! 81 NINER MINERS ARE LIVE\n THE BRAIN IS OPERATIONAL\n`);
+  });
 })();
-
-app.get('/health', (req, res) => {
-  res.json({ status: 'healthy', uptime: process.uptime(), routesLoaded: loadedRoutes.length, routesFailed: failedRoutes.length });
-});
-app.get('/metrics', (req, res) => {
-  res.json({ requests: requestStats, memory: process.memoryUsage(), uptime: process.uptime() });
-});
-
-const server = app.listen(PORT, () => {
-  console.log(`\n AUDITDNA BACKEND SERVER v3.2\n Port: ${PORT}\n Env: ${NODE_ENV}\n PID: ${process.pid}\n Routes: ${loadedRoutes.length}\n YEEHAW! 81 NINER MINERS ARE LIVE\n THE BRAIN IS OPERATIONAL\n`);
-});
 
 function shutdown(signal) {
   console.log(`\n${signal} received. Shutting down...`);
