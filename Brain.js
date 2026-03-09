@@ -8,6 +8,7 @@
 // =============================================================================
 
 const EventEmitter = require('events');
+const executionEngine = require('./ai-core/orchestrator/executionEngine');
 
 class Brain extends EventEmitter {
   constructor() {
@@ -162,7 +163,7 @@ class Brain extends EventEmitter {
   // ===========================================================================
   initializeAIAgents() {
     const agents = {
-      // --- CM PRODUCTS INTELLIGENCE (19 tabs) ---
+      // --- CM PRODUCTS INTELLIGENCE ---
       'cm_price_forecast': { module: 'CM Products Intelligence', role: 'Price Forecasting', type: 'AI', status: 'ACTIVE', accuracy: 0.91, ops: 0, description: 'Monitors USDA pricing, predicts 7-day price movements, generates buy/hold signals' },
       'cm_supply_chain': { module: 'CM Products Intelligence', role: 'Supply Chain Optimization', type: 'AI', status: 'ACTIVE', accuracy: 0.88, ops: 0, description: 'Optimizes port routing, freight costs, regional pricing across West/Midwest/East corridors' },
       'cm_seasonal': { module: 'CM Products Intelligence', role: 'Seasonal Intelligence', type: 'AI', status: 'ACTIVE', accuracy: 0.93, ops: 0, description: 'Tracks 10-country seasonal availability matrix, predicts supply windows' },
@@ -231,7 +232,7 @@ class Brain extends EventEmitter {
   // ===========================================================================
   // TASK ASSIGNMENT - Routes to correct team + notifies relevant AI agents
   // ===========================================================================
-  assignTask(task) {
+  async assignTask(task) {
     const { type, priority = 'NORMAL', data = {}, module = null } = task;
     const team = this.selectTeam(type);
     const miner = this.selectMiner(team, priority);
@@ -247,25 +248,46 @@ class Brain extends EventEmitter {
     miner.currentTask = { type, priority, workflowId, startedAt: Date.now() };
 
     this.activeWorkflows.set(workflowId, {
-      id: workflowId, type, priority, team,
-      miner: miner.id, minerName: miner.name,
-      data, module, status: 'IN_PROGRESS',
-      startedAt: Date.now(), completedAt: null, duration: null, result: null
+      id: workflowId,
+      type,
+      priority,
+      team,
+      miner: miner.id,
+      minerName: miner.name,
+      data,
+      module,
+      status: 'IN_PROGRESS',
+      startedAt: Date.now(),
+      completedAt: null,
+      duration: null,
+      result: null
     });
 
     this.metrics.totalTasks++;
     this.metrics.activeTasks++;
 
     // Notify relevant AI agents for this module
-    const agentNotifications = this.notifyAIAgents(type, module, workflowId, data);
+    const agentNotifications = await this.notifyAIAgents(type, module, workflowId, data);
 
-    this.emit('taskAssigned', { workflowId, miner: miner.name, team, task, agentsNotified: agentNotifications });
+    this.emit('taskAssigned', {
+      workflowId,
+      miner: miner.name,
+      team,
+      task,
+      agentsNotified: agentNotifications
+    });
 
-    return { success: true, workflowId, miner: miner.name, team, agentsNotified: agentNotifications };
+    return {
+      success: true,
+      workflowId,
+      miner: miner.name,
+      team,
+      agentsNotified: agentNotifications
+    };
   }
 
   // Notify AI agents relevant to this task/module
-  notifyAIAgents(taskType, module, workflowId, data) {
+  async notifyAIAgents(taskType, module, workflowId, data) {
     const notified = [];
     for (const [agentId, agent] of Object.entries(this.aiAgents)) {
       const moduleMatch = module && agent.module.toLowerCase().includes(module.toLowerCase());
@@ -282,15 +304,37 @@ class Brain extends EventEmitter {
 
   selectTeam(taskType) {
     const teamMapping = {
-      'data_analysis': 'dataIntelligence', 'pricing': 'dataIntelligence', 'forecasting': 'dataIntelligence',
-      'workflow': 'workflowAutomation', 'approval': 'workflowAutomation', 'scheduling': 'workflowAutomation',
-      'security': 'securityCompliance', 'compliance': 'securityCompliance', 'audit': 'securityCompliance',
-      'api': 'integrationAPI', 'integration': 'integrationAPI', 'sync': 'integrationAPI',
-      'communication': 'communication', 'email': 'communication', 'sms': 'communication', 'crm': 'communication',
-      'financial': 'financialOps', 'mortgage': 'financialOps', 'invoice': 'financialOps', 'payment': 'financialOps',
-      'customer': 'customerIntelligence', 'buyer': 'customerIntelligence', 'marketplace': 'customerIntelligence',
-      'agriculture': 'agriculturalIntelligence', 'grower': 'agriculturalIntelligence', 'crop': 'agriculturalIntelligence', 'usda': 'agriculturalIntelligence',
-      'operations': 'operationsCommand', 'logistics': 'operationsCommand', 'customs': 'operationsCommand', 'port': 'operationsCommand'
+      'data_analysis': 'dataIntelligence',
+      'pricing': 'dataIntelligence',
+      'forecasting': 'dataIntelligence',
+      'workflow': 'workflowAutomation',
+      'approval': 'workflowAutomation',
+      'scheduling': 'workflowAutomation',
+      'security': 'securityCompliance',
+      'compliance': 'securityCompliance',
+      'audit': 'securityCompliance',
+      'api': 'integrationAPI',
+      'integration': 'integrationAPI',
+      'sync': 'integrationAPI',
+      'communication': 'communication',
+      'email': 'communication',
+      'sms': 'communication',
+      'crm': 'communication',
+      'financial': 'financialOps',
+      'mortgage': 'financialOps',
+      'invoice': 'financialOps',
+      'payment': 'financialOps',
+      'customer': 'customerIntelligence',
+      'buyer': 'customerIntelligence',
+      'marketplace': 'customerIntelligence',
+      'agriculture': 'agriculturalIntelligence',
+      'grower': 'agriculturalIntelligence',
+      'crop': 'agriculturalIntelligence',
+      'usda': 'agriculturalIntelligence',
+      'operations': 'operationsCommand',
+      'logistics': 'operationsCommand',
+      'customs': 'operationsCommand',
+      'port': 'operationsCommand'
     };
     return teamMapping[taskType] || 'operationsCommand';
   }
@@ -342,12 +386,21 @@ class Brain extends EventEmitter {
 
     // Learning cycle
     this.learningLog.push({
-      workflowId, type: workflow.type, duration: workflow.duration,
-      module: workflow.module, timestamp: Date.now()
+      workflowId,
+      type: workflow.type,
+      duration: workflow.duration,
+      module: workflow.module,
+      timestamp: Date.now()
     });
     this.metrics.learningCycles++;
 
-    this.emit('taskCompleted', { workflowId, miner: workflow.minerName, duration: workflow.duration, result });
+    this.emit('taskCompleted', {
+      workflowId,
+      miner: workflow.minerName,
+      duration: workflow.duration,
+      result
+    });
+
     return { success: true, workflow };
   }
 
@@ -389,7 +442,9 @@ class Brain extends EventEmitter {
     const status = {};
     for (const [teamName, miners] of Object.entries(this.ninerMiners)) {
       status[teamName] = miners.map(m => ({
-        id: m.id, name: m.name, status: m.status,
+        id: m.id,
+        name: m.name,
+        status: m.status,
         specialties: m.specialties,
         currentTask: m.currentTask?.type || null,
         tasksCompleted: m.tasksCompleted
@@ -403,9 +458,13 @@ class Brain extends EventEmitter {
     for (const [agentId, agent] of Object.entries(this.aiAgents)) {
       if (!agentsByModule[agent.module]) agentsByModule[agent.module] = [];
       agentsByModule[agent.module].push({
-        id: agentId, role: agent.role, type: agent.type,
-        status: agent.status, accuracy: agent.accuracy,
-        ops: agent.ops, description: agent.description
+        id: agentId,
+        role: agent.role,
+        type: agent.type,
+        status: agent.status,
+        accuracy: agent.accuracy,
+        ops: agent.ops,
+        description: agent.description
       });
     }
     return agentsByModule;
@@ -442,11 +501,27 @@ class Brain extends EventEmitter {
     }
     return {
       brain: { version: this.version, status: 'OPERATIONAL' },
-      miners: { total: 81, active: this.countActiveMiners(), busy: this.countBusyMiners(), teams: 9 },
-      agents: { total: Object.keys(this.aiAgents).length, ai: agentsByType.AI, si: agentsByType.SI },
+      miners: {
+        total: 81,
+        active: this.countActiveMiners(),
+        busy: this.countBusyMiners(),
+        teams: 9
+      },
+      agents: {
+        total: Object.keys(this.aiAgents).length,
+        ai: agentsByType.AI,
+        si: agentsByType.SI
+      },
       siModules: Object.keys(this.siModules).length,
-      workflows: { active: this.metrics.activeTasks, completed: this.metrics.completedTasks, total: this.metrics.totalTasks },
-      learning: { cycles: this.metrics.learningCycles, recentOps: this.metrics.aiAgentOps }
+      workflows: {
+        active: this.metrics.activeTasks,
+        completed: this.metrics.completedTasks,
+        total: this.metrics.totalTasks
+      },
+      learning: {
+        cycles: this.metrics.learningCycles,
+        recentOps: this.metrics.aiAgentOps
+      }
     };
   }
 

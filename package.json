@@ -26,7 +26,7 @@
     "compression": "^1.8.1",
     "connect-pg-simple": "^10.0.0",
     "cors": "^2.8.5",
-    "dotenv": "^16.3.1",
+    "dotenv": "^16.6.1",
     "express": "^4.18.2",
     "express-session": "^1.19.0",
     "express-validator": "^7.0.1",
@@ -37,7 +37,7 @@
     "morgan": "^1.10.0",
     "multer": "^2.0.2",
     "node-fetch": "^2.7.0",
-    "nodemailer": "^6.9.7",
+    "nodemailer": "^6.10.1",
     "pg": "^8.11.3",
     "uuid": "^13.0.0"
   },

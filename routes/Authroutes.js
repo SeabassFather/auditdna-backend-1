@@ -14,7 +14,7 @@ router.post('/login', async (req, res) => {
   
   try {
     const result = await pool.query(
-      'SELECT * FROM users WHERE email = $1',
+      'SELECT * FROM users WHERE username = $1 OR username = $1',
       [username]
     );
     
@@ -24,7 +24,7 @@ router.post('/login', async (req, res) => {
     
     const user = result.rows[0];
     
-    if (user.password_hash !== password) {
+    if (user.password !== password) {
       return res.status(401).json({ success: false, error: 'Invalid password' });
     }
     

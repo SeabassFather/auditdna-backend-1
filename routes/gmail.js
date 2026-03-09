@@ -2,48 +2,92 @@
 // AuditDNA Gmail Integration Route - DUAL PERSISTENCE
 // Backend: C:\AuditDNA\backend\routes\gmail.js
 // Tokens: AES-256 encrypted file + PostgreSQL backup
+// Sends: nodemailer SMTP from saul@mexausafg.com (NO Gmail alias issues)
+// Contacts/Read: Gmail OAuth API
 // ============================================================
 const express = require('express');
 const router = express.Router();
 const { google } = require('googleapis');
+const nodemailer = require('nodemailer');
 const crypto = require('crypto');
 const fs = require('fs');
 const path = require('path');
 const { Pool } = require('pg');
 
-// OAuth2 Configuration
-const CLIENT_ID = '694423905775-v24ckb7b7gr5qj8kh78m0svmisi3a4i9.apps.googleusercontent.com';
+// ============================================================
+// SMTP CONFIG — sends from saul@mexausafg.com directly
+// Set these in C:\AuditDNA\backend\.env
+// ============================================================
+const SMTP_HOST     = process.env.SMTP_HOST     || 'smtp.mexausafg.com';
+const SMTP_PORT     = parseInt(process.env.SMTP_PORT || '587');
+const SMTP_SECURE   = process.env.SMTP_SECURE === 'true'; // false for port 587 STARTTLS, true for 465 SSL
+const SMTP_USER     = process.env.SMTP_USER     || 'Saul@mexausafg.com';
+const SMTP_PASS     = process.env.SMTP_PASS     || '';
+const FROM_NAME     = process.env.FROM_NAME     || process.env.SMTP_FROM_NAME || 'Saul Garcia | Mexausa Food Group, Inc.';
+const FROM_ADDRESS  = process.env.FROM_ADDRESS  || process.env.SMTP_FROM     || 'Saul@mexausafg.com';
+const FROM_HEADER   = `${FROM_NAME} <${FROM_ADDRESS}>`;
+
+// Build nodemailer transporter — reused for all sends
+function createTransport() {
+  return nodemailer.createTransport({
+    host:   SMTP_HOST,
+    port:   SMTP_PORT,
+    secure: SMTP_SECURE,
+    auth: {
+      user: SMTP_USER,
+      pass: SMTP_PASS,
+    },
+    tls: {
+      rejectUnauthorized: false, // handles self-signed certs on some hosts
+    },
+  });
+}
+
+// Verify SMTP on startup
+(async () => {
+  if (!SMTP_PASS) {
+    console.warn('[SMTP] WARNING: SMTP_PASS not set in .env — email sending will fail');
+    return;
+  }
+  try {
+    const t = createTransport();
+    await t.verify();
+    console.log(`[SMTP] Connected — sending as ${FROM_HEADER}`);
+  } catch (err) {
+    console.error(`[SMTP] Connection failed: ${err.message}`);
+    console.error(`[SMTP] Check SMTP_HOST/SMTP_PORT/SMTP_USER/SMTP_PASS in .env`);
+  }
+})();
+
+// ============================================================
+// OAUTH2 — used ONLY for contacts, labels, reading messages
+// ============================================================
+const CLIENT_ID     = '694423905775-v24ckb7b7gr5qj8kh78m0svmisi3a4i9.apps.googleusercontent.com';
 const CLIENT_SECRET = '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';
-const REDIRECT_URI = 'http://localhost:5050/api/gmail/callback';
+const REDIRECT_URI  = 'http://localhost:5050/api/gmail/callback';
 
-// Default sender alias
-const DEFAULT_FROM = 'Saul Garcia <saul@mexausafg.com>';
-
-// Encryption config
 const ENCRYPTION_KEY = process.env.VAULT_KEY || process.env.SESSION_SECRET || 'auditdna_gmail_vault_2026';
-const TOKEN_FILE = path.join(__dirname, '..', '.gmail-tokens.enc');
-const PROFILE_FILE = path.join(__dirname, '..', '.gmail-profile.enc');
+const TOKEN_FILE     = path.join(__dirname, '..', '.gmail-tokens.enc');
+const PROFILE_FILE   = path.join(__dirname, '..', '.gmail-profile.enc');
 
-// PostgreSQL pool
 const pgPool = new Pool({
-  host: process.env.DB_HOST || 'localhost',
-  port: parseInt(process.env.DB_PORT || '5432'),
-  database: process.env.DB_NAME || 'auditdna',
-  user: process.env.DB_USER || 'postgres',
-  password: process.env.DB_PASSWORD || 'auditdna2026'
+  host:     process.env.DB_HOST     || 'localhost',
+  port:     parseInt(process.env.DB_PORT || '5432'),
+  database: process.env.DB_NAME     || 'auditdna',
+  user:     process.env.DB_USER     || 'postgres',
+  password: process.env.DB_PASSWORD || 'auditdna2026',
 });
 
 const oauth2Client = new google.auth.OAuth2(CLIENT_ID, CLIENT_SECRET, REDIRECT_URI);
 
-// Scopes
 const SCOPES = [
-  'https://www.googleapis.com/auth/gmail.send',
   'https://www.googleapis.com/auth/gmail.readonly',
   'https://www.googleapis.com/auth/gmail.labels',
   'https://www.googleapis.com/auth/contacts.readonly',
   'https://www.googleapis.com/auth/contacts.other.readonly',
   'https://www.googleapis.com/auth/userinfo.email',
-  'https://www.googleapis.com/auth/userinfo.profile'
+  'https://www.googleapis.com/auth/userinfo.profile',
+  // NOTE: gmail.send scope removed — we send via SMTP, not Gmail API
 ];
 
 // ============================================================
@@ -52,7 +96,6 @@ const SCOPES = [
 function getEncryptionKey() {
   return crypto.createHash('sha256').update(ENCRYPTION_KEY).digest();
 }
-
 function encrypt(data) {
   const iv = crypto.randomBytes(16);
   const cipher = crypto.createCipheriv('aes-256-cbc', getEncryptionKey(), iv);
@@ -60,7 +103,6 @@ function encrypt(data) {
   encrypted += cipher.final('hex');
   return iv.toString('hex') + ':' + encrypted;
 }
-
 function decrypt(encryptedData) {
   const parts = encryptedData.split(':');
   const iv = Buffer.from(parts.shift(), 'hex');
@@ -75,44 +117,19 @@ function decrypt(encryptedData) {
 // FILE PERSISTENCE
 // ============================================================
 function saveTokensToFile(tokens) {
-  try {
-    fs.writeFileSync(TOKEN_FILE, encrypt(tokens), 'utf8');
-  } catch (err) {
-    console.error('❌ File token save failed:', err.message);
-  }
+  try { fs.writeFileSync(TOKEN_FILE, encrypt(tokens), 'utf8'); } catch (err) { console.error('File token save failed:', err.message); }
 }
-
 function loadTokensFromFile() {
-  try {
-    if (fs.existsSync(TOKEN_FILE)) {
-      return decrypt(fs.readFileSync(TOKEN_FILE, 'utf8'));
-    }
-  } catch (err) {
-    console.error('❌ File token load failed:', err.message);
-    try { fs.unlinkSync(TOKEN_FILE); } catch (e) {}
-  }
+  try { if (fs.existsSync(TOKEN_FILE)) return decrypt(fs.readFileSync(TOKEN_FILE, 'utf8')); } catch (err) { try { fs.unlinkSync(TOKEN_FILE); } catch (e) {} }
   return null;
 }
-
 function saveProfileToFile(profile) {
-  try {
-    fs.writeFileSync(PROFILE_FILE, encrypt(profile), 'utf8');
-  } catch (err) {
-    console.error('❌ File profile save failed:', err.message);
-  }
+  try { fs.writeFileSync(PROFILE_FILE, encrypt(profile), 'utf8'); } catch (err) {}
 }
-
 function loadProfileFromFile() {
-  try {
-    if (fs.existsSync(PROFILE_FILE)) {
-      return decrypt(fs.readFileSync(PROFILE_FILE, 'utf8'));
-    }
-  } catch (err) {
-    try { fs.unlinkSync(PROFILE_FILE); } catch (e) {}
-  }
+  try { if (fs.existsSync(PROFILE_FILE)) return decrypt(fs.readFileSync(PROFILE_FILE, 'utf8')); } catch (err) { try { fs.unlinkSync(PROFILE_FILE); } catch (e) {} }
   return null;
 }
-
 function deleteFiles() {
   try { fs.unlinkSync(TOKEN_FILE); } catch (e) {}
   try { fs.unlinkSync(PROFILE_FILE); } catch (e) {}
@@ -135,159 +152,155 @@ async function initPgTable() {
         updated_at TIMESTAMP DEFAULT NOW()
       )
     `);
-    console.log('✅ [Gmail] PostgreSQL table initialized');
+    console.log('[Gmail] PostgreSQL table ready');
   } catch (err) {
-    console.error('❌ [Gmail] PG table init failed:', err.message);
+    console.error('[Gmail] PG table init failed:', err.message);
   }
 }
-
 async function saveTokensToPg(tokens, profile) {
   try {
-    const tokensEnc = encrypt(tokens);
+    const tokensEnc  = encrypt(tokens);
     const profileEnc = profile ? encrypt(profile) : null;
-    const email = profile?.email || null;
-
+    const email      = profile?.email || null;
     await pgPool.query(`
       INSERT INTO gmail_auth (account_key, tokens_enc, profile_enc, email, send_as, updated_at)
       VALUES ('primary', $1, $2, $3, $4, NOW())
       ON CONFLICT (account_key)
-      DO UPDATE SET tokens_enc = $1, profile_enc = $2, email = $3, send_as = $4, updated_at = NOW()
-    `, [tokensEnc, profileEnc, email, DEFAULT_FROM]);
-
-    console.log('🐘 Gmail tokens saved to PostgreSQL');
-  } catch (err) {
-    console.error('❌ PG token save failed:', err.message);
-  }
+      DO UPDATE SET tokens_enc=$1, profile_enc=$2, email=$3, send_as=$4, updated_at=NOW()
+    `, [tokensEnc, profileEnc, email, FROM_ADDRESS]);
+  } catch (err) { console.error('PG token save failed:', err.message); }
 }
-
 async function loadTokensFromPg() {
   try {
-    const result = await pgPool.query(
-      `SELECT tokens_enc, profile_enc, email FROM gmail_auth WHERE account_key = 'primary' LIMIT 1`
-    );
-
+    const result = await pgPool.query(`SELECT tokens_enc, profile_enc, email FROM gmail_auth WHERE account_key='primary' LIMIT 1`);
     if (result.rows.length > 0) {
       const row = result.rows[0];
-      const tokens = decrypt(row.tokens_enc);
-      const profile = row.profile_enc ? decrypt(row.profile_enc) : null;
-      console.log(`🐘 Gmail tokens loaded from PostgreSQL (${row.email})`);
-      return { tokens, profile };
+      return { tokens: decrypt(row.tokens_enc), profile: row.profile_enc ? decrypt(row.profile_enc) : null };
     }
-  } catch (err) {
-    console.error('❌ PG token load failed:', err.message);
-  }
+  } catch (err) { console.error('PG token load failed:', err.message); }
   return null;
 }
-
 async function deleteFromPg() {
-  try {
-    await pgPool.query(`DELETE FROM gmail_auth WHERE account_key = 'primary'`);
-    console.log('🐘 Gmail auth deleted from PostgreSQL');
-  } catch (err) {
-    console.error('❌ PG delete failed:', err.message);
-  }
+  try { await pgPool.query(`DELETE FROM gmail_auth WHERE account_key='primary'`); } catch (err) {}
 }
-
-// ============================================================
-// DUAL SAVE & LOAD
-// ============================================================
 async function saveAuth(tokens, profile) {
-  // Save to file (instant)
   saveTokensToFile(tokens);
   if (profile) saveProfileToFile(profile);
-  console.log('🔐 Gmail auth saved to file (encrypted)');
-
-  // Save to PostgreSQL (backup)
   await saveTokensToPg(tokens, profile);
 }
-
 async function loadAuth() {
-  // Try file first (fastest)
-  let tokens = loadTokensFromFile();
+  let tokens  = loadTokensFromFile();
   let profile = loadProfileFromFile();
-
   if (tokens) {
-    console.log('🔐 Gmail tokens loaded from file');
-    // Sync to PG if not there
     saveTokensToPg(tokens, profile).catch(() => {});
     return { tokens, profile };
   }
-
-  // Fall back to PostgreSQL
-  console.log('📂 No file tokens, checking PostgreSQL...');
   const pgData = await loadTokensFromPg();
   if (pgData) {
-    // Restore file from PG
     saveTokensToFile(pgData.tokens);
     if (pgData.profile) saveProfileToFile(pgData.profile);
-    console.log('🔄 Restored file tokens from PostgreSQL backup');
     return pgData;
   }
-
   return null;
 }
-
 async function deleteAuth() {
   deleteFiles();
   await deleteFromPg();
-  console.log('🗑️ Gmail auth deleted from all storage');
 }
 
 // ============================================================
-// STARTUP: Init table + load tokens
+// STARTUP: init PG + load OAuth tokens for contacts
 // ============================================================
 let storedTokens = null;
-let userProfile = null;
+let userProfile  = null;
 
 (async () => {
   await initPgTable();
-
   const auth = await loadAuth();
   if (auth) {
     storedTokens = auth.tokens;
-    userProfile = auth.profile;
+    userProfile  = auth.profile;
     oauth2Client.setCredentials(storedTokens);
-    console.log(`✅ Gmail auto-connected: ${userProfile?.email || 'unknown'}`);
-    console.log(`📧 Sending as: ${DEFAULT_FROM}`);
+    console.log(`[Gmail] OAuth connected for contacts: ${userProfile?.email || 'unknown'}`);
+    console.log(`[Gmail] All emails send FROM: ${FROM_HEADER}`);
   }
 })();
 
-// Auto-refresh tokens
 oauth2Client.on('tokens', async (tokens) => {
-  if (tokens.refresh_token) {
-    storedTokens = { ...storedTokens, ...tokens };
-  } else {
-    storedTokens = { ...storedTokens, access_token: tokens.access_token, expiry_date: tokens.expiry_date };
-  }
+  storedTokens = tokens.refresh_token
+    ? { ...storedTokens, ...tokens }
+    : { ...storedTokens, access_token: tokens.access_token, expiry_date: tokens.expiry_date };
   await saveAuth(storedTokens, userProfile);
-  console.log('🔄 Gmail tokens auto-refreshed & saved (file + PG)');
+  console.log('[Gmail] OAuth tokens auto-refreshed');
 });
+
+// ============================================================
+// PROACTIVE TOKEN REFRESH
+// ============================================================
+async function ensureFreshTokens() {
+  if (!storedTokens) return false;
+  if (!storedTokens.refresh_token) return false;
+  const now       = Date.now();
+  const expiryDate = storedTokens.expiry_date || 0;
+  if (expiryDate && (expiryDate - now) > 5 * 60 * 1000) return true;
+  try {
+    oauth2Client.setCredentials({ refresh_token: storedTokens.refresh_token });
+    const { credentials } = await oauth2Client.refreshAccessToken();
+    storedTokens = { ...storedTokens, access_token: credentials.access_token, expiry_date: credentials.expiry_date, token_type: credentials.token_type };
+    if (credentials.refresh_token) storedTokens.refresh_token = credentials.refresh_token;
+    oauth2Client.setCredentials(storedTokens);
+    await saveAuth(storedTokens, userProfile);
+    return true;
+  } catch (err) {
+    console.error('[Gmail] Token refresh failed:', err.message);
+    if (err.message.includes('invalid_grant') || err.message.includes('Token has been revoked')) {
+      storedTokens = null; userProfile = null;
+      await deleteAuth();
+    }
+    return false;
+  }
+}
+setInterval(async () => { if (storedTokens) await ensureFreshTokens(); }, 45 * 60 * 1000);
 
 // ============================================================
 // GET /api/gmail/status
 // ============================================================
-router.get('/status', (req, res) => {
+router.get('/status', async (req, res) => {
+  if (storedTokens) await ensureFreshTokens();
+  const expiryDate  = storedTokens?.expiry_date ? new Date(storedTokens.expiry_date) : null;
+  const minutesLeft = expiryDate ? Math.round((expiryDate - Date.now()) / 60000) : null;
   res.json({
-    connected: !!storedTokens,
-    email: userProfile?.email || null,
-    name: userProfile?.name || null,
-    picture: userProfile?.picture || null,
-    defaultFrom: DEFAULT_FROM,
-    persistent: true,
-    storage: 'file + postgresql',
-    scopes: storedTokens ? SCOPES : []
+    connected:       !!storedTokens,
+    email:           userProfile?.email || null,
+    name:            userProfile?.name  || null,
+    picture:         userProfile?.picture || null,
+    sendingFrom:     FROM_HEADER,                   // always saul@mexausafg.com
+    smtpReady:       !!SMTP_PASS,
+    persistent:      true,
+    storage:         'file + postgresql',
+    hasRefreshToken: !!storedTokens?.refresh_token,
+    tokenExpiresAt:  expiryDate?.toISOString() || null,
+    tokenMinutesLeft: minutesLeft,
+    autoRefresh:     true,
   });
 });
 
 // ============================================================
-// GET /api/gmail/auth
+// POST /api/gmail/refresh
+// ============================================================
+router.post('/refresh', async (req, res) => {
+  if (!storedTokens?.refresh_token) return res.status(401).json({ error: 'No refresh token' });
+  const ok = await ensureFreshTokens();
+  ok
+    ? res.json({ success: true, expiresAt: new Date(storedTokens.expiry_date).toISOString() })
+    : res.status(401).json({ error: 'Refresh failed — re-authenticate at /api/gmail/auth' });
+});
+
+// ============================================================
+// GET /api/gmail/auth  (contacts OAuth only)
 // ============================================================
 router.get('/auth', (req, res) => {
-  const authUrl = oauth2Client.generateAuthUrl({
-    access_type: 'offline',
-    scope: SCOPES,
-    prompt: 'consent'
-  });
+  const authUrl = oauth2Client.generateAuthUrl({ access_type: 'offline', scope: SCOPES, prompt: 'consent' });
   res.redirect(authUrl);
 });
 
@@ -296,118 +309,104 @@ router.get('/auth', (req, res) => {
 // ============================================================
 router.get('/callback', async (req, res) => {
   const { code, error } = req.query;
-
-  if (error) {
-    return res.send(`
-      <html><body style="background:#0f172a;color:#fff;font-family:sans-serif;display:flex;align-items:center;justify-content:center;height:100vh;">
-        <div style="text-align:center;">
-          <h1 style="color:#ef4444;">❌ Authorization Failed</h1>
-          <p>${error}</p>
-        </div>
-      </body></html>
-    `);
-  }
-
+  if (error) return res.send(`<html><body style="background:#0f172a;color:#ef4444;font-family:sans-serif;padding:40px"><h1>Auth Failed</h1><p>${error}</p></body></html>`);
   try {
     const { tokens } = await oauth2Client.getToken(code);
     oauth2Client.setCredentials(tokens);
     storedTokens = tokens;
-
-    const oauth2 = google.oauth2({ version: 'v2', auth: oauth2Client });
-    const { data } = await oauth2.userinfo.get();
-    userProfile = data;
-
-    // Dual save: file + PostgreSQL
+    const oauth2     = google.oauth2({ version: 'v2', auth: oauth2Client });
+    const { data }   = await oauth2.userinfo.get();
+    userProfile      = data;
     await saveAuth(tokens, data);
+    console.log(`[Gmail] OAuth connected: ${data.email}`);
 
-    console.log(`✅ Gmail connected: ${data.email}`);
-    console.log(`📧 Sending as: ${DEFAULT_FROM}`);
-    console.log(`🔐 Auth persisted: file + PostgreSQL`);
-
+    // AUTO-SYNC ALL CONTACTS IMMEDIATELY — no extra steps needed
     res.send(`
-      <html><body style="background:#0f172a;color:#fff;font-family:sans-serif;display:flex;align-items:center;justify-content:center;height:100vh;">
-        <div style="text-align:center;">
-          <h1 style="color:#cba658;">✅ Gmail Connected!</h1>
-          <p>Signed in as: <strong>${data.email}</strong></p>
-          <p style="color:#94a3b0;">Sending as: <strong>${DEFAULT_FROM}</strong></p>
-          <p style="color:#86efac;">🔐 Auth saved — file + PostgreSQL</p>
-          <p style="color:#94a3b0;">You can close this window and return to AuditDNA.</p>
+      <html><body style="background:#0f172a;color:#fff;font-family:sans-serif;display:flex;align-items:center;justify-content:center;height:100vh;margin:0;">
+        <div style="text-align:center;max-width:500px;">
+          <h1 style="color:#cba658;margin-bottom:8px;">Gmail Connected!</h1>
+          <p style="color:#94a3b0;">Syncing all contacts from <strong style="color:#fff;">${data.email}</strong>...</p>
+          <div id="status" style="color:#86efac;font-size:18px;margin:20px 0;">Loading contacts...</div>
+          <div id="count" style="color:#cba658;font-size:36px;font-weight:bold;">0</div>
+          <p id="msg" style="color:#94a3b0;font-size:13px;"></p>
           <script>
-            if (window.opener) {
-              window.opener.postMessage({ type: 'GMAIL_CONNECTED', email: '${data.email}' }, '*');
-              setTimeout(() => window.close(), 2000);
-            }
+            fetch('/api/gmail/contacts?force=true')
+              .then(r=>r.json())
+              .then(d=>{
+                document.getElementById('status').textContent = 'Contacts Synced!';
+                document.getElementById('count').textContent = (d.total||0).toLocaleString() + ' contacts';
+                document.getElementById('msg').textContent = 'You can close this window.';
+                if(window.opener){ window.opener.postMessage({type:'GMAIL_CONNECTED',email:'${data.email}',total:d.total},'*'); }
+                setTimeout(()=>{ try{window.close();}catch(e){} }, 3000);
+              })
+              .catch(e=>{
+                document.getElementById('status').textContent = 'Sync failed — try again';
+                document.getElementById('msg').textContent = e.message;
+              });
           </script>
         </div>
       </body></html>
     `);
   } catch (err) {
-    console.error('Gmail OAuth Error:', err.message);
-    res.status(500).send(`
-      <html><body style="background:#0f172a;color:#fff;font-family:sans-serif;display:flex;align-items:center;justify-content:center;height:100vh;">
-        <div style="text-align:center;">
-          <h1 style="color:#ef4444;">❌ Token Exchange Failed</h1>
-          <p>${err.message}</p>
-        </div>
-      </body></html>
-    `);
+    res.status(500).send(`<html><body style="background:#0f172a;color:#ef4444;font-family:sans-serif;padding:40px"><h1>Token Exchange Failed</h1><p>${err.message}</p></body></html>`);
   }
 });
 
 // ============================================================
-// POST /api/gmail/send
+// SMTP SEND HELPER — builds and sends via nodemailer
+// Supports: to, cc, bcc, subject, html body, attachments
+// ============================================================
+async function smtpSend({ to, cc, bcc, subject, html, text, attachments = [] }) {
+  const transport = createTransport();
+
+  // Build attachments array for nodemailer
+  const mailAttachments = attachments.map(a => ({
+    filename:    a.name || a.filename,
+    content:     Buffer.from(a.content || a.data || a.b64 || '', 'base64'),
+    contentType: a.mimeType || a.contentType || 'application/octet-stream',
+  }));
+
+  const info = await transport.sendMail({
+    from:        FROM_HEADER,   // always saul@mexausafg.com
+    to,
+    cc:          cc  || undefined,
+    bcc:         bcc || undefined,
+    subject,
+    html:        html || text || '',
+    text:        text || undefined,
+    attachments: mailAttachments,
+  });
+
+  return info;
+}
+
+// ============================================================
+// POST /api/gmail/send  (single)
 // ============================================================
 router.post('/send', async (req, res) => {
-  if (!storedTokens) {
-    return res.status(401).json({ error: 'Gmail not connected. Visit /api/gmail/auth first.' });
-  }
-
   try {
-    oauth2Client.setCredentials(storedTokens);
-    const gmail = google.gmail({ version: 'v1', auth: oauth2Client });
+    const { to, subject, body, html, cc, bcc, attachments } = req.body;
 
-    const { to, subject, body, cc, bcc, from } = req.body;
-
-    if (!to || !subject || !body) {
-      return res.status(400).json({ error: 'Missing required fields: to, subject, body' });
+    if (!to || !subject || (!body && !html)) {
+      return res.status(400).json({ error: 'Missing required fields: to, subject, body/html' });
+    }
+    if (!SMTP_PASS) {
+      return res.status(500).json({ error: 'SMTP_PASS not configured in .env — see setup instructions' });
     }
 
-    const sender = from || DEFAULT_FROM;
-
-    const headers = [
-      `From: ${sender}`,
-      `To: ${to}`,
-      cc ? `Cc: ${cc}` : '',
-      bcc ? `Bcc: ${bcc}` : '',
-      `Subject: ${subject}`,
-      'MIME-Version: 1.0',
-      'Content-Type: text/html; charset=utf-8',
-      '',
-      body
-    ].filter(Boolean).join('\r\n');
-
-    const encodedMessage = Buffer.from(headers)
-      .toString('base64')
-      .replace(/\+/g, '-')
-      .replace(/\//g, '_')
-      .replace(/=+$/, '');
-
-    const result = await gmail.users.messages.send({
-      userId: 'me',
-      requestBody: { raw: encodedMessage }
+    const info = await smtpSend({
+      to, cc, bcc, subject,
+      html:        html || body,
+      text:        body,
+      attachments: attachments || [],
     });
 
-    console.log(`📧 Email sent from ${sender} to ${to} (ID: ${result.data.id})`);
-    res.json({ success: true, messageId: result.data.id, from: sender });
+    console.log(`[SMTP] Sent: ${FROM_ADDRESS} -> ${to} | MsgID: ${info.messageId}`);
+    res.json({ success: true, messageId: info.messageId, from: FROM_ADDRESS });
+
   } catch (err) {
-    console.error('Gmail Send Error:', err.message);
-    if (err.message.includes('invalid_grant') || err.message.includes('Token has been expired')) {
-      storedTokens = null;
-      userProfile = null;
-      await deleteAuth();
-      return res.status(401).json({ error: 'Token expired. Re-authenticate at /api/gmail/auth' });
-    }
-    res.status(500).json({ error: err.message });
+    console.error('[SMTP] Send error:', err.message);
+    res.status(500).json({ error: err.message, hint: 'Check SMTP_HOST/SMTP_PORT/SMTP_USER/SMTP_PASS in .env' });
   }
 });
 
@@ -415,297 +414,231 @@ router.post('/send', async (req, res) => {
 // POST /api/gmail/send-bulk
 // ============================================================
 router.post('/send-bulk', async (req, res) => {
-  if (!storedTokens) {
-    return res.status(401).json({ error: 'Gmail not connected.' });
-  }
-
   try {
-    oauth2Client.setCredentials(storedTokens);
-    const gmail = google.gmail({ version: 'v1', auth: oauth2Client });
+    const { recipients, subject, body, html, cc, bcc, attachments = [], delayMs = 1200 } = req.body;
 
-    const { recipients, subject, body, from, delayMs = 1000 } = req.body;
-
-    if (!recipients || !Array.isArray(recipients) || !subject || !body) {
-      return res.status(400).json({ error: 'Missing: recipients (array), subject, body' });
+    if (!recipients || !Array.isArray(recipients) || !subject || (!body && !html)) {
+      return res.status(400).json({ error: 'Missing: recipients (array), subject, body/html' });
+    }
+    if (!SMTP_PASS) {
+      return res.status(500).json({ error: 'SMTP_PASS not configured in .env' });
     }
 
-    const sender = from || DEFAULT_FROM;
     const results = [];
 
     for (const recipient of recipients) {
+      const email = typeof recipient === 'string' ? recipient : recipient.email;
+      const name  = recipient.name || '';
+
       try {
-        const email = typeof recipient === 'string' ? recipient : recipient.email;
-        const personalizedBody = body
-          .replace(/\{\{name\}\}/g, recipient.name || '')
+        // Personalize HTML and text body
+        const personalizedHtml = (html || body || '')
+          .replace(/\{\{name\}\}/g,    name)
           .replace(/\{\{company\}\}/g, recipient.company || '')
-          .replace(/\{\{email\}\}/g, email);
+          .replace(/\{\{email\}\}/g,   email);
 
-        const headers = [
-          `From: ${sender}`,
-          `To: ${email}`,
-          `Subject: ${subject}`,
-          'MIME-Version: 1.0',
-          'Content-Type: text/html; charset=utf-8',
-          '',
-          personalizedBody
-        ].join('\r\n');
+        const personalizedText = (body || '')
+          .replace(/\{\{name\}\}/g,    name)
+          .replace(/\{\{company\}\}/g, recipient.company || '')
+          .replace(/\{\{email\}\}/g,   email);
 
-        const encodedMessage = Buffer.from(headers)
-          .toString('base64')
-          .replace(/\+/g, '-')
-          .replace(/\//g, '_')
-          .replace(/=+$/, '');
-
-        const result = await gmail.users.messages.send({
-          userId: 'me',
-          requestBody: { raw: encodedMessage }
+        const info = await smtpSend({
+          to:          name ? `${name} <${email}>` : email,
+          cc,
+          bcc,
+          subject,
+          html:        personalizedHtml,
+          text:        personalizedText,
+          attachments,
         });
 
-        results.push({ email, success: true, messageId: result.data.id });
-        console.log(`📧 Bulk: Sent from ${sender} to ${email}`);
+        results.push({ email, success: true, messageId: info.messageId });
+        console.log(`[SMTP] Bulk sent -> ${email}`);
 
         if (delayMs > 0) await new Promise(r => setTimeout(r, delayMs));
+
       } catch (err) {
-        results.push({ email: recipient.email || recipient, success: false, error: err.message });
-        console.error(`❌ Bulk: Failed ${recipient.email || recipient}: ${err.message}`);
+        results.push({ email, success: false, error: err.message });
+        console.error(`[SMTP] Bulk failed -> ${email}: ${err.message}`);
       }
     }
 
-    res.json({
-      success: true,
-      from: sender,
-      total: recipients.length,
-      sent: results.filter(r => r.success).length,
-      failed: results.filter(r => !r.success).length,
-      results
-    });
+    const sent   = results.filter(r => r.success).length;
+    const failed = results.filter(r => !r.success).length;
+    console.log(`[SMTP] Bulk complete: ${sent} sent, ${failed} failed, FROM: ${FROM_ADDRESS}`);
+
+    res.json({ success: true, from: FROM_ADDRESS, total: recipients.length, sent, failed, results });
+
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 });
 
 // ============================================================
-// GET /api/gmail/messages
+// GET /api/gmail/messages  (OAuth read — unchanged)
 // ============================================================
 router.get('/messages', async (req, res) => {
-  if (!storedTokens) {
-    return res.status(401).json({ error: 'Gmail not connected.' });
-  }
-
+  const tokenOk = await ensureFreshTokens();
+  if (!tokenOk || !storedTokens) return res.status(401).json({ error: 'Authentication required', authUrl: '/api/gmail/auth' });
   try {
     oauth2Client.setCredentials(storedTokens);
     const gmail = google.gmail({ version: 'v1', auth: oauth2Client });
-
     const { maxResults = 20, q = '', labelIds } = req.query;
     const params = { userId: 'me', maxResults: parseInt(maxResults) };
     if (q) params.q = q;
     if (labelIds) params.labelIds = labelIds.split(',');
-
     const list = await gmail.users.messages.list(params);
-
-    if (!list.data.messages || list.data.messages.length === 0) {
-      return res.json({ messages: [], total: 0 });
-    }
-
-    const messages = await Promise.all(
-      list.data.messages.map(async (msg) => {
-        const full = await gmail.users.messages.get({
-          userId: 'me', id: msg.id, format: 'metadata',
-          metadataHeaders: ['From', 'To', 'Subject', 'Date']
-        });
-        const headers = {};
-        full.data.payload.headers.forEach(h => { headers[h.name.toLowerCase()] = h.value; });
-        return {
-          id: msg.id, threadId: msg.threadId, from: headers.from || '',
-          to: headers.to || '', subject: headers.subject || '(no subject)',
-          date: headers.date || '', snippet: full.data.snippet, labelIds: full.data.labelIds
-        };
-      })
-    );
-
+    if (!list.data.messages?.length) return res.json({ messages: [], total: 0 });
+    const messages = await Promise.all(list.data.messages.map(async (msg) => {
+      const full    = await gmail.users.messages.get({ userId: 'me', id: msg.id, format: 'metadata', metadataHeaders: ['From', 'To', 'Subject', 'Date'] });
+      const headers = {};
+      full.data.payload.headers.forEach(h => { headers[h.name.toLowerCase()] = h.value; });
+      return { id: msg.id, threadId: msg.threadId, from: headers.from || '', to: headers.to || '', subject: headers.subject || '(no subject)', date: headers.date || '', snippet: full.data.snippet, labelIds: full.data.labelIds };
+    }));
     res.json({ messages, total: list.data.resultSizeEstimate });
   } catch (err) {
-    console.error('Gmail List Error:', err.message);
     res.status(500).json({ error: err.message });
   }
 });
 
 // ============================================================
-// GET /api/gmail/contacts — FULL SYNC (ALL PAGES)
+// GET /api/gmail/contacts  (OAuth — full sync, unchanged)
 // ============================================================
-let cachedContacts = null;
-let cacheTimestamp = 0;
-const CACHE_TTL = 5 * 60 * 1000; // 5 min
+let cachedContacts  = null;
+let cacheTimestamp  = 0;
+const CACHE_TTL     = 5 * 60 * 1000;
 
 router.get('/contacts', async (req, res) => {
-  if (!storedTokens) {
-    return res.status(401).json({ error: 'Gmail not connected.' });
+  const tokenOk = await ensureFreshTokens();
+  if (!tokenOk || !storedTokens) {
+    // Return cached contacts if available — no auth dance needed
+    if (cachedContacts && cachedContacts.length > 0) {
+      return res.json({ contacts: cachedContacts, total: cachedContacts.length, cached: true, warning: 'Using cached contacts — Gmail re-auth needed to refresh' });
+    }
+    // Load from PostgreSQL as fallback
+    try {
+      const pgResult = await pgPool.query(`SELECT contact_data FROM gmail_contacts_cache ORDER BY synced_at DESC LIMIT 1`);
+      if (pgResult.rows.length > 0) {
+        const contacts = pgResult.rows[0].contact_data;
+        cachedContacts = contacts;
+        cacheTimestamp = Date.now();
+        return res.json({ contacts, total: contacts.length, cached: true, source: 'postgresql' });
+      }
+    } catch (e) {}
+    return res.status(401).json({ error: 'Authentication required', authUrl: '/api/gmail/auth' });
   }
-
   try {
     oauth2Client.setCredentials(storedTokens);
-    const people = google.people({ version: 'v1', auth: oauth2Client });
-
-    // Return cache unless force refresh
+    const people      = google.people({ version: 'v1', auth: oauth2Client });
     const forceRefresh = req.query.force === 'true' || req.query.refresh === 'true';
     if (!forceRefresh && cachedContacts && (Date.now() - cacheTimestamp < CACHE_TTL)) {
-      console.log(`[Gmail] Returning ${cachedContacts.length} cached contacts`);
       return res.json({ contacts: cachedContacts, total: cachedContacts.length, cached: true });
     }
-
     const allContacts = [];
-    let nextPageToken = null;
-    let page = 0;
-
-    // ── LOOP 1: Saved contacts (connections) ──
+    let nextPageToken  = null;
+    let page           = 0;
     console.log('[Gmail] Fetching ALL connections...');
     do {
       page++;
-      const response = await people.people.connections.list({
-        resourceName: 'people/me',
-        pageSize: 1000,
-        pageToken: nextPageToken || undefined,
-        personFields: 'names,emailAddresses,phoneNumbers,organizations,photos',
-        sortOrder: 'LAST_NAME_ASCENDING',
-      });
-
+      const response    = await people.people.connections.list({ resourceName: 'people/me', pageSize: 1000, pageToken: nextPageToken || undefined, personFields: 'names,emailAddresses,phoneNumbers,organizations,photos', sortOrder: 'LAST_NAME_ASCENDING' });
       const connections = response.data.connections || [];
       console.log(`  Page ${page}: ${connections.length} connections`);
-
       for (const person of connections) {
         const emails = person.emailAddresses || [];
-        if (emails.length === 0) continue;
-
-        allContacts.push({
-          resourceName: person.resourceName,
-          name: person.names?.[0]?.displayName || '',
-          email: emails[0]?.value || '',
-          allEmails: emails.map(e => e.value),
-          phone: person.phoneNumbers?.[0]?.value || '',
-          company: person.organizations?.[0]?.name || '',
-          title: person.organizations?.[0]?.title || '',
-          photo: person.photos?.[0]?.url || '',
-          source: 'contacts',
-        });
+        if (!emails.length) continue;
+        allContacts.push({ resourceName: person.resourceName, name: person.names?.[0]?.displayName || '', email: emails[0]?.value || '', allEmails: emails.map(e => e.value), phone: person.phoneNumbers?.[0]?.value || '', company: person.organizations?.[0]?.name || '', title: person.organizations?.[0]?.title || '', photo: person.photos?.[0]?.url || '', source: 'contacts' });
       }
-
       nextPageToken = response.data.nextPageToken || null;
     } while (nextPageToken);
-
-    console.log(`[Gmail] Saved contacts: ${allContacts.length}`);
-
-    // ── LOOP 2: Other contacts (people you've emailed) ──
     let otherCount = 0;
     try {
-      nextPageToken = null;
-      page = 0;
-      console.log('[Gmail] Fetching otherContacts...');
-
+      nextPageToken = null; page = 0;
       do {
         page++;
-        const response = await people.otherContacts.list({
-          pageSize: 1000,
-          pageToken: nextPageToken || undefined,
-          readMask: 'names,emailAddresses,phoneNumbers',
-        });
-
-        const others = response.data.otherContacts || [];
-        console.log(`  Other page ${page}: ${others.length}`);
-
+        const response = await people.otherContacts.list({ pageSize: 1000, pageToken: nextPageToken || undefined, readMask: 'names,emailAddresses,phoneNumbers' });
+        const others   = response.data.otherContacts || [];
         for (const person of others) {
           const emails = person.emailAddresses || [];
-          if (emails.length === 0) continue;
-
+          if (!emails.length) continue;
           const email = emails[0]?.value?.toLowerCase();
           if (allContacts.find(c => c.email.toLowerCase() === email)) continue;
-
-          allContacts.push({
-            resourceName: person.resourceName || '',
-            name: person.names?.[0]?.displayName || email.split('@')[0] || '',
-            email: emails[0]?.value || '',
-            phone: person.phoneNumbers?.[0]?.value || '',
-            company: person.organizations?.[0]?.name || '',
-            title: '',
-            photo: '',
-            source: 'other',
-          });
+          allContacts.push({ resourceName: person.resourceName || '', name: person.names?.[0]?.displayName || email.split('@')[0] || '', email: emails[0]?.value || '', phone: '', company: '', title: '', photo: '', source: 'other' });
           otherCount++;
         }
-
         nextPageToken = response.data.nextPageToken || null;
       } while (nextPageToken);
-
-      console.log(`[Gmail] Other contacts added: ${otherCount}`);
-    } catch (otherErr) {
-      console.warn('[Gmail] otherContacts not available:', otherErr.message);
-    }
-
-    // Sort and cache
+    } catch (e) { console.warn('[Gmail] otherContacts unavailable:', e.message); }
     allContacts.sort((a, b) => (a.name || '').localeCompare(b.name || ''));
-    cachedContacts = allContacts;
-    cacheTimestamp = Date.now();
-
-    console.log(`\n========================================`);
-    console.log(`  GMAIL CONTACTS SYNCED: ${allContacts.length}`);
-    console.log(`  Saved: ${allContacts.filter(c => c.source === 'contacts').length}`);
-    console.log(`  Other: ${otherCount}`);
-    console.log(`========================================\n`);
-
-    res.json({
-      contacts: allContacts,
-      total: allContacts.length,
-      cached: false,
-      breakdown: {
-        saved: allContacts.filter(c => c.source === 'contacts').length,
-        other: otherCount,
-      }
-    });
+    cachedContacts  = allContacts;
+    cacheTimestamp  = Date.now();
+    // Persist to PostgreSQL so contacts survive restarts without re-auth
+    try {
+      await pgPool.query(`CREATE TABLE IF NOT EXISTS gmail_contacts_cache (id SERIAL PRIMARY KEY, contact_data JSONB NOT NULL, total INTEGER, synced_at TIMESTAMP DEFAULT NOW())`);
+      await pgPool.query(`DELETE FROM gmail_contacts_cache`);
+      await pgPool.query(`INSERT INTO gmail_contacts_cache (contact_data, total) VALUES ($1, $2)`, [JSON.stringify(allContacts), allContacts.length]);
+      console.log(`[Gmail] Contacts persisted to PostgreSQL: ${allContacts.length}`);
+    } catch (e) { console.warn('[Gmail] Could not persist contacts to PG:', e.message); }
+    console.log(`[Gmail] Contacts synced: ${allContacts.length} (saved: ${allContacts.filter(c=>c.source==='contacts').length}, other: ${otherCount})`);
+    res.json({ contacts: allContacts, total: allContacts.length, cached: false, breakdown: { saved: allContacts.filter(c => c.source === 'contacts').length, other: otherCount } });
   } catch (err) {
     console.error('Contacts Error:', err.message);
     if (err.message.includes('invalid_grant') || err.message.includes('Token has been expired')) {
-      storedTokens = null;
-      userProfile = null;
-      await deleteAuth();
+      storedTokens = null; userProfile = null; await deleteAuth();
       return res.status(401).json({ error: 'Token expired. Re-authenticate at /api/gmail/auth' });
     }
     res.status(500).json({ error: err.message });
   }
 });
 
-// Force cache clear
-router.post('/contacts/refresh', (req, res) => {
-  cachedContacts = null;
-  cacheTimestamp = 0;
-  res.json({ message: 'Contact cache cleared.' });
-});
+router.post('/contacts/refresh', (req, res) => { cachedContacts = null; cacheTimestamp = 0; res.json({ message: 'Contact cache cleared.' }); });
 
 // ============================================================
 // GET /api/gmail/labels
 // ============================================================
 router.get('/labels', async (req, res) => {
-  if (!storedTokens) {
-    return res.status(401).json({ error: 'Gmail not connected.' });
-  }
-
+  const tokenOk = await ensureFreshTokens();
+  if (!tokenOk || !storedTokens) return res.status(401).json({ error: 'Authentication required', authUrl: '/api/gmail/auth' });
   try {
     oauth2Client.setCredentials(storedTokens);
-    const gmail = google.gmail({ version: 'v1', auth: oauth2Client });
+    const gmail    = google.gmail({ version: 'v1', auth: oauth2Client });
     const response = await gmail.users.labels.list({ userId: 'me' });
     res.json({ labels: response.data.labels });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
+  } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
 // ============================================================
 // POST /api/gmail/disconnect
 // ============================================================
 router.post('/disconnect', async (req, res) => {
-  storedTokens = null;
-  userProfile = null;
+  storedTokens = null; userProfile = null;
   await deleteAuth();
-  console.log('🔌 Gmail disconnected — all storage cleared');
   res.json({ success: true, message: 'Gmail disconnected' });
+});
+
+// ============================================================
+// POST /api/gmail/calendar-event
+// ============================================================
+router.post('/calendar-event', async (req, res) => {
+  try {
+    if (!oauth2Client.credentials?.access_token) return res.status(401).json({ success: false, error: 'Gmail not connected' });
+    const calendar = google.calendar({ version: 'v3', auth: oauth2Client });
+    const { summary, description, start, end, colorId, recurrence } = req.body;
+    const result   = await calendar.events.insert({ calendarId: 'primary', resource: { summary, description, start, end, colorId: colorId || '5', ...(recurrence ? { recurrence } : {}), reminders: { useDefault: false, overrides: [{ method: 'email', minutes: 60 }, { method: 'popup', minutes: 30 }] } }, sendUpdates: 'all' });
+    res.json({ success: true, eventId: result.data.id, link: result.data.htmlLink });
+  } catch (e) { res.status(500).json({ success: false, error: e.message }); }
+});
+
+// ============================================================
+// POST /api/gmail/smtp-test — verify SMTP creds on demand
+// ============================================================
+router.post('/smtp-test', async (req, res) => {
+  try {
+    const t = createTransport();
+    await t.verify();
+    res.json({ success: true, message: `SMTP verified — sending as ${FROM_HEADER}`, host: SMTP_HOST, port: SMTP_PORT });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message, hint: 'Check SMTP_HOST/SMTP_PORT/SMTP_USER/SMTP_PASS in .env' });
+  }
 });
 
 module.exports = router;

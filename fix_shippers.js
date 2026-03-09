@@ -24,7 +24,7 @@ async function fix() {
     )
   `);
   
-  const ct = await p.query('SELECT count(*) FROM shippers');
+  const ct = await p.query('SELECT count(*) FROM shipper_contacts');
   console.log('Shippers table created. Rows:', ct.rows[0].count);
   
   // Also show current counts
@@ -35,3 +35,4 @@ async function fix() {
   p.end();
 }
 fix().catch(e => { console.error(e.message); p.end(); });
+
