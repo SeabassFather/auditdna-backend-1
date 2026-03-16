@@ -5,7 +5,7 @@
 
 const express = require('express');
 const router = express.Router();
-const pool = require('../db');
+const { pool } = require('../db');
 
 // ═══════════════════════════════════════════════════════════════
 // AI COWBOYS CONFIGURATION (81 Total = 9 Teams × 9 Cowboys each)

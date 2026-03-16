@@ -5,7 +5,7 @@
 
 const express = require('express');
 const router = express.Router();
-const pool = require('../db');
+const { pool } = require('../db');
 
 // 
 // INIT: Fix existing growers table by adding missing columns

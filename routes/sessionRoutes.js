@@ -10,7 +10,7 @@ const router = express.Router();
 // Database Connection (FIXED - Direct import)
 // ═══════════════════════════════════════════════════════════════
 
-const pool = require('../db');
+const { pool } = require('../db');
 
 // ═══════════════════════════════════════════════════════════════
 // In-memory session store (fallback & performance cache)
