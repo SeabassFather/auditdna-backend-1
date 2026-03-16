@@ -48,7 +48,7 @@ function clearAttempts(ip) {
 
 // ── GET DB POOL ──────────────────────────────────────────────
 function getPool() {
-  try { return require('../server').pool; } catch { return null; }
+  try { return require('../db').pool; } catch { return null; }
 }
 
 // ── ENSURE auth_users TABLE EXISTS ───────────────────────────

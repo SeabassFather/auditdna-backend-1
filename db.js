@@ -1,30 +1,32 @@
-// ═══════════════════════════════════════════════════════════════
-// PostgreSQL Connection Pool
-// Centralized DB connection for AuditDNA backend
-// ═══════════════════════════════════════════════════════════════
+// ════════════════════════════════════════════════════════════════════════════
+// AUDITDNA — STANDALONE DATABASE POOL
+// Save to: C:\AuditDNA\backend\db.js
+//
+// WHY THIS EXISTS:
+// server.js had: module.exports.pool = pool  (line 40)
+// then later:    module.exports = app         (last line)
+// The second line WIPED the pool export silently.
+// Any route doing require('../server').pool got undefined → crash.
+//
+// FIX: Import pool from here instead of server.js.
+// Usage in any route:
+//   const { pool } = require('../db');        (from routes/ folder)
+//   const { pool } = require('./db');         (from backend root)
+// ════════════════════════════════════════════════════════════════════════════
 
 const { Pool } = require('pg');
 require('dotenv').config();
 
-// ═══════════════════════════════════════════════════════════════
-// Pool Configuration
-// ═══════════════════════════════════════════════════════════════
-
 const pool = new Pool({
-  host: process.env.DB_HOST || 'localhost',
-  port: Number(process.env.DB_PORT || 5432),
-  database: process.env.DB_NAME || 'auditdna',
-  user: process.env.DB_USER || 'postgres',
+  host:     process.env.DB_HOST     || 'localhost',
+  port:     Number(process.env.DB_PORT || 5432),
+  database: process.env.DB_NAME     || 'auditdna',
+  user:     process.env.DB_USER     || 'postgres',
   password: process.env.DB_PASSWORD,
-
-  max: 20,                      // max connections
-  idleTimeoutMillis: 30000,     // close idle clients after 30s
-  connectionTimeoutMillis: 5000 // fail fast if DB unreachable
+  max:      20,
+  idleTimeoutMillis:       30000,
+  connectionTimeoutMillis: 5000,
 });
-
-// ═══════════════════════════════════════════════════════════════
-// Pool Events
-// ═══════════════════════════════════════════════════════════════
 
 pool.on('connect', () => {
   console.log('✅ PostgreSQL pool ready');
@@ -33,17 +35,7 @@ pool.on('connect', () => {
 });
 
 pool.on('error', (err) => {
-  console.error('❌ PostgreSQL pool error');
-  console.error(err);
-  
-  // Don't hard exit in development - just log the error
-  if (process.env.NODE_ENV === 'production') {
-    process.exit(1);
-  }
+  console.error('[DB] Pool error:', err.message);
 });
 
-// ═══════════════════════════════════════════════════════════════
-// Export Pool
-// ═══════════════════════════════════════════════════════════════
-
-module.exports = pool;
+module.exports = { pool };
