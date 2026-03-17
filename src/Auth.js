@@ -134,7 +134,7 @@ router.post('/login', async (req, res) => {
   try {
     // DB auth
     const { rows } = await pool.query(
-      'SELECT * FROM auth_users WHERE is_active = true LIMIT 5'
+      'SELECT * FROM auth_users WHERE is_active = true ORDER BY id'
     );
 
     let matched = null;
