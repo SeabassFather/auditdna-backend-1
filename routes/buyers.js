@@ -36,7 +36,7 @@ router.get('/', async (req, res) => {
       params.push(req.query.status);
     }
 
-    query += ' ORDER BY legal_name LIMIT 10000';
+    const limit = parseInt(req.query.limit) || 10000; const offset = parseInt(req.query.offset) || 0; query += ' ORDER BY legal_name LIMIT ' + limit + ' OFFSET ' + offset;
 
     const result = await db.query(query, params);
     const countResult = await db.query('SELECT COUNT(*) FROM buyers');
