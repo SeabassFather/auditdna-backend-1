@@ -77,6 +77,16 @@ const NODE_ENV = process.env.NODE_ENV || 'development';
 // Attach shared pool to app.locals — accessible via req.app.locals.pool
 app.locals.pool = pool;
 
+// ── BRAIN DATA MESH — wires all APIs into Brain, fires schedules ─────────────
+// Adds: /api/ag-intel/snapshot | /api/brain/live-feed | /api/brain/price-predictions
+//       /api/brain/weather-alerts | /api/brain/grower-scores | /api/brain/status
+try {
+  require('./brain-data-mesh')(app, pool);
+  console.log('[OK] Brain Data Mesh installed — all API feeds live');
+} catch (e) {
+  console.warn('[WARN] Brain Data Mesh failed to load:', e.message);
+}
+
 // ════════════════════════════════════════════════════════════════════════════
 // CORE MIDDLEWARE
 // ════════════════════════════════════════════════════════════════════════════
@@ -254,6 +264,46 @@ app.get('/crm/shippers', async (req, res) => {
       pool.query('SELECT COUNT(*) FROM shipper_contacts'),
     ]);
     res.json({ data: data.rows, total: parseInt(count.rows[0].count), page, limit });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+// ── FULL DUMP ENDPOINTS — no pagination, returns ALL records like pgAdmin ──
+// Used by SaulIntelCRM to load the complete 23K+ contact database in one shot
+app.get('/crm/growers/all', async (req, res) => {
+  try {
+    const result = await pool.query('SELECT * FROM growers ORDER BY id DESC LIMIT 50000');
+    res.json({ data: result.rows, total: result.rows.length });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+app.get('/crm/buyers/all', async (req, res) => {
+  try {
+    const result = await pool.query('SELECT * FROM buyers ORDER BY id DESC LIMIT 50000');
+    res.json({ data: result.rows, total: result.rows.length });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+app.get('/crm/shippers/all', async (req, res) => {
+  try {
+    const result = await pool.query('SELECT * FROM shipper_contacts ORDER BY id DESC LIMIT 50000');
+    res.json({ data: result.rows, total: result.rows.length });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+// ── SINGLE CALL — returns all 3 tables in one PostgreSQL round-trip ──
+app.get('/crm/all-contacts', async (req, res) => {
+  try {
+    const [g, b, s] = await Promise.all([
+      pool.query('SELECT * FROM growers ORDER BY id DESC LIMIT 50000'),
+      pool.query('SELECT * FROM buyers ORDER BY id DESC LIMIT 50000'),
+      pool.query('SELECT * FROM shipper_contacts ORDER BY id DESC LIMIT 50000'),
+    ]);
+    res.json({
+      growers:  g.rows,
+      buyers:   b.rows,
+      shippers: s.rows,
+      total:    g.rows.length + b.rows.length + s.rows.length,
+    });
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
