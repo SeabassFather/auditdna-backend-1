@@ -47,42 +47,44 @@ function clearAttempts(ip) {
 }
 
 // ── GET DB POOL ──────────────────────────────────────────────
-function getPool() {
-  try { return require('../db').pool; } catch { return null; }
+// Pool lives on app.locals.pool (set in server.js) — NOT exported from ../db
+let _sharedPool = null;
+function getPool(req) {
+  if (req && req.app && req.app.locals && req.app.locals.pool) {
+    _sharedPool = req.app.locals.pool;
+  }
+  if (_sharedPool) return _sharedPool;
+  // Last resort: build own pool from env
+  try {
+    const { Pool } = require('pg');
+    _sharedPool = new Pool({
+      host:     process.env.DB_HOST     || 'localhost',
+      port:     parseInt(process.env.DB_PORT || '5432'),
+      database: process.env.DB_NAME     || 'auditdna',
+      user:     process.env.DB_USER     || 'postgres',
+      password: process.env.DB_PASSWORD || 'auditdna2026',
+      ssl:      process.env.DB_SSL === 'true' ? { rejectUnauthorized: false } : false,
+    });
+    return _sharedPool;
+  } catch { return null; }
 }
 
 // ── ENSURE auth_users TABLE EXISTS ───────────────────────────
 async function ensureAuthTable() {
-  const pool = getPool();
+  const pool = getPool(null);
   if (!pool) return;
   try {
-    await pool.query(`
-      CREATE TABLE IF NOT EXISTS auth_users (
-        id SERIAL PRIMARY KEY,
-        username VARCHAR(100) UNIQUE NOT NULL,
-        password_hash VARCHAR(255) NOT NULL,
-        access_code VARCHAR(20) NOT NULL,
-        pin VARCHAR(20) NOT NULL DEFAULT '',
-        display_name VARCHAR(200),
-        role VARCHAR(50) DEFAULT 'owner',
-        is_active BOOLEAN DEFAULT true,
-        last_login TIMESTAMPTZ,
-        login_count INTEGER DEFAULT 0,
-        created_at TIMESTAMPTZ DEFAULT NOW(),
-        updated_at TIMESTAMPTZ DEFAULT NOW()
-      );
-    `);
-
-    // Seed default user if table is empty
-    const { rows } = await pool.query('SELECT COUNT(*) as cnt FROM auth_users');
+    // Table already exists with correct schema — just verify saul user exists
+    const { rows } = await pool.query("SELECT COUNT(*) as cnt FROM auth_users WHERE username = 'saul'");
     if (parseInt(rows[0].cnt) === 0) {
-      const hash = await bcrypt.hash('Dsg060905#321', 12);
+      const passHash = await bcrypt.hash('Dsg060905#321', 12);
       await pool.query(
-        `INSERT INTO auth_users (username, password_hash, access_code, pin, display_name, role)
-         VALUES ($1, $2, $3, $4, $5, $6)`,
-        ['saul', hash, '060905Dsg#321', '0609051974', 'Saul Garcia', 'owner']
+        'INSERT INTO auth_users (username, password_hash, access_code, pin, display_name, role, is_active) VALUES ($1, $2, $3, $4, $5, $6, $7)',
+        ['saul', passHash, '060905Dsg#321', '0609051974', 'Saul Garcia', 'owner', true]
       );
-      console.log('AUTH: Default user "saul" created');
+      console.log('AUTH: Default user saul created');
+    } else {
+      console.log('AUTH: Tables ready (secured v2.0)');
     }
   } catch (err) {
     console.error('AUTH: Table init error:', err.message);
@@ -113,7 +115,7 @@ router.post('/login', async (req, res) => {
     return res.status(400).json({ success: false, error: 'Password, access code, and PIN required' });
   }
 
-  const pool = getPool();
+  const pool = getPool(req);
   if (!pool) {
     // Fallback: env-based auth if DB is down
     const envPass = process.env.AUTH_PASSWORD || 'Dsg060905#321';
@@ -132,16 +134,16 @@ router.post('/login', async (req, res) => {
   }
 
   try {
-    // DB auth
+    // DB auth — matches real table: username, password_hash, access_code, pin, display_name, role, is_active
     const { rows } = await pool.query(
-      'SELECT * FROM auth_users WHERE is_active = true ORDER BY id'
+      "SELECT * FROM auth_users WHERE is_active = true ORDER BY id"
     );
 
     let matched = null;
     for (const user of rows) {
       const passOk = await bcrypt.compare(password, user.password_hash);
-      const codeOk = accessCode === user.access_code;
-      const pinOk = pin === user.pin;
+      const codeOk = (accessCode === user.access_code);
+      const pinOk  = (pin === user.pin);
       if (passOk && codeOk && pinOk) { matched = user; break; }
     }
 
@@ -160,7 +162,7 @@ router.post('/login', async (req, res) => {
 
     // Update login stats
     await pool.query(
-      'UPDATE auth_users SET last_login = NOW(), login_count = login_count + 1 WHERE id = $1',
+      'UPDATE auth_users SET last_login = NOW(), updated_at = NOW() WHERE id = $1',
       [matched.id]
     );
 
@@ -183,8 +185,7 @@ router.post('/login', async (req, res) => {
         username: matched.username,
         displayName: matched.display_name,
         role: matched.role,
-        lastLogin: matched.last_login,
-        loginCount: matched.login_count + 1
+        lastLogin: matched.last_login
       }
     });
 
@@ -239,7 +240,7 @@ router.post('/change-pw', async (req, res) => {
     return res.status(400).json({ success: false, error: 'Current and new password required' });
   }
 
-  const pool = getPool();
+  const pool = getPool(req);
   if (!pool) return res.status(500).json({ success: false, error: 'Database unavailable' });
 
   try {
@@ -251,8 +252,8 @@ router.post('/change-pw', async (req, res) => {
 
     const newHash = await bcrypt.hash(newPassword, 12);
     await pool.query(
-      'UPDATE auth_users SET password_hash = $1, access_code = COALESCE($2, access_code), updated_at = NOW() WHERE id = $3',
-      [newHash, newCode || null, decoded.userId]
+      'UPDATE auth_users SET password_hash = $1, updated_at = NOW() WHERE id = $2',
+      [newHash, decoded.userId]
     );
 
     res.json({ success: true, message: 'Password updated' });

@@ -818,26 +818,12 @@ app.use((req, res) => {
 // ============================================================
 // START SERVER
 // ============================================================
-const PORT = process.env.PORT || 4000;
+
+const PORT = process.env.PORT || 5051;
 
 app.listen(PORT, () => {
-  console.log('');
-  console.log('════════════════════════════════════════════════════════════════');
-  console.log('   🚀 AuditDNA Backend Server v2.2.0');
-  console.log('════════════════════════════════════════════════════════════════');
-  console.log(`   URL: http://localhost:${PORT}`);
-  console.log(`   Contacts Loaded: ${leads.length}`);
-  console.log(`   Price Records: ${usdaPrices.length}`);
-  console.log('');
-  console.log('   📊 API Routes:');
-  console.log('   ├── /api/produce/*        - Produce Intelligence');
-  console.log('   ├── /api/usda-registry/*  - USDA Organic Registry');
-  console.log('   ├── /api/usda-prices/*    - USDA Price Data');
-  console.log('   ├── /api/foodsafety/*     - Food Safety Module');
-  console.log('   ├── /api/zadarma/*        - Zadarma CRM');
-  console.log('   └── /api/calendar/*       - Google Calendar');
-  console.log('════════════════════════════════════════════════════════════════');
-  console.log('');
+  console.log(`[MiniAPI] Running on port ${PORT}`);
+  console.log(`[MiniAPI] URL: http://localhost:${PORT}`);
 });
 
 export default app;
