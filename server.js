@@ -1,7 +1,8 @@
 // ════════════════════════════════════════════════════════════════════════════
-// AUDITDNA BACKEND SERVER v3.3 — ENTERPRISE + AI LEARNING (STABLE)
+// AUDITDNA BACKEND SERVER v3.5 — ENTERPRISE + AI LEARNING (STABLE)
 // Fixes: pool export conflict, LIMIT 50000, session fault isolation,
 //        JWT startup validation, failed route reporting, request timeout
+// Added: /api/onboarding — Phase 1 Lead Capture + Phase 2 KYC
 // Save to: C:\AuditDNA\backend\server.js
 // ════════════════════════════════════════════════════════════════════════════
 
@@ -111,6 +112,10 @@ app.use(cors({
 }));
 
 app.use(morgan(NODE_ENV === 'development' ? 'dev' : 'combined'));
+// ── Stripe webhook — raw body MUST come before express.json() ────────────────
+// This allows the webhook route to verify Stripe signatures correctly.
+app.use('/api/onboarding/payment/webhook', express.raw({ type: 'application/json' }));
+
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 
@@ -215,6 +220,16 @@ try {
   console.error('  [FAIL]  /api/auth —', e.message);
 }
 
+// ── Tenant Auth — login + token verify for provisioned tenants ────────────────
+try {
+  app.use('/api/auth', require('./routes/tenant-auth'));
+  loadedRoutes.push('/api/auth/tenant-login');
+  console.log('  [ROUTE] /api/auth/tenant-login + /api/auth/tenant-verify');
+} catch (e) {
+  failedRoutes.push({ path: '/api/auth/tenant-login', error: e.message });
+  console.error('  [FAIL]  /api/auth/tenant-login —', e.message);
+}
+
 // ── Contacts proxy ────────────────────────────────────────────────────────────
 try {
   app.use('/api/contacts-proxy', require('./Contacts-proxy'));
@@ -222,6 +237,20 @@ try {
   console.log('  [ROUTE] /api/contacts-proxy');
 } catch (e) {
   console.warn('  [SKIP]  /api/contacts-proxy —', e.message);
+}
+
+// ── Tenant Onboarding — Phase 1 Lead Capture + Phase 2 KYC ──────────────────
+// Handles: /api/onboarding/lead | /otp/send | /otp/verify
+//          /kyc/init | /kyc/step1–5 | /kyc/complete | /status/:lead_id
+// NOTE: auto-loader also picks this up from routes/ — explicit mount here
+//       overrides if routes/onboarding.js exists (first-mount wins)
+try {
+  app.use('/api/onboarding', require('./routes/onboarding'));
+  loadedRoutes.push('/api/onboarding');
+  console.log('  [ROUTE] /api/onboarding');
+} catch (e) {
+  failedRoutes.push({ path: '/api/onboarding', error: e.message });
+  console.error('  [FAIL]  /api/onboarding —', e.message);
 }
 
 // ════════════════════════════════════════════════════════════════════════════
@@ -376,7 +405,7 @@ const server = app.listen(PORT, () => {
 
   console.log(`
 ════════════════════════════════════════════════════════
- AUDITDNA BACKEND SERVER v3.3
+ AUDITDNA BACKEND SERVER v3.5
  Port:          ${PORT}
  Env:           ${NODE_ENV}
  PID:           ${process.pid}
