@@ -55,16 +55,23 @@ function getPool(req) {
   }
   if (_sharedPool) return _sharedPool;
   // Last resort: build own pool from env
+  // RAILWAY FIX: use DATABASE_URL if available, always allow SSL
   try {
     const { Pool } = require('pg');
-    _sharedPool = new Pool({
-      host:     process.env.DB_HOST     || 'localhost',
-      port:     parseInt(process.env.DB_PORT || '5432'),
-      database: process.env.DB_NAME     || 'auditdna',
-      user:     process.env.DB_USER     || 'postgres',
-      password: process.env.DB_PASSWORD || 'auditdna2026',
-      ssl:      process.env.DB_SSL === 'true' ? { rejectUnauthorized: false } : false,
-    });
+    const poolConfig = process.env.DATABASE_URL
+      ? {
+          connectionString: process.env.DATABASE_URL,
+          ssl: { rejectUnauthorized: false },
+        }
+      : {
+          host:     process.env.DB_HOST     || 'localhost',
+          port:     parseInt(process.env.DB_PORT || '5432'),
+          database: process.env.DB_NAME     || 'auditdna',
+          user:     process.env.DB_USER     || 'postgres',
+          password: process.env.DB_PASSWORD || 'auditdna2026',
+          ssl:      { rejectUnauthorized: false },
+        };
+    _sharedPool = new Pool(poolConfig);
     return _sharedPool;
   } catch { return null; }
 }
@@ -162,7 +169,7 @@ router.post('/login', async (req, res) => {
 
     // Update login stats
     await pool.query(
-      'UPDATE auth_users SET last_login = NOW() WHERE id = $1',
+      'UPDATE auth_users SET last_login = NOW(), updated_at = NOW() WHERE id = $1',
       [matched.id]
     );
 
@@ -199,15 +206,11 @@ router.post('/login', async (req, res) => {
 // POST /logout
 // ═════════════════════════════════════════════════════════════
 router.post('/logout', (req, res) => {
-  try {
-    if (req.session && req.session.destroy) {
-      req.session.destroy(err => {
-        if (err) console.error('Logout session destroy error:', err);
-      });
-    }
-  } catch (e) { console.warn('Logout session error:', e.message); }
-  res.clearCookie('auditdna.sid');
-  res.json({ success: true });
+  req.session.destroy(err => {
+    if (err) console.error('Logout session destroy error:', err);
+    res.clearCookie('auditdna.sid');
+    res.json({ success: true });
+  });
 });
 
 // ═════════════════════════════════════════════════════════════
