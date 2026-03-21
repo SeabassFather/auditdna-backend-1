@@ -162,20 +162,14 @@ router.post('/login', async (req, res) => {
 
     // Update login stats
     await pool.query(
-      'UPDATE auth_users SET last_login = NOW(), updated_at = NOW() WHERE id = $1',
+      'UPDATE auth_users SET last_login = NOW() WHERE id = $1',
       [matched.id]
     );
 
-    // Store in session — wrapped so Railway pg-session failures don't kill login
-    try {
-      if (req.session) {
-        req.session.userId   = matched.id;
-        req.session.username = matched.username;
-        req.session.role     = matched.role;
-      }
-    } catch (sessErr) {
-      console.warn('AUTH: Session store unavailable — JWT only:', sessErr.message);
-    }
+    // Store in session
+    req.session.userId = matched.id;
+    req.session.username = matched.username;
+    req.session.role = matched.role;
 
     // Generate JWT
     const token = jwt.sign(
@@ -205,11 +199,15 @@ router.post('/login', async (req, res) => {
 // POST /logout
 // ═════════════════════════════════════════════════════════════
 router.post('/logout', (req, res) => {
-  req.session.destroy(err => {
-    if (err) console.error('Logout session destroy error:', err);
-    res.clearCookie('auditdna.sid');
-    res.json({ success: true });
-  });
+  try {
+    if (req.session && req.session.destroy) {
+      req.session.destroy(err => {
+        if (err) console.error('Logout session destroy error:', err);
+      });
+    }
+  } catch (e) { console.warn('Logout session error:', e.message); }
+  res.clearCookie('auditdna.sid');
+  res.json({ success: true });
 });
 
 // ═════════════════════════════════════════════════════════════
