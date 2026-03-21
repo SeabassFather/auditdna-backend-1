@@ -166,10 +166,16 @@ router.post('/login', async (req, res) => {
       [matched.id]
     );
 
-    // Store in session
-    req.session.userId = matched.id;
-    req.session.username = matched.username;
-    req.session.role = matched.role;
+    // Store in session — wrapped so Railway pg-session failures don't kill login
+    try {
+      if (req.session) {
+        req.session.userId   = matched.id;
+        req.session.username = matched.username;
+        req.session.role     = matched.role;
+      }
+    } catch (sessErr) {
+      console.warn('AUTH: Session store unavailable — JWT only:', sessErr.message);
+    }
 
     // Generate JWT
     const token = jwt.sign(
