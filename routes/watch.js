@@ -6,7 +6,7 @@
 
 const express = require('express');
 const router  = express.Router();
-const notify  = require('C:/AuditDNA/backend/services/watch-notify');
+const notify  = require('../services/watch-notify');
 
 // ── GET /api/watch/config ────────────────────────────────────
 // Returns ntfy channel so frontend can show subscription QR
