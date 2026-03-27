@@ -1,8 +1,8 @@
 // ════════════════════════════════════════════════════════════════════════════
-// GROWER PIPELINE ROUTES v1.0
-// Save to: C:\AuditDNA\backend\routes\growers.js
-// Auto-mounts at: /api/growers (via server.js auto-loader)
-// Pool:    req.app.locals.pool
+// GROWER PIPELINE ROUTES v1.1 — DEDICATED POOL
+// Save to: C:\AuditDNA\backend\routes\grower-pipeline.js
+// Auto-mounts at: /api/grower-pipeline (via server.js auto-loader)
+// Pool:    DEDICATED pool (not shared with 106 other routes)
 // Auth:    bcrypt12 passwords + PINs, JWT tokens
 // Upload:  multer -> C:\AuditDNA\uploads\growers\{grower_id}\
 // ════════════════════════════════════════════════════════════════════════════
@@ -15,9 +15,29 @@ const multer  = require('multer');
 const path    = require('path');
 const fs      = require('fs');
 const crypto  = require('crypto');
+const { Pool } = require('pg');
+require('dotenv').config({ path: path.join(__dirname, '..', '.env') });
 
 const SALT_ROUNDS = 12;
 const JWT_SECRET  = process.env.JWT_SECRET || 'auditdna-grower-jwt-dev';
+
+// ════════════════════════════════════════════════════════════════════════════
+// DEDICATED POOL — isolated from main server pool (fixes timeout under load)
+// ════════════════════════════════════════════════════════════════════════════
+const growerPool = new Pool({
+  host:     process.env.DB_HOST     || 'localhost',
+  port:     Number(process.env.DB_PORT || 5432),
+  database: process.env.DB_NAME     || 'auditdna',
+  user:     process.env.DB_USER     || 'postgres',
+  password: process.env.DB_PASSWORD,
+  max:      5,
+  idleTimeoutMillis:    30000,
+  connectionTimeoutMillis: 8000,
+});
+growerPool.on('error', err => console.error('[GROWER-POOL] Error:', err.message));
+
+// Helper: get pool (dedicated pool, falls back to shared if needed)
+const getPool = (req) => growerPool || req.app.locals.pool;
 
 // ════════════════════════════════════════════════════════════════════════════
 // MULTER — file upload to C:\AuditDNA\uploads\growers\{grower_id}\
@@ -106,7 +126,7 @@ function adminRequired(req, res, next) {
 // ════════════════════════════════════════════════════════════════════════════
 
 router.post('/register', async (req, res) => {
-  const pool = req.app.locals.pool;
+  const pool = getPool(req);
   const {
     first_name, last_name, email, phone, company_name,
     city, state_region, country,
@@ -195,7 +215,7 @@ router.post('/register', async (req, res) => {
 // ════════════════════════════════════════════════════════════════════════════
 
 router.post('/login', async (req, res) => {
-  const pool = req.app.locals.pool;
+  const pool = getPool(req);
   const { email, password } = req.body;
 
   if (!email || !password) {
@@ -242,7 +262,7 @@ router.post('/login', async (req, res) => {
 // ════════════════════════════════════════════════════════════════════════════
 
 router.post('/verify-pin', authRequired, async (req, res) => {
-  const pool = req.app.locals.pool;
+  const pool = getPool(req);
   const { pin } = req.body;
 
   try {
@@ -261,7 +281,7 @@ router.post('/verify-pin', authRequired, async (req, res) => {
 // ════════════════════════════════════════════════════════════════════════════
 
 router.get('/profile/:id', authRequired, async (req, res) => {
-  const pool = req.app.locals.pool;
+  const pool = getPool(req);
   const id   = parseInt(req.params.id);
 
   // Growers can only see their own profile unless admin
@@ -295,7 +315,7 @@ router.get('/profile/:id', authRequired, async (req, res) => {
 // ════════════════════════════════════════════════════════════════════════════
 
 router.patch('/profile/:id', authRequired, async (req, res) => {
-  const pool = req.app.locals.pool;
+  const pool = getPool(req);
   const id   = parseInt(req.params.id);
 
   if (req.grower.id !== id && !['admin', 'owner'].includes(req.grower.role)) {
@@ -357,7 +377,7 @@ router.patch('/profile/:id', authRequired, async (req, res) => {
 // ════════════════════════════════════════════════════════════════════════════
 
 router.get('/', async (req, res) => {
-  const pool = req.app.locals.pool;
+  const pool = getPool(req);
   const { compliance, risk_tier, country, search, limit: lim, page: pg } = req.query;
 
   const page  = Math.max(1, parseInt(pg || '1'));
@@ -402,7 +422,7 @@ router.get('/', async (req, res) => {
 // ════════════════════════════════════════════════════════════════════════════
 
 router.get('/stats/summary', async (req, res) => {
-  const pool = req.app.locals.pool;
+  const pool = getPool(req);
   try {
     const result = await pool.query(`
       SELECT
@@ -430,7 +450,7 @@ router.get('/stats/summary', async (req, res) => {
 // ════════════════════════════════════════════════════════════════════════════
 
 router.post('/:grower_id/documents', upload.single('file'), async (req, res) => {
-  const pool      = req.app.locals.pool;
+  const pool = getPool(req);
   const grower_id = parseInt(req.params.grower_id);
   const { doc_type, notes } = req.body;
 
@@ -488,7 +508,7 @@ router.post('/:grower_id/documents', upload.single('file'), async (req, res) => 
 // ════════════════════════════════════════════════════════════════════════════
 
 router.get('/:grower_id/documents', async (req, res) => {
-  const pool = req.app.locals.pool;
+  const pool = getPool(req);
   try {
     const result = await pool.query(
       'SELECT * FROM grower_documents WHERE grower_id = $1 ORDER BY created_at DESC',
@@ -506,7 +526,7 @@ router.get('/:grower_id/documents', async (req, res) => {
 // ════════════════════════════════════════════════════════════════════════════
 
 router.patch('/documents/:doc_id/review', async (req, res) => {
-  const pool   = req.app.locals.pool;
+  const pool = getPool(req);
   const doc_id = parseInt(req.params.doc_id);
   const { status, reviewed_by, notes } = req.body;
 
@@ -548,7 +568,7 @@ router.patch('/documents/:doc_id/review', async (req, res) => {
 // ════════════════════════════════════════════════════════════════════════════
 
 router.post('/:grower_id/financials', async (req, res) => {
-  const pool      = req.app.locals.pool;
+  const pool = getPool(req);
   const grower_id = parseInt(req.params.grower_id);
   const {
     type, reference_number, amount, currency, status,
@@ -588,7 +608,7 @@ router.post('/:grower_id/financials', async (req, res) => {
 // ════════════════════════════════════════════════════════════════════════════
 
 router.get('/:grower_id/financials', async (req, res) => {
-  const pool = req.app.locals.pool;
+  const pool = getPool(req);
   const { type, status } = req.query;
 
   let where  = ['grower_id = $1'];
@@ -614,7 +634,7 @@ router.get('/:grower_id/financials', async (req, res) => {
 // ════════════════════════════════════════════════════════════════════════════
 
 router.get('/:grower_id/compliance', async (req, res) => {
-  const pool = req.app.locals.pool;
+  const pool = getPool(req);
   const id   = parseInt(req.params.grower_id);
 
   try {
@@ -664,7 +684,7 @@ router.get('/:grower_id/compliance', async (req, res) => {
 // ════════════════════════════════════════════════════════════════════════════
 
 router.post('/:grower_id/reset-password', async (req, res) => {
-  const pool = req.app.locals.pool;
+  const pool = getPool(req);
   const id   = parseInt(req.params.grower_id);
 
   try {
@@ -696,3 +716,6 @@ router.post('/:grower_id/reset-password', async (req, res) => {
 });
 
 module.exports = router;
+
+// Cleanup dedicated pool on process exit
+process.on('exit', () => growerPool.end().catch(() => {}));
