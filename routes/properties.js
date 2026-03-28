@@ -22,7 +22,7 @@
 
 const express = require('express');
 const crypto  = require('crypto');
-const notify  = require('./notifications');
+const notify  = require('./notifications.helper');
 const router  = express.Router();
 const { pool } = require('../db');
 

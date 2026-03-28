@@ -68,3 +68,20 @@ const notifications = {
 };
 
 module.exports = notifications;
+async function sendNotification(to, subject, html) {
+  if (!transporter) return;
+  try {
+    await transporter.sendMail({
+      from: process.env.SMTP_FROM || 'saul@mexausafg.com',
+      to, subject, html
+    });
+  } catch(e) {
+    console.warn('[NOTIFICATIONS] sendMail failed:', e.message);
+  }
+}
+
+const express = require('express');
+const _router = express.Router();
+module.exports = _router;
+module.exports.sendNotification = sendNotification;
+module.exports.transporter = transporter;

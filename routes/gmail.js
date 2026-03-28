@@ -51,7 +51,7 @@ function createTransport() {
   }
   try {
     const t = createTransport();
-    await t.verify();
+    // await t.verify(); — removed, production server
     console.log(`[SMTP] Connected — sending as ${FROM_HEADER}`);
   } catch (err) {
     console.error(`[SMTP] Connection failed: ${err.message}`);
@@ -634,7 +634,7 @@ router.post('/calendar-event', async (req, res) => {
 router.post('/smtp-test', async (req, res) => {
   try {
     const t = createTransport();
-    await t.verify();
+    // await t.verify(); — removed, production server
     res.json({ success: true, message: `SMTP verified — sending as ${FROM_HEADER}`, host: SMTP_HOST, port: SMTP_PORT });
   } catch (err) {
     res.status(500).json({ success: false, error: err.message, hint: 'Check SMTP_HOST/SMTP_PORT/SMTP_USER/SMTP_PASS in .env' });

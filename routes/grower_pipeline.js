@@ -1,10 +1,30 @@
 // ════════════════════════════════════════════════════════════════════════════
-// GROWER PIPELINE ROUTES v1.0
-// Save to: C:\AuditDNA\backend\routes\growers.js
-// Auto-mounts at: /api/growers (via server.js auto-loader)
+// GROWER PIPELINE ROUTES v2.0 — MERGED
+// Save to: C:\AuditDNA\backend\routes\grower-pipeline.js
+// Auto-mounts at: /api/grower-pipeline (via server.js auto-loader)
 // Pool:    req.app.locals.pool
 // Auth:    bcrypt12 passwords + PINs, JWT tokens
 // Upload:  multer -> C:\AuditDNA\uploads\growers\{grower_id}\
+//
+// Endpoints:
+//   POST   /register              — register grower, auto-gen credentials
+//   POST   /login                 — grower login, returns JWT
+//   POST   /verify-pin            — verify PIN (auth required)
+//   GET    /                      — list all grower profiles (paginated)
+//   GET    /profile/:id           — full grower profile + docs + financials
+//   PATCH  /profile/:id           — update profile (field whitelist)
+//   POST   /:grower_id/documents  — upload document (multer)
+//   GET    /:grower_id/documents  — list documents
+//   PATCH  /documents/:doc_id/review — approve/reject doc (admin)
+//   POST   /:grower_id/financials — create financial record
+//   GET    /:grower_id/financials — list financials
+//   GET    /:grower_id/financial-summary — aggregated financial summary
+//   GET    /:grower_id/compliance — compliance checklist + missing docs
+//   POST   /:grower_id/reset-password — admin reset credentials
+//   GET    /stats/summary         — dashboard totals
+//   POST   /:grower_id/harvests   — create harvest record
+//   GET    /:grower_id/harvests   — list harvests
+//   GET    /search/query          — search/filter growers (UnifiedSourcing)
 // ════════════════════════════════════════════════════════════════════════════
 
 const express = require('express');
@@ -41,7 +61,7 @@ const storage = multer.diskStorage({
 
 const upload = multer({
   storage,
-  limits: { fileSize: 25 * 1024 * 1024 }, // 25 MB
+  limits: { fileSize: 25 * 1024 * 1024 },
   fileFilter: (_req, file, cb) => {
     const allowed = /jpeg|jpg|png|gif|pdf|doc|docx|xls|xlsx|csv/;
     const ext  = allowed.test(path.extname(file.originalname).toLowerCase());
@@ -54,7 +74,6 @@ const upload = multer({
 // HELPERS
 // ════════════════════════════════════════════════════════════════════════════
 
-// Generate a random alphanumeric password
 function generatePassword(len = 12) {
   const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789';
   let pw = '';
@@ -63,12 +82,10 @@ function generatePassword(len = 12) {
   return pw;
 }
 
-// Generate a 4-digit PIN
 function generatePIN() {
   return String(crypto.randomInt(1000, 9999));
 }
 
-// JWT auth middleware
 function authRequired(req, res, next) {
   const header = req.headers.authorization;
   if (!header) return res.status(401).json({ error: 'No token provided' });
@@ -81,9 +98,7 @@ function authRequired(req, res, next) {
   }
 }
 
-// Admin-only middleware — checks mfg_token from session/header
 function adminRequired(req, res, next) {
-  // Accept if grower token has role=admin/owner, OR if mfg_token present
   if (req.grower && ['admin', 'owner'].includes(req.grower.role)) return next();
   const mfgToken = req.headers['x-mfg-token']
     || req.headers.authorization?.replace('Bearer ', '');
@@ -100,9 +115,7 @@ function adminRequired(req, res, next) {
 }
 
 // ════════════════════════════════════════════════════════════════════════════
-// 1. REGISTRATION — POST /api/growers/register
-//    Called from ContactIntelHub GROWER INTAKE form
-//    Auto-generates password + PIN, returns credentials once
+// 1. REGISTRATION — POST /register
 // ════════════════════════════════════════════════════════════════════════════
 
 router.post('/register', async (req, res) => {
@@ -119,13 +132,11 @@ router.post('/register', async (req, res) => {
   }
 
   try {
-    // Check for duplicate email
     const exists = await pool.query('SELECT id FROM grower_profiles WHERE email = $1', [email.toLowerCase()]);
     if (exists.rows.length > 0) {
       return res.status(409).json({ error: 'Email already registered', grower_id: exists.rows[0].id });
     }
 
-    // Generate credentials
     const plainPassword = generatePassword(12);
     const plainPIN      = generatePIN();
     const password_hash = await bcrypt.hash(plainPassword, SALT_ROUNDS);
@@ -150,22 +161,17 @@ router.post('/register', async (req, res) => {
 
     const grower = result.rows[0];
 
-    // Fire Brain event
+    // Brain event (non-blocking)
     try {
-      const brainPayload = {
-        type: 'GROWER_REGISTERED_DB',
-        grower_id: grower.id,
-        name: `${first_name} ${last_name || ''}`.trim(),
-        email: email.toLowerCase(),
-        commodities,
-        company: company_name,
-        timestamp: new Date().toISOString(),
-      };
-      // Non-blocking brain event
       pool.query(
         `INSERT INTO brain_events (event_type, payload, created_at) VALUES ($1, $2, NOW())`,
-        ['GROWER_REGISTERED_DB', JSON.stringify(brainPayload)]
-      ).catch(() => { /* brain_events table may not exist yet — silent */ });
+        ['GROWER_REGISTERED_DB', JSON.stringify({
+          type: 'GROWER_REGISTERED_DB', grower_id: grower.id,
+          name: `${first_name} ${last_name || ''}`.trim(),
+          email: email.toLowerCase(), commodities, company: company_name,
+          timestamp: new Date().toISOString(),
+        })]
+      ).catch(() => {});
     } catch { /* non-critical */ }
 
     res.status(201).json({
@@ -175,15 +181,14 @@ router.post('/register', async (req, res) => {
         email:    email.toLowerCase(),
         password: plainPassword,
         pin:      plainPIN,
-        note:     'SAVE THESE CREDENTIALS — password and PIN cannot be recovered after this response.',
+        note:     'SAVE THESE CREDENTIALS -- password and PIN cannot be recovered after this response.',
       },
       next_steps: [
-        'Upload ID photo and corporate documents at /api/growers/{id}/documents',
+        'Upload ID photo and corporate documents at /:id/documents',
         'Submit for compliance review',
         'Monitor status at grower portal',
       ],
     });
-
   } catch (e) {
     console.error('[GROWER REGISTER ERROR]', e.message);
     res.status(500).json({ error: e.message });
@@ -191,7 +196,7 @@ router.post('/register', async (req, res) => {
 });
 
 // ════════════════════════════════════════════════════════════════════════════
-// 2. LOGIN — POST /api/growers/login
+// 2. LOGIN — POST /login
 // ════════════════════════════════════════════════════════════════════════════
 
 router.post('/login', async (req, res) => {
@@ -207,18 +212,14 @@ router.post('/login', async (req, res) => {
       'SELECT * FROM grower_profiles WHERE email = $1 AND status = $2',
       [email.toLowerCase(), 'active']
     );
-
     if (result.rows.length === 0) {
       return res.status(401).json({ error: 'Invalid credentials' });
     }
 
     const grower = result.rows[0];
     const valid  = await bcrypt.compare(password, grower.password_hash);
-    if (!valid) {
-      return res.status(401).json({ error: 'Invalid credentials' });
-    }
+    if (!valid) return res.status(401).json({ error: 'Invalid credentials' });
 
-    // Update last_login
     await pool.query('UPDATE grower_profiles SET last_login = NOW() WHERE id = $1', [grower.id]);
 
     const token = jwt.sign(
@@ -227,9 +228,7 @@ router.post('/login', async (req, res) => {
       { expiresIn: '8h' }
     );
 
-    // Strip sensitive fields
     const { password_hash, pin_hash, ...safe } = grower;
-
     res.json({ success: true, token, grower: safe });
   } catch (e) {
     console.error('[GROWER LOGIN ERROR]', e.message);
@@ -238,17 +237,15 @@ router.post('/login', async (req, res) => {
 });
 
 // ════════════════════════════════════════════════════════════════════════════
-// 3. PIN VERIFY — POST /api/growers/verify-pin
+// 3. PIN VERIFY — POST /verify-pin
 // ════════════════════════════════════════════════════════════════════════════
 
 router.post('/verify-pin', authRequired, async (req, res) => {
   const pool = req.app.locals.pool;
   const { pin } = req.body;
-
   try {
     const result = await pool.query('SELECT pin_hash FROM grower_profiles WHERE id = $1', [req.grower.id]);
     if (result.rows.length === 0) return res.status(404).json({ error: 'Grower not found' });
-
     const valid = await bcrypt.compare(String(pin), result.rows[0].pin_hash);
     res.json({ valid });
   } catch (e) {
@@ -257,41 +254,37 @@ router.post('/verify-pin', authRequired, async (req, res) => {
 });
 
 // ════════════════════════════════════════════════════════════════════════════
-// 4. PROFILE — GET /api/growers/profile/:id
+// 4. PROFILE — GET /profile/:id
 // ════════════════════════════════════════════════════════════════════════════
 
 router.get('/profile/:id', authRequired, async (req, res) => {
   const pool = req.app.locals.pool;
   const id   = parseInt(req.params.id);
 
-  // Growers can only see their own profile unless admin
   if (req.grower.id !== id && !['admin', 'owner'].includes(req.grower.role)) {
     return res.status(403).json({ error: 'Access denied' });
   }
 
   try {
-    const result = await pool.query(
-      'SELECT * FROM grower_profiles WHERE id = $1',
-      [id]
-    );
+    const result = await pool.query('SELECT * FROM grower_profiles WHERE id = $1', [id]);
     if (result.rows.length === 0) return res.status(404).json({ error: 'Grower not found' });
 
     const { password_hash, pin_hash, ...grower } = result.rows[0];
 
-    // Also fetch docs + financials
-    const [docs, fins] = await Promise.all([
+    const [docs, fins, harvests] = await Promise.all([
       pool.query('SELECT * FROM grower_documents WHERE grower_id = $1 ORDER BY created_at DESC', [id]),
       pool.query('SELECT * FROM grower_financials WHERE grower_id = $1 ORDER BY created_at DESC', [id]),
+      pool.query('SELECT * FROM grower_harvests WHERE grower_id = $1 ORDER BY harvest_start DESC', [id]),
     ]);
 
-    res.json({ grower, documents: docs.rows, financials: fins.rows });
+    res.json({ grower, documents: docs.rows, financials: fins.rows, harvests: harvests.rows });
   } catch (e) {
     res.status(500).json({ error: e.message });
   }
 });
 
 // ════════════════════════════════════════════════════════════════════════════
-// 5. UPDATE PROFILE — PATCH /api/growers/profile/:id
+// 5. UPDATE PROFILE — PATCH /profile/:id
 // ════════════════════════════════════════════════════════════════════════════
 
 router.patch('/profile/:id', authRequired, async (req, res) => {
@@ -302,15 +295,12 @@ router.patch('/profile/:id', authRequired, async (req, res) => {
     return res.status(403).json({ error: 'Access denied' });
   }
 
-  // Whitelist updatable fields
   const allowed = [
     'first_name', 'last_name', 'phone', 'company_name',
     'city', 'state_region', 'country',
     'commodities', 'quantities', 'packaging', 'certifications',
     'harvest_start', 'harvest_end',
   ];
-
-  // Admin-only fields
   const adminFields = [
     'compliance_status', 'grs_score', 'risk_tier',
     'id_verified', 'docs_complete', 'status', 'role',
@@ -331,10 +321,7 @@ router.patch('/profile/:id', authRequired, async (req, res) => {
     }
   }
 
-  if (updates.length === 0) {
-    return res.status(400).json({ error: 'No valid fields to update' });
-  }
-
+  if (updates.length === 0) return res.status(400).json({ error: 'No valid fields to update' });
   values.push(id);
 
   try {
@@ -343,7 +330,6 @@ router.patch('/profile/:id', authRequired, async (req, res) => {
       values
     );
     if (result.rows.length === 0) return res.status(404).json({ error: 'Grower not found' });
-
     const { password_hash, pin_hash, ...grower } = result.rows[0];
     res.json({ success: true, grower });
   } catch (e) {
@@ -352,8 +338,7 @@ router.patch('/profile/:id', authRequired, async (req, res) => {
 });
 
 // ════════════════════════════════════════════════════════════════════════════
-// 6. LIST ALL GROWER PROFILES — GET /api/growers/
-//    Admin / staff only
+// 6. LIST ALL — GET /
 // ════════════════════════════════════════════════════════════════════════════
 
 router.get('/', async (req, res) => {
@@ -397,7 +382,7 @@ router.get('/', async (req, res) => {
 });
 
 // ════════════════════════════════════════════════════════════════════════════
-// 7. DOCUMENT UPLOAD — POST /api/growers/:grower_id/documents
+// 7. DOCUMENT UPLOAD — POST /:grower_id/documents
 // ════════════════════════════════════════════════════════════════════════════
 
 router.post('/:grower_id/documents', upload.single('file'), async (req, res) => {
@@ -409,7 +394,6 @@ router.post('/:grower_id/documents', upload.single('file'), async (req, res) => 
   if (!doc_type)  return res.status(400).json({ error: 'doc_type is required' });
 
   try {
-    // Verify grower exists
     const gCheck = await pool.query('SELECT id FROM grower_profiles WHERE id = $1', [grower_id]);
     if (gCheck.rows.length === 0) return res.status(404).json({ error: 'Grower not found' });
 
@@ -417,26 +401,13 @@ router.post('/:grower_id/documents', upload.single('file'), async (req, res) => 
       INSERT INTO grower_documents (grower_id, doc_type, file_name, file_path, file_size, mime_type, notes)
       VALUES ($1, $2, $3, $4, $5, $6, $7)
       RETURNING *
-    `, [
-      grower_id,
-      doc_type,
-      req.file.originalname,
-      req.file.path,
-      req.file.size,
-      req.file.mimetype,
-      notes || null,
-    ]);
+    `, [grower_id, doc_type, req.file.originalname, req.file.path, req.file.size, req.file.mimetype, notes || null]);
 
-    // Auto-update id_verified if doc_type is id_photo
     if (doc_type === 'id_photo') {
       await pool.query('UPDATE grower_profiles SET id_verified = TRUE WHERE id = $1', [grower_id]);
     }
 
-    // Check if all required doc types are present
-    const allDocs = await pool.query(
-      'SELECT DISTINCT doc_type FROM grower_documents WHERE grower_id = $1',
-      [grower_id]
-    );
+    const allDocs = await pool.query('SELECT DISTINCT doc_type FROM grower_documents WHERE grower_id = $1', [grower_id]);
     const docTypes = allDocs.rows.map(r => r.doc_type);
     const required = ['id_photo', 'corporate_id', 'phytosanitary'];
     const complete = required.every(t => docTypes.includes(t));
@@ -455,7 +426,7 @@ router.post('/:grower_id/documents', upload.single('file'), async (req, res) => 
 });
 
 // ════════════════════════════════════════════════════════════════════════════
-// 8. LIST DOCUMENTS — GET /api/growers/:grower_id/documents
+// 8. LIST DOCUMENTS — GET /:grower_id/documents
 // ════════════════════════════════════════════════════════════════════════════
 
 router.get('/:grower_id/documents', async (req, res) => {
@@ -472,8 +443,7 @@ router.get('/:grower_id/documents', async (req, res) => {
 });
 
 // ════════════════════════════════════════════════════════════════════════════
-// 9. REVIEW DOCUMENT — PATCH /api/growers/documents/:doc_id/review
-//    Admin-only: approve or reject a document
+// 9. REVIEW DOCUMENT — PATCH /documents/:doc_id/review (admin)
 // ════════════════════════════════════════════════════════════════════════════
 
 router.patch('/documents/:doc_id/review', async (req, res) => {
@@ -495,7 +465,6 @@ router.patch('/documents/:doc_id/review', async (req, res) => {
 
     if (result.rows.length === 0) return res.status(404).json({ error: 'Document not found' });
 
-    // If all docs approved for this grower, auto-advance compliance
     const grower_id = result.rows[0].grower_id;
     const pending = await pool.query(
       `SELECT COUNT(*) FROM grower_documents WHERE grower_id = $1 AND status != 'approved'`,
@@ -515,7 +484,7 @@ router.patch('/documents/:doc_id/review', async (req, res) => {
 });
 
 // ════════════════════════════════════════════════════════════════════════════
-// 10. CREATE FINANCIAL RECORD — POST /api/growers/:grower_id/financials
+// 10. CREATE FINANCIAL — POST /:grower_id/financials
 // ════════════════════════════════════════════════════════════════════════════
 
 router.post('/:grower_id/financials', async (req, res) => {
@@ -555,7 +524,7 @@ router.post('/:grower_id/financials', async (req, res) => {
 });
 
 // ════════════════════════════════════════════════════════════════════════════
-// 11. LIST FINANCIALS — GET /api/growers/:grower_id/financials
+// 11. LIST FINANCIALS — GET /:grower_id/financials
 // ════════════════════════════════════════════════════════════════════════════
 
 router.get('/:grower_id/financials', async (req, res) => {
@@ -581,7 +550,31 @@ router.get('/:grower_id/financials', async (req, res) => {
 });
 
 // ════════════════════════════════════════════════════════════════════════════
-// 12. COMPLIANCE SUMMARY — GET /api/growers/:grower_id/compliance
+// 12. FINANCIAL SUMMARY — GET /:grower_id/financial-summary   [MERGED]
+// ════════════════════════════════════════════════════════════════════════════
+
+router.get('/:grower_id/financial-summary', async (req, res) => {
+  const pool = req.app.locals.pool;
+  try {
+    const result = await pool.query(`
+      SELECT
+        COUNT(*)::int AS total_transactions,
+        COALESCE(SUM(CASE WHEN type='purchase_order' THEN amount ELSE 0 END), 0) AS total_po,
+        COALESCE(SUM(CASE WHEN type='invoice' THEN amount ELSE 0 END), 0) AS total_invoiced,
+        COALESCE(SUM(CASE WHEN type='factoring_agreement' THEN amount ELSE 0 END), 0) AS total_factored,
+        COALESCE(SUM(CASE WHEN type='payment' THEN amount ELSE 0 END), 0) AS total_paid,
+        COALESCE(SUM(CASE WHEN status='overdue' THEN amount ELSE 0 END), 0) AS total_overdue,
+        COALESCE(SUM(CASE WHEN status='draft' OR status='pending' THEN amount ELSE 0 END), 0) AS total_pending
+      FROM grower_financials WHERE grower_id = $1
+    `, [parseInt(req.params.grower_id)]);
+    res.json(result.rows[0]);
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// ════════════════════════════════════════════════════════════════════════════
+// 13. COMPLIANCE — GET /:grower_id/compliance
 // ════════════════════════════════════════════════════════════════════════════
 
 router.get('/:grower_id/compliance', async (req, res) => {
@@ -630,8 +623,7 @@ router.get('/:grower_id/compliance', async (req, res) => {
 });
 
 // ════════════════════════════════════════════════════════════════════════════
-// 13. RESET PASSWORD — POST /api/growers/:grower_id/reset-password
-//     Admin-only: generates new password + PIN
+// 14. RESET PASSWORD — POST /:grower_id/reset-password (admin)
 // ════════════════════════════════════════════════════════════════════════════
 
 router.post('/:grower_id/reset-password', async (req, res) => {
@@ -658,7 +650,7 @@ router.post('/:grower_id/reset-password', async (req, res) => {
         email:    gCheck.rows[0].email,
         password: plainPassword,
         pin:      plainPIN,
-        note:     'SAVE THESE CREDENTIALS — cannot be recovered after this response.',
+        note:     'SAVE THESE CREDENTIALS -- cannot be recovered after this response.',
       },
     });
   } catch (e) {
@@ -667,7 +659,7 @@ router.post('/:grower_id/reset-password', async (req, res) => {
 });
 
 // ════════════════════════════════════════════════════════════════════════════
-// 14. DASHBOARD STATS — GET /api/growers/stats/summary
+// 15. STATS SUMMARY — GET /stats/summary
 // ════════════════════════════════════════════════════════════════════════════
 
 router.get('/stats/summary', async (req, res) => {
@@ -675,16 +667,16 @@ router.get('/stats/summary', async (req, res) => {
   try {
     const [total, byStatus, byTier, byCountry, recentDocs] = await Promise.all([
       pool.query('SELECT COUNT(*) FROM grower_profiles'),
-      pool.query('SELECT compliance_status, COUNT(*) FROM grower_profiles GROUP BY compliance_status'),
-      pool.query('SELECT risk_tier, COUNT(*) FROM grower_profiles GROUP BY risk_tier'),
-      pool.query('SELECT country, COUNT(*) FROM grower_profiles GROUP BY country ORDER BY count DESC LIMIT 10'),
-      pool.query('SELECT COUNT(*) FROM grower_documents WHERE status = $1', ['uploaded']),
+      pool.query('SELECT compliance_status, COUNT(*)::int FROM grower_profiles GROUP BY compliance_status'),
+      pool.query('SELECT risk_tier, COUNT(*)::int FROM grower_profiles GROUP BY risk_tier'),
+      pool.query('SELECT country, COUNT(*)::int FROM grower_profiles GROUP BY country ORDER BY count DESC LIMIT 10'),
+      pool.query(`SELECT COUNT(*) FROM grower_documents WHERE status = 'uploaded'`),
     ]);
 
     res.json({
       total_growers:  parseInt(total.rows[0].count),
-      by_status:      byStatus.rows.reduce((o, r) => ({ ...o, [r.compliance_status]: parseInt(r.count) }), {}),
-      by_tier:        byTier.rows.reduce((o, r) => ({ ...o, [r.risk_tier]: parseInt(r.count) }), {}),
+      by_status:      byStatus.rows.reduce((o, r) => ({ ...o, [r.compliance_status]: r.count }), {}),
+      by_tier:        byTier.rows.reduce((o, r) => ({ ...o, [r.risk_tier]: r.count }), {}),
       by_country:     byCountry.rows,
       pending_docs:   parseInt(recentDocs.rows[0].count),
     });
@@ -692,5 +684,94 @@ router.get('/stats/summary', async (req, res) => {
     res.status(500).json({ error: e.message });
   }
 });
+
+// ════════════════════════════════════════════════════════════════════════════
+// 16. HARVESTS — POST /:grower_id/harvests                     [MERGED]
+// ════════════════════════════════════════════════════════════════════════════
+
+router.post('/:grower_id/harvests', async (req, res) => {
+  const pool = req.app.locals.pool;
+  const grower_id = parseInt(req.params.grower_id);
+  const {
+    commodity, acreage_planted, expected_yield,
+    harvest_start, harvest_end, loads_estimated,
+    quality_grade, notes, season_year
+  } = req.body;
+
+  if (!commodity) return res.status(400).json({ error: 'commodity is required' });
+
+  try {
+    const gCheck = await pool.query('SELECT id FROM grower_profiles WHERE id = $1', [grower_id]);
+    if (gCheck.rows.length === 0) return res.status(404).json({ error: 'Grower not found' });
+
+    const result = await pool.query(`
+      INSERT INTO grower_harvests (
+        grower_id, commodity, acreage_planted, expected_yield,
+        harvest_start, harvest_end, loads_estimated,
+        quality_grade, notes, season_year
+      ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)
+      RETURNING *
+    `, [
+      grower_id, commodity, acreage_planted || null, expected_yield || null,
+      harvest_start || null, harvest_end || null, loads_estimated || null,
+      quality_grade || null, notes || null, season_year || new Date().getFullYear()
+    ]);
+
+    res.status(201).json({ success: true, harvest: result.rows[0] });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// GET /:grower_id/harvests
+router.get('/:grower_id/harvests', async (req, res) => {
+  const pool = req.app.locals.pool;
+  try {
+    const result = await pool.query(
+      'SELECT * FROM grower_harvests WHERE grower_id = $1 ORDER BY harvest_start DESC',
+      [parseInt(req.params.grower_id)]
+    );
+    res.json({ harvests: result.rows });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// ════════════════════════════════════════════════════════════════════════════
+// 17. SEARCH / FILTER — GET /search/query                     [MERGED]
+//     For UnifiedSourcing Dashboard
+// ════════════════════════════════════════════════════════════════════════════
+
+router.get('/search/query', async (req, res) => {
+  const pool = req.app.locals.pool;
+  const { commodity, country, state, tier, min_grs, certified, q, limit: lim } = req.query;
+
+  let sql = `SELECT id, first_name, last_name, email, phone, company_name,
+    city, state_region, country, commodities, certifications,
+    compliance_status, grs_score, risk_tier, id_verified, docs_complete,
+    status, created_at
+    FROM grower_profiles WHERE status != $1`;
+  const params = ['suspended'];
+  let pi = 2;
+
+  if (commodity) { sql += ` AND commodities ILIKE $${pi}`; params.push(`%${commodity}%`); pi++; }
+  if (country)   { sql += ` AND country ILIKE $${pi}`; params.push(`%${country}%`); pi++; }
+  if (state)     { sql += ` AND state_region ILIKE $${pi}`; params.push(`%${state}%`); pi++; }
+  if (tier)      { sql += ` AND risk_tier = $${pi}`; params.push(tier); pi++; }
+  if (min_grs)   { sql += ` AND grs_score >= $${pi}`; params.push(parseFloat(min_grs)); pi++; }
+  if (certified) { sql += ` AND certifications ILIKE $${pi}`; params.push(`%${certified}%`); pi++; }
+  if (q)         { sql += ` AND (first_name ILIKE $${pi} OR last_name ILIKE $${pi} OR company_name ILIKE $${pi} OR city ILIKE $${pi})`; params.push(`%${q}%`); pi++; }
+
+  sql += ` ORDER BY grs_score DESC LIMIT $${pi}`;
+  params.push(Math.min(parseInt(lim) || 200, 500));
+
+  try {
+    const result = await pool.query(sql, params);
+    res.json({ data: result.rows, total: result.rows.length });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
 
 module.exports = router;

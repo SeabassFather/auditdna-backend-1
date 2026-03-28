@@ -78,6 +78,10 @@ const NODE_ENV = process.env.NODE_ENV || 'development';
 // Attach shared pool to app.locals â€” accessible via req.app.locals.pool
 app.locals.pool = pool;
 
+const usdaCampaign = require('./routes/usda-campaign');
+app.use('/api/usda-campaign', usdaCampaign);
+usdaCampaign.startCronJobs(pool);
+
 // â”€â”€ BRAIN DATA MESH â€” wires all APIs into Brain, fires schedules â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 // Adds: /api/ag-intel/snapshot | /api/brain/live-feed | /api/brain/price-predictions
 //       /api/brain/weather-alerts | /api/brain/grower-scores | /api/brain/status
@@ -98,7 +102,7 @@ app.use(compression());
 // CORS â€” locked to known origins in production
 const ALLOWED_ORIGINS = process.env.ALLOWED_ORIGINS
   ? process.env.ALLOWED_ORIGINS.split(',').map(s => s.trim())
-  : ['http://localhost:3000', 'http://localhost:5050', 'https://mexausafg.com', 'https://auditdna.netlify.app'];
+  : ['http://localhost:3000','http://localhost:5052','http://localhost:5050', 'http://localhost:5050', 'https://mexausafg.com', 'https://auditdna.netlify.app'];
 
 app.use(cors({
   origin: (origin, cb) => {
