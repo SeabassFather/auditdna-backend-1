@@ -255,6 +255,8 @@ try {
 try {
   app.use('/api/onboarding', require('./routes/onboarding'));
 app.use('/api/buyer-segments', require('./routes/buyer-segments'));
+const fdaRouter = require('./routes/fdaApi_.routes');
+app.use('/api/fda', fdaRouter);
   loadedRoutes.push('/api/onboarding');
   console.log('  [ROUTE] /api/onboarding');
 } catch (e) {
