@@ -65,7 +65,7 @@ async function runCampaign(pool, segment) {
     if (pool) {
       try {
         const terms = labels[segment]||[];
-        const q = terms.length ? `SELECT email, COALESCE(trade_name, legal_name) AS name, COALESCE(trade_name, legal_name) AS company, primary_contact FROM buyers WHERE email IS NOT NULL AND status='active' AND unsubscribed=false AND (${terms.map((_,i)=>`commodities ILIKE $${i+1}`).join(' OR ')}) LIMIT 2000` : `SELECT email, COALESCE(trade_name, legal_name) AS name, COALESCE(trade_name, legal_name) AS company, primary_contact FROM buyers WHERE email IS NOT NULL AND status='active' AND unsubscribed=false LIMIT 2000`;
+        const q = terms.length ? `SELECT email, COALESCE(trade_name, legal_name) AS name, COALESCE(trade_name, legal_name) AS company, primary_contact FROM buyers WHERE email IS NOT NULL AND status='active' AND (${terms.map((_,i)=>`product_specialties ILIKE $${i+1}`).join(' OR ')}) LIMIT 2000` : `SELECT email, COALESCE(trade_name, legal_name) AS name, COALESCE(trade_name, legal_name) AS company, primary_contact FROM buyers WHERE email IS NOT NULL AND status='active' LIMIT 2000`;
         const r = await pool.query(q, terms.map(t=>`%${t}%`));
         buyers = r.rows;
       } catch(e) { console.error('[usda-campaign] DB error', e.message); }
