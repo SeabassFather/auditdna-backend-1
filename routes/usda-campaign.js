@@ -4,7 +4,7 @@ const nodemailer = require('nodemailer');
 
 const USDA_KEY = '4F158DB1-85C2-3243-BFFA-58B53FB40D23';
 const CM_DISCOUNT = 0.175;
-const SMTP = { host: 'smtpout.secureserver.net', port: 465, secure: true, auth: { user: process.env.SMTP_USER || 'saul@mexausafg.com', pass: process.env.SMTP_PASS || 'KongKing#321' } };
+const SMTP = { host: 'smtpout.secureserver.net', port: 465, secure: true, auth: { user: process.env.SMTP_USER || 'saul@mexausafg.com', pass: process.env.SMTP_PASS || '060905Dsg#321' } };
 
 const COMMODITY_REPORTS = {
   avocado:    { label: 'Hass Avocados',  unit: '25lb carton', segment: 'avocado'   },
@@ -78,7 +78,7 @@ async function runCampaign(pool, segment) {
         await transporter.sendMail({ from:'"CM Products International" <saul@mexausafg.com>', to:b.email, subject:subjects[segment]||subjects.all, html:buildHtml(prices,b.name,b.company) });
         sent++;
         if (sent%5===0) await new Promise(r=>setTimeout(r,1000));
-      } catch(e) { failed++; }
+      } catch(e) { failed++; if(failed<=3) console.error('[usda-campaign] email error:', e.message); }
     }
     campaignState.sentCount=sent; campaignState.failCount=failed; campaignState.lastStatus='ok';
     console.log('[usda-campaign] Done — sent:'+sent+' failed:'+failed);
