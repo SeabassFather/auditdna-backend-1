@@ -81,6 +81,8 @@ app.locals.pool = pool;
 const usdaCampaign = require('./routes/usda-campaign');
 app.use('/api/usda-campaign', usdaCampaign);
 usdaCampaign.startCronJobs(pool);
+const prodSub = require('./routes/product-submissions');
+prodSub.initTable(pool).catch(e => console.warn('[PRODUCT-SUB] init:', e.message));
 
 // â”€â”€ BRAIN DATA MESH â€” wires all APIs into Brain, fires schedules â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 // Adds: /api/ag-intel/snapshot | /api/brain/live-feed | /api/brain/price-predictions
