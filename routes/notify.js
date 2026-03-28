@@ -1,5 +1,5 @@
 // ============================================================================
-// ADMIN NOTIFY ROUTE — AuditDNA
+// ADMIN NOTIFY ROUTE -- AuditDNA
 // Save to: C:\AuditDNA\backend\routes\notify.js
 // Fires on: user login, admin login, registration request
 // Channels: Zadarma SMS + ntfy.sh push (instant smartwatch ping)
@@ -47,7 +47,7 @@ async function sendZadarmaSMS(to, message) {
   }
 }
 
-// ── ntfy.sh Push (instant — no credentials needed) ───────────────────────────
+// ── ntfy.sh Push (instant -- no credentials needed) ───────────────────────────
 async function sendPush(title, body, priority = 'high') {
   try {
     const res = await fetch(`https://ntfy.sh/${NTFY_TOPIC}`, {
@@ -106,30 +106,30 @@ router.post('/admin-alert', async (req, res) => {
   let emailText = '';
 
   if (type === 'ADMIN_LOGIN') {
-    pushTitle    = 'ADMIN LOGIN — AuditDNA';
+    pushTitle    = 'ADMIN LOGIN -- AuditDNA';
     pushBody     = `Admin authenticated at ${ts} | IP: ${ip}`;
     smsText      = `AuditDNA: ADMIN LOGIN @ ${ts}`;
-    emailSubject = 'AuditDNA — Admin Login Detected';
+    emailSubject = 'AuditDNA -- Admin Login Detected';
     emailText    = `Admin login at ${ts}\nIP: ${ip}\nAgent: ${agent || 'unknown'}`;
   } else if (type === 'CLIENT_LOGIN') {
-    pushTitle    = `CLIENT LOGIN — ${email || 'unknown'}`;
+    pushTitle    = `CLIENT LOGIN -- ${email || 'unknown'}`;
     pushBody     = `${email} | Role: ${role || 'client'} | ${ts}`;
     smsText      = `AuditDNA: LOGIN ${email} @ ${ts}`;
-    emailSubject = `AuditDNA — Client Login: ${email}`;
+    emailSubject = `AuditDNA -- Client Login: ${email}`;
     emailText    = `Client: ${email}\nRole: ${role}\nTime: ${ts}\nIP: ${ip}`;
   } else if (type === 'REGISTRATION_REQUEST_SUBMITTED') {
-    pushTitle    = `NEW REGISTRATION — ${company || email}`;
+    pushTitle    = `NEW REGISTRATION -- ${company || email}`;
     pushBody     = `${company} | ${entity} | ${email} | ${ts}`;
     smsText      = `AuditDNA: NEW REG ${company} (${entity}) @ ${ts}`;
-    emailSubject = `AuditDNA — New Registration: ${company}`;
+    emailSubject = `AuditDNA -- New Registration: ${company}`;
     emailText    = `Company: ${company}\nEntity: ${entity}\nEmail: ${email}\nTime: ${ts}\nIP: ${ip}`;
   } else {
-    pushTitle = `AuditDNA Alert — ${type}`;
+    pushTitle = `AuditDNA Alert -- ${type}`;
     pushBody  = `${email || ''} @ ${ts}`;
     smsText   = `AuditDNA: ${type} @ ${ts}`;
   }
 
-  // Fire all channels in parallel — don't block response
+  // Fire all channels in parallel -- don't block response
   res.json({ success: true, type, ts });
 
   // Async notifications after response
@@ -144,12 +144,12 @@ router.post('/admin-alert', async (req, res) => {
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // GET /api/notify/test
-// Quick test endpoint — hit this to verify your smartwatch gets pinged
+// Quick test endpoint -- hit this to verify your smartwatch gets pinged
 // ═══════════════════════════════════════════════════════════════════════════════
 router.get('/test', async (req, res) => {
   const ts = new Date().toLocaleString('en-US', { timeZone: 'America/Los_Angeles' });
   await Promise.allSettled([
-    sendPush('AuditDNA TEST PING', `Test fired at ${ts} — smartwatch check`),
+    sendPush('AuditDNA TEST PING', `Test fired at ${ts} -- smartwatch check`),
     sendZadarmaSMS(ADMIN_US_PHONE, `AuditDNA: TEST PING @ ${ts}`),
   ]);
   res.json({ success: true, message: 'Test ping fired', ntfy_topic: NTFY_TOPIC, ts });

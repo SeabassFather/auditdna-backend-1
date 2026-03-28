@@ -95,7 +95,7 @@ router.get('/prices', async (req,res) => {
 router.get('/status', (req,res) => res.json(campaignState));
 
 router.post('/trigger', async (req,res) => {
-  const segment = req.body?.segment||'all';
+  const segment = (req.body && req.body.segment) ? req.body.segment : (req.query.segment||'all');
   res.json({ message:'Campaign triggered', segment });
   setImmediate(()=>runCampaign(req.app.locals.pool, segment));
 });

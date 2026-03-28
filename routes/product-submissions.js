@@ -31,7 +31,9 @@ router.post('/', async (req,res) => {
   try {
     const pool = req.app.locals.pool;
     const d = req.body;
-    const r = await pool.query('INSERT INTO product_submissions (grower_name,grower_email,grower_phone,company,commodity,variety,quantity,unit,pack_size,fob_price,available_date,shelf_life,harvest_location,destination_market,quality_grade,notes) VALUES (,,,,,,,,,,,,,,,) RETURNING *',[d.growerName||null,d.growerEmail||null,d.growerPhone||null,d.company||null,d.commodity||null,d.variety||null,d.quantity||null,d.unit||'Carton',d.packSize||null,d.fobPrice||null,d.availableDate||null,d.shelfLife||null,d.harvestLocation||null,d.destinationMarket||null,d.qualityGrade||'US No. 1',d.notes||null]);
+    const cols = ['grower_name','grower_email','grower_phone','company','commodity','variety','quantity','unit','pack_size','fob_price','available_date','shelf_life','harvest_location','destination_market','quality_grade','notes'];
+    const vals = [d.growerName||null,d.growerEmail||null,d.growerPhone||null,d.company||null,d.commodity||null,d.variety||null,d.quantity||null,d.unit||'Carton',d.packSize||null,d.fobPrice||null,d.availableDate||null,d.shelfLife||null,d.harvestLocation||null,d.destinationMarket||null,d.qualityGrade||'US No. 1',d.notes||null];
+    const r = await pool.query('INSERT INTO product_submissions (' + cols.join(',') + ') VALUES (' + cols.map((_,i)=>'$'+(i+1)).join(',') + ') RETURNING *', vals);
     res.status(201).json({success:true,submission:r.rows[0]});
   } catch(e){res.status(500).json({error:e.message});}
 });
