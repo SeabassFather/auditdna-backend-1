@@ -1,108 +1,118 @@
-// ============================================================
-// AuditDNA SMS Route — Zadarma API
-// Backend: C:\AuditDNA\backend\routes\sms.js
-// Register in server.js: app.use('/api/sms', require('./routes/sms'));
-// ============================================================
-const express = require('express');
-const router  = express.Router();
-const crypto  = require('crypto');
-const axios   = require('axios');
+﻿const express  = require('express');
+const router   = express.Router();
+const twilio   = require('twilio');
+const { getPool } = require('../db');
 
-const ZD_KEY    = process.env.ZADARMA_KEY    || '';
-const ZD_SECRET = process.env.ZADARMA_SECRET || '';
-const ZD_BASE   = 'https://api.zadarma.com';
+const client   = twilio(process.env.TWILIO_ACCOUNT_SID, process.env.TWILIO_AUTH_TOKEN);
+const FROM     = process.env.TWILIO_PHONE_NUMBER;
 
-// ── ZADARMA SIGNATURE ──────────────────────────────────────
-function zdSign(endpoint, params) {
-  const sorted = Object.keys(params).sort().map(k => `${k}=${params[k]}`).join('&');
-  const hash   = crypto.createHash('md5').update(sorted).digest('hex');
-  const data   = endpoint + sorted + hash;
-  return crypto.createHmac('sha1', ZD_SECRET).update(data).digest('base64');
-}
+const MSGS = {
+  welcome:    'Bienvenido a AuditDNA / CM Products International.\nResponde con:\n1 - Registrarme\n2 - Estado de mis documentos\n3 - Hablar con un agente\n4 - English',
+  welcome_en: 'Welcome to AuditDNA / CM Products International.\nReply with:\n1 - Register\n2 - Document status\n3 - Talk to an agent\n4 - Espanol',
+  register:   'Para registrarte como productor, visita:\nhttps://mexausafg.com/#grower-portal\n\nNecesitas:\n- Licencia comercial\n- Plan FSMA\n- Certificado GAP/BPM\n- Cert. fitosanitario\n- Seguro de responsabilidad\n- RFC/W-9\n- Acuerdo CM Products\n\nResponde STATUS para ver tus documentos.',
+  register_en:'To register as a grower, visit:\nhttps://mexausafg.com/#grower-portal\n\nYou need:\n- Business license\n- FSMA Food Safety Plan\n- GAP/GMP Certificate\n- Phytosanitary cert\n- Liability insurance\n- RFC/W-9\n- CM Products Agreement\n\nReply STATUS to check your documents.',
+  agent:      'Un agente de CM Products se comunicara contigo pronto.\nSaul Garcia: +1-831-251-3116\nOficina Baja: +52-646-340-2686',
+  unknown:    'No entendi tu mensaje. Responde 1, 2, 3 o 4.\nFor English reply 4.',
+};
 
-function zdHeaders(endpoint, params) {
-  return {
-    Authorization: `${ZD_KEY}:${zdSign(endpoint, params)}`,
-    'Content-Type': 'application/x-www-form-urlencoded',
-  };
-}
-
-// ── POST /api/sms/send ─────────────────────────────────────
-// Body: { to, message, from? }
-router.post('/send', async (req, res) => {
-  const { to, message, from } = req.body;
-  if (!to || !message) return res.status(400).json({ error: 'Missing: to, message' });
-  if (!ZD_KEY || !ZD_SECRET) return res.status(500).json({ error: 'Zadarma keys not configured in .env' });
-
-  const endpoint = '/v1/sms/send/';
-  const params   = { number: to.replace(/\D/g, ''), message };
-  if (from) params.caller_id = from;
-
+const sendSMS = async (to, body) => {
   try {
-    const response = await axios.post(
-      `${ZD_BASE}${endpoint}`,
-      new URLSearchParams(params).toString(),
-      { headers: zdHeaders(endpoint, params) }
-    );
-    const d = response.data;
-    if (d.status === 'success') {
-      console.log(`[SMS] Sent to ${to}: "${message.slice(0,40)}..."`);
-      res.json({ success: true, status: d.status, cost: d.cost || null });
-    } else {
-      res.status(400).json({ error: d.message || 'Zadarma rejected SMS', raw: d });
-    }
-  } catch (err) {
-    console.error('[SMS] Error:', err.message);
-    res.status(500).json({ error: err.message });
+    await client.messages.create({ from: FROM, to, body });
+  } catch(e) {
+    console.error('[SMS ERROR]', e.message);
   }
-});
+};
 
-// ── POST /api/sms/bulk ─────────────────────────────────────
-// Body: { recipients: [{number, name}], message, delayMs? }
-router.post('/bulk', async (req, res) => {
-  const { recipients, message, delayMs = 1500 } = req.body;
-  if (!recipients?.length || !message) return res.status(400).json({ error: 'Missing: recipients, message' });
-  if (!ZD_KEY || !ZD_SECRET) return res.status(500).json({ error: 'Zadarma keys not configured' });
+// POST /api/sms/webhook — Twilio inbound
+router.post('/webhook', async (req, res) => {
+  const pool = getPool(req);
+  const { Body, From } = req.body;
+  const msg  = (Body||'').trim().toLowerCase();
+  const phone = From || '';
 
-  const results = [];
-  for (const r of recipients) {
-    const number = (r.number || r.phone || '').replace(/\D/g, '');
-    if (!number) { results.push({ number: r.number, success: false, error: 'Invalid number' }); continue; }
+  console.log('[SMS INBOUND]', phone, ':', Body);
 
-    const personalizedMsg = message
-      .replace(/\{\{name\}\}/g, r.name || '')
-      .replace(/\{\{first_name\}\}/g, (r.name || '').split(' ')[0] || '');
+  let reply = MSGS.unknown;
 
-    const endpoint = '/v1/sms/send/';
-    const params   = { number, message: personalizedMsg };
-
+  if (!msg || msg === 'hola' || msg === 'hi' || msg === 'hello' || msg === 'inicio' || msg === 'start' || msg === 'menu') {
+    reply = MSGS.welcome;
+  } else if (msg === '1' || msg === 'registro' || msg === 'registrar' || msg === 'register') {
+    reply = MSGS.register;
+    // Log inbound lead
     try {
-      const response = await axios.post(
-        `${ZD_BASE}${endpoint}`,
-        new URLSearchParams(params).toString(),
-        { headers: zdHeaders(endpoint, params) }
+      await pool.query(
+        'INSERT INTO sms_leads (phone, action, created_at) VALUES ($1,$2,NOW()) ON CONFLICT DO NOTHING',
+        [phone, 'register_request']
       );
-      const d = response.data;
-      results.push({ number, name: r.name, success: d.status === 'success', cost: d.cost });
-      if (delayMs > 0) await new Promise(resolve => setTimeout(resolve, delayMs));
-    } catch (err) {
-      results.push({ number, name: r.name, success: false, error: err.message });
+    } catch(e) {}
+  } else if (msg === '2' || msg === 'status' || msg === 'estado' || msg === 'documentos') {
+    // Check compliance status by phone
+    try {
+      const r = await pool.query(
+        'SELECT id, company_name, docs_complete, compliance_status FROM grower_profiles WHERE phone=$1 LIMIT 1',
+        [phone]
+      );
+      if (r.rows.length) {
+        const g = r.rows[0];
+        const docs = await pool.query(
+          'SELECT DISTINCT doc_type FROM grower_documents WHERE grower_id=$1', [g.id]
+        );
+        const uploaded = docs.rows.map(d=>d.doc_type);
+        const total    = 7;
+        const done     = uploaded.length;
+        reply = g.docs_complete
+          ? `${g.company_name}: Todos los documentos completos. Acceso aprobado.`
+          : `${g.company_name}: ${done}/${total} documentos enviados.\nFalta(n): visita mexausafg.com/#grower-portal para subir los documentos faltantes.`;
+      } else {
+        reply = 'No encontramos tu numero en el sistema. Registrate en:\nhttps://mexausafg.com/#grower-portal';
+      }
+    } catch(e) {
+      reply = 'Error consultando tu estado. Intenta de nuevo o llama al +1-831-251-3116';
     }
+  } else if (msg === '3' || msg === 'agente' || msg === 'agent' || msg === 'ayuda' || msg === 'help') {
+    reply = MSGS.agent;
+  } else if (msg === '4' || msg === 'english' || msg === 'en') {
+    reply = MSGS.welcome_en;
+  } else if (msg === 'register en' || msg === '1 en') {
+    reply = MSGS.register_en;
   }
 
-  const sent   = results.filter(r => r.success).length;
-  const failed = results.filter(r => !r.success).length;
-  console.log(`[SMS] Bulk: ${sent} sent, ${failed} failed`);
-  res.json({ success: true, total: recipients.length, sent, failed, results });
+  await sendSMS(phone, reply);
+  res.set('Content-Type', 'text/xml');
+  res.send('<Response></Response>');
 });
 
-// ── GET /api/sms/status ────────────────────────────────────
-router.get('/status', (req, res) => {
-  res.json({
-    configured: !!(ZD_KEY && ZD_SECRET),
-    provider: 'Zadarma',
-    keys: ZD_KEY ? 'SET' : 'MISSING',
-  });
+// POST /api/sms/send — manual send from admin panel
+router.post('/send', async (req, res) => {
+  const { to, message } = req.body;
+  if (!to || !message) return res.status(400).json({ error: 'to and message required' });
+  try {
+    const result = await client.messages.create({ from: FROM, to, body: message });
+    res.json({ success: true, sid: result.sid });
+  } catch(e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// POST /api/sms/blast — send to list of growers missing docs
+router.post('/blast', async (req, res) => {
+  const pool = getPool(req);
+  try {
+    const r = await pool.query(
+      'SELECT phone, first_name, company_name FROM grower_profiles WHERE docs_complete=false AND phone IS NOT NULL AND phone != \'\' LIMIT 50'
+    );
+    let sent = 0;
+    for (const g of r.rows) {
+      const name = g.company_name || g.first_name || 'Productor';
+      const msg  = `Hola ${name}, te falta completar tus documentos en AuditDNA. Visita mexausafg.com/#grower-portal o responde STATUS para ver que falta. CM Products International.`;
+      await sendSMS(g.phone, msg);
+      sent++;
+      await new Promise(r=>setTimeout(r,300));
+    }
+    res.json({ success: true, sent });
+  } catch(e) {
+    res.status(500).json({ error: e.message });
+  }
 });
 
 module.exports = router;
