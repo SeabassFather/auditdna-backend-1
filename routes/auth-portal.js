@@ -1,4 +1,4 @@
-// ══════════════════════════════════════════════════════════════════════════
+﻿// ══════════════════════════════════════════════════════════════════════════
 //  AUDITDNA — AUTH ROUTES (SECURED v2.0)
 //  File: C:\AuditDNA\backend\routes\auth.js
 //
@@ -77,7 +77,7 @@ const initAuthTables = async () => {
       id            SERIAL PRIMARY KEY,
       email         VARCHAR(150) UNIQUE NOT NULL,
       password_hash VARCHAR(256) NOT NULL,
-      pin_hash      VARCHAR(256),
+      password_hash      VARCHAR(256),
       role          VARCHAR(20)  NOT NULL DEFAULT 'consumer',
       name          VARCHAR(256),
       status        VARCHAR(20)  DEFAULT 'active',
@@ -116,7 +116,7 @@ function issueToken(user) {
     ? JWT_EXPIRY_STAFF
     : JWT_EXPIRY_CONSUMER;
   return jwt.sign(
-    { email: user.email, role: user.role, name: user.name },
+    { email: user.username, role: user.role, name: user.display_name, tier: user.tier || 'free' },
     JWT_SECRET,
     { expiresIn: expiry }
   );
@@ -145,7 +145,7 @@ router.post('/login',
     try {
       // Look up user in auth_users table
       const result = await pool.query(
-        'SELECT id, email, password_hash, pin_hash, role, name, status FROM auth_users WHERE LOWER(email) = $1 LIMIT 1',
+        'SELECT id, username, password_hash, access_code, pin, role, display_name, is_active, tier FROM auth_users WHERE LOWER(username) = $1 LIMIT 1',
         [cleanEmail]
       );
 
@@ -171,11 +171,11 @@ router.post('/login',
 
       // For owner/admin: verify PIN if provided
       if (['owner', 'admin'].includes(user.role) && pin) {
-        if (!user.pin_hash) {
+        if (!user.pin) {
           await logLogin(cleanEmail, req.ip, false, user.role, 'no_pin_configured');
           return res.status(401).json({ error: 'PIN not configured. Contact sg01@eb.com.' });
         }
-        const pinMatch = await bcrypt.compare(String(pin), user.pin_hash);
+        const pinMatch = String(pin) === String(user.pin);
         if (!pinMatch) {
           await logLogin(cleanEmail, req.ip, false, user.role, 'bad_pin');
           return res.status(401).json({ error: 'Invalid PIN' });
@@ -189,12 +189,12 @@ router.post('/login',
       pool.query('UPDATE auth_users SET last_login = NOW() WHERE id = $1', [user.id]).catch(() => {});
 
       await logLogin(cleanEmail, req.ip, true, user.role, 'success');
-      console.log(`✅ [AUTH] Login: ${user.email} (${user.role})`);
+      console.log(`✅ [AUTH] Login: ${user.username} (${user.role})`);
 
       return res.json({
         success: true,
         token,
-        user: { email: user.email, role: user.role, name: user.name },
+        user: { email: user.username, role: user.role, name: user.display_name, tier: user.tier || 'free', username: user.username, is_active: user.is_active, access_code: user.access_code },
       });
 
     } catch (err) {
@@ -219,7 +219,7 @@ router.post('/login-agent',
 
     try {
       const result = await pool.query(
-        'SELECT agent_code, password_hash, pin_hash, salt, nombre, agent_type, role, status FROM agent_registrations WHERE LOWER(agent_code) = $1 LIMIT 1',
+        'SELECT agent_code, password_hash, password_hash, salt, nombre, agent_type, role, status FROM agent_registrations WHERE LOWER(agent_code) = $1 LIMIT 1',
         [cleanEmail]
       );
 
@@ -238,9 +238,9 @@ router.post('/login-agent',
       }
 
       // Verify PIN if provided
-      if (pin && agent.pin_hash) {
+      if (pin && agent.password_hash) {
         const pinHash = crypto.createHash('sha256').update(String(pin) + agent.salt).digest('hex');
-        if (pinHash !== agent.pin_hash) {
+        if (pinHash !== agent.password_hash) {
           await logLogin(cleanEmail, req.ip, false, 'agent', 'bad_pin');
           return res.status(401).json({ error: 'Invalid PIN' });
         }
@@ -398,7 +398,7 @@ router.put('/users/:email', requireOwner, async (req, res) => {
 
     if (!rows.length) return res.status(404).json({ error: 'User not found' });
 
-    console.log(`[AUTH] User updated by ${req.user.email}: ${targetEmail} → role=${rows[0].role}, status=${rows[0].status}`);
+    console.log(`[AUTH] User updated by ${req.user.username}: ${targetEmail} → role=${rows[0].role}, status=${rows[0].status}`);
 
     return res.json({ success: true, user: rows[0] });
   } catch (err) {
@@ -445,7 +445,7 @@ router.post('/change-password', async (req, res) => {
 
     if (newPin) {
       params.push(await bcrypt.hash(String(newPin), BCRYPT_ROUNDS));
-      updates.push(`pin_hash = $${params.length}`);
+      updates.push(`password_hash = $${params.length}`);
     }
 
     params.push(user.id);
@@ -477,7 +477,7 @@ router.post('/reset-password', requireOwner, async (req, res) => {
 
     if (newPin) {
       params.push(await bcrypt.hash(String(newPin), BCRYPT_ROUNDS));
-      updates.push(`pin_hash = $${params.length}`);
+      updates.push(`password_hash = $${params.length}`);
     }
 
     params.push(targetEmail.toLowerCase());
@@ -488,7 +488,7 @@ router.post('/reset-password', requireOwner, async (req, res) => {
 
     if (!rows.length) return res.status(404).json({ error: 'User not found' });
 
-    console.log(`[AUTH] Password reset by ${req.user.email} for: ${targetEmail}`);
+    console.log(`[AUTH] Password reset by ${req.user.username} for: ${targetEmail}`);
     return res.json({ success: true, user: rows[0], message: 'Password reset. Share the new credentials securely.' });
   } catch (err) {
     return res.status(500).json({ error: err.message });
@@ -496,3 +496,6 @@ router.post('/reset-password', requireOwner, async (req, res) => {
 });
 
 module.exports = router;// rebuild trigger v2
+
+
+
