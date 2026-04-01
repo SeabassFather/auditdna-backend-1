@@ -795,7 +795,6 @@ router.get('/stats', (req, res) => {
 // GET /api/terminal-markets/shipments
 router.get('/shipments', async (req, res) => {
   try {
-    const pool = getPool(req);
     const r = await pool.query('SELECT * FROM shipments ORDER BY created_at DESC LIMIT 100').catch(()=>({rows:[]}));
     res.json({ ok:true, shipments: r.rows });
   } catch(e) { res.status(500).json({ ok:false, error:e.message }); }
@@ -804,7 +803,6 @@ router.get('/shipments', async (req, res) => {
 // POST /api/terminal-markets/shipments
 router.post('/shipments', async (req, res) => {
   try {
-    const pool = getPool(req);
     const { lot_number, commodity, grower, origin, destination, carrier, quantity, unit, border_crossing, po_number } = req.body;
     const r = await pool.query(
       `INSERT INTO shipments (lot_number, commodity, grower, origin, destination, carrier, quantity, unit, border_crossing, po_number, status)
