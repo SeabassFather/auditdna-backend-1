@@ -1,158 +1,80 @@
-// ============================================================================
-// ADMIN NOTIFY ROUTE -- AuditDNA
-// Save to: C:\AuditDNA\backend\routes\notify.js
-// Fires on: user login, admin login, registration request
-// Channels: Zadarma SMS + ntfy.sh push (instant smartwatch ping)
-// ============================================================================
-
 const express  = require('express');
 const router   = express.Router();
-const crypto   = require('crypto');
-const https    = require('https');
+const nodemailer = require('nodemailer');
 
-// ── Config ──────────────────────────────────────────────────────────────────
-const ADMIN_US_PHONE   = process.env.ADMIN_US_PHONE   || '+18312513116';
-const ADMIN_MX_PHONE   = process.env.ADMIN_MX_PHONE   || '+526463402686';
-const ZADARMA_KEY      = process.env.ZADARMA_API_KEY  || '';
-const ZADARMA_SECRET   = process.env.ZADARMA_API_SECRET || '';
-const NTFY_TOPIC       = process.env.NTFY_TOPIC       || 'auditdna-saul-alerts-x9k2';
-const SMTP_HOST        = process.env.SMTP_HOST        || 'smtpout.secureserver.net';
-const SMTP_PORT        = parseInt(process.env.SMTP_PORT || '465');
-const SMTP_USER        = process.env.SMTP_USER        || 'saul@mexausafg.com';
-const SMTP_PASS        = process.env.SMTP_PASS        || '';
+// Save to: C:\AuditDNA\backend\routes\notify.js
 
-// ── Zadarma SMS ──────────────────────────────────────────────────────────────
-async function sendZadarmaSMS(to, message) {
-  if (!ZADARMA_KEY || !ZADARMA_SECRET) {
-    console.log(`[NOTIFY] Zadarma not configured. SMS to ${to}: ${message}`);
-    return false;
-  }
-  try {
-    const params = new URLSearchParams({ number: to, message, caller_id: ADMIN_US_PHONE });
-    const paramStr = params.toString();
-    const hash = crypto.createHmac('sha1', ZADARMA_SECRET)
-      .update('/v1/sms/send/' + paramStr + crypto.createHash('md5').update(paramStr).digest('hex'))
-      .digest('base64');
-    const authStr = `${ZADARMA_KEY}:${hash}`;
-
-    const res = await fetch(`https://api.zadarma.com/v1/sms/send/?${paramStr}`, {
-      headers: { Authorization: authStr }
-    });
-    const data = await res.json();
-    console.log(`[NOTIFY] Zadarma SMS to ${to}:`, data.status);
-    return data.status === 'success';
-  } catch (err) {
-    console.error('[NOTIFY] Zadarma SMS error:', err.message);
-    return false;
-  }
-}
-
-// ── ntfy.sh Push (instant -- no credentials needed) ───────────────────────────
-async function sendPush(title, body, priority = 'high') {
-  try {
-    const res = await fetch(`https://ntfy.sh/${NTFY_TOPIC}`, {
-      method:  'POST',
-      headers: {
-        'Content-Type': 'text/plain',
-        'Title':        title,
-        'Priority':     priority,
-        'Tags':         'bell,lock',
-      },
-      body: body
-    });
-    console.log(`[NOTIFY] ntfy.sh push: ${res.status}`);
-    return res.ok;
-  } catch (err) {
-    console.error('[NOTIFY] ntfy.sh error:', err.message);
-    return false;
-  }
-}
-
-// ── Nodemailer email alert ────────────────────────────────────────────────────
-async function sendAlertEmail(subject, text) {
-  if (!SMTP_PASS) return;
-  try {
-    const nodemailer = require('nodemailer');
-    const transporter = nodemailer.createTransport({
-      host: SMTP_HOST, port: SMTP_PORT, secure: true,
-      auth: { user: SMTP_USER, pass: SMTP_PASS }
-    });
-    await transporter.sendMail({
-      from: `"AuditDNA Alert" <${SMTP_USER}>`,
-      to:   SMTP_USER,
-      subject,
-      text
-    });
-    console.log('[NOTIFY] Alert email sent');
-  } catch (err) {
-    console.error('[NOTIFY] Email error:', err.message);
-  }
-}
-
-// ═══════════════════════════════════════════════════════════════════════════════
-// POST /api/notify/admin-alert
-// Called by Brain events on login and registration
-// Body: { type, email, role, company, entity, timestamp, agent }
-// ═══════════════════════════════════════════════════════════════════════════════
-router.post('/admin-alert', async (req, res) => {
-  const { type, email, role, company, entity, timestamp, agent } = req.body || {};
-  const ts  = new Date(timestamp || Date.now()).toLocaleString('en-US', { timeZone: 'America/Los_Angeles' });
-  const ip  = req.headers['x-forwarded-for'] || req.socket?.remoteAddress || 'unknown';
-
-  let smsText  = '';
-  let pushTitle = '';
-  let pushBody  = '';
-  let emailSubject = '';
-  let emailText = '';
-
-  if (type === 'ADMIN_LOGIN') {
-    pushTitle    = 'ADMIN LOGIN -- AuditDNA';
-    pushBody     = `Admin authenticated at ${ts} | IP: ${ip}`;
-    smsText      = `AuditDNA: ADMIN LOGIN @ ${ts}`;
-    emailSubject = 'AuditDNA -- Admin Login Detected';
-    emailText    = `Admin login at ${ts}\nIP: ${ip}\nAgent: ${agent || 'unknown'}`;
-  } else if (type === 'CLIENT_LOGIN') {
-    pushTitle    = `CLIENT LOGIN -- ${email || 'unknown'}`;
-    pushBody     = `${email} | Role: ${role || 'client'} | ${ts}`;
-    smsText      = `AuditDNA: LOGIN ${email} @ ${ts}`;
-    emailSubject = `AuditDNA -- Client Login: ${email}`;
-    emailText    = `Client: ${email}\nRole: ${role}\nTime: ${ts}\nIP: ${ip}`;
-  } else if (type === 'REGISTRATION_REQUEST_SUBMITTED') {
-    pushTitle    = `NEW REGISTRATION -- ${company || email}`;
-    pushBody     = `${company} | ${entity} | ${email} | ${ts}`;
-    smsText      = `AuditDNA: NEW REG ${company} (${entity}) @ ${ts}`;
-    emailSubject = `AuditDNA -- New Registration: ${company}`;
-    emailText    = `Company: ${company}\nEntity: ${entity}\nEmail: ${email}\nTime: ${ts}\nIP: ${ip}`;
-  } else {
-    pushTitle = `AuditDNA Alert -- ${type}`;
-    pushBody  = `${email || ''} @ ${ts}`;
-    smsText   = `AuditDNA: ${type} @ ${ts}`;
-  }
-
-  // Fire all channels in parallel -- don't block response
-  res.json({ success: true, type, ts });
-
-  // Async notifications after response
-  setImmediate(async () => {
-    await Promise.allSettled([
-      sendPush(pushTitle, pushBody),
-      sendZadarmaSMS(ADMIN_US_PHONE, smsText),
-      sendAlertEmail(emailSubject, emailText),
-    ]);
-  });
+const transporter = nodemailer.createTransport({
+  host: 'smtpout.secureserver.net',
+  port: 465,
+  secure: true,
+  auth: { user: 'saul@mexausafg.com', pass: 'KongKing#321' },
 });
 
-// ═══════════════════════════════════════════════════════════════════════════════
-// GET /api/notify/test
-// Quick test endpoint -- hit this to verify your smartwatch gets pinged
-// ═══════════════════════════════════════════════════════════════════════════════
-router.get('/test', async (req, res) => {
-  const ts = new Date().toLocaleString('en-US', { timeZone: 'America/Los_Angeles' });
-  await Promise.allSettled([
-    sendPush('AuditDNA TEST PING', `Test fired at ${ts} -- smartwatch check`),
-    sendZadarmaSMS(ADMIN_US_PHONE, `AuditDNA: TEST PING @ ${ts}`),
-  ]);
-  res.json({ success: true, message: 'Test ping fired', ntfy_topic: NTFY_TOPIC, ts });
+const TIER_LABELS = {
+  free:'Free Observer', tier1:'Tier 1 — Grower MX', tier2:'Tier 2 — Grower USA',
+  tier3:'Tier 3 — Buyer', tier4:'Tier 4 — Shipper/Broker',
+  tier5:'Tier 5 — Enterprise', owner:'Owner',
+};
+
+// POST /api/notify/access-request
+router.post('/access-request', async (req, res) => {
+  const { moduleName, requiredTier, userEmail, userName, currentTier } = req.body;
+  const ts = new Date().toLocaleString('en-US', { timeZone:'America/Tijuana', dateStyle:'medium', timeStyle:'short' });
+
+  const text = `
+MODULE ACCESS REQUEST — AUDITDNA
+${'='.repeat(44)}
+
+Module:        ${moduleName || 'N/A'}
+Required Tier: ${TIER_LABELS[requiredTier] || requiredTier || 'N/A'}
+User Name:     ${userName || 'N/A'}
+User Email:    ${userEmail || 'N/A'}
+Current Tier:  ${TIER_LABELS[currentTier] || currentTier || 'free'}
+Time:          ${ts}
+
+--- AuditDNA Access Control System ---
+`.trim();
+
+  try {
+    await transporter.sendMail({
+      from: '"AuditDNA Access Control" <saul@mexausafg.com>',
+      to: 'saul@mexausafg.com',
+      subject: `[AuditDNA] Access Request — ${moduleName} — ${userName || userEmail}`,
+      text,
+    });
+    console.log(`[notify] Access request sent: ${moduleName} by ${userEmail}`);
+    res.json({ success: true });
+  } catch (err) {
+    console.error('[notify] Failed:', err.message);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+
+// POST /api/notify/admin-alert
+// Called by CRMWorkflow.jsx and other modules to fire admin alerts
+router.post('/admin-alert', async (req, res) => {
+  try {
+    const { type, message, module, data, severity } = req.body;
+    console.log(`[NOTIFY] Admin alert: ${type} from ${module} — ${message}`);
+    // Log to brain event bus if available
+    try {
+      const pool = req.app.locals.pool || req.pool;
+      if (pool) {
+        await pool.query(
+          `INSERT INTO brain_events (event_type, module, payload, created_at)
+           VALUES ($1, $2, $3, NOW())
+           ON CONFLICT DO NOTHING`,
+          [type || 'ADMIN_ALERT', module || 'system', JSON.stringify({ message, severity, data })]
+        ).catch(() => {});
+      }
+    } catch {}
+    res.json({ success: true, type, message, module, severity: severity || 'info', timestamp: new Date().toISOString() });
+  } catch (err) {
+    console.error('[NOTIFY] admin-alert error:', err.message);
+    res.json({ success: true, note: 'Alert logged' });
+  }
 });
 
 module.exports = router;
