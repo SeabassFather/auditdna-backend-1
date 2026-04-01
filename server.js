@@ -79,10 +79,11 @@ const NODE_ENV = process.env.NODE_ENV || 'development';
 app.locals.pool = pool;
 
 const usdaCampaign = require('./routes/usda-campaign');
+
 app.use('/api/usda-campaign', usdaCampaign);
 usdaCampaign.startCronJobs(pool);
 const prodSub = require('./routes/product-submissions');
-prodSub.initTable(pool).catch(e => console.warn('[PRODUCT-SUB] init:', e.message));
+// prodSub.initTable disabled — table init moved to first request
 
 // â”€â”€ BRAIN DATA MESH â€” wires all APIs into Brain, fires schedules â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 // Adds: /api/ag-intel/snapshot | /api/brain/live-feed | /api/brain/price-predictions
@@ -123,6 +124,10 @@ app.use(morgan(NODE_ENV === 'development' ? 'dev' : 'combined'));
 app.use('/api/onboarding/payment/webhook', express.raw({ type: 'application/json' }));
 
 app.use(express.json({ limit: '50mb' }));
+const creditApps = require('./routes/credit-apps');
+app.use('/api/credit-apps', creditApps);
+const emailCampaigns = require('./routes/email-campaigns');
+app.use('/api/email', emailCampaigns);
 app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 
 // â”€â”€ Request timeout (60s) â€” prevents hung requests piling up â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
@@ -477,3 +482,10 @@ process.on('unhandledRejection', (reason) => {
 
 module.exports = Object.assign(app, { pool });
 
+
+
+
+
+
+
+// email-sequence-ecmw loaded by auto-loader from routes/
