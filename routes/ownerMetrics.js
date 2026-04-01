@@ -1,24 +1,24 @@
-/**
- * AUDITDNA — OWNER METRICS & INTELLIGENCE CENTER ROUTES
+﻿/**
+ * AUDITDNA â€” OWNER METRICS & INTELLIGENCE CENTER ROUTES
  * File: C:\AuditDNA\backend\routes\ownerMetrics.js
  *
- * ⚠️  THIS IS A SEPARATE FILE FROM intelligence.js
+ * âš ï¸  THIS IS A SEPARATE FILE FROM intelligence.js
  *     intelligence.js  = lender violations, class action, market reports
  *     ownerMetrics.js  = real-time dashboard for OwnerIntelligenceCenter.jsx
  *
- * ACCESS: OWNER ROLE ONLY — enforced on every route
+ * ACCESS: OWNER ROLE ONLY â€” enforced on every route
  *
  * Endpoints:
- *  GET /api/referrals/metrics          — Attorney referral aggregate metrics
- *  GET /api/referrals/sparkline        — Attorney 12-period sparkline data
- *  GET /api/mortgage/metrics           — Mortgage module aggregate metrics
- *  GET /api/mortgage/sparkline         — Mortgage 12-period sparkline data
- *  GET /api/cpa/metrics                — CPA referral aggregate metrics
- *  GET /api/cpa/sparkline              — CPA 12-period sparkline data
- *  GET /api/cpa/enforcement-leads      — Active enforcement leads queue
- *  GET /api/brain/status               — AI/SI/Brain process status
- *  GET /api/security/vault-status      — Consumer data vault security checks
- *  GET /api/admin/live-events          — Anonymized real-time event stream
+ *  GET /api/referrals/metrics          â€” Attorney referral aggregate metrics
+ *  GET /api/referrals/sparkline        â€” Attorney 12-period sparkline data
+ *  GET /api/mortgage/metrics           â€” Mortgage module aggregate metrics
+ *  GET /api/mortgage/sparkline         â€” Mortgage 12-period sparkline data
+ *  GET /api/cpa/metrics                â€” CPA referral aggregate metrics
+ *  GET /api/cpa/sparkline              â€” CPA 12-period sparkline data
+ *  GET /api/cpa/enforcement-leads      â€” Active enforcement leads queue
+ *  GET /api/brain/status               â€” AI/SI/Brain process status
+ *  GET /api/security/vault-status      â€” Consumer data vault security checks
+ *  GET /api/admin/live-events          â€” Anonymized real-time event stream
  *
  * PRIVACY ENFORCEMENT:
  *  - PII fields (email, name, phone, ssn, address) are NEVER returned
@@ -36,28 +36,28 @@
 
 const express = require('express');
 const router  = express.Router();
-const { pool } = require('../server');  // matches your existing intelligence.js pattern
+const { getPool } = require('../db');
 const jwt     = require('jsonwebtoken');
 const os      = require('os');
 const process = require('process');
 
-// ── OWNER-ONLY MIDDLEWARE ─────────────────────────────────────
+// â”€â”€ OWNER-ONLY MIDDLEWARE â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 const requireOwner = async (req, res, next) => {
   const token = req.headers.authorization?.replace('Bearer ', '');
   if (!token) return res.status(401).json({ error: 'No token.' });
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET || 'auditdna_secret_change_me');
     if (decoded.role !== 'owner') {
-      await pool.query(
+      await getPool(req).query(
         `INSERT INTO audit_access_log (user_email, role, endpoint, outcome, ip_address, attempted_at)
          VALUES ($1,$2,$3,'DENIED',$4,NOW())`,
         [decoded.email, decoded.role, req.path, req.ip]
-      ).catch(() => {}); // silent — don't block response
+      ).catch(() => {}); // silent â€” don't block response
       return res.status(403).json({ error: 'Owner access required.' });
     }
     req.user = decoded;
     // Log access
-    await pool.query(
+    await getPool(req).query(
       `INSERT INTO audit_access_log (user_email, role, endpoint, outcome, ip_address, attempted_at)
        VALUES ($1,$2,$3,'GRANTED',$4,NOW())`,
       [decoded.email, decoded.role, req.path, req.ip]
@@ -68,10 +68,10 @@ const requireOwner = async (req, res, next) => {
   }
 };
 
-// ── SAFE QUERY HELPER ─────────────────────────────────────────
+// â”€â”€ SAFE QUERY HELPER â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 async function safeQuery(sql, params = []) {
   try {
-    const res = await pool.query(sql, params);
+    const res = await getPool(req).query(sql, params);
     return res.rows;
   } catch (err) {
     console.error('[INTEL_QUERY_ERROR]', err.message);
@@ -79,9 +79,9 @@ async function safeQuery(sql, params = []) {
   }
 }
 
-// ══════════════════════════════════════════════════════════════
-// AUDIT_ACCESS_LOG TABLE (create if not exists — run once)
-// ══════════════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+// AUDIT_ACCESS_LOG TABLE (create if not exists â€” run once)
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 // Run this in pgAdmin once:
 /*
 CREATE TABLE IF NOT EXISTS audit_access_log (
@@ -97,10 +97,10 @@ CREATE INDEX IF NOT EXISTS idx_aal_endpoint ON audit_access_log(endpoint, attemp
 CREATE INDEX IF NOT EXISTS idx_aal_denied   ON audit_access_log(outcome) WHERE outcome = 'DENIED';
 */
 
-// ══════════════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 // ROUTE 1: GET /api/referrals/metrics
-// Attorney referral aggregate metrics — NO PII
-// ══════════════════════════════════════════════════════════════
+// Attorney referral aggregate metrics â€” NO PII
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 router.get('/referrals/metrics', requireOwner, async (req, res) => {
   try {
     // Status distribution
@@ -128,7 +128,7 @@ router.get('/referrals/metrics', requireOwner, async (req, res) => {
     const partnerRows = await safeQuery(`SELECT COUNT(*) AS cnt FROM attorney_partners WHERE active = TRUE`);
     const partnerCount = parseInt(partnerRows[0]?.cnt || 0);
 
-    // Latest case (token only — no PII)
+    // Latest case (token only â€” no PII)
     const latestRows = await safeQuery(
       `SELECT referral_id FROM attorney_referrals ORDER BY created_at DESC LIMIT 1`
     );
@@ -162,10 +162,10 @@ router.get('/referrals/metrics', requireOwner, async (req, res) => {
   }
 });
 
-// ══════════════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 // ROUTE 2: GET /api/referrals/sparkline
 // 12-quarter attorney referral volume
-// ══════════════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 router.get('/referrals/sparkline', requireOwner, async (req, res) => {
   try {
     const rows = await safeQuery(
@@ -181,10 +181,10 @@ router.get('/referrals/sparkline', requireOwner, async (req, res) => {
   }
 });
 
-// ══════════════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 // ROUTE 3: GET /api/mortgage/metrics
-// Mortgage module aggregate metrics — NO PII
-// ══════════════════════════════════════════════════════════════
+// Mortgage module aggregate metrics â€” NO PII
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 router.get('/mortgage/metrics', requireOwner, async (req, res) => {
   try {
     // Try multiple possible table names for mortgage data
@@ -237,9 +237,9 @@ router.get('/mortgage/metrics', requireOwner, async (req, res) => {
   }
 });
 
-// ══════════════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 // ROUTE 4: GET /api/mortgage/sparkline
-// ══════════════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 router.get('/mortgage/sparkline', requireOwner, async (req, res) => {
   try {
     const tableCheck = await safeQuery(
@@ -257,10 +257,10 @@ router.get('/mortgage/sparkline', requireOwner, async (req, res) => {
   }
 });
 
-// ══════════════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 // ROUTE 5: GET /api/cpa/metrics
-// CPA referral aggregate metrics — NO PII
-// ══════════════════════════════════════════════════════════════
+// CPA referral aggregate metrics â€” NO PII
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 router.get('/cpa/metrics', requireOwner, async (req, res) => {
   try {
     const statusRows = await safeQuery(`SELECT status, COUNT(*) AS count FROM cpa_referrals GROUP BY status`);
@@ -304,9 +304,9 @@ router.get('/cpa/metrics', requireOwner, async (req, res) => {
   }
 });
 
-// ══════════════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 // ROUTE 6: GET /api/cpa/sparkline
-// ══════════════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 router.get('/cpa/sparkline', requireOwner, async (req, res) => {
   try {
     const rows = await safeQuery(
@@ -320,10 +320,10 @@ router.get('/cpa/sparkline', requireOwner, async (req, res) => {
   }
 });
 
-// ══════════════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 // ROUTE 7: GET /api/cpa/enforcement-leads
-// Active enforcement leads — NO consumer PII
-// ══════════════════════════════════════════════════════════════
+// Active enforcement leads â€” NO consumer PII
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 router.get('/cpa/enforcement-leads', requireOwner, async (req, res) => {
   const limit = Math.min(50, parseInt(req.query.limit || '20'));
   try {
@@ -356,10 +356,10 @@ router.get('/cpa/enforcement-leads', requireOwner, async (req, res) => {
   }
 });
 
-// ══════════════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 // ROUTE 8: GET /api/brain/status
-// AI/SI process status — no PII possible
-// ══════════════════════════════════════════════════════════════
+// AI/SI process status â€” no PII possible
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 router.get('/brain/status', requireOwner, async (req, res) => {
   try {
     // Query recent brain/event logs to infer process activity
@@ -408,7 +408,7 @@ router.get('/brain/status', requireOwner, async (req, res) => {
     );
     const thoughts = thoughtRows.map(r => ({
       ts:   r.created_at,
-      text: `[${r.event_type}] ${r.event_description || '—'}`.substring(0, 100),
+      text: `[${r.event_type}] ${r.event_description || 'â€”'}`.substring(0, 100),
     }));
 
     return res.json({
@@ -420,9 +420,9 @@ router.get('/brain/status', requireOwner, async (req, res) => {
         memory_mb:         Math.round(process.memoryUsage().rss / 1024 / 1024),
         cpu_count:         os.cpus().length,
         node_version:      process.version,
-        db_pool_total:     pool.totalCount,
-        db_pool_idle:      pool.idleCount,
-        db_pool_waiting:   pool.waitingCount,
+        db_pool_total:     getPool(req).totalCount,
+        db_pool_idle:      getPool(req).idleCount,
+        db_pool_waiting:   getPool(req).waitingCount,
       }
     });
   } catch (err) {
@@ -430,16 +430,16 @@ router.get('/brain/status', requireOwner, async (req, res) => {
   }
 });
 
-// ══════════════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 // ROUTE 9: GET /api/security/vault-status
-// Consumer data vault security check — no PII
-// ══════════════════════════════════════════════════════════════
+// Consumer data vault security check â€” no PII
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 router.get('/security/vault-status', requireOwner, async (req, res) => {
   try {
     // Check that all required security configurations are present
     const checks = {
       encryption:  !!(process.env.DB_ENCRYPTION_KEY || process.env.VAULT_KEY),
-      piiMasking:  true,  // enforced at application layer — always true
+      piiMasking:  true,  // enforced at application layer â€” always true
       jwtEnforced: !!(process.env.JWT_SECRET) && process.env.JWT_SECRET !== 'auditdna_secret_change_me',
       auditLog:    true,  // this endpoint exists = audit log running
       sslDb:       !!(process.env.DB_SSL === 'true' || process.env.DATABASE_URL?.includes('sslmode=require')),
@@ -471,18 +471,18 @@ router.get('/security/vault-status', requireOwner, async (req, res) => {
   }
 });
 
-// ══════════════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 // ROUTE 10: GET /api/admin/live-events
-// Real-time event stream — PII NEVER RETURNED
+// Real-time event stream â€” PII NEVER RETURNED
 // All subject identification tokenized/masked at query level
-// ══════════════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 router.get('/admin/live-events', requireOwner, async (req, res) => {
   const limit = Math.min(200, parseInt(req.query.limit || '100'));
   const lane  = req.query.lane || null;  // optional filter
 
   try {
     // Combine events from attorney, CPA, and audit logs
-    // CRITICAL: email, name, phone, ip NEVER selected — tokens only
+    // CRITICAL: email, name, phone, ip NEVER selected â€” tokens only
     let events = [];
 
     // Attorney events
@@ -532,7 +532,7 @@ router.get('/admin/live-events', requireOwner, async (req, res) => {
            attempted_at                     AS ts,
            'security'                       AS lane,
            CONCAT('ACCESS_', outcome)       AS event_type,
-           CONCAT('Intel Center accessed by Owner — ', endpoint) AS description,
+           CONCAT('Intel Center accessed by Owner â€” ', endpoint) AS description,
            NULL                             AS masked_subject,
            NULL                             AS amount,
            NULL                             AS score,
@@ -571,7 +571,7 @@ router.get('/admin/live-events', requireOwner, async (req, res) => {
     // Sort combined events newest first
     events.sort((a, b) => new Date(b.ts) - new Date(a.ts));
 
-    // FINAL PII STRIP — belt and suspenders
+    // FINAL PII STRIP â€” belt and suspenders
     const safe = events.slice(0, limit).map(e => ({
       ts:             e.ts,
       lane:           e.lane,
@@ -593,3 +593,4 @@ router.get('/admin/live-events', requireOwner, async (req, res) => {
 });
 
 module.exports = router;
+

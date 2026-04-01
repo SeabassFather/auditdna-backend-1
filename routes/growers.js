@@ -1,4 +1,5 @@
 // ════════════════════════════════════════════════════════════════════════════
+const { pingRegistration } = require('../utils/notify_ping');
 // GROWER PIPELINE ROUTES v1.0
 // Save to: C:\AuditDNA\backend\routes\growers.js
 // Auto-mounts at: /api/growers (via server.js auto-loader)
@@ -168,6 +169,16 @@ router.post('/register', async (req, res) => {
       ).catch(() => { /* brain_events table may not exist yet — silent */ });
     } catch { /* non-critical */ }
 
+    // Notify owner on new grower registration
+    pingRegistration({
+      platform: 'AuditDNA',
+      name: (req.body.first_name || '') + ' ' + (req.body.last_name || ''),
+      email: req.body.email || '',
+      company: req.body.company_name || req.body.business_name || '',
+      origin: req.body.state || req.body.region || req.body.country || '',
+      docs: req.body.documents_completed ? req.body.documents_completed : [],
+      extra: { tier: req.body.tier || 'N/A', phone: req.body.phone || 'N/A' }
+    }).catch(() => {});
     res.status(201).json({
       success: true,
       grower,
