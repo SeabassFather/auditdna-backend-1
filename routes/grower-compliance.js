@@ -1,5 +1,6 @@
 // GROWER COMPLIANCE GATE ? C:\AuditDNA\backend\routes\grower-compliance.js
 const express = require('express');
+const { pingRegistration } = require('../utils/notify_ping');
 const router  = express.Router();
 const multer  = require('multer');
 const path    = require('path');

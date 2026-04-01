@@ -525,6 +525,13 @@ async function safeFetch(url, opts = {}, timeoutMs = 10000) {
 function brainLog(type, data, source) {
   const event = { type, data, source, ts: new Date().toISOString() };
   BrainState.eventLog.unshift(event);
+  // Persist to DB
+  try {
+    await pool.query(
+      "INSERT INTO brain_events (event_type, module, miners, payload, created_at) VALUES ($1,$2,$3,$4,NOW())",
+      [event.type||'BRAIN_EVENT', event.module||'brain', JSON.stringify(event.miners||[]), JSON.stringify(event)]
+    ).catch(()=>{});
+  } catch(e) {}
   if (BrainState.eventLog.length > 500) BrainState.eventLog.pop();
 }
 
@@ -843,7 +850,7 @@ module.exports = function installBrainMesh(app, pool) {
   });
 
   // ── /api/brain/event — All modules POST into this ──────────────────────
-  app.post('/api/brain/event', (req, res) => {
+  app.post('/api/brain/event', async (req, res) => {
     const event = req.body;
     if (!event || !event.type) return res.status(400).json({ error: 'type required' });
 
