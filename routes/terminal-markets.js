@@ -791,5 +791,30 @@ router.get('/stats', (req, res) => {
   });
 });
 
+
+// GET /api/terminal-markets/shipments
+router.get('/shipments', async (req, res) => {
+  try {
+    const pool = getPool(req);
+    const r = await pool.query('SELECT * FROM shipments ORDER BY created_at DESC LIMIT 100').catch(()=>({rows:[]}));
+    res.json({ ok:true, shipments: r.rows });
+  } catch(e) { res.status(500).json({ ok:false, error:e.message }); }
+});
+
+// POST /api/terminal-markets/shipments
+router.post('/shipments', async (req, res) => {
+  try {
+    const pool = getPool(req);
+    const { lot_number, commodity, grower, origin, destination, carrier, quantity, unit, border_crossing, po_number } = req.body;
+    const r = await pool.query(
+      `INSERT INTO shipments (lot_number, commodity, grower, origin, destination, carrier, quantity, unit, border_crossing, po_number, status)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,'In Transit') RETURNING *`,
+      [lot_number, commodity, grower, origin, destination, carrier, quantity, unit||'lbs', border_crossing, po_number]
+    );
+    try { pool.query("INSERT INTO brain_events (event_type, module, payload, created_at) VALUES ($1,$2,$3,NOW())", ['SHIPMENT_CREATED','terminal-markets',JSON.stringify(req.body)]).catch(()=>{}); } catch(e) {}
+    res.json({ ok:true, shipment: r.rows[0] });
+  } catch(e) { res.status(500).json({ ok:false, error:e.message }); }
+});
+
 module.exports = router;
 process.on('exit', () => termPool.end().catch(() => {}));

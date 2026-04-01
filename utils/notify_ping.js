@@ -1,64 +1,48 @@
 // notify_ping.js
 // Save to: C:\AuditDNA\backend\utils\notify_ping.js
-// AND to:  C:\AuditDNA\auditdna-realestate\backend\utils\notify_ping.js
+const nodemailer = require('nodemailer');
+const fetch = (...args) => import('node-fetch').then(({default: f}) => f(...args)).catch(() => null);
 
-const nodemailer = require("nodemailer");
+const CHANNEL = process.env.NTFY_CHANNEL || 'auditdna-agro-saul2026';
+const NTFY_BASE = 'https://ntfy.sh';
 
 const transporter = nodemailer.createTransport({
-  host: "smtpout.secureserver.net",
+  host: 'smtpout.secureserver.net',
   port: 465,
   secure: true,
   auth: {
-    user: "saul@mexausafg.com",
-    pass: "KongKing#321",
+    user: 'saul@mexausafg.com',
+    pass: process.env.SMTP_PASS || 'PurpleRain321',
   },
 });
 
-async function pingRegistration({ platform, name, email, company, origin, docs, extra }) {
-  const timestamp = new Date().toLocaleString("en-US", {
-    timeZone: "America/Tijuana",
-    dateStyle: "medium",
-    timeStyle: "short",
-  });
-
-  const docList = docs && docs.length
-    ? docs.map((d) => `  - ${d}`).join("\n")
-    : "  No documents listed";
-
-  const extraBlock = extra
-    ? `\nAdditional Info:\n${Object.entries(extra).map(([k, v]) => `  ${k}: ${v}`).join("\n")}`
-    : "";
-
-  const subject = `[${platform}] New Registration — ${name || email}`;
-
-  const text = `
-NEW REGISTRATION — ${platform.toUpperCase()}
-${"=".repeat(44)}
-
-Name:     ${name || "N/A"}
-Email:    ${email || "N/A"}
-Company:  ${company || "N/A"}
-Origin:   ${origin || "N/A"}
-Time:     ${timestamp}
-
-Legal / Document Checklist:
-${docList}
-${extraBlock}
-
---- AuditDNA Notification System ---
-`.trim();
-
+const ping = async ({ title = 'AuditDNA Alert', message = '', priority = 'default', tags = [] } = {}) => {
   try {
-    await transporter.sendMail({
-      from: '"AuditDNA Alerts" <saul@mexausafg.com>',
-      to: "saul@mexausafg.com",
-      subject,
-      text,
+    const r = await fetch(`${NTFY_BASE}/${CHANNEL}`, {
+      method: 'POST',
+      headers: {
+        'Title': title,
+        'Priority': priority,
+        'Tags': tags.join(',') || 'auditdna',
+        'Content-Type': 'text/plain',
+      },
+      body: message || title,
     });
-    console.log(`[notify_ping] Registration ping sent for ${email}`);
-  } catch (err) {
-    console.error("[notify_ping] Failed to send ping:", err.message);
+    return r && r.ok;
+  } catch (e) {
+    console.warn('[ntfy] ping failed:', e.message);
+    return false;
   }
-}
+};
 
-module.exports = { pingRegistration };
+const sendEmail = async ({ to = 'saul@mexausafg.com', subject = 'AuditDNA Alert', html = '' } = {}) => {
+  try {
+    await transporter.sendMail({ from: '"AuditDNA" <saul@mexausafg.com>', to, subject, html });
+    return true;
+  } catch (e) {
+    console.warn('[email] send failed:', e.message);
+    return false;
+  }
+};
+
+module.exports = { ping, sendEmail, CHANNEL, NTFY_BASE };
