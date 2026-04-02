@@ -8,6 +8,25 @@ const router = express.Router();
 
 // GET /api/buyer-segments/by-commodity
 // Returns buyers grouped by commodity with state breakdown
+// Auto-create buyer_segments table if missing
+async function ensureBuyerSegmentsTable(pool) {
+  try {
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS buyer_segments (
+        id SERIAL PRIMARY KEY,
+        email TEXT,
+        name TEXT,
+        company TEXT,
+        commodity TEXT,
+        state TEXT,
+        segment TEXT,
+        created_at TIMESTAMPTZ DEFAULT NOW()
+      )
+    `);
+    console.log("[buyer-segments] Table ready");
+  } catch(e) { console.warn("[buyer-segments] Table init warn:", e.message); }
+}
+
 router.get('/by-commodity', async (req, res) => {
   const pool = req.app.locals.pool;
   const { commodity } = req.query; // optional: filter to specific commodity
@@ -119,4 +138,5 @@ router.get('/commodity-list', async (req, res) => {
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
+module.exports = function(router, pool) { ensureBuyerSegmentsTable(pool); return router; };
 module.exports = router;

@@ -432,7 +432,7 @@ const server = app.listen(PORT, () => {
  JWT Secret:    ${process.env.JWT_SECRET ? 'SET' : 'MISSING â€” auth insecure'}
  DB Password:   ${process.env.DB_PASSWORD ? 'SET' : 'MISSING â€” DB will fail'}
 â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-YEEHAW! AI COWBOYS ARE LIVE${failMsg}
+81 NINER MINERS ARE LIVE${failMsg}
 â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 `);
 });

@@ -1,12 +1,12 @@
 // ═══════════════════════════════════════════════════════════════════════════════
-// COWBOYS ROUTES - AI Cowboys Insights & Predictions
+// COWBOYS ROUTES - 81 Niner Miners Insights & Predictions
 // ═══════════════════════════════════════════════════════════════════════════════
 
 const express = require('express');
 const router = express.Router();
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// GET /api/cowboys/insights - AI Cowboys Predictions
+// GET /api/cowboys/insights - 81 Niner Miners Predictions
 // ═══════════════════════════════════════════════════════════════════════════════
 router.get('/insights', (req, res) => {
   res.json({
