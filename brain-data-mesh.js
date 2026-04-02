@@ -522,7 +522,7 @@ async function safeFetch(url, opts = {}, timeoutMs = 10000) {
 }
 
 // ── LOG EVENT TO BRAIN ────────────────────────────────────────────────────────
-function brainLog(type, data, source) {
+async function brainLog(type, data, source) {
   const event = { type, data, source, ts: new Date().toISOString() };
   BrainState.eventLog.unshift(event);
   // Persist to DB

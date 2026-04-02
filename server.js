@@ -90,6 +90,8 @@ const prodSub = require('./routes/product-submissions');
 //       /api/brain/weather-alerts | /api/brain/grower-scores | /api/brain/status
 try {
   require('./brain-data-mesh')(app, pool);
+const brainEvents = require('./routes/brainEvents');
+app.use('/api/brain', brainEvents);
   console.log('[OK] Brain Data Mesh installed â€” all API feeds live');
 } catch (e) {
   console.warn('[WARN] Brain Data Mesh failed to load:', e.message);
