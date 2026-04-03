@@ -3,8 +3,8 @@
 // =============================================================================
 // 81 Niner Miners across 9 teams | AI Agents per module | SI Validation
 // Routes workflows across entire AuditDNA platform
-// CM Products Intelligence | Finance | Compliance | Agriculture | LATAM
-// CEO/COO: Saul Garcia | CM Products International | MexaUSA Food Group
+// Mexausa Food Group Intell | Finance | Compliance | Agriculture | LATAM
+// CEO/COO: Saul Garcia | Mexausa Food Group, Inc. | MexaUSA Food Group
 // =============================================================================
 
 const EventEmitter = require('events');
@@ -164,12 +164,12 @@ class Brain extends EventEmitter {
   initializeAIAgents() {
     const agents = {
       // --- CM PRODUCTS INTELLIGENCE ---
-      'cm_price_forecast': { module: 'CM Products Intelligence', role: 'Price Forecasting', type: 'AI', status: 'ACTIVE', accuracy: 0.91, ops: 0, description: 'Monitors USDA pricing, predicts 7-day price movements, generates buy/hold signals' },
-      'cm_supply_chain': { module: 'CM Products Intelligence', role: 'Supply Chain Optimization', type: 'AI', status: 'ACTIVE', accuracy: 0.88, ops: 0, description: 'Optimizes port routing, freight costs, regional pricing across West/Midwest/East corridors' },
-      'cm_seasonal': { module: 'CM Products Intelligence', role: 'Seasonal Intelligence', type: 'AI', status: 'ACTIVE', accuracy: 0.93, ops: 0, description: 'Tracks 10-country seasonal availability matrix, predicts supply windows' },
-      'cm_cogs': { module: 'CM Products Intelligence', role: 'Landed Cost Engine', type: 'SI', status: 'ACTIVE', accuracy: 0.99, ops: 0, description: 'Calculates exact COGS with 6-tier price ladder per region' },
-      'cm_manifest': { module: 'CM Products Intelligence', role: 'Manifest Compliance', type: 'SI', status: 'ACTIVE', accuracy: 0.97, ops: 0, description: 'Validates manifests against USDA requirements, flags non-compliant shipments' },
-      'cm_inventory': { module: 'CM Products Intelligence', role: 'Inventory Optimization', type: 'AI', status: 'ACTIVE', accuracy: 0.90, ops: 0, description: 'Monitors 65 SKUs, predicts reorder points, manages cold chain expiry' },
+      'cm_price_forecast': { module: 'Mexausa Food Group Intell', role: 'Price Forecasting', type: 'AI', status: 'ACTIVE', accuracy: 0.91, ops: 0, description: 'Monitors USDA pricing, predicts 7-day price movements, generates buy/hold signals' },
+      'cm_supply_chain': { module: 'Mexausa Food Group Intell', role: 'Supply Chain Optimization', type: 'AI', status: 'ACTIVE', accuracy: 0.88, ops: 0, description: 'Optimizes port routing, freight costs, regional pricing across West/Midwest/East corridors' },
+      'cm_seasonal': { module: 'Mexausa Food Group Intell', role: 'Seasonal Intelligence', type: 'AI', status: 'ACTIVE', accuracy: 0.93, ops: 0, description: 'Tracks 10-country seasonal availability matrix, predicts supply windows' },
+      'cm_cogs': { module: 'Mexausa Food Group Intell', role: 'Landed Cost Engine', type: 'SI', status: 'ACTIVE', accuracy: 0.99, ops: 0, description: 'Calculates exact COGS with 6-tier price ladder per region' },
+      'cm_manifest': { module: 'Mexausa Food Group Intell', role: 'Manifest Compliance', type: 'SI', status: 'ACTIVE', accuracy: 0.97, ops: 0, description: 'Validates manifests against USDA requirements, flags non-compliant shipments' },
+      'cm_inventory': { module: 'Mexausa Food Group Intell', role: 'Inventory Optimization', type: 'AI', status: 'ACTIVE', accuracy: 0.90, ops: 0, description: 'Monitors 65 SKUs, predicts reorder points, manages cold chain expiry' },
 
       // --- AGRICULTURE & COMMODITIES ---
       'ag_yield': { module: 'Agriculture', role: 'Yield Prediction', type: 'AI', status: 'ACTIVE', accuracy: 0.87, ops: 0, description: 'Predicts crop yields using weather, soil, and historical data' },

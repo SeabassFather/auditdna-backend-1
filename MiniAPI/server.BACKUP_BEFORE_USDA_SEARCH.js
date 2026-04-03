@@ -62,7 +62,7 @@ let inventoryDB = [
     costPerUnit: 28.00,
     sellPrice: 42.00,
     suggestedPrice: 42.00,
-    warehouse: 'CM Products - Nogales',
+    warehouse: 'Mexausa Food Group - Nogales',
     supplier: 'Valle Verde Organics',
     grade: 'Premium'
   },
@@ -80,7 +80,7 @@ let inventoryDB = [
     costPerUnit: 28.00,
     sellPrice: 40.00,
     suggestedPrice: 40.00,
-    warehouse: 'CM Products - Nogales',
+    warehouse: 'Mexausa Food Group - Nogales',
     supplier: 'Valle Verde Organics',
     grade: 'Premium'
   },
@@ -98,7 +98,7 @@ let inventoryDB = [
     costPerUnit: 28.00,
     sellPrice: 38.00,
     suggestedPrice: 38.00,
-    warehouse: 'CM Products - Nogales',
+    warehouse: 'Mexausa Food Group - Nogales',
     supplier: 'Valle Verde Organics',
     grade: 'Standard'
   },
@@ -116,7 +116,7 @@ let inventoryDB = [
     costPerUnit: 28.00,
     sellPrice: 36.00,
     suggestedPrice: 36.00,
-    warehouse: 'CM Products - Nogales',
+    warehouse: 'Mexausa Food Group - Nogales',
     supplier: 'Valle Verde Organics',
     grade: 'Standard'
   },
@@ -134,7 +134,7 @@ let inventoryDB = [
     costPerUnit: 28.00,
     sellPrice: 48.00,
     suggestedPrice: 48.00,
-    warehouse: 'CM Products - Nogales',
+    warehouse: 'Mexausa Food Group - Nogales',
     supplier: 'Valle Verde Organics',
     grade: 'Premium Plus'
   },
@@ -156,7 +156,7 @@ let inventoryDB = [
     costPerUnit: 16.80,
     sellPrice: 24.00,
     suggestedPrice: 24.00,
-    warehouse: 'CM Products - Nogales',
+    warehouse: 'Mexausa Food Group - Nogales',
     supplier: 'Fresh Fields Mexico',
     grade: 'Premium'
   },
@@ -174,7 +174,7 @@ let inventoryDB = [
     costPerUnit: 11.20,
     sellPrice: 16.50,
     suggestedPrice: 16.50,
-    warehouse: 'CM Products - Nogales',
+    warehouse: 'Mexausa Food Group - Nogales',
     supplier: 'Fresh Fields Mexico',
     grade: 'Standard'
   },
@@ -192,7 +192,7 @@ let inventoryDB = [
     costPerUnit: 9.50,
     sellPrice: 14.00,
     suggestedPrice: 14.00,
-    warehouse: 'CM Products - Nogales',
+    warehouse: 'Mexausa Food Group - Nogales',
     supplier: 'Fresh Fields Mexico',
     grade: 'Standard'
   },
@@ -214,7 +214,7 @@ let inventoryDB = [
     costPerUnit: 15.60,
     sellPrice: 22.10,
     suggestedPrice: 22.10,
-    warehouse: 'CM Products - Nogales',
+    warehouse: 'Mexausa Food Group - Nogales',
     supplier: 'Green Valley Farms',
     grade: 'Premium'
   },
@@ -232,7 +232,7 @@ let inventoryDB = [
     costPerUnit: 13.20,
     sellPrice: 18.50,
     suggestedPrice: 18.50,
-    warehouse: 'CM Products - Nogales',
+    warehouse: 'Mexausa Food Group - Nogales',
     supplier: 'Green Valley Farms',
     grade: 'Standard'
   },
@@ -250,7 +250,7 @@ let inventoryDB = [
     costPerUnit: 10.50,
     sellPrice: 14.25,
     suggestedPrice: 14.25,
-    warehouse: 'CM Products - Nogales',
+    warehouse: 'Mexausa Food Group - Nogales',
     supplier: 'Green Valley Farms',
     grade: 'Retail'
   },
@@ -272,7 +272,7 @@ let inventoryDB = [
     costPerUnit: 12.40,
     sellPrice: 18.75,
     suggestedPrice: 18.75,
-    warehouse: 'CM Products - Nogales',
+    warehouse: 'Mexausa Food Group - Nogales',
     supplier: 'Berry Fresh Co',
     grade: 'Premium'
   },
@@ -290,7 +290,7 @@ let inventoryDB = [
     costPerUnit: 16.20,
     sellPrice: 24.50,
     suggestedPrice: 24.50,
-    warehouse: 'CM Products - Nogales',
+    warehouse: 'Mexausa Food Group - Nogales',
     supplier: 'Berry Fresh Co',
     grade: 'Premium'
   },
@@ -308,7 +308,7 @@ let inventoryDB = [
     costPerUnit: 18.50,
     sellPrice: 28.00,
     suggestedPrice: 28.00,
-    warehouse: 'CM Products - Nogales',
+    warehouse: 'Mexausa Food Group - Nogales',
     supplier: 'Berry Fresh Co',
     grade: 'Premium'
   },
@@ -330,7 +330,7 @@ let inventoryDB = [
     costPerUnit: 21.50,
     sellPrice: 31.20,
     suggestedPrice: 31.20,
-    warehouse: 'CM Products - Nogales',
+    warehouse: 'Mexausa Food Group - Nogales',
     supplier: 'Pepper Paradise',
     grade: 'Premium'
   },
@@ -348,7 +348,7 @@ let inventoryDB = [
     costPerUnit: 18.20,
     sellPrice: 26.50,
     suggestedPrice: 26.50,
-    warehouse: 'CM Products - Nogales',
+    warehouse: 'Mexausa Food Group - Nogales',
     supplier: 'Pepper Paradise',
     grade: 'Standard'
   },
@@ -366,7 +366,7 @@ let inventoryDB = [
     costPerUnit: 11.50,
     sellPrice: 16.80,
     suggestedPrice: 16.80,
-    warehouse: 'CM Products - Nogales',
+    warehouse: 'Mexausa Food Group - Nogales',
     supplier: 'Pepper Paradise',
     grade: 'Retail'
   }
@@ -731,7 +731,7 @@ app.get('/verify/:invoiceNumber', async (req, res) => {
     <div class="detail"><strong>Total:</strong> $${sale.total}</div>
     <div class="detail"><strong>Date:</strong> ${new Date(sale.createdAt || sale.timestamp).toLocaleDateString()}</div>
     <div style="margin-top: 30px; color: #6b7280; font-size: 12px;">
-      <p>CM Products International</p>
+      <p>Mexausa Food Group, Inc.</p>
       <p>Verified at ${new Date().toLocaleString()}</p>
     </div>
   </div>

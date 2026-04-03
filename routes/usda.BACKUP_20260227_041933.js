@@ -1,6 +1,6 @@
 // ═══════════════════════════════════════════════════════════════
 // USDA MARS API ROUTES - LIVE INTEGRATION
-// CM Products International | AuditDNA Platform
+// Mexausa Food Group, Inc. | AuditDNA Platform
 // Auto-mounts at: /api/usda/* (via server.js auto-loader)
 // Deps: ZERO (native https + Buffer only)
 // ═══════════════════════════════════════════════════════════════

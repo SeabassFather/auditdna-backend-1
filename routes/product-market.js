@@ -289,11 +289,11 @@ router.post('/match/:submission_id', async (req, res) => {
         ? `${new Date(sub.available_from).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} - ${new Date(sub.available_to).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}`
         : 'Immediate availability';
 
-      const emailSubject = `Fresh ${sub.commodity} Available — ${sub.origin_region || sub.origin_country} Origin | CM Products Group`;
+      const emailSubject = `Fresh ${sub.commodity} Available — ${sub.origin_region || sub.origin_country} Origin | Mexausa Food Group, Inc.`;
 
       const emailBody = `Dear ${buyerName},
 
-CM Products Group, LLC. is pleased to offer the following product from our verified grower network:
+Mexausa Food Group, Inc.. is pleased to offer the following product from our verified grower network:
 
 PRODUCT: ${sub.commodity}${sub.variety ? ' (' + sub.variety + ')' : ''}
 ORIGIN: ${sub.origin_region || ''} ${sub.origin_country || 'Mexico'}
@@ -309,13 +309,13 @@ ${sub.organic ? 'USDA ORGANIC CERTIFIED' : ''}${sub.globalgap ? ' | GlobalGAP' :
 
 All products are fully traceable via the AuditDNA Agriculture Intelligence Platform with complete water, soil, fertilizer, and seed germination analysis on file. FSMA 204 compliant.
 
-CM Products Group, LLC. is a PACA-licensed buyer. Purchase orders and invoice factoring available.
+Mexausa Food Group, Inc.. is a PACA-licensed buyer. Purchase orders and invoice factoring available.
 
 To place an order or request samples, reply to this email or contact us directly.
 
 Best regards,
 Saul Garcia
-CM Products Group, LLC. | Mexausa Food Group, Inc.
+Mexausa Food Group, Inc.. | Mexausa Food Group, Inc.
 NMLS #337526
 Saul@mexausafg.com | +1-831-251-3116`;
 

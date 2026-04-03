@@ -26,11 +26,11 @@ app.use(express.urlencoded({ extended: true }));
 // MOCK DATABASES (Replace with MongoDB in production)
 // ============================================================
 let inventoryDB = [
-  { sku: 'AVG-HASS-25LB', productName: 'Hass Avocado', category: 'Fruits', unit: '25 lb box', currentStock: 150, reorderPoint: 50, sellPrice: 42.50, costPerUnit: 28.30, warehouse: 'CM Products - Nogales', supplier: 'Valle Verde Organics' },
-  { sku: 'TOM-ROMA-40LB', productName: 'Roma Tomato', category: 'Vegetables', unit: '40 lb carton', currentStock: 200, reorderPoint: 60, sellPrice: 24.00, costPerUnit: 16.80, warehouse: 'CM Products - Nogales', supplier: 'Fresh Fields Mexico' },
-  { sku: 'LET-ROM-24CT', productName: 'Romaine Lettuce', category: 'Vegetables', unit: '24 count', currentStock: 85, reorderPoint: 40, sellPrice: 22.10, costPerUnit: 15.60, warehouse: 'CM Products - Nogales', supplier: 'Green Valley Farms' },
-  { sku: 'STR-ALB-12X6', productName: 'Strawberry (Albion)', category: 'Berries', unit: '12x6 oz clamshell', currentStock: 120, reorderPoint: 50, sellPrice: 18.75, costPerUnit: 12.40, warehouse: 'CM Products - Nogales', supplier: 'Berry Fresh Co' },
-  { sku: 'PEP-RED-25LB', productName: 'Red Bell Pepper', category: 'Vegetables', unit: '25 lb box', currentStock: 95, reorderPoint: 40, sellPrice: 31.20, costPerUnit: 21.50, warehouse: 'CM Products - Nogales', supplier: 'Pepper Paradise' }
+  { sku: 'AVG-HASS-25LB', productName: 'Hass Avocado', category: 'Fruits', unit: '25 lb box', currentStock: 150, reorderPoint: 50, sellPrice: 42.50, costPerUnit: 28.30, warehouse: 'Mexausa Food Group - Nogales', supplier: 'Valle Verde Organics' },
+  { sku: 'TOM-ROMA-40LB', productName: 'Roma Tomato', category: 'Vegetables', unit: '40 lb carton', currentStock: 200, reorderPoint: 60, sellPrice: 24.00, costPerUnit: 16.80, warehouse: 'Mexausa Food Group - Nogales', supplier: 'Fresh Fields Mexico' },
+  { sku: 'LET-ROM-24CT', productName: 'Romaine Lettuce', category: 'Vegetables', unit: '24 count', currentStock: 85, reorderPoint: 40, sellPrice: 22.10, costPerUnit: 15.60, warehouse: 'Mexausa Food Group - Nogales', supplier: 'Green Valley Farms' },
+  { sku: 'STR-ALB-12X6', productName: 'Strawberry (Albion)', category: 'Berries', unit: '12x6 oz clamshell', currentStock: 120, reorderPoint: 50, sellPrice: 18.75, costPerUnit: 12.40, warehouse: 'Mexausa Food Group - Nogales', supplier: 'Berry Fresh Co' },
+  { sku: 'PEP-RED-25LB', productName: 'Red Bell Pepper', category: 'Vegetables', unit: '25 lb box', currentStock: 95, reorderPoint: 40, sellPrice: 31.20, costPerUnit: 21.50, warehouse: 'Mexausa Food Group - Nogales', supplier: 'Pepper Paradise' }
 ];
 
 let salesDB = [];
@@ -384,7 +384,7 @@ app.get('/verify/:invoiceNumber', async (req, res) => {
     <div class="detail"><strong>Date:</strong> ${new Date(sale.createdAt).toLocaleDateString()}</div>
     <div class="detail"><strong>Status:</strong> <span class="status-badge">${sale.status}</span></div>
     <div style="margin-top: 30px; color: #6b7280; font-size: 12px;">
-      <p>CM Products International</p>
+      <p>Mexausa Food Group, Inc.</p>
       <p>Verified at ${new Date().toLocaleString()}</p>
     </div>
   </div>

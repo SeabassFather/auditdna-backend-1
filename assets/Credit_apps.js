@@ -66,7 +66,7 @@ router.post('/', async (req, res) => {
     // Notify Saul + Jose
     const priorityTag = isPriority ? '[PRIORITY ACCOUNT]' : '[NEW APPLICATION]';
     await mailer.sendMail({
-      from: '"CM Products Credit" <sgarcia1911@gmail.com>',
+      from: '"Mexausa Food Group Credit" <sgarcia1911@gmail.com>',
       to: 'saul@mexausafg.com, solreal1110@gmail.com',
       replyTo: 'saul@mexausafg.com',
       subject: `${priorityTag} Credit App #${appId} — ${biz.legalName} (${biz.roleType})`,
@@ -87,7 +87,7 @@ router.post('/', async (req, res) => {
                  ['AP Contact',biz.apName+' | '+biz.apEmail]
                 ].map(([k,v])=>`<tr><td style="padding:6px 0;border-bottom:1px solid #e2e8f0;color:#64748b;width:40%">${k}</td><td style="padding:6px 0;border-bottom:1px solid #e2e8f0;font-weight:600">${v}</td></tr>`).join('')}
             </table>
-            <p style="margin-top:16px;font-size:12px;color:#64748b">Review in AuditDNA: CM Products Intelligence → Credit Application → Admin Review</p>
+            <p style="margin-top:16px;font-size:12px;color:#64748b">Review in AuditDNA: Mexausa Food Group Intell → Credit Application → Admin Review</p>
           </div>
         </div>`
     }).catch(e => console.error('[CREDIT-APPS] Email error:', e.message));
@@ -96,10 +96,10 @@ router.post('/', async (req, res) => {
     if (biz.purchasingEmail || biz.apEmail) {
       const toEmail = biz.purchasingEmail || biz.apEmail;
       await mailer.sendMail({
-        from: '"CM Products Group LLC" <sgarcia1911@gmail.com>',
+        from: '"Mexausa Food Group, Inc." <sgarcia1911@gmail.com>',
         to: toEmail,
         replyTo: 'solreal1110@gmail.com',
-        subject: `Credit Application Received — ${biz.legalName} | CM Products Group LLC`,
+        subject: `Credit Application Received — ${biz.legalName} | Mexausa Food Group, Inc.`,
         html: `
           <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto">
             <div style="background:#0f172a;padding:24px;text-align:center">
@@ -110,7 +110,7 @@ router.post('/', async (req, res) => {
               <p>We have received your credit application (Reference #${appId}). ${isPriority
                 ? 'As a priority buyer account, Saul Garcia will contact you directly within 24 hours to complete your onboarding.'
                 : 'Our team will review your application within 2-3 business days. You will receive your login credentials and PIN upon approval.'}</p>
-              <p><strong>Important Notice — Factoring:</strong> CM Products Group LLC may factor its accounts receivable. If applicable, you will be notified in writing to remit payments to our designated finance company.</p>
+              <p><strong>Important Notice — Factoring:</strong> Mexausa Food Group, Inc. may factor its accounts receivable. If applicable, you will be notified in writing to remit payments to our designated finance company.</p>
               <p>Questions? Contact us at <strong>solreal1110@gmail.com</strong> or <strong>(928) 246-3858</strong></p>
             </div>
           </div>`

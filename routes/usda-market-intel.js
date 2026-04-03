@@ -9,7 +9,7 @@
 //   USDA ERS                   - retail/consumer pricing data
 // FEEDS TO:
 //   Brain (81 miners)          - price alerts, trend analysis, buy signals
-//   CM Products Tenant         - market intel for buyer base (LA/MW/EC)
+//   Mexausa Food Group Tenant         - market intel for buyer base (LA/MW/EC)
 //   Price Intelligence         - predicted vs actual comparison
 //   Email Scheduler            - buyer outreach with live USDA data
 //   Terminal Markets           - wholesale/retail/chain pricing
@@ -486,7 +486,7 @@ router.post('/email-buyers', async (req, res) => {
   let discountLine = '';
   if (usdaPrice && fob > 0 && fob < usdaPrice) {
     const disc = Math.round(((usdaPrice - fob) / usdaPrice) * 100);
-    discountLine = `\nUSDA National Average: $${usdaPrice} ${usdaUnit}\nCM Products FOB: $${fob}\nYOUR SAVINGS: ${disc}% UNDER USDA AVERAGE\n`;
+    discountLine = `\nUSDA National Average: $${usdaPrice} ${usdaUnit}\nMexausa Food Group FOB: $${fob}\nYOUR SAVINGS: ${disc}% UNDER USDA AVERAGE\n`;
   }
 
   // Build emails
@@ -497,11 +497,11 @@ router.post('/email-buyers', async (req, res) => {
 
     if (!buyerEmail) return null;
 
-    const subject = custom_subject || `Fresh ${comName} Available - CM Products Group | PACA Licensed`;
+    const subject = custom_subject || `Fresh ${comName} Available - Mexausa Food Group, Inc. | PACA Licensed`;
 
     const body = `${custom_intro || `Dear ${buyerName},`}
 
-CM Products Group, LLC. (PACA Licensed | NMLS #337526) is offering:
+Mexausa Food Group, Inc.. (PACA Licensed | NMLS #337526) is offering:
 
 PRODUCT: ${comName}
 ORIGIN: ${origin || 'Mexico'}
@@ -521,7 +521,7 @@ Minneapolis, Denver, Atlanta, Miami, New York, Philadelphia, Boston
 For orders, samples, or pricing: reply or call directly.
 
 Saul Garcia
-CM Products Group, LLC. | Mexausa Food Group, Inc.
+Mexausa Food Group, Inc.. | Mexausa Food Group, Inc.
 Saul@mexausafg.com | +1-831-251-3116 | +52-646-340-2686`;
 
     return { to: buyerEmail, name: buyerName, company: buyerCompany, subject, body };
@@ -573,7 +573,7 @@ Saul@mexausafg.com | +1-831-251-3116 | +52-646-340-2686`;
 
 // ============================================================================
 // 8. BRAIN MARKET FEED - GET /api/usda-market-intel/brain-feed
-//    Full market intelligence feed for Brain + 81 miners + CM Products
+//    Full market intelligence feed for Brain + 81 miners + Mexausa Food Group
 // ============================================================================
 router.get('/brain-feed', async (req, res) => {
   const topCommodities = ['AVOCADOS','STRAWBERRIES','BLUEBERRIES','RASPBERRIES','TOMATOES','LIMES','PEPPERS','MANGOES','ASPARAGUS','CUCUMBERS'];
@@ -612,7 +612,7 @@ router.get('/brain-feed', async (req, res) => {
 
 // ============================================================================
 // 9. CM PRODUCTS TENANT INTEL - GET /api/usda-market-intel/cm-products
-//    Market intelligence formatted for CM Products buyer base
+//    Market intelligence formatted for Mexausa Food Group buyer base
 // ============================================================================
 router.get('/cm-products', async (req, res) => {
   const regions = {
@@ -645,14 +645,14 @@ router.get('/cm-products', async (req, res) => {
   await fireBrain('CM_PRODUCTS_TENANT_ACCESS', { regions: Object.keys(regions).length, commodities: Object.keys(marketData).length });
 
   res.json({
-    tenant: 'CM Products Group, LLC.',
+    tenant: 'Mexausa Food Group, Inc..',
     paca_license: true,
     nmls: '337526',
     coverage: regions,
     usda_pricing: marketData,
     markets_total: Object.keys(MARKETS).length,
     generated_at: new Date().toISOString(),
-    note: 'All data sourced from USDA NASS and AMS. CM Products operates 10-20% under national wholesale averages.',
+    note: 'All data sourced from USDA NASS and AMS. Mexausa Food Group operates 10-20% under national wholesale averages.',
   });
 });
 
@@ -676,7 +676,7 @@ router.get('/stats', (req, res) => {
       'Buy/sell signal generation',
       'Buyer email scheduling with live USDA pricing',
       'Brain feed for 81 miners',
-      'CM Products tenant intelligence',
+      'Mexausa Food Group tenant intelligence',
     ],
   });
 });

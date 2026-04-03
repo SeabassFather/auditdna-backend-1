@@ -5,13 +5,13 @@
 // ============================================================================
 // CONNECTS TO:
 //   Brain (81 miners)  - fires events on price changes, alerts, email sends
-//   CM Products Tenant - shares market intel with buyer base (LA/MW/EC)
+//   Mexausa Food Group Tenant - shares market intel with buyer base (LA/MW/EC)
 //   Price Intelligence - feeds predicted vs actual terminal pricing
 //   Product Market     - links grower submissions to terminal delivery quotes
 //   Email Marketing    - schedules 3am EST buyer outreach with live pricing
 // ============================================================================
 // DATA FLOW:
-//   USDA AMS API -> terminal-markets -> Brain -> CM Products Tenant
+//   USDA AMS API -> terminal-markets -> Brain -> Mexausa Food Group Tenant
 //                                    -> Price Intelligence (predicted vs actual)
 //                                    -> Email Scheduler -> Matched Buyers
 //                                    -> Frontend Dashboard (charts/tables)
@@ -84,7 +84,7 @@ const COMMODITIES = {
   avocado: {
     name:'Hass Avocado', origin:'Michoacan/Jalisco', unit:'48ct case', usda_group:'Fruits',
     mexico_fob: 28.50, usda_avg_wholesale: 42.00,
-    margin_vs_usda: -0.15, // CM Products is 15% under USDA avg
+    margin_vs_usda: -0.15, // Mexausa Food Group is 15% under USDA avg
     logistics: { truck_to_border:2.50, customs:1.20, cold_chain:0.80, phyto:0.30, total:4.80 },
     terminals: {
       los_angeles:   { wholesale:36.00, retail:52.00, chain:48.00, transit_days:2, freight:3.50 },
@@ -449,7 +449,7 @@ router.post('/logistics', (req, res) => {
 
 // ============================================================================
 // 6. CM PRODUCTS TENANT VIEW - GET /api/terminal-markets/cm-products
-//    Market intel formatted for CM Products buyer base
+//    Market intel formatted for Mexausa Food Group buyer base
 //    Regions: LA, Midwest, East Coast
 // ============================================================================
 router.get('/cm-products', async (req, res) => {
@@ -485,7 +485,7 @@ router.get('/cm-products', async (req, res) => {
     }
   }
 
-  // Fire brain event for CM Products data access
+  // Fire brain event for Mexausa Food Group data access
   await fireBrainEvent('CM_PRODUCTS_INTEL_ACCESSED', {
     regions: Object.keys(regions),
     commodities: Object.keys(COMMODITIES).length,
@@ -493,7 +493,7 @@ router.get('/cm-products', async (req, res) => {
   });
 
   res.json({
-    tenant: 'CM Products Group, LLC.',
+    tenant: 'Mexausa Food Group, Inc..',
     paca_license: true,
     nmls: '337526',
     regions: intel,
@@ -554,11 +554,11 @@ router.post('/schedule-email', async (req, res) => {
     const buyerEmail = buyer.email || buyer.email_address;
     const buyerName = buyer.first_name ? `${buyer.first_name} ${buyer.last_name || ''}`.trim() : (buyer.company_name || 'Valued Buyer');
 
-    const subject = custom_subject || `Fresh ${c.name} - ${Math.abs(Math.round(c.margin_vs_usda * 100))}% Under USDA Wholesale | CM Products Group`;
+    const subject = custom_subject || `Fresh ${c.name} - ${Math.abs(Math.round(c.margin_vs_usda * 100))}% Under USDA Wholesale | Mexausa Food Group, Inc.`;
 
     const body = `${custom_intro || `Dear ${buyerName},`}
 
-CM Products Group, LLC. (PACA Licensed) is offering premium ${c.name} from ${c.origin}, Mexico at competitive pricing:
+Mexausa Food Group, Inc.. (PACA Licensed) is offering premium ${c.name} from ${c.origin}, Mexico at competitive pricing:
 
 PRODUCT: ${c.name}
 ORIGIN: ${c.origin}
@@ -573,7 +573,7 @@ PRICING BREAKDOWN:
 ${include_usda_comparison !== false ? `
 USDA COMPARISON:
   USDA Avg Wholesale:  $${c.usda_avg_wholesale}/${c.unit}
-  CM Products Price:   $${landed?.total_landed || c.mexico_fob}/${c.unit}
+  Mexausa Food Group Price:   $${landed?.total_landed || c.mexico_fob}/${c.unit}
   YOUR SAVINGS:        ${Math.abs(Math.round(c.margin_vs_usda * 100))}% UNDER USDA AVERAGE` : ''}
 
 QUALITY ASSURANCE:
@@ -586,7 +586,7 @@ We ship from Mexico to all USA terminal markets: ${Object.keys(c.terminals).map(
 To place an order or request samples, reply directly or call:
 
 Saul Garcia
-CM Products Group, LLC. | Mexausa Food Group, Inc.
+Mexausa Food Group, Inc.. | Mexausa Food Group, Inc.
 NMLS #337526
 Saul@mexausafg.com | +1-831-251-3116 | +52-646-340-2686`;
 

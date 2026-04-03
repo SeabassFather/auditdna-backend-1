@@ -133,7 +133,7 @@ router.post('/shop', async (req, res) => {
 </div>
 <div style="background:#fff;padding:20px;border-radius:0 0 8px 8px;">
   <p style="color:#475569;font-size:13px;margin-bottom:16px;">
-    CM Products International (PACA #20241168) is soliciting competitive factoring terms for the following receivable.
+    Mexausa Food Group, Inc. (PACA #20241168) is soliciting competitive factoring terms for the following receivable.
     <strong>Parties are not disclosed at this stage. NDA required before disclosure.</strong>
   </p>
   <table style="width:100%;border-collapse:collapse;font-size:13px;">
@@ -156,13 +156,13 @@ router.post('/shop', async (req, res) => {
     Reference: <strong>${dealId}</strong> in your reply subject line.
   </p>
   <div style="margin-top:16px;padding-top:16px;border-top:1px solid #e2e8f0;font-size:11px;color:#94a3b8;">
-    CM Products International · PACA License #20241168 · EIN 93-2597001<br>
+    Mexausa Food Group, Inc. · PACA License #20241168 · EIN 93-2597001<br>
     saul@mexausafg.com · +1-831-251-3116 · mexausafg.com
   </div>
 </div></div>`;
 
         await mailer.sendMail({
-          from: '"CM Products International" <saul@mexausafg.com>',
+          from: '"Mexausa Food Group, Inc." <saul@mexausafg.com>',
           to: lender.email,
           cc: lender.email_cc||'',
           subject: `Factoring Opportunity — ${dealId} — $${parseFloat(amount).toLocaleString()} — ${commodity}`,

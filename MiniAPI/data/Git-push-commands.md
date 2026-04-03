@@ -45,7 +45,7 @@ git commit -m "🚀 MAJOR: Zadarma CRM + Google Calendar + 15,379 Contacts Integ
 - API Key: a2aaea04d645d80e739c
 - WhatsApp: +52-646-340-2686
 
-Author: Saul Garcia / CM Products International
+Author: Saul Garcia / Mexausa Food Group, Inc.
 Date: January 13, 2026"
 
 # Push to GitHub

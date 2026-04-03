@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 
 // =============================================================================
-// CALL FOR TENDER (CFT) — CM Products International / AuditDNA
+// CALL FOR TENDER (CFT) — Mexausa Food Group, Inc. / AuditDNA
 // Buyer posts commodity need → System emails ALL matching growers →
 // Growers submit offers → Price Analyzer compares → Buyer selects →
 // PO auto-generated → Escrow/Factoring → Deal closed
@@ -275,7 +275,7 @@ export default function CallForTender() {
       <div style={{ background:'linear-gradient(135deg,rgba(203,166,88,0.07),rgba(10,10,10,0.98))', borderBottom:`1px solid ${T.borderGold}`, padding:'16px 24px', display:'flex', justifyContent:'space-between', alignItems:'center' }}>
         <div>
           <div style={{ fontSize:16, fontWeight:900, letterSpacing:3, color:T.gold }}>CALL FOR TENDER</div>
-          <div style={{ fontSize:10, color:T.dim, marginTop:2, letterSpacing:1 }}>Buyer RFQ — Grower Matching — PO Generation | CM Products International</div>
+          <div style={{ fontSize:10, color:T.dim, marginTop:2, letterSpacing:1 }}>Buyer RFQ — Grower Matching — PO Generation | Mexausa Food Group, Inc.</div>
         </div>
         <button style={btnGold} onClick={()=>setTab('new')}>+ NEW TENDER</button>
       </div>

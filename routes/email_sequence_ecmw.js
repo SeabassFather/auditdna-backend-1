@@ -69,7 +69,7 @@ const getTemplate = (day, buyer) => {
           </div>
           <div style="padding:30px;background:#fef8e7;">
             <p>Hello ${name}${company ? ` at ${company}` : ''},</p>
-            <p>My name is <strong>Saul Garcia</strong> with CM Products International — we're a PACA-licensed importer sourcing premium avocados, berries, and leafy greens directly from certified growers in Michoacan and Sinaloa, Mexico.</p>
+            <p>My name is <strong>Saul Garcia</strong> with Mexausa Food Group, Inc. — we're a PACA-licensed importer sourcing premium avocados, berries, and leafy greens directly from certified growers in Michoacan and Sinaloa, Mexico.</p>
             <p>We work with distributors and retailers across the East Coast and Midwest who need consistent volume, competitive pricing, and full USDA/FDA/APHIS compliance — without the middleman markup.</p>
             <table style="width:100%;border-collapse:collapse;margin:20px 0;">
               <tr style="background:#0f172a;color:#cba658;">
@@ -102,14 +102,14 @@ const getTemplate = (day, buyer) => {
             <p>If you're currently sourcing from Mexico or looking to diversify your supply chain, I'd welcome a 15-minute call this week.</p>
             <p style="margin-top:30px;">Best regards,<br>
             <strong>Saul Garcia</strong><br>
-            CM Products International / Mexausa Food Group, Inc.<br>
+            Mexausa Food Group, Inc. / Mexausa Food Group, Inc.<br>
             PACA #20241168 | NMLS #337526<br>
             <a href="tel:+18312513116" style="color:#cba658;">+1-831-251-3116</a> |
             <a href="mailto:saul@mexausafg.com" style="color:#cba658;">saul@mexausafg.com</a> |
             <a href="https://mexausafg.com" style="color:#cba658;">mexausafg.com</a></p>
           </div>
           <div style="background:#0f172a;padding:12px 30px;font-size:10px;color:#475569;">
-            To unsubscribe, reply with REMOVE in the subject line. CM Products International, PACA #20241168.
+            To unsubscribe, reply with REMOVE in the subject line. Mexausa Food Group, Inc., PACA #20241168.
           </div>
         </div>
       `
@@ -158,13 +158,13 @@ const getTemplate = (day, buyer) => {
             <p>Would a full pricing sheet and spec pack be helpful? I can send it over today.</p>
             <p style="margin-top:30px;">Best regards,<br>
             <strong>Saul Garcia</strong><br>
-            CM Products International<br>
+            Mexausa Food Group, Inc.<br>
             PACA #20241168<br>
             <a href="tel:+18312513116" style="color:#cba658;">+1-831-251-3116</a> |
             <a href="mailto:saul@mexausafg.com" style="color:#cba658;">saul@mexausafg.com</a></p>
           </div>
           <div style="background:#0f172a;padding:12px 30px;font-size:10px;color:#475569;">
-            To unsubscribe, reply with REMOVE in the subject line. CM Products International, PACA #20241168.
+            To unsubscribe, reply with REMOVE in the subject line. Mexausa Food Group, Inc., PACA #20241168.
           </div>
         </div>
       `
@@ -172,7 +172,7 @@ const getTemplate = (day, buyer) => {
 
     // ── DAY 10 — CLOSE ───────────────────────────────────────────
     10: {
-      subject: 'Last Note — Open Allocation Closing Q2 | CM Products International',
+      subject: 'Last Note — Open Allocation Closing Q2 | Mexausa Food Group, Inc.',
       html: `
         <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;color:#1e293b;">
           <div style="background:#0f172a;padding:20px 30px;border-bottom:3px solid #cba658;">
@@ -195,14 +195,14 @@ const getTemplate = (day, buyer) => {
             <p>Hope to connect.</p>
             <p style="margin-top:30px;">
             <strong>Saul Garcia</strong><br>
-            CM Products International / Mexausa Food Group, Inc.<br>
+            Mexausa Food Group, Inc. / Mexausa Food Group, Inc.<br>
             PACA #20241168 | NMLS #337526<br>
             <a href="tel:+18312513116" style="color:#cba658;">+1-831-251-3116</a> |
             <a href="mailto:saul@mexausafg.com" style="color:#cba658;">saul@mexausafg.com</a> |
             <a href="https://mexausafg.com" style="color:#cba658;">mexausafg.com</a></p>
           </div>
           <div style="background:#0f172a;padding:12px 30px;font-size:10px;color:#475569;">
-            To unsubscribe, reply with REMOVE in the subject line. CM Products International, PACA #20241168.
+            To unsubscribe, reply with REMOVE in the subject line. Mexausa Food Group, Inc., PACA #20241168.
           </div>
         </div>
       `
@@ -277,7 +277,7 @@ const sendSequenceDay = async (pool, day) => {
 
     try {
       await transporter.sendMail({
-        from: '"Saul Garcia - CM Products International" <saul@mexausafg.com>',
+        from: '"Saul Garcia - Mexausa Food Group, Inc." <saul@mexausafg.com>',
         to: buyer.email,
         subject: template.subject,
         html: template.html,

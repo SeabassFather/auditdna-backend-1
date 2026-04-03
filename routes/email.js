@@ -134,7 +134,7 @@ router.post('/send-campaign', upload.fields([
         htmlBody = `
           <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
             <div style="background: #0f172a; padding: 20px; border-radius: 8px 8px 0 0;">
-              <h2 style="color: #cba658; margin: 0;">CM Products International</h2>
+              <h2 style="color: #cba658; margin: 0;">Mexausa Food Group, Inc.</h2>
               <p style="color: #94a3b0; margin: 5px 0 0;">MexaUSA Food Group</p>
             </div>
             <div style="background: #ffffff; padding: 30px; border: 1px solid #e2e8f0;">
@@ -143,7 +143,7 @@ router.post('/send-campaign', upload.fields([
             <div style="background: #f8fafc; padding: 15px; text-align: center; border-radius: 0 0 8px 8px; border: 1px solid #e2e8f0; border-top: none;">
               <p style="color: #64748b; font-size: 12px; margin: 0;">
                 Saul Garcia | CEO/COO<br>
-                CM Products International | Email: saul@mexausafg.com<br>
+                Mexausa Food Group, Inc. | Email: saul@mexausafg.com<br>
                 saul@mexausafg.com
               </p>
             </div>
@@ -426,8 +426,8 @@ router.post('/ai-generate', async (req, res) => {
   if (!ANTHROPIC_API_KEY || ANTHROPIC_API_KEY.includes('YOUR_KEY') || ANTHROPIC_API_KEY.includes('your_real')) {
     console.log('[EMAIL AI] No Anthropic key - using template mode');
     return res.json({
-      content: `Dear ${context?.contact || 'Valued Partner'},\n\nRegarding: "${prompt}"\n\nAt CM Products International, we specialize in premium fresh produce from Mexico.\n\nBest regards,\nSaul Garcia\nSales Director/Contract Sales- Load Volume-Multi Distribution Channels/Commodities
-CM Products International- Los Angeles, Ca. & Mexico
+      content: `Dear ${context?.contact || 'Valued Partner'},\n\nRegarding: "${prompt}"\n\nAt Mexausa Food Group, Inc., we specialize in premium fresh produce from Mexico.\n\nBest regards,\nSaul Garcia\nSales Director/Contract Sales- Load Volume-Multi Distribution Channels/Commodities
+Mexausa Food Group, Inc.- Los Angeles, Ca. & Mexico
 Mexausa Food Group, Inc.\nEmail: saul@mexausafg.com`,
       subject: context?.subject || prompt,
       mode: 'template'
@@ -435,7 +435,7 @@ Mexausa Food Group, Inc.\nEmail: saul@mexausafg.com`,
   }
 
   try {
-    const systemPrompt = `You are an AI email content writer for CM Products International (MexaUSA Food Group, Inc.).
+    const systemPrompt = `You are an AI email content writer for Mexausa Food Group, Inc. (MexaUSA Food Group, Inc.).
 
 COMPANY INFO:
 - Sales Director/Contract Sales: Saul Garcia
@@ -452,7 +452,7 @@ STYLE RULES:
 - Reference Mexican growing regions when relevant (Michoacán, Jalisco, Baja California, Sinaloa)
 - Include seasonal market insights
 - Always sign as Saul Garcia, Sales Director/Contract Sales- Load Volume-Multi Distribution Channels/Commodities
-CM Products International- Los Angeles, Ca. & Mexico
+Mexausa Food Group, Inc.- Los Angeles, Ca. & Mexico
 Mexausa Food Group, Inc.
 
 ${type === 'subject' ? 'Generate ONLY an email subject line. No body, no quotes, just the subject.' : 'Generate a complete professional email body. Include greeting, body paragraphs, and signature.'}`;
@@ -524,8 +524,8 @@ ${type === 'subject' ? 'Generate ONLY an email subject line. No body, no quotes,
     console.error('[EMAIL AI] Error:', err.message);
     // Fallback to template on error
     res.json({
-      content: `Dear ${context?.contact || 'Valued Partner'},\n\nRegarding: "${prompt}"\n\nAt CM Products International, we specialize in premium fresh produce from Mexico.\n\nBest regards,\nSaul Garcia\nSales Director/Contract Sales- Load Volume-Multi Distribution Channels/Commodities
-CM Products International- Los Angeles, Ca. & Mexico
+      content: `Dear ${context?.contact || 'Valued Partner'},\n\nRegarding: "${prompt}"\n\nAt Mexausa Food Group, Inc., we specialize in premium fresh produce from Mexico.\n\nBest regards,\nSaul Garcia\nSales Director/Contract Sales- Load Volume-Multi Distribution Channels/Commodities
+Mexausa Food Group, Inc.- Los Angeles, Ca. & Mexico
 Mexausa Food Group, Inc.\nEmail: saul@mexausafg.com`,
       subject: context?.subject || prompt,
       mode: 'template-fallback',

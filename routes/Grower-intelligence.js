@@ -7,7 +7,7 @@
 // Pulls from grower-recommendations and growerworkflow data
 // Brain wired for all major operations
 //
-// CM Products International | MexaUSA Food Group, Inc.
+// Mexausa Food Group, Inc. | MexaUSA Food Group, Inc.
 // ============================================================================
 
 const express = require('express');

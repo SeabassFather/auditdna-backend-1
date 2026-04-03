@@ -49,7 +49,7 @@ Write-Host "`n============================================================" -For
 Write-Host "📊 CHANGES MADE:" -ForegroundColor Yellow
 Write-Host "============================================================" -ForegroundColor Cyan
 Write-Host "   • Removed: ðŸ  (Home)" -ForegroundColor White
-Write-Host "   • Removed: ðŸ'¼ (CM Products)" -ForegroundColor White
+Write-Host "   • Removed: ðŸ'¼ (Mexausa Food Group)" -ForegroundColor White
 Write-Host "   • Removed: ðŸŒ± (Grower Hub)" -ForegroundColor White
 Write-Host "   • Removed: ðŸ¥' (Produce)" -ForegroundColor White
 Write-Host "   • Removed: ðŸ¥© (Protein)" -ForegroundColor White

@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 
 // =============================================================================
-// FDA COMPLIANCE & REGULATORY MODULE — AuditDNA / CM Products International
+// FDA COMPLIANCE & REGULATORY MODULE — AuditDNA / Mexausa Food Group, Inc.
 //
 // Covers ALL gaps identified from earlier analysis:
 //   1. FDA Prior Notice auto-filing (required 15hrs before arrival)
@@ -88,7 +88,7 @@ export default function FDACompliance() {
   const [mrlResults, setMrlResults] = useState(null);
 
   // PACA Generator
-  const [pacaForm, setPacaForm] = useState({ seller_name:'CM Products International', seller_paca:'', buyer_name:'', buyer_paca:'', commodity:'', qty:'', unit:'Cases', price_per_unit:'', total_value:'', delivery_date:'', po_number:'' });
+  const [pacaForm, setPacaForm] = useState({ seller_name:'Mexausa Food Group, Inc.', seller_paca:'', buyer_name:'', buyer_paca:'', commodity:'', qty:'', unit:'Cases', price_per_unit:'', total_value:'', delivery_date:'', po_number:'' });
   const [pacaDoc, setPacaDoc] = useState(null);
 
   // Border Wait Times
@@ -608,7 +608,7 @@ export default function FDACompliance() {
         {tab==='bluebook' && (
           <div style={{ maxWidth:600 }}>
             <div style={{ fontSize:13, fontWeight:800, color:T.gold, marginBottom:4, letterSpacing:2 }}>BUYER CREDIT VETTING — BLUE BOOK / RED BOOK</div>
-            <div style={{ fontSize:11, color:T.dim, marginBottom:16 }}>Verify buyer PACA license, credit rating, and payment history before extending terms. Protects CM Products from non-payment.</div>
+            <div style={{ fontSize:11, color:T.dim, marginBottom:16 }}>Verify buyer PACA license, credit rating, and payment history before extending terms. Protects Mexausa Food Group from non-payment.</div>
             <div style={{ display:'flex', gap:10, marginBottom:20 }}>
               <input style={{ ...inp, flex:1 }} value={bbCompany} onChange={e=>setBbCompany(e.target.value)}
                 placeholder="Enter company name to vet..." onKeyDown={e=>e.key==='Enter'&&vetBuyer()} />

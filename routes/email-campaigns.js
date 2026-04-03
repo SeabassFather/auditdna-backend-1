@@ -59,7 +59,7 @@ function buildHTML(subject, body, recipientEmail, lang) {
 <div class="wrap">
   <div class="header">
     <h1>MEXAUSA FOOD GROUP, INC.</h1>
-    <p>CM Products International | PACA #20241168</p>
+    <p>Mexausa Food Group, Inc. | PACA #20241168</p>
   </div>
   <div class="body">
     <h2>${subject}</h2>

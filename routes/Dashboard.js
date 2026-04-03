@@ -1,5 +1,5 @@
 // ═══════════════════════════════════════════════════════════════════════════════
-// DASHBOARD ROUTES - CM Products International / MexaUSA Food Group, Inc.
+// DASHBOARD ROUTES - Mexausa Food Group, Inc. / MexaUSA Food Group, Inc.
 // ═══════════════════════════════════════════════════════════════════════════════
 
 const express = require('express');

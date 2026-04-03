@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 
 let companies = [
-    { id: 1, name: 'CM Products International', accountNumber: 'CMP-001', state: 'CA', industry: 'Produce Trading', status: 'active' },
+    { id: 1, name: 'Mexausa Food Group, Inc.', accountNumber: 'CMP-001', state: 'CA', industry: 'Produce Trading', status: 'active' },
     { id: 2, name: 'Fresh Valley Farms', accountNumber: 'FVF-002', state: 'CA', industry: 'Agriculture', status: 'active' }
 ];
 let journalEntries = [];

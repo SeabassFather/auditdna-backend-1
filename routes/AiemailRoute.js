@@ -1,6 +1,6 @@
 // ═══════════════════════════════════════════════════════════════════════════════
 // AI EMAIL ROUTES - CONSOLIDATED MASTER FILE
-// CM Products International / MexaUSA Food Group, Inc.
+// Mexausa Food Group, Inc. / MexaUSA Food Group, Inc.
 // AI Learning Reports + Email Generation
 // ═══════════════════════════════════════════════════════════════════════════════
 

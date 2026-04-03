@@ -1,6 +1,6 @@
 // ═══════════════════════════════════════════════════════════════════════════════
 // SEED TESTING ROUTES - CONSOLIDATED MASTER FILE
-// CM Products International / MexaUSA Food Group, Inc.
+// Mexausa Food Group, Inc. / MexaUSA Food Group, Inc.
 // Seed quality testing, germination analysis, and certification
 // ═══════════════════════════════════════════════════════════════════════════════
 

@@ -75,7 +75,7 @@ async function onAuditConfirmed({ caseId, consumer, fees }) {
     <div style="background:#1e293b;color:#cba658;padding:20px;text-align:center;"><h2 style="margin:0;">Your Audit Has Been Confirmed</h2><p style="margin:4px 0 0;color:#94a3b8;font-size:12px;">Case: ${caseId}</p></div>
     <div style="padding:20px;"><p>Dear ${consumer?.name || 'Valued Client'},</p>
     <p>Your mortgage audit has been authorized. Recovery estimate: <strong>${fmt(fees?.total)}</strong>. You receive: <strong>${fmt(fees?.youReceive)}</strong>.</p>
-    <p style="font-size:12px;color:#94a3b8;">AuditDNA | NMLS #337526 | CM Products International</p></div></div>`;
+    <p style="font-size:12px;color:#94a3b8;">AuditDNA | NMLS #337526 | Mexausa Food Group, Inc.</p></div></div>`;
   return sendEmail(consumerEmail, `AuditDNA — Your Audit Is Confirmed — Case ${caseId}`, html);
 }
 

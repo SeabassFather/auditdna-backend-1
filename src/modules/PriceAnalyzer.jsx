@@ -5,7 +5,7 @@ import {
 } from 'recharts';
 
 // =============================================================================
-// PRICE ANALYZER DASHBOARD — AuditDNA / CM Products International
+// PRICE ANALYZER DASHBOARD — AuditDNA / Mexausa Food Group, Inc.
 // Terminal market charts | 50-product comparison | Buy/sell signals
 // Palette: Slate/Gold/Platinum | Zero green/purple/emojis
 // =============================================================================
@@ -211,7 +211,7 @@ export default function PriceAnalyzer() {
       <div style={{ background:'linear-gradient(135deg,rgba(203,166,88,0.08),rgba(15,23,42,0.98))', borderBottom:`1px solid ${T.borderGold}`, padding:'16px 24px', display:'flex', justifyContent:'space-between', alignItems:'center' }}>
         <div>
           <div style={{ fontSize:16, fontWeight:900, letterSpacing:3, color:T.gold }}>PRICE ANALYZER</div>
-          <div style={{ fontSize:10, color:T.dim, marginTop:2, letterSpacing:1 }}>CM Products International — Terminal Market Intelligence | {PRODUCTS.length} Products</div>
+          <div style={{ fontSize:10, color:T.dim, marginTop:2, letterSpacing:1 }}>Mexausa Food Group, Inc. — Terminal Market Intelligence | {PRODUCTS.length} Products</div>
         </div>
         <div style={{ display:'flex', gap:8 }}>
           {['table','chart','compare'].map(m => (

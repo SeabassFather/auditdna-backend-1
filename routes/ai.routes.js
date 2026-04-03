@@ -19,7 +19,7 @@ const CLAUDE_MODEL = 'claude-sonnet-4-20250514';
 
 // Company context for all AI generations
 const COMPANY_CONTEXT = `
-You are an AI assistant for CM Products International and MexaUSA Food Group, Inc.
+You are an AI assistant for Mexausa Food Group, Inc. and MexaUSA Food Group, Inc.
 
 COMPANY INFO:
 - CEO/COO: Saul Garcia (NMLS #337526)
@@ -36,7 +36,7 @@ SPECIALTIES:
 - Competitive financing options
 
 TONE: Professional, knowledgeable, friendly, results-oriented.
-Always sign letters as: Saul Garcia, CEO/COO, CM Products International, NMLS #337526
+Always sign letters as: Saul Garcia, CEO/COO, Mexausa Food Group, Inc., NMLS #337526
 `;
 
 // ===================================================================
@@ -224,7 +224,7 @@ router.post('/cowboys/generate', async (req, res) => {
 
 YOU ARE: ${cowboyRole}
 
-Your role is to provide expert advice and analysis in your specialty area for CM Products International's agricultural trading operations.
+Your role is to provide expert advice and analysis in your specialty area for Mexausa Food Group, Inc.'s agricultural trading operations.
 
 TASK: ${task}
 
@@ -296,7 +296,7 @@ router.post('/search-research', async (req, res) => {
 RESEARCH REQUEST: ${query}
 TYPE: ${searchType || 'general'}
 
-Provide relevant information from your knowledge about this topic as it relates to agricultural trading, produce industry, or CM Products International's services. 
+Provide relevant information from your knowledge about this topic as it relates to agricultural trading, produce industry, or Mexausa Food Group, Inc.'s services. 
 
 If this requires real-time data (prices, weather, news), indicate that external APIs should be consulted.
 
@@ -389,7 +389,7 @@ REQUIREMENTS:
 - Be specific about products/services mentioned
 - Include relevant details (sizes, volumes, certifications if applicable)
 - End with a clear call-to-action
-- Sign as Saul Garcia, CEO/COO, CM Products International, NMLS #337526
+- Sign as Saul Garcia, CEO/COO, Mexausa Food Group, Inc., NMLS #337526
 
 Write the letter now:`;
 }
@@ -428,7 +428,7 @@ Compliance: FSMA 204 compliant, full traceability`
 
   return `Dear ${name},
 
-I hope this message finds you well. I'm reaching out from CM Products International regarding ${topic || 'our produce programs'}.
+I hope this message finds you well. I'm reaching out from Mexausa Food Group, Inc. regarding ${topic || 'our produce programs'}.
 
 ${content}
 
@@ -445,7 +445,7 @@ Would you be available for a brief call this week?
 
 Best regards,
 Saul Garcia
-CEO/COO, CM Products International
+CEO/COO, Mexausa Food Group, Inc.
 NMLS #337526
 📞 (831) 555-0123
 📧 saul@cmproducts.com`;
@@ -456,7 +456,7 @@ function generateMarketingFallback(prompt, category) {
 
 ${prompt}
 
-At CM Products International, we're committed to providing exceptional products and services for all your ${category || 'agricultural'} needs.
+At Mexausa Food Group, Inc., we're committed to providing exceptional products and services for all your ${category || 'agricultural'} needs.
 
 Our team is ready to support you with:
 • Premium quality products
@@ -468,7 +468,7 @@ Contact us today to learn more!
 
 Best regards,
 Saul Garcia
-CEO/COO, CM Products International
+CEO/COO, Mexausa Food Group, Inc.
 NMLS #337526`;
 }
 

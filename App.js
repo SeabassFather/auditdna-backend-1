@@ -10,7 +10,7 @@ import CommandSphere from './modules/CommandSphere';
 // 35 AI/SI Cowboys | Auto-Module Generation | Data Capture | Email Reports
 // ================================================================================
 
-const CMProductsOmegaIntelligence = React.lazy(() => import('./modules/Cmproductsomegaintelligence'));
+const MexausaFoodGroupOmegaIntelligence = React.lazy(() => import('./modules/MexausaFoodGroupomegaintelligence'));
 const USDAIntelligence = React.lazy(() => import('./modules/USDAIntelligence'));
 const GrowerDatabase = React.lazy(() => import('./modules/GrowerDatabase'));
 const FinancialServices = React.lazy(() => import('./modules/FinancialServices'));
@@ -150,7 +150,7 @@ const AI_LEARNING_ENGINE = {
       insights.identifiedTopics.push('pricing_intelligence');
       insights.assignedCowboys.push('priceHawk', 'marketOracle', 'commodityTracker');
       if (q.includes('forecast') || q.includes('predict') || q.includes('future')) {
-        insights.suggestedModules.push({ name: 'Price Forecasting Dashboard', category: 'CM Products Intelligence', priority: 'high' });
+        insights.suggestedModules.push({ name: 'Price Forecasting Dashboard', category: 'Mexausa Food Group Intell', priority: 'high' });
         insights.workflowOpportunities.push('Automated Price Alert System');
       }
       if (q.includes('compare') || q.includes('competitor')) {
@@ -360,14 +360,14 @@ const getIntelligentResponse = (question, setActiveModule, onLearningUpdate) => 
     for (const [product, data] of Object.entries(MARKET_PRICES)) {
       if (q.includes(product)) {
         response = isSpanish
-          ? `PRECIO ${product.toUpperCase()} (via Price Hawk AI): $${data.price}/caja | Cambio: ${data.change} | Origen: ${data.origin}. Para analisis completo, visite CM Products Intelligence.`
-          : `${product.toUpperCase()} PRICING (via Price Hawk AI): $${data.price}/case | Change: ${data.change} | Origin: ${data.origin}. For complete analysis, visit CM Products Intelligence.`;
+          ? `PRECIO ${product.toUpperCase()} (via Price Hawk AI): $${data.price}/caja | Cambio: ${data.change} | Origen: ${data.origin}. Para analisis completo, visite Mexausa Food Group Intell.`
+          : `${product.toUpperCase()} PRICING (via Price Hawk AI): $${data.price}/case | Change: ${data.change} | Origin: ${data.origin}. For complete analysis, visit Mexausa Food Group Intell.`;
         return response + learningNote;
       }
     }
     response = isSpanish
-      ? 'PRECIOS HOY (via Price Hawk AI): Aguacate: $42.50, Tomate: $18.75, Fresa: $32.00, Lechuga: $19.80, Limon: $28.50. AuditDNA rastrea 200+ productos. Modulo recomendado: CM Products Intelligence.'
-      : 'TODAY\'S PRICES (via Price Hawk AI): Avocado: $42.50, Tomato: $18.75, Strawberry: $32.00, Romaine: $19.80, Lime: $28.50. AuditDNA tracks 200+ commodities. Recommended module: CM Products Intelligence.';
+      ? 'PRECIOS HOY (via Price Hawk AI): Aguacate: $42.50, Tomate: $18.75, Fresa: $32.00, Lechuga: $19.80, Limon: $28.50. AuditDNA rastrea 200+ productos. Modulo recomendado: Mexausa Food Group Intell.'
+      : 'TODAY\'S PRICES (via Price Hawk AI): Avocado: $42.50, Tomato: $18.75, Strawberry: $32.00, Romaine: $19.80, Lime: $28.50. AuditDNA tracks 200+ commodities. Recommended module: Mexausa Food Group Intell.';
     return response + learningNote;
   }
 
@@ -408,8 +408,8 @@ const getIntelligentResponse = (question, setActiveModule, onLearningUpdate) => 
 
   if (q.includes('feature') || q.includes('module') || q.includes('what can') || q.includes('help') || q.includes('ayuda')) {
     response = isSpanish
-      ? 'PLATAFORMA AUDITDNA - 230+ Modulos: CM Products Intelligence (19), Agricultura (50), Productores (17), Finanzas (28), Marketplace (15), Cumplimiento (20), Logistica (18), Trazabilidad (12). 35 Cowboys AI/SI activos 24/7 aprendiendo de tus necesidades.'
-      : 'AUDITDNA PLATFORM - 230+ Modules: CM Products Intelligence (19), Agriculture (50), Growers (17), Finance (28), Marketplace (15), Compliance (20), Logistics (18), Traceability (12). 35 AI/SI Cowboys active 24/7 learning from your needs.';
+      ? 'PLATAFORMA AUDITDNA - 230+ Modulos: Mexausa Food Group Intell (19), Agricultura (50), Productores (17), Finanzas (28), Marketplace (15), Cumplimiento (20), Logistica (18), Trazabilidad (12). 35 Cowboys AI/SI activos 24/7 aprendiendo de tus necesidades.'
+      : 'AUDITDNA PLATFORM - 230+ Modules: Mexausa Food Group Intell (19), Agriculture (50), Growers (17), Finance (28), Marketplace (15), Compliance (20), Logistics (18), Traceability (12). 35 AI/SI Cowboys active 24/7 learning from your needs.';
     return response + learningNote;
   }
 
@@ -687,11 +687,11 @@ const App = () => {
   // ================================================================================
   const MODULES = {
     'CRM & Communications': { color: '#cba658', count: 8, modules: ['Saul Intel CRM', 'Email Marketing', 'Call Center', 'SMS Gateway', 'Contacts', 'Secure Buyers'] },
-    'CM Products Intelligence': { color: '#cba658', count: 19, modules: ['CM Dashboard'] },
+    'Mexausa Food Group Intell': { color: '#cba658', count: 19, modules: ['MFG Dashboard'] },
     'Agriculture & Commodities': { color: '#cba658', count: 50, modules: ['Grower Database', 'Grower Management', 'USDA Intel', 'USDA Dashboard', 'USDA Grower Search', 'Seasonal Calendar', 'Buyer Network', 'Quality Control', 'Cold Chain', 'Harvest Tracker', 'Ag Intel Master', 'Price Alerts', 'Recon Engine', 'Field Operations'] },
     'Grower Intelligence': { color: '#cba658', count: 11, modules: ['Grower Portal', 'Grower Intelligence', 'Grower Master', 'Grower Recommendations', 'Registration', 'Product Listing', 'Compliance Assist', 'Unified Sourcing', 'Small Grower Intel'] },
     'Marketplace': { color: '#cba658', count: 15, modules: ['Marketplace', 'Product Catalog', 'Orders', 'Shipping', 'Customer Portal', 'Customer Portal Advanced', 'Document Vault', 'Mobile Sales Upload'] },
-    'Financial Services': { color: '#cba658', count: 28, modules: ['Finance Dashboard', 'Financial Services Hub', 'Finance Center', 'Small Grower Finance', 'Grower Finance', 'CM Products Finance', 'Finance Access Control', 'Invoice Factoring', 'PO Finance', 'AR/AP', 'Accounting Hub', 'Accounting Dashboard', 'Reports', 'Elite Analytics', 'Elite Beast', 'Analytics Dashboard'] },
+    'Financial Services': { color: '#cba658', count: 28, modules: ['Finance Dashboard', 'Financial Services Hub', 'Finance Center', 'Small Grower Finance', 'Grower Finance', 'Mexausa Food Group Finance', 'Finance Access Control', 'Invoice Factoring', 'PO Finance', 'AR/AP', 'Accounting Hub', 'Accounting Dashboard', 'Reports', 'Elite Analytics', 'Elite Beast', 'Analytics Dashboard'] },
     'Compliance & Auditing': { color: '#cba658', count: 18, modules: ['Compliance Hub', 'FSMA 204', 'GlobalGAP', 'PrimusGFS', 'SENASICA', 'Audit Manager', 'Travel Protection', 'Traveler Protection'] },
     'Agricultural Testing (81 AI)': { color: '#06b6d4', count: 9, modules: ['WaterTech Pro', 'SoilTech Pro', 'Fertilizer Analysis', 'Seed Germination', 'Traceability Hub', 'Lot Tracking', 'Chain of Custody', 'Recall Manager', 'QR Generator'] },
     'LATAM Intelligence': { color: '#cba658', count: 17, modules: ['LATAM Dashboard', 'Mexico Market', 'Central America', 'South America', 'International Travel Security', 'MAUTTR Registry', 'MAUTTR QR Scanner', 'MAUTTR Vehicles'] },
@@ -732,7 +732,7 @@ const App = () => {
   const moduleMap = {
     'Predictive Analyzer': <div style={{padding:'40px',color:'#94a3b8',textAlign:'center'}}>Predictive Analyzer - Coming Soon</div>,
     'Analytics Predictions': <div style={{padding:'40px',color:'#94a3b8',textAlign:'center'}}>Analytics Predictions - Coming Soon</div>,
-    'CM Predictions': <div style={{padding:'40px',color:'#94a3b8',textAlign:'center'}}>CM Predictions - Coming Soon</div>,
+    'MFG Predictions': <div style={{padding:'40px',color:'#94a3b8',textAlign:'center'}}>MFG Predictions - Coming Soon</div>,
     'SII-MX': <SII_MX />,
     'Sistema Inmobiliario': <SII_MX />,
     'Gestion Inmobiliaria MX': <SII_MX />,
@@ -741,12 +741,12 @@ const App = () => {
     'Seed Germination': <SeedGermination />,
     'Document Analysis AI': <DocumentAnalysisAI />,
     'Saul Intel CRM': <ZadarmaCRM />, 'Email Marketing': <EmailMarketing />, 'Call Center': <ZadarmaCRM />, 'SMS Gateway': <ZadarmaCRM />, 'Contacts': <ZadarmaCRM />, 'Secure Buyers': <SecureBuyersIntelligence />,
-    'CM Dashboard': <CMProductsOmegaIntelligence />,
+    'MFG Dashboard': <MexausaFoodGroupOmegaIntelligence />,
     'Logistics': <LogisticsCenter />,
     'Grower Database': <GrowerManagementHub />, 'Grower Management': <GrowerManagementHub />, 'USDA Intel': <USDAIntelligenceDashboard />, 'USDA Dashboard': <USDAIntelligenceDashboard />, 'USDA Grower Search': <USDAGrowerSearchEngine />, 'Seasonal Calendar': <SeasonalCalendar />, 'Buyer Network': <BuyerNetwork />,
     'Quality Control': <QualityControl />, 'Cold Chain': <ColdChainMonitoring />, 'Harvest Tracker': <FieldOperations />, 'Ag Intel Master': <AgriculturalIntelligenceMaster />,
     'Grower Portal': <GrowerIntelligence />, 'Grower Intelligence': <GrowerIntelligence />, 'Grower Master': <GrowerMaster />, 'Registration': <GrowerIntelligence />, 'Product Listing': <GrowerIntelligence />, 'Compliance Assist': <GrowerIntelligence />, 'Small Grower Intel': <SmallGrowerIntelligence />,
-    'Finance Dashboard': <FinancialDashboard />, 'Financial Services Hub': <FinancialServicesHub />, 'Finance Center': <FinanceMasterModule />, 'Small Grower Finance': <FinanceOperations />, 'Grower Finance': <FinanceOperations />, 'CM Products Finance': <FinanceMasterModule />, 'Finance Access Control': <FinanceMasterModule />, 'Invoice Factoring': <FinanceMasterModule />, 'PO Finance': <FinanceMasterModule />, 'AR/AP': <FinanceOperations />, 'Accounting Hub': <AccountingHub />, 'Reports': <ReportsCenter />, 'Elite Analytics': <AuditDNA_Elite_Analytics />, 'Elite Beast': <AuditDNA_ELITE_BEAST />,
+    'Finance Dashboard': <FinancialDashboard />, 'Financial Services Hub': <FinancialServicesHub />, 'Finance Center': <FinanceMasterModule />, 'Small Grower Finance': <FinanceOperations />, 'Grower Finance': <FinanceOperations />, 'Mexausa Food Group Finance': <FinanceMasterModule />, 'Finance Access Control': <FinanceMasterModule />, 'Invoice Factoring': <FinanceMasterModule />, 'PO Finance': <FinanceMasterModule />, 'AR/AP': <FinanceOperations />, 'Accounting Hub': <AccountingHub />, 'Reports': <ReportsCenter />, 'Elite Analytics': <AuditDNA_Elite_Analytics />, 'Elite Beast': <AuditDNA_ELITE_BEAST />,
     'Compliance Hub': <Compliance />, 'FSMA 204': <Compliance />, 'GlobalGAP': <Compliance />, 'PrimusGFS': <Compliance />, 'SENASICA': <Compliance />, 'Audit Manager': <Compliance />,
     'Traceability Hub': <TraceabilityHub />, 'Lot Tracking': <TraceabilityHub />, 'Chain of Custody': <TraceabilityHub />, 'Recall Manager': <TraceabilityHub />, 'QR Generator': <TraceabilityHub />,
     'WaterTech Pro': <WaterTech />,

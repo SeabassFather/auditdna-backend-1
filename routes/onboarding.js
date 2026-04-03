@@ -131,7 +131,7 @@ function otpEmailHTML(code, type = 'email') {
           </span>
         </div>
         <p style="color:#64748b;margin:0;font-size:12px;line-height:1.5">
-          Never share this code. MexaUSA Food Group Inc. / CM Products International
+          Never share this code. MexaUSA Food Group Inc. / Mexausa Food Group, Inc.
           NMLS #337526 will never ask for this code by phone or email.
         </p>
       </div>
@@ -207,7 +207,7 @@ router.post('/lead', async (req, res) => {
                 Continue Registration
               </a>
               <p style="color:#64748b;margin:24px 0 0;font-size:11px">
-                MexaUSA Food Group Inc. / CM Products International NMLS #337526
+                MexaUSA Food Group Inc. / Mexausa Food Group, Inc. NMLS #337526
               </p>
             </div>
           </body>
@@ -906,11 +906,11 @@ const LEGAL_DOCS = {
     title:   'Master Subscription Agreement',
     version: DOC_VERSION,
     body: `MASTER SUBSCRIPTION AGREEMENT
-MexaUSA Food Group Inc. / CM Products International | NMLS #337526
+MexaUSA Food Group Inc. / Mexausa Food Group, Inc. | NMLS #337526
 Effective upon electronic acceptance.
 
 1. PARTIES
-This Master Subscription Agreement ("Agreement") is between MexaUSA Food Group Inc. / CM Products International NMLS #337526 ("Platform Provider") and the subscribing entity ("Tenant") identified during registration.
+This Master Subscription Agreement ("Agreement") is between MexaUSA Food Group Inc. / Mexausa Food Group, Inc. NMLS #337526 ("Platform Provider") and the subscribing entity ("Tenant") identified during registration.
 
 2. SUBSCRIPTION SERVICES
 Platform Provider grants Tenant a non-exclusive, non-transferable right to access and use the AuditDNA platform ("Platform") solely for Tenant's internal business operations, subject to the tier selected during onboarding and all terms herein.
@@ -946,14 +946,14 @@ By typing your full legal name below, you acknowledge that you have read, unders
     title:   'Data Processing Addendum',
     version: DOC_VERSION,
     body: `DATA PROCESSING ADDENDUM
-MexaUSA Food Group Inc. / CM Products International | NMLS #337526
+MexaUSA Food Group Inc. / Mexausa Food Group, Inc. | NMLS #337526
 Effective upon electronic acceptance.
 
 1. PURPOSE
 This Data Processing Addendum ("DPA") supplements the Master Subscription Agreement and governs the processing of personal data and business data submitted to the AuditDNA Platform by Tenant.
 
 2. DATA CONTROLLER AND PROCESSOR
-Tenant is the Data Controller of all data it submits to the Platform. MexaUSA Food Group Inc. / CM Products International acts as Data Processor, processing data solely on Tenant's behalf and per Tenant's documented instructions.
+Tenant is the Data Controller of all data it submits to the Platform. MexaUSA Food Group Inc. / Mexausa Food Group, Inc. acts as Data Processor, processing data solely on Tenant's behalf and per Tenant's documented instructions.
 
 3. DATA WE PROCESS
 Platform Provider processes: business registration information, contact details, agricultural credentials, government ID data (KYC only), GPS and location data, transaction and financial records, crop and commodity data, traceability records, and usage analytics.
@@ -983,7 +983,7 @@ By typing your full legal name below, you acknowledge that you have read, unders
     title:   'FSMA 204 Compliance Acknowledgment',
     version: DOC_VERSION,
     body: `FSMA 204 COMPLIANCE ACKNOWLEDGMENT
-MexaUSA Food Group Inc. / CM Products International | NMLS #337526
+MexaUSA Food Group Inc. / Mexausa Food Group, Inc. | NMLS #337526
 Food Safety Modernization Act — Section 204 Traceability Rule
 
 1. REGULATORY BACKGROUND
@@ -1011,11 +1011,11 @@ By typing your full legal name below, you acknowledge that you have read, unders
     title:   'Non-Disclosure Agreement',
     version: DOC_VERSION,
     body: `NON-DISCLOSURE AGREEMENT
-MexaUSA Food Group Inc. / CM Products International | NMLS #337526
+MexaUSA Food Group Inc. / Mexausa Food Group, Inc. | NMLS #337526
 Effective upon electronic acceptance.
 
 1. DEFINITION OF CONFIDENTIAL INFORMATION
-"Confidential Information" means all non-public information disclosed by MexaUSA Food Group Inc. / CM Products International ("Disclosing Party") to Tenant ("Receiving Party") in connection with the AuditDNA Platform, including but not limited to: Platform architecture and source code; SI (Synthetic Intelligence) methodology and miner logic; pricing tiers, discount structures, and contract terms; client and tenant lists; agricultural intelligence algorithms; USDA data processing pipelines; patent-pending inventions across all 12 patent families; Brain Data Mesh architecture; GrowerMaster scoring and tiering logic; and any business strategies, financial projections, or product roadmaps.
+"Confidential Information" means all non-public information disclosed by MexaUSA Food Group Inc. / Mexausa Food Group, Inc. ("Disclosing Party") to Tenant ("Receiving Party") in connection with the AuditDNA Platform, including but not limited to: Platform architecture and source code; SI (Synthetic Intelligence) methodology and miner logic; pricing tiers, discount structures, and contract terms; client and tenant lists; agricultural intelligence algorithms; USDA data processing pipelines; patent-pending inventions across all 12 patent families; Brain Data Mesh architecture; GrowerMaster scoring and tiering logic; and any business strategies, financial projections, or product roadmaps.
 
 2. OBLIGATIONS
 Receiving Party agrees to: (a) hold all Confidential Information in strict confidence; (b) not disclose Confidential Information to any third party without prior written consent; (c) use Confidential Information solely in connection with using the Platform under the Master Subscription Agreement; (d) limit access to employees and contractors who have a need to know and are bound by equivalent confidentiality obligations.
@@ -1024,7 +1024,7 @@ Receiving Party agrees to: (a) hold all Confidential Information in strict confi
 Confidentiality obligations do not apply to information that: (a) is or becomes publicly available through no breach by Receiving Party; (b) was rightfully known to Receiving Party prior to disclosure; (c) is independently developed without use of Confidential Information; (d) is required to be disclosed by law or court order, provided Disclosing Party receives prompt written notice.
 
 4. INTELLECTUAL PROPERTY
-All Platform technology, including the 81 Niner Miners, Brain Data Mesh, SI compliance engine, and associated patent-pending inventions remain the exclusive intellectual property of MexaUSA Food Group Inc. / CM Products International. Nothing in this Agreement transfers any IP rights to Tenant.
+All Platform technology, including the 81 Niner Miners, Brain Data Mesh, SI compliance engine, and associated patent-pending inventions remain the exclusive intellectual property of MexaUSA Food Group Inc. / Mexausa Food Group, Inc.. Nothing in this Agreement transfers any IP rights to Tenant.
 
 5. TERM
 This NDA is effective from the date of acceptance and survives termination of the Master Subscription Agreement for a period of 5 years.
@@ -1039,7 +1039,7 @@ By typing your full legal name below, you acknowledge that you have read, unders
     title:   'Acceptable Use Policy',
     version: DOC_VERSION,
     body: `ACCEPTABLE USE POLICY
-MexaUSA Food Group Inc. / CM Products International | NMLS #337526
+MexaUSA Food Group Inc. / Mexausa Food Group, Inc. | NMLS #337526
 Effective upon electronic acceptance.
 
 1. PURPOSE
@@ -1076,14 +1076,14 @@ By typing your full legal name below, you acknowledge that you have read, unders
     title:   'NMLS #337526 Financial Services Disclosure',
     version: DOC_VERSION,
     body: `NMLS #337526 FINANCIAL SERVICES DISCLOSURE
-CM Products International | NMLS #337526
+Mexausa Food Group, Inc. | NMLS #337526
 Effective upon electronic acceptance.
 
 1. LICENSED ENTITY
-CM Products International is registered with the Nationwide Multistate Licensing System & Registry (NMLS) under license number #337526. This registration applies to mortgage lending, loan origination, and related financial services activities conducted by CM Products International.
+Mexausa Food Group, Inc. is registered with the Nationwide Multistate Licensing System & Registry (NMLS) under license number #337526. This registration applies to mortgage lending, loan origination, and related financial services activities conducted by Mexausa Food Group, Inc..
 
 2. SCOPE OF FINANCIAL MODULES
-The AuditDNA Platform includes modules related to financial services, including: mortgage recovery and audit tools (AuditDNA Recovery), trade finance, factoring, accounts receivable management, and financial reporting. Access to these modules is provided by CM Products International NMLS #337526.
+The AuditDNA Platform includes modules related to financial services, including: mortgage recovery and audit tools (AuditDNA Recovery), trade finance, factoring, accounts receivable management, and financial reporting. Access to these modules is provided by Mexausa Food Group, Inc. NMLS #337526.
 
 3. NOT INVESTMENT ADVICE
 Nothing on the Platform constitutes investment advice, legal advice, tax advice, or financial planning advice. All financial data, reports, and analytics are provided for informational purposes only. Tenant should consult licensed professionals for investment, legal, and tax decisions.
@@ -1092,7 +1092,7 @@ Nothing on the Platform constitutes investment advice, legal advice, tax advice,
 The mortgage audit and recovery features are designed to identify potential violations and compliance gaps in mortgage documentation. Platform Provider does not guarantee recovery of any funds. Results depend on the specific facts of each loan file and applicable law.
 
 5. NMLS CONSUMER ACCESS
-You may verify CM Products International's NMLS registration at: https://www.nmlsconsumeraccess.org
+You may verify Mexausa Food Group, Inc.'s NMLS registration at: https://www.nmlsconsumeraccess.org
 
 By typing your full legal name below, you acknowledge that you have read and understood this NMLS #337526 Financial Services Disclosure.`,
   },
@@ -1101,7 +1101,7 @@ By typing your full legal name below, you acknowledge that you have read and und
     title:   'USDA Data Terms of Use',
     version: DOC_VERSION,
     body: `USDA DATA TERMS OF USE
-MexaUSA Food Group Inc. / CM Products International | NMLS #337526
+MexaUSA Food Group Inc. / Mexausa Food Group, Inc. | NMLS #337526
 Effective upon electronic acceptance.
 
 1. DATA SOURCE
@@ -1126,7 +1126,7 @@ By typing your full legal name below, you acknowledge that you have read, unders
     title:   'Export Compliance Certification',
     version: DOC_VERSION,
     body: `EXPORT COMPLIANCE CERTIFICATION
-MexaUSA Food Group Inc. / CM Products International | NMLS #337526
+MexaUSA Food Group Inc. / Mexausa Food Group, Inc. | NMLS #337526
 Required for Tier 4 (Trade) and Tier 5 (Enterprise)
 Effective upon electronic acceptance.
 
@@ -1159,7 +1159,7 @@ By typing your full legal name below, you certify that the foregoing representat
     title:   'Enterprise Custom MSA — Owner Review Required',
     version: DOC_VERSION,
     body: `ENTERPRISE CUSTOM MSA — OWNER REVIEW REQUIRED
-MexaUSA Food Group Inc. / CM Products International | NMLS #337526
+MexaUSA Food Group Inc. / Mexausa Food Group, Inc. | NMLS #337526
 
 NOTICE TO ENTERPRISE TIER APPLICANTS
 
@@ -1886,7 +1886,7 @@ function credentialsEmailHTML(email, pin, tier_name, legal_name) {
       <p style="color:#64748b;font-size:11px;margin:0;line-height:1.6">
         Plan: ${tier_name}<br>
         Support: saul@mexausafg.com<br>
-        MexaUSA Food Group Inc. / CM Products International NMLS #337526
+        MexaUSA Food Group Inc. / Mexausa Food Group, Inc. NMLS #337526
       </p>
     </div>
   </div>
@@ -2657,7 +2657,7 @@ router.post('/brain/activate', async (req, res) => {
                 ).join('')}
               </div>
               <p style="color:#64748b;font-size:11px;margin:0">
-                MexaUSA Food Group Inc. / CM Products International NMLS #337526
+                MexaUSA Food Group Inc. / Mexausa Food Group, Inc. NMLS #337526
               </p>
             </div>
           </body>
@@ -3061,7 +3061,7 @@ router.post('/renewal/renew', async (req, res) => {
                 Next renewal: ${newRenewal.toLocaleDateString('en-US')}.
               </p>
               <p style="color:#64748b;font-size:11px;margin:0">
-                MexaUSA Food Group Inc. / CM Products International NMLS #337526
+                MexaUSA Food Group Inc. / Mexausa Food Group, Inc. NMLS #337526
               </p>
             </div>
           </body>
@@ -3493,7 +3493,7 @@ router.post('/wizard/step5', async (req, res) => {
                     Accept Invitation
                   </a>
                   <p style="color:#64748b;margin:20px 0 0;font-size:11px">
-                    MexaUSA Food Group Inc. / CM Products International NMLS #337526
+                    MexaUSA Food Group Inc. / Mexausa Food Group, Inc. NMLS #337526
                   </p>
                 </div>
               </body>

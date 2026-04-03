@@ -104,12 +104,12 @@ router.post('/generate-doc', async (req, res) => {
     const finalMessages = messages || [
       {
         role: 'user',
-        content: `Generate a complete, professional ${docType} application letter for the following client:\n\n${JSON.stringify(clientData, null, 2)}\n\nWrite the full letter — no placeholders, no summaries. Include all sections: executive overview, business description, financing purpose, repayment plan, and supporting details. Sign as Saul Garcia, CEO, CM Products International.`,
+        content: `Generate a complete, professional ${docType} application letter for the following client:\n\n${JSON.stringify(clientData, null, 2)}\n\nWrite the full letter — no placeholders, no summaries. Include all sections: executive overview, business description, financing purpose, repayment plan, and supporting details. Sign as Saul Garcia, CEO, Mexausa Food Group, Inc..`,
       },
     ];
 
     const finalSystem = system ||
-      `You are a senior commercial finance writer for CM Products International, a PACA-licensed fresh produce wholesale import/export company based in Ensenada, Baja California. You write complete, professional ${docType} application documents in English. Be direct, specific, and compelling. Output the full letter only — no preamble, no markdown fences.`;
+      `You are a senior commercial finance writer for Mexausa Food Group, Inc., a PACA-licensed fresh produce wholesale import/export company based in Ensenada, Baja California. You write complete, professional ${docType} application documents in English. Be direct, specific, and compelling. Output the full letter only — no preamble, no markdown fences.`;
 
     const data = await callAnthropic({
       model:      'claude-sonnet-4-20250514',

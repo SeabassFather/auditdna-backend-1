@@ -41,7 +41,7 @@ const REQUIRED_DOCS = [
   { doc_key:'phytosanitary_cert', name_en:'USDA / SENASICA Phytosanitary Certificate', name_es:'Certificado Fitosanitario USDA / SENASICA' },
   { doc_key:'insurance_cert',     name_en:'Liability Insurance Certificate',            name_es:'Certificado de Seguro de Responsabilidad' },
   { doc_key:'tax_id',             name_en:'W-9 / RFC Tax Identification',               name_es:'Identificacion Fiscal W-9 / RFC' },
-  { doc_key:'grower_agreement',   name_en:'Signed CM Products Grower Agreement',        name_es:'Acuerdo de Productor CM Products Firmado' },
+  { doc_key:'grower_agreement',   name_en:'Signed Mexausa Food Group Grower Agreement',        name_es:'Acuerdo de Productor Mexausa Food Group Firmado' },
 ];
 
 // GET /api/growers/compliance/:id

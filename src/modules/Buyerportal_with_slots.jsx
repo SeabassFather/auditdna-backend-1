@@ -1,7 +1,7 @@
 // ═══════════════════════════════════════════════════════════════════════════════
 // BUYER PORTAL - FIFO SLOT-BASED MARKETPLACE
 // ═══════════════════════════════════════════════════════════════════════════════
-// CM Products International | MexaUSA Food Group, Inc.
+// Mexausa Food Group, Inc. | MexaUSA Food Group, Inc.
 // AuditDNA Platform v4.0
 // ═══════════════════════════════════════════════════════════════════════════════
 // FEATURES:
@@ -320,8 +320,8 @@ export default function BuyerPortal() {
         body: JSON.stringify({
           to:      currentBuyer?.email,
           toName:  currentBuyer?.name,
-          subject: `Order Confirmed: ${order.orderId} — CM Products International`,
-          body: `Dear ${currentBuyer?.name},\n\nYour order ${order.orderId} for ${order.totals.totalCases} cases ($${order.totals.total.toFixed(2)}) has been received.\n\nDelivery: ${order.deliveryDate}\nPayment Terms: ${order.paymentTerms}\nPACA Trust Protected\n\nSaul Garcia | CM Products International\n+1-831-251-3116`,
+          subject: `Order Confirmed: ${order.orderId} — Mexausa Food Group, Inc.`,
+          body: `Dear ${currentBuyer?.name},\n\nYour order ${order.orderId} for ${order.totals.totalCases} cases ($${order.totals.total.toFixed(2)}) has been received.\n\nDelivery: ${order.deliveryDate}\nPayment Terms: ${order.paymentTerms}\nPACA Trust Protected\n\nSaul Garcia | Mexausa Food Group, Inc.\n+1-831-251-3116`,
         })
       });
     } catch { /* email fallback */ }
@@ -424,7 +424,7 @@ export default function BuyerPortal() {
           <div style={{ textAlign: 'center', marginBottom: '30px' }}>
             <ShoppingCart size={48} color={C.gold} style={{ margin: '0 auto 16px' }} />
             <h1 style={{ color: C.gold, fontSize: '24px', margin: '0 0 8px 0' }}>Buyer Portal</h1>
-            <p style={{ color: C.platinum, fontSize: '14px', margin: 0 }}>CM Products International</p>
+            <p style={{ color: C.platinum, fontSize: '14px', margin: 0 }}>Mexausa Food Group, Inc.</p>
           </div>
           
           <div style={{ marginBottom: '20px' }}>

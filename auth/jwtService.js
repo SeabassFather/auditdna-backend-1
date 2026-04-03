@@ -1,6 +1,6 @@
 // ═══════════════════════════════════════════════════════════════════════════════════════════
 // AUDITDNA - JWT SERVICE
-// CM Products International | AuditDNA Platform
+// Mexausa Food Group, Inc. | AuditDNA Platform
 // ═══════════════════════════════════════════════════════════════════════════════════════════
 // Created: January 15, 2026
 // Purpose: JWT token generation, verification, and middleware

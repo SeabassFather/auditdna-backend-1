@@ -2,7 +2,7 @@
 // 🔥 ULTIMATE 500+ AGRICULTURAL INTELLIGENCE DATABASE 🔥
 // TRIPLE API INTEGRATION: USDA NASS + FDA + USDA ORGANIC INTEGRITY
 // REGIONAL FOCUS: Mexico, Central America, South America
-// CM Products International - The Most Powerful Produce Search Engine
+// Mexausa Food Group, Inc. - The Most Powerful Produce Search Engine
 // ═══════════════════════════════════════════════════════════════════════════════
 
 // ═══════════════════════════════════════════════════════════════════════════════

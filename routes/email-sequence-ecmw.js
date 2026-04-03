@@ -38,10 +38,10 @@ router.post('/fire/:day', async (req, res) => {
     for (const b of buyers) {
       try {
         await transporter.sendMail({
-          from: '"CM Products International" <saul@mexausafg.com>',
+          from: '"Mexausa Food Group, Inc." <saul@mexausafg.com>',
           to: b.email || b.buyer_email,
           subject: day === 0 ? 'Premium Mexican Avocados & Berries — Direct Grower Source' : day === 5 ? 'Following Up — Q2 Pricing + Availability' : 'Last Note — Open Allocation Closing Q2',
-          html: `<p>Hello ${b.company || b.buyer_name || 'Team'},</p><p>CM Products International, PACA #20241168 — direct grower source for premium Mexican produce.</p><p>Reply or call +1-831-251-3116</p><p>Saul Garcia</p>`
+          html: `<p>Hello ${b.company || b.buyer_name || 'Team'},</p><p>Mexausa Food Group, Inc., PACA #20241168 — direct grower source for premium Mexican produce.</p><p>Reply or call +1-831-251-3116</p><p>Saul Garcia</p>`
         });
         await pool.query(`INSERT INTO ecmw_campaign_log (buyer_email, company, state, sequence_day) VALUES ($1, $2, $3, $4)`, [b.email || b.buyer_email, b.company, b.state, day]).catch(()=>{});
         sent++;

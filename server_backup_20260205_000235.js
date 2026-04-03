@@ -1,6 +1,6 @@
 // ═══════════════════════════════════════════════════════════════════════════════════════════
 // AUDITDNA BACKEND SERVER v3.2 - ENTERPRISE EDITION + ANALYTICS + AI LEARNING
-// CM Products International | MexaUSA Food Group, Inc.
+// Mexausa Food Group, Inc. | MexaUSA Food Group, Inc.
 // CEO/COO: Saul Garcia
 // ═══════════════════════════════════════════════════════════════════════════════════════════
 // NASA-GRADE PRODUCTION SERVER
@@ -1006,7 +1006,7 @@ app.get('/', (req, res) => {
   res.json({
     name: 'AuditDNA Backend Server - Enterprise Edition + Analytics + AI Learning',
     version: '3.2.0',
-    company: 'CM Products International / MexaUSA Food Group, Inc.',
+    company: 'Mexausa Food Group, Inc. / MexaUSA Food Group, Inc.',
     ceo: 'Saul Garcia',
     status: 'ONLINE',
     modules: {
@@ -1128,7 +1128,7 @@ server = app.listen(PORT, () => {
   console.log('\n');
   console.log('════════════════════════════════════════════════════════════════');
   console.log('   AUDITDNA BACKEND SERVER v3.2 - ENTERPRISE + AI LEARNING');
-  console.log('   CM Products International / MexaUSA Food Group, Inc.');
+  console.log('   Mexausa Food Group, Inc. / MexaUSA Food Group, Inc.');
   console.log('   CEO/COO: Saul Garcia');
   console.log('════════════════════════════════════════════════════════════════');
   console.log(`   Port:          ${PORT}`);
