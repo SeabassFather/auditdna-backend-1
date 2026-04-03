@@ -1,4 +1,4 @@
-// Save to: C:\AuditDNA\backend\routes\brainEvents.js
+﻿// Save to: C:\AuditDNA\backend\routes\brainEvents.js
 const express = require('express');
 const router = express.Router();
 const { getPool } = require('../db');
@@ -20,7 +20,7 @@ router.post('/', async (req, res) => {
          ON CONFLICT DO NOTHING`,
         [type || 'UNKNOWN', JSON.stringify(payload || {}), timestamp || Date.now()]
       ).catch(() => {
-        // Table may not exist yet — silently continue
+        // Table may not exist yet â€” silently continue
       });
     }
 
@@ -31,7 +31,7 @@ router.post('/', async (req, res) => {
   }
 });
 
-// POST /api/brain/event (singular — used by module activation)
+// POST /api/brain/event (singular â€” used by module activation)
 router.post('/event', async (req, res) => {
   try {
     const { type, payload, timestamp, ...rest } = req.body;
@@ -49,17 +49,16 @@ router.post('/event', async (req, res) => {
 });
 
 
-// GET /api/brain/events — returns recent brain activity log
+// GET /api/brain/events â€” returns recent brain activity log
 router.get('/events', async (req, res) => {
   try {
-    const { Pool } = require('pg');
-    const pool = new Pool({ connectionString: process.env.DATABASE_URL, ssl: { rejectUnauthorized: false } });
+    const pool = getPool(req);
     const result = await pool.query(
       `SELECT id, event_type, payload, created_at FROM brain_events ORDER BY created_at DESC LIMIT 50`
     );
     res.json({ success: true, events: result.rows });
   } catch(err) {
-    // Table may not exist yet — return empty
+    // Table may not exist yet â€” return empty
     res.json({ success: true, events: [] });
   }
 });
