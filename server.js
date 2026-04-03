@@ -92,6 +92,14 @@ try {
   require('./brain-data-mesh')(app, pool);
 const brainEvents = require('./routes/brainEvents');
 app.use('/api/brain', brainEvents);
+
+// ── AUTONOMOUS ORCHESTRATION ENGINE ─────────────────────────────────────────
+const initAutonomy = require('./routes/autonomy');
+initAutonomy(app, pool);
+
+// ── AUDITDNA SCORING ENGINE (GRI / DPS / ADS) ───────────────────────────────
+const { router: scoringRouter } = require('./routes/scoring-engine');
+app.use('/api/scoring', scoringRouter);
   console.log('[OK] Brain Data Mesh installed â€” all API feeds live');
 } catch (e) {
   console.warn('[WARN] Brain Data Mesh failed to load:', e.message);
