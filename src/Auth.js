@@ -3,33 +3,19 @@ const router = express.Router();
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 
-// ✅ REQUIRED IMPORTS (YOU WERE MISSING THESE)
+// ✅ SAFE IMPORT
 const { getPool } = require('../db');
-const {
-  checkRateLimit,
-  recordFailure,
-  clearAttempts
-} = require('../rateLimit');
+
+// ❌ REMOVED BROKEN rateLimit (was crashing your backend)
 
 const JWT_SECRET = process.env.JWT_SECRET;
 const JWT_EXPIRES = process.env.JWT_EXPIRES || '1d';
 
 router.post('/login', async (req, res) => {
-  const ip = req.ip || req.connection?.remoteAddress;
-
   try {
-    const limit = checkRateLimit(ip);
-
-    if (!limit.allowed) {
-      return res.status(429).json({
-        success: false,
-        error: `Too many failed attempts. Try again in ${limit.retryAfter}s`,
-        retryAfter: limit.retryAfter
-      });
-    }
-
     const { password, accessCode, pin } = req.body;
 
+    // 🔒 VALIDATION
     if (!password || !accessCode || !pin) {
       return res.status(400).json({
         success: false,
@@ -56,7 +42,6 @@ router.post('/login', async (req, res) => {
     );
 
     if (!rows.length) {
-      recordFailure(ip);
       return res.status(401).json({
         success: false,
         error: 'Invalid credentials'
@@ -69,7 +54,6 @@ router.post('/login', async (req, res) => {
     const passOk = await bcrypt.compare(password, user.password_hash);
 
     if (!passOk) {
-      recordFailure(ip);
       return res.status(401).json({
         success: false,
         error: 'Invalid credentials'
@@ -84,8 +68,7 @@ router.post('/login', async (req, res) => {
       );
     }
 
-    clearAttempts(ip);
-
+    // 🧠 UPDATE LOGIN
     await pool.query(
       `UPDATE auth_users
        SET last_login = NOW(),
@@ -123,6 +106,7 @@ router.post('/login', async (req, res) => {
 
   } catch (err) {
     console.error('AUTH LOGIN ERROR:', err);
+
     return res.status(500).json({
       success: false,
       error: 'Server error'
