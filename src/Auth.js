@@ -1,3 +1,12 @@
+const express = require('express');
+const router = express.Router();
+const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
+
+// make sure these are already defined/imported in your project
+// const { getPool } = require('../db');
+// const { checkRateLimit, recordFailure, clearAttempts } = require('../rateLimit');
+
 router.post('/login', async (req, res) => {
   const ip = req.ip || req.connection.remoteAddress;
   const limit = checkRateLimit(ip);
@@ -47,7 +56,7 @@ router.post('/login', async (req, res) => {
 
     const user = rows[0];
 
-    // 🔥 FORCE PASSWORD MATCH (NO MORE FAILS)
+    // 🔥 PASSWORD CHECK
     const passOk = await bcrypt.compare(password, user.password_hash);
 
     if (!passOk) {
@@ -58,7 +67,7 @@ router.post('/login', async (req, res) => {
       });
     }
 
-    // 🔥 FORCE ACTIVE (BYPASS ANY BROKEN FLAGS)
+    // 🔥 FORCE ACTIVE IF BROKEN
     if (user.is_active === false) {
       await pool.query(
         `UPDATE auth_users SET is_active = true WHERE id = $1`,
@@ -76,10 +85,12 @@ router.post('/login', async (req, res) => {
       [user.id]
     );
 
+    // SESSION
     req.session.userId = user.id;
     req.session.username = user.username;
     req.session.role = user.role;
 
+    // JWT
     const token = jwt.sign(
       {
         userId: user.id,
@@ -107,3 +118,5 @@ router.post('/login', async (req, res) => {
     });
   }
 });
+
+module.exports = router;
