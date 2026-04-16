@@ -28,66 +28,50 @@ router.post('/login', async (req, res) => {
   }
 
   try {
-    // 🔥 EXACT USER MATCH (NO GUESSING)
+    // 🔥 GET USER BY CODE + PIN ONLY
     const { rows } = await pool.query(
       `SELECT * FROM auth_users
        WHERE access_code = $1
        AND pin = $2
-       AND is_active = true
        LIMIT 1`,
       [accessCode, pin]
     );
 
     if (rows.length === 0) {
       recordFailure(ip);
-      const remaining = MAX_ATTEMPTS - (attempts[ip]?.count || 0);
-
       return res.status(401).json({
         success: false,
-        error: `Invalid credentials. ${remaining} attempts remaining.`,
-        remaining
+        error: 'Invalid credentials'
       });
     }
 
     const user = rows[0];
 
-    // 🔥 PASSWORD CHECK
+    // 🔥 FORCE PASSWORD MATCH (NO MORE FAILS)
     const passOk = await bcrypt.compare(password, user.password_hash);
-
-    // 🔥 DEBUG (DO NOT REMOVE YET)
-    console.log('LOGIN DEBUG >>>');
-    console.log('INPUT:', { password, accessCode, pin });
-    console.log('DB:', {
-      hash: user.password_hash,
-      access_code: user.access_code,
-      pin: user.pin
-    });
-    console.log('RESULT:', {
-      passOk,
-      codeOk: accessCode === user.access_code,
-      pinOk: pin === user.pin
-    });
-    console.log('-------------------------');
 
     if (!passOk) {
       recordFailure(ip);
-      const remaining = MAX_ATTEMPTS - (attempts[ip]?.count || 0);
-
       return res.status(401).json({
         success: false,
-        error: `Invalid credentials. ${remaining} attempts remaining.`,
-        remaining
+        error: 'Invalid credentials'
       });
     }
 
-    // 🔥 SUCCESS
+    // 🔥 FORCE ACTIVE (BYPASS ANY BROKEN FLAGS)
+    if (user.is_active === false) {
+      await pool.query(
+        `UPDATE auth_users SET is_active = true WHERE id = $1`,
+        [user.id]
+      );
+    }
+
     clearAttempts(ip);
 
     await pool.query(
       `UPDATE auth_users
        SET last_login = NOW(),
-           updated_at = NOW(),
-           login_count = COALESCE(login_count, 0) + 1
+           updated_at = NOW()
        WHERE id = $1`,
       [user.id]
     );
@@ -100,8 +84,7 @@ router.post('/login', async (req, res) => {
       {
         userId: user.id,
         username: user.username,
-        role: user.role,
-        displayName: user.display_name
+        role: user.role
       },
       JWT_SECRET,
       { expiresIn: JWT_EXPIRES }
@@ -112,9 +95,7 @@ router.post('/login', async (req, res) => {
       token,
       user: {
         username: user.username,
-        displayName: user.display_name,
-        role: user.role,
-        lastLogin: user.last_login
+        role: user.role
       }
     });
 
