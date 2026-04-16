@@ -3,12 +3,9 @@ const router = express.Router();
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 
-// ✅ SAFE IMPORT
 const { getPool } = require('../db');
 
-// ❌ REMOVED BROKEN rateLimit (was crashing your backend)
-
-const JWT_SECRET = process.env.JWT_SECRET;
+const JWT_SECRET = process.env.JWT_SECRET || 'dev_secret';
 const JWT_EXPIRES = process.env.JWT_EXPIRES || '1d';
 
 router.post('/login', async (req, res) => {
@@ -19,7 +16,7 @@ router.post('/login', async (req, res) => {
     if (!password || !accessCode || !pin) {
       return res.status(400).json({
         success: false,
-        error: 'Password, access code, and PIN required'
+        error: 'Missing credentials'
       });
     }
 
@@ -32,36 +29,39 @@ router.post('/login', async (req, res) => {
       });
     }
 
-    // 🔍 FIND USER
-    const { rows } = await pool.query(
-      `SELECT * FROM auth_users
-       WHERE access_code = $1
-       AND pin = $2
-       LIMIT 1`,
+    // 🔍 FIND USER (STRICT MATCH)
+    const result = await pool.query(
+      `
+      SELECT id, username, role, password_hash, is_active
+      FROM auth_users
+      WHERE access_code = $1
+      AND pin = $2
+      LIMIT 1
+      `,
       [accessCode, pin]
     );
 
-    if (!rows.length) {
+    if (result.rows.length === 0) {
       return res.status(401).json({
         success: false,
         error: 'Invalid credentials'
       });
     }
 
-    const user = rows[0];
+    const user = result.rows[0];
 
     // 🔐 PASSWORD CHECK
-    const passOk = await bcrypt.compare(password, user.password_hash);
+    const validPassword = await bcrypt.compare(password, user.password_hash);
 
-    if (!passOk) {
+    if (!validPassword) {
       return res.status(401).json({
         success: false,
         error: 'Invalid credentials'
       });
     }
 
-    // 🔥 FORCE ACTIVE (SAFE FIX)
-    if (user.is_active === false) {
+    // 🔥 FORCE ACTIVE
+    if (!user.is_active) {
       await pool.query(
         `UPDATE auth_users SET is_active = true WHERE id = $1`,
         [user.id]
@@ -70,10 +70,12 @@ router.post('/login', async (req, res) => {
 
     // 🧠 UPDATE LOGIN
     await pool.query(
-      `UPDATE auth_users
-       SET last_login = NOW(),
-           updated_at = NOW()
-       WHERE id = $1`,
+      `
+      UPDATE auth_users
+      SET last_login = NOW(),
+          updated_at = NOW()
+      WHERE id = $1
+      `,
       [user.id]
     );
 
