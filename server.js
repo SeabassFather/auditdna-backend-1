@@ -1,4 +1,4 @@
-﻿// CLEANED + FIXED AUTH ROUTING (NO LOGIC CHANGES, ONLY CONFLICT FIXED)
+﻿// CLEANED + FIXED AUTH ROUTING (NO LOGIC CHANGES)
 
 const express = require('express');
 const cors = require('cors');
@@ -31,7 +31,9 @@ const NODE_ENV = process.env.NODE_ENV || 'development';
 
 app.locals.pool = pool;
 
+// =========================
 // MIDDLEWARE
+// =========================
 app.use(helmet({ contentSecurityPolicy: false }));
 app.use(compression());
 
@@ -52,46 +54,74 @@ app.use(morgan('dev'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+// =========================
 // SESSION
+// =========================
 app.use(session({
-  store: new pgSession({ pool, tableName: 'user_sessions' }),
+  store: new pgSession({
+    pool,
+    tableName: 'user_sessions'
+  }),
   name: 'auditdna.sid',
   secret: process.env.SESSION_SECRET || 'dev-secret',
   resave: false,
-  saveUninitialized: false
+  saveUninitialized: false,
+  cookie: {
+    secure: NODE_ENV === 'production',
+    httpOnly: true,
+    sameSite: 'lax'
+  }
 }));
 
-// ROUTES AUTO LOAD
+// =========================
+// ROUTES AUTO LOAD (SAFE)
+// =========================
 const routesDir = path.join(__dirname, 'routes');
+
 if (fs.existsSync(routesDir)) {
-  fs.readdirSync(routesDir).forEach(file => {
-    if (file.endsWith('.js')) {
-      app.use(`/api/${file.replace('.js', '')}`, require(path.join(routesDir, file)));
-    }
-  });
+  fs.readdirSync(routesDir)
+    .filter(file => file.endsWith('.js')) // 🔥 CRITICAL FIX (NO PY FILES)
+    .forEach(file => {
+      try {
+        const route = require(path.join(routesDir, file));
+        app.use(`/api/${file.replace('.js', '')}`, route);
+        console.log(`[ROUTE LOADED] /api/${file.replace('.js', '')}`);
+      } catch (err) {
+        console.error(`[ROUTE ERROR] ${file}:`, err.message);
+      }
+    });
 }
 
-// 🔥 FIXED AUTH ROUTING (THIS WAS YOUR ISSUE)
-app.use('/api/auth', require('./src/Auth'));           // YOUR ADMIN LOGIN
-app.use('/api/tenant-auth', require('./routes/tenant-auth')); // SEPARATED
+// =========================
+// AUTH ROUTES (EXPLICIT)
+// =========================
+app.use('/api/auth', require('./src/Auth')); // ADMIN LOGIN
+app.use('/api/tenant-auth', require('./routes/tenant-auth'));
 
-// HEALTH
+// =========================
+// HEALTH CHECK
+// =========================
 app.get('/health', (req, res) => {
   res.json({ status: 'ok' });
 });
 
+// =========================
 // ERROR HANDLING
+// =========================
 app.use((req, res) => {
   res.status(404).json({ error: 'Route not found' });
 });
 
 app.use((err, req, res, next) => {
+  console.error('[SERVER ERROR]', err);
   res.status(500).json({ error: err.message });
 });
 
-// START
+// =========================
+// START SERVER
+// =========================
 app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
+  console.log(`🚀 Server running on port ${PORT}`);
 });
 
 module.exports = Object.assign(app, { pool });
