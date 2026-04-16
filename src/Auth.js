@@ -3,8 +3,9 @@ const router = express.Router();
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 
-// ✅ FIXED IMPORT
-const getPool = require('../db');
+// ✅ SAFE IMPORT (handles BOTH export styles)
+const dbModule = require('../db');
+const getPool = dbModule.getPool || dbModule;
 
 const JWT_SECRET = process.env.JWT_SECRET || 'dev_secret';
 const JWT_EXPIRES = process.env.JWT_EXPIRES || '1d';
@@ -21,7 +22,15 @@ router.post('/login', async (req, res) => {
       });
     }
 
-    // ✅ FIXED (no req passed)
+    // 🔥 SAFE POOL INIT (NO MORE CRASHES)
+    if (typeof getPool !== 'function') {
+      console.error('DB ERROR: getPool is not a function');
+      return res.status(500).json({
+        success: false,
+        error: 'Database misconfigured'
+      });
+    }
+
     const pool = getPool();
 
     if (!pool) {
@@ -43,7 +52,7 @@ router.post('/login', async (req, res) => {
       [accessCode, pin]
     );
 
-    if (result.rows.length === 0) {
+    if (!result.rows.length) {
       return res.status(401).json({
         success: false,
         error: 'Invalid credentials'
@@ -109,11 +118,11 @@ router.post('/login', async (req, res) => {
     });
 
   } catch (err) {
-    console.error('AUTH LOGIN ERROR:', err.message);
+    console.error('AUTH LOGIN ERROR:', err);
 
     return res.status(500).json({
       success: false,
-      error: err.message
+      error: 'Server error'
     });
   }
 });
