@@ -1,4 +1,4 @@
-﻿// TIER 6 - LEGAL COMPLIANCE ANALYSIS (AI)
+// TIER 6 - LEGAL COMPLIANCE ANALYSIS (AI)
 // Signature: analyzeLegalCompliance(extractedData, loanData, state)
 // Returns: { violations: [...], documents: {...} }
 

@@ -1,15 +1,15 @@
-﻿// ============================================================================
-// AuditDNA — EMAIL CAMPAIGN ENGINE v2.0
+// ============================================================================
+// AuditDNA � EMAIL CAMPAIGN ENGINE v2.0
 // File: C:\AuditDNA\backend\routes\email-campaigns.js
 //
 // Routes:
-//   POST /api/email/send-blast        — send immediate blast
-//   POST /api/email/schedule-blast    — schedule future blast
-//   POST /api/email/auto-pilot/run    — run auto-pilot cycle manually
-//   GET  /api/email/campaigns         — list campaigns
-//   GET  /api/email/scheduled         — list scheduled blasts
-//   GET  /api/email/stats             — campaign stats
-//   POST /api/email/unsubscribe       — unsubscribe handler
+//   POST /api/email/send-blast        � send immediate blast
+//   POST /api/email/schedule-blast    � schedule future blast
+//   POST /api/email/auto-pilot/run    � run auto-pilot cycle manually
+//   GET  /api/email/campaigns         � list campaigns
+//   GET  /api/email/scheduled         � list scheduled blasts
+//   GET  /api/email/stats             � campaign stats
+//   POST /api/email/unsubscribe       � unsubscribe handler
 // ============================================================================
 'use strict';
 
@@ -18,7 +18,7 @@ const router   = express.Router();
 const nodemailer = require('nodemailer');
 const { getPool } = require('../db');
 
-// ── SMTP TRANSPORTER ─────────────────────────────────────────────────────────
+// -- SMTP TRANSPORTER ---------------------------------------------------------
 const transporter = nodemailer.createTransport({
   host: 'smtp.gmail.com',
   port: 465,
@@ -32,7 +32,7 @@ const transporter = nodemailer.createTransport({
 
 const FROM = '"Saul Garcia - Mexausa Food Group" <sgarcia1911@gmail.com>';
 
-// ── HTML EMAIL TEMPLATE ───────────────────────────────────────────────────────
+// -- HTML EMAIL TEMPLATE -------------------------------------------------------
 function buildHTML(subject, body, recipientEmail, lang) {
   const unsubUrl = `${process.env.REACT_APP_API_URL || 'https://mexausafg.com'}/api/email/unsubscribe?email=${encodeURIComponent(recipientEmail)}&t=${Date.now()}`;
   return `<!DOCTYPE html>
@@ -77,7 +77,7 @@ function buildHTML(subject, body, recipientEmail, lang) {
 </body></html>`;
 }
 
-// ── SEND SINGLE EMAIL ─────────────────────────────────────────────────────────
+// -- SEND SINGLE EMAIL ---------------------------------------------------------
 async function sendEmail(to, subject, body, lang) {
   return transporter.sendMail({ replyTo: 'saul@mexausafg.com',
     from: FROM,
@@ -88,7 +88,7 @@ async function sendEmail(to, subject, body, lang) {
   });
 }
 
-// ── LOG SEND TO DB ─────────────────────────────────────────────────────────────
+// -- LOG SEND TO DB -------------------------------------------------------------
 async function logSend(req, campaignId, recipientEmail, status, error) {
   try {
     const pool = getPool(req);
@@ -101,7 +101,7 @@ async function logSend(req, campaignId, recipientEmail, status, error) {
   } catch {}
 }
 
-// ── INIT SCHEDULED BLASTS TABLE IF NEEDED ────────────────────────────────────
+// -- INIT SCHEDULED BLASTS TABLE IF NEEDED ------------------------------------
 async function ensureScheduledTable(pool) {
   await pool.query(`
     CREATE TABLE IF NOT EXISTS scheduled_blasts (
@@ -120,7 +120,7 @@ async function ensureScheduledTable(pool) {
   `).catch(() => {});
 }
 
-// ── POST /api/email/send-blast ────────────────────────────────────────────────
+// -- POST /api/email/send-blast ------------------------------------------------
 router.post('/send-blast', async (req, res) => {
   const { subject, body, recipients, segment, lang, campaignId } = req.body;
   if (!subject || !body || !recipients?.length) {
@@ -160,7 +160,7 @@ router.post('/send-blast', async (req, res) => {
   res.json({ success: true, sent, failed, errors: errors.slice(0, 10) });
 });
 
-// ── POST /api/email/schedule-blast ───────────────────────────────────────────
+// -- POST /api/email/schedule-blast -------------------------------------------
 router.post('/schedule-blast', async (req, res) => {
   const { subject, body, segment, recipients, sendAt, recurrence, lang } = req.body;
   if (!subject || !sendAt) return res.status(400).json({ error: 'subject and sendAt required' });
@@ -180,7 +180,7 @@ router.post('/schedule-blast', async (req, res) => {
   }
 });
 
-// ── GET /api/email/scheduled ─────────────────────────────────────────────────
+// -- GET /api/email/scheduled -------------------------------------------------
 router.get('/scheduled', async (req, res) => {
   try {
     const pool = getPool(req);
@@ -192,7 +192,7 @@ router.get('/scheduled', async (req, res) => {
   }
 });
 
-// ── GET /api/email/campaigns ─────────────────────────────────────────────────
+// -- GET /api/email/campaigns -------------------------------------------------
 router.get('/campaigns', async (req, res) => {
   try {
     const pool = getPool(req);
@@ -203,7 +203,7 @@ router.get('/campaigns', async (req, res) => {
   }
 });
 
-// ── GET /api/email/stats ──────────────────────────────────────────────────────
+// -- GET /api/email/stats ------------------------------------------------------
 router.get('/stats', async (req, res) => {
   try {
     const pool = getPool(req);
@@ -217,7 +217,7 @@ router.get('/stats', async (req, res) => {
   }
 });
 
-// ── POST /api/email/auto-pilot/run ───────────────────────────────────────────
+// -- POST /api/email/auto-pilot/run -------------------------------------------
 // Runs the auto-pilot cycle: checks pending scheduled blasts and fires them
 router.post('/auto-pilot/run', async (req, res) => {
   try {
@@ -274,7 +274,7 @@ router.post('/auto-pilot/run', async (req, res) => {
   }
 });
 
-// ── GET /api/email/unsubscribe ────────────────────────────────────────────────
+// -- GET /api/email/unsubscribe ------------------------------------------------
 router.get('/unsubscribe', async (req, res) => {
   const { email } = req.query;
   if (!email) return res.status(400).send('Invalid unsubscribe link');
@@ -290,7 +290,7 @@ router.get('/unsubscribe', async (req, res) => {
   }
 });
 
-// ── POST /api/email/send-learning-report ────────────────────────────────────
+// -- POST /api/email/send-learning-report ------------------------------------
 router.post('/send-learning-report', async (req, res) => {
   const { subject, body } = req.body;
   try {
@@ -301,7 +301,7 @@ router.post('/send-learning-report', async (req, res) => {
   }
 });
 
-// ── CRON INIT — runs auto-pilot every hour ────────────────────────────────────
+// -- CRON INIT � runs auto-pilot every hour ------------------------------------
 function startAutoPilotCron(app) {
   const INTERVAL = 60 * 60 * 1000; // every 1 hour
   setInterval(async () => {
@@ -339,7 +339,7 @@ function startAutoPilotCron(app) {
       console.error('[AUTO-PILOT CRON ERROR]', e.message);
     }
   }, INTERVAL);
-  console.log('[AUTO-PILOT CRON] Started — runs every 60 minutes');
+  console.log('[AUTO-PILOT CRON] Started � runs every 60 minutes');
 }
 
 module.exports = router;

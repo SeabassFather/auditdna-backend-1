@@ -466,7 +466,7 @@ const sendLearningDataEmail = async (data) => {
       body: JSON.stringify(data, null, 2)
     };
 
-    await fetch('http://localhost:5050/api/email/send-learning-report', {
+    await fetch('http://process.env.DB_HOST:5050/api/email/send-learning-report', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(emailData)
@@ -497,7 +497,7 @@ const App = () => {
   const [loginError, setLoginError] = useState('');
   const [loginLoading, setLoginLoading] = useState(false);
 
-  const API_BASE = process.env.REACT_APP_API_URL || 'http://localhost:5050';
+  const API_BASE = process.env.REACT_APP_API_URL || 'http://process.env.DB_HOST:5050';
 
   useEffect(() => {
     const token = localStorage.getItem('mfg_token');
@@ -582,7 +582,7 @@ const App = () => {
   useEffect(() => {
     const checkServers = async () => {
       try {
-        const response = await fetch('http://localhost:5050/health', {
+        const response = await fetch('http://process.env.DB_HOST:5050/health', {
           method: 'GET',
           signal: AbortSignal.timeout(3000)
         });

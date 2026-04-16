@@ -16,7 +16,7 @@ const ZADARMA_SECRET = process.env.ZADARMA_API_SECRET || '';
 const ZADARMA_BASE   = 'api.zadarma.com';
 
 const pgPool = new Pool({
-  host:     process.env.DB_HOST     || 'localhost',
+  host:     process.env.DB_HOST     || 'process.env.DB_HOST',
   port:     parseInt(process.env.DB_PORT || '5432'),
   database: process.env.DB_NAME     || 'auditdna',
   user:     process.env.DB_USER     || 'postgres',

@@ -76,7 +76,7 @@ if (MONGO_URI) {
       console.log('✅ MongoDB Connected');
       app.listen(PORT, () => {
         console.log(`🚀 AuditDNA Backend running on port ${PORT}`);
-        console.log(`📊 API URL: http://localhost:${PORT}`);
+        console.log(`📊 API URL: http://process.env.DB_HOST:${PORT}`);
       });
     })
     .catch(err => {
@@ -88,7 +88,7 @@ if (MONGO_URI) {
   console.log('⚠️  MongoDB URI not found - starting without database');
   app.listen(PORT, () => {
     console.log(`🚀 AuditDNA Backend running on port ${PORT}`);
-    console.log(`📊 API URL: http://localhost:${PORT}`);
+    console.log(`📊 API URL: http://process.env.DB_HOST:${PORT}`);
   });
 }
 

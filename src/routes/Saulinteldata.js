@@ -92,11 +92,11 @@ export const C = {
 };
 
 export const API = {
-  base: (process.env.REACT_APP_API_URL || 'http://localhost:5050'),
-  zadarma: `${process.env.REACT_APP_API_URL || 'http://localhost:5050'}/api/zadarma`,
-  email: `${process.env.REACT_APP_API_URL || 'http://localhost:5050'}/api/email`,
-  files: `${process.env.REACT_APP_API_URL || 'http://localhost:5050'}/api/files`,
-  crm: `${process.env.REACT_APP_API_URL || 'http://localhost:5050'}/api`
+  base: (process.env.REACT_APP_API_URL || 'http://process.env.DB_HOST:5050'),
+  zadarma: `${process.env.REACT_APP_API_URL || 'http://process.env.DB_HOST:5050'}/api/zadarma`,
+  email: `${process.env.REACT_APP_API_URL || 'http://process.env.DB_HOST:5050'}/api/email`,
+  files: `${process.env.REACT_APP_API_URL || 'http://process.env.DB_HOST:5050'}/api/files`,
+  crm: `${process.env.REACT_APP_API_URL || 'http://process.env.DB_HOST:5050'}/api`
 };
 export const CRM = API.crm;
 

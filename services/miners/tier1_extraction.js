@@ -1,4 +1,4 @@
-﻿// TIER 1 - DOCUMENT EXTRACTION (SI)
+// TIER 1 - DOCUMENT EXTRACTION (SI)
 // Signature: extractAllDocuments(documents)
 //   documents = req.body.documents (array of strings or objects from frontend)
 

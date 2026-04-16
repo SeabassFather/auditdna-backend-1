@@ -1,4 +1,4 @@
-﻿// TIER 5 - FINANCIAL RECONCILIATION (SI)
+// TIER 5 - FINANCIAL RECONCILIATION (SI)
 // Signature: reconcileFinancials(extractedData, loanData)
 //   NOTE: audits.js calls tier5.reconcileFinancials NOT analyzeFinancials
 

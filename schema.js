@@ -1,5 +1,5 @@
-﻿const{Pool}=require('pg');
-const p=new Pool({host:'localhost',port:5432,database:'auditdna',user:'postgres',password:'auditdna2026'});
+const{Pool}=require('pg');
+const p=new Pool({host:'process.env.DB_HOST',port:5432,database:'auditdna',user:'postgres',password:'auditdna2026'});
 (async()=>{
   const r=await p.query("SELECT table_name FROM information_schema.tables WHERE table_schema='public' ORDER BY table_name");
   console.log('=== ALL TABLES ===');

@@ -1,4 +1,4 @@
-﻿// TIER 3 - MULTI-JURISDICTION REVIEW (SI)
+// TIER 3 - MULTI-JURISDICTION REVIEW (SI)
 // Signature: analyzeJurisdiction(extractedData, state, zip)
 
 const STATE_RULES = {

@@ -11,7 +11,7 @@ const nodemailer = require('nodemailer');
 
 const getPool = () => {
   const { Pool } = require('pg');
-  return new Pool({ connectionString: process.env.DATABASE_URL || 'postgresql://postgres:auditdna2026@localhost:5432/auditdna' });
+  return new Pool({ connectionString: process.env.DATABASE_URL || 'postgresql://postgres:auditdna2026@process.env.DB_HOST:5432/auditdna' });
 };
 
 const mailer = nodemailer.createTransport({

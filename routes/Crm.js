@@ -11,7 +11,7 @@ const { Pool } = require('pg');
 
 // POSTGRESQL CONNECTION
 const pool = new Pool({
-  host: 'localhost',
+  host: 'process.env.DB_HOST',
   port: 5432,
   database: 'auditdna',
   user: 'postgres',

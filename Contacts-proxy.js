@@ -1,8 +1,8 @@
-ï»¿// ============================================================
-// AuditDNA Contacts Proxy â€” Express Router
+// ============================================================
+// AuditDNA Contacts Proxy — Express Router
 // Backend: C:\AuditDNA\backend\Contacts-proxy.js
 // Mounted at: /api/contacts-proxy (via server.js)
-// NO standalone server â€” runs inside port 5050
+// NO standalone server — runs inside port 5050
 // Eliminates EADDRINUSE crash on port 5051
 // ============================================================
 const express = require('express');
@@ -10,7 +10,7 @@ const router  = express.Router();
 const { Pool } = require('pg');
 
 const pool = new Pool({
-  host:     process.env.DB_HOST     || 'localhost',
+  host:     process.env.DB_HOST     || 'process.env.DB_HOST',
   port:     parseInt(process.env.DB_PORT || '5432'),
   database: process.env.DB_NAME     || 'auditdna',
   user:     process.env.DB_USER     || 'postgres',
@@ -23,7 +23,7 @@ pool.connect((err, client, release) => {
     console.error('[Contacts-proxy] PostgreSQL connection FAILED:', err.message);
   } else {
     release();
-    console.log('[Contacts-proxy] PostgreSQL ready â€” mounted at /api/contacts-proxy');
+    console.log('[Contacts-proxy] PostgreSQL ready — mounted at /api/contacts-proxy');
   }
 });
 

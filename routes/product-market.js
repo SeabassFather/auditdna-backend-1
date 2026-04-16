@@ -15,7 +15,7 @@ require('dotenv').config({ path: path.join(__dirname, '..', '.env') });
 
 // Dedicated pool (same pattern as grower-pipeline)
 const mktPool = new Pool({
-  host:     process.env.DB_HOST     || 'localhost',
+  host:     process.env.DB_HOST     || 'process.env.DB_HOST',
   port:     Number(process.env.DB_PORT || 5432),
   database: process.env.DB_NAME     || 'auditdna',
   user:     process.env.DB_USER     || 'postgres',

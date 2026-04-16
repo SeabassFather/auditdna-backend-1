@@ -14,7 +14,7 @@ const brainLog = (event, data) => {
   try {
     const API = process.env.RAILWAY_PUBLIC_DOMAIN
       ? `https://${process.env.RAILWAY_PUBLIC_DOMAIN}`
-      : 'http://localhost:5000';
+      : 'http://process.env.DB_HOST:5000';
     fetch(`${API}/api/brain/event`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },

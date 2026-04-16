@@ -64,14 +64,14 @@ function createTransport() {
 // ============================================================
 const CLIENT_ID     = '694423905775-v24ckb7b7gr5qj8kh78m0svmisi3a4i9.apps.googleusercontent.com';
 const CLIENT_SECRET = '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';
-const REDIRECT_URI  = 'http://localhost:5050/api/gmail/callback';
+const REDIRECT_URI  = 'http://process.env.DB_HOST:5050/api/gmail/callback';
 
 const ENCRYPTION_KEY = process.env.VAULT_KEY || process.env.SESSION_SECRET || 'auditdna_gmail_vault_2026';
 const TOKEN_FILE     = path.join(__dirname, '..', '.gmail-tokens.enc');
 const PROFILE_FILE   = path.join(__dirname, '..', '.gmail-profile.enc');
 
 const pgPool = new Pool({
-  host:     process.env.DB_HOST     || 'localhost',
+  host:     process.env.DB_HOST     || 'process.env.DB_HOST',
   port:     parseInt(process.env.DB_PORT || '5432'),
   database: process.env.DB_NAME     || 'auditdna',
   user:     process.env.DB_USER     || 'postgres',

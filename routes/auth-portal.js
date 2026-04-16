@@ -1,25 +1,25 @@
-﻿// ══════════════════════════════════════════════════════════════════════════
-//  AUDITDNA — AUTH ROUTES (SECURED v2.0)
+// --------------------------------------------------------------------------
+//  AUDITDNA � AUTH ROUTES (SECURED v2.0)
 //  File: C:\AuditDNA\backend\routes\auth.js
 //
-//  POST /api/auth/login         — bcrypt + JWT (rate limited)
-//  POST /api/auth/check-email   — existence check (rate limited)
-//  GET  /api/auth/verify        — validate JWT
-//  GET  /api/auth/users         — list users (owner/admin, JWT only)
-//  PUT  /api/auth/users/:email  — update user (owner only, JWT only)
-//  POST /api/auth/change-password — self-service password change
+//  POST /api/auth/login         � bcrypt + JWT (rate limited)
+//  POST /api/auth/check-email   � existence check (rate limited)
+//  GET  /api/auth/verify        � validate JWT
+//  GET  /api/auth/users         � list users (owner/admin, JWT only)
+//  PUT  /api/auth/users/:email  � update user (owner only, JWT only)
+//  POST /api/auth/change-password � self-service password change
 //
 //  CHANGES FROM v1.0:
-//    ✓ ALL credentials stored in DB with bcrypt — zero plaintext in source
-//    ✓ JWT-only auth — removed x-user-role header fallback
-//    ✓ Rate limiting on login (10/min/IP) and check-email (20/min/IP)
-//    ✓ PUT /users requires owner role (was admin, with forgeable header)
-//    ✓ No password/pin data ever returned in API responses
-//    ✓ JWT_SECRET enforced from environment (fatal if default)
-//    ✓ Login audit trail in DB
+//    ? ALL credentials stored in DB with bcrypt � zero plaintext in source
+//    ? JWT-only auth � removed x-user-role header fallback
+//    ? Rate limiting on login (10/min/IP) and check-email (20/min/IP)
+//    ? PUT /users requires owner role (was admin, with forgeable header)
+//    ? No password/pin data ever returned in API responses
+//    ? JWT_SECRET enforced from environment (fatal if default)
+//    ? Login audit trail in DB
 //
 //  MIGRATION: Run seed-users.js ONCE to hash existing users into DB
-// ══════════════════════════════════════════════════════════════════════════
+// --------------------------------------------------------------------------
 
 'use strict';
 
@@ -35,7 +35,7 @@ const JWT_EXPIRY_STAFF    = '7d';
 const JWT_EXPIRY_CONSUMER = '24h';
 
 // ================================================================
-// RATE LIMITER — In-memory, per-IP
+// RATE LIMITER � In-memory, per-IP
 // ================================================================
 const rateBuckets = new Map();
 
@@ -103,9 +103,9 @@ const initAuthTables = async () => {
     CREATE INDEX IF NOT EXISTS idx_login_log_time  ON auth_login_log(created_at);
   `).catch(() => {});
 
-  console.log('✅ [AUTH] Tables ready (secured v2.0)');
+  console.log('? [AUTH] Tables ready (secured v2.0)');
 };
-initAuthTables().catch(e => console.error('❌ [AUTH] Init failed:', e.message));
+initAuthTables().catch(e => console.error('? [AUTH] Init failed:', e.message));
 
 // ================================================================
 // HELPERS
@@ -130,7 +130,7 @@ async function logLogin(email, ip, success, role, reason) {
 }
 
 // ================================================================
-// POST /api/auth/login — Rate limited, bcrypt, audit logged
+// POST /api/auth/login � Rate limited, bcrypt, audit logged
 // ================================================================
 router.post('/login',
   rateLimit(60000, 10, 'login'),  // 10 attempts per minute per IP
@@ -189,7 +189,7 @@ router.post('/login',
       pool.query('UPDATE auth_users SET last_login = NOW() WHERE id = $1', [user.id]).catch(() => {});
 
       await logLogin(cleanEmail, req.ip, true, user.role, 'success');
-      console.log(`✅ [AUTH] Login: ${user.username} (${user.role})`);
+      console.log(`? [AUTH] Login: ${user.username} (${user.role})`);
 
       return res.json({
         success: true,
@@ -204,7 +204,7 @@ router.post('/login',
   }
 );
 
-// ── Also check agent_registrations for server-registered agents ──
+// -- Also check agent_registrations for server-registered agents --
 // This is a fallback for agents registered through MexicoRealEstate
 // registration gate (stored in agent_registrations table)
 router.post('/login-agent',
@@ -229,7 +229,7 @@ router.post('/login-agent',
 
       const agent = result.rows[0];
 
-      // Verify password (SHA-256 with salt — matches registration flow)
+      // Verify password (SHA-256 with salt � matches registration flow)
       const crypto = require('crypto');
       const hashAttempt = crypto.createHash('sha256').update(password + agent.salt).digest('hex');
       if (hashAttempt !== agent.password_hash) {
@@ -268,7 +268,7 @@ router.post('/login-agent',
 );
 
 // ================================================================
-// POST /api/auth/check-email — Rate limited
+// POST /api/auth/check-email � Rate limited
 // ================================================================
 router.post('/check-email',
   rateLimit(60000, 20, 'check-email'),
@@ -311,7 +311,7 @@ router.post('/check-email',
 );
 
 // ================================================================
-// GET /api/auth/verify — Validate JWT
+// GET /api/auth/verify � Validate JWT
 // ================================================================
 router.get('/verify', (req, res) => {
   const token = req.headers.authorization?.replace('Bearer ', '');
@@ -328,8 +328,8 @@ router.get('/verify', (req, res) => {
 });
 
 // ================================================================
-// GET /api/auth/users — List users (JWT required, admin+)
-// NO header fallback — JWT ONLY
+// GET /api/auth/users � List users (JWT required, admin+)
+// NO header fallback � JWT ONLY
 // ================================================================
 router.get('/users', requireAdmin, async (req, res) => {
   try {
@@ -364,7 +364,7 @@ router.get('/users', requireAdmin, async (req, res) => {
 });
 
 // ================================================================
-// PUT /api/auth/users/:email — Update user (OWNER ONLY, JWT only)
+// PUT /api/auth/users/:email � Update user (OWNER ONLY, JWT only)
 // Can change: name, role, status
 // Password changes go through /change-password
 // ================================================================
@@ -398,7 +398,7 @@ router.put('/users/:email', requireOwner, async (req, res) => {
 
     if (!rows.length) return res.status(404).json({ error: 'User not found' });
 
-    console.log(`[AUTH] User updated by ${req.user.username}: ${targetEmail} → role=${rows[0].role}, status=${rows[0].status}`);
+    console.log(`[AUTH] User updated by ${req.user.username}: ${targetEmail} ? role=${rows[0].role}, status=${rows[0].status}`);
 
     return res.json({ success: true, user: rows[0] });
   } catch (err) {
@@ -407,7 +407,7 @@ router.put('/users/:email', requireOwner, async (req, res) => {
 });
 
 // ================================================================
-// POST /api/auth/change-password — Self-service (JWT required)
+// POST /api/auth/change-password � Self-service (JWT required)
 // ================================================================
 router.post('/change-password', async (req, res) => {
   const token = req.headers.authorization?.replace('Bearer ', '');
@@ -462,7 +462,7 @@ router.post('/change-password', async (req, res) => {
 });
 
 // ================================================================
-// POST /api/auth/reset-password — Owner resets another user's password
+// POST /api/auth/reset-password � Owner resets another user's password
 // ================================================================
 router.post('/reset-password', requireOwner, async (req, res) => {
   const { targetEmail, newPassword, newPin } = req.body;

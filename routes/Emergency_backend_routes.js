@@ -541,7 +541,7 @@ router.get('/car/status', async (req, res) => {
 // ──────────────────────────────────────────────────────────────
 
 /**
- * WebSocket endpoint: ws://localhost:3001/ws/emergency
+ * WebSocket endpoint: ws://process.env.DB_HOST:3001/ws/emergency
  * 
  * Real-time broadcasts:
  * - Emergency activations (to nearby users)

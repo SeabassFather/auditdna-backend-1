@@ -3,7 +3,8 @@ const router = express.Router();
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 
-const { getPool } = require('../db');
+// ✅ FIXED IMPORT
+const getPool = require('../db');
 
 const JWT_SECRET = process.env.JWT_SECRET || 'dev_secret';
 const JWT_EXPIRES = process.env.JWT_EXPIRES || '1d';
@@ -20,7 +21,8 @@ router.post('/login', async (req, res) => {
       });
     }
 
-    const pool = getPool(req);
+    // ✅ FIXED (no req passed)
+    const pool = getPool();
 
     if (!pool) {
       return res.status(500).json({
@@ -29,13 +31,13 @@ router.post('/login', async (req, res) => {
       });
     }
 
-    // 🔍 FIND USER (STRICT MATCH)
+    // 🔍 FIND USER
     const result = await pool.query(
       `
       SELECT id, username, role, password_hash, is_active
       FROM auth_users
       WHERE access_code = $1
-      AND pin = $2
+        AND pin = $2
       LIMIT 1
       `,
       [accessCode, pin]
@@ -107,11 +109,11 @@ router.post('/login', async (req, res) => {
     });
 
   } catch (err) {
-    console.error('AUTH LOGIN ERROR:', err);
+    console.error('AUTH LOGIN ERROR:', err.message);
 
     return res.status(500).json({
       success: false,
-      error: 'Server error'
+      error: err.message
     });
   }
 });

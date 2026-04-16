@@ -25,7 +25,7 @@ const JWT_SECRET  = process.env.JWT_SECRET || 'auditdna-grower-jwt-dev';
 // DEDICATED POOL — isolated from main server pool (fixes timeout under load)
 // ════════════════════════════════════════════════════════════════════════════
 const growerPool = new Pool({
-  host:     process.env.DB_HOST     || 'localhost',
+  host:     process.env.DB_HOST     || 'process.env.DB_HOST',
   port:     Number(process.env.DB_PORT || 5432),
   database: process.env.DB_NAME     || 'auditdna',
   user:     process.env.DB_USER     || 'postgres',

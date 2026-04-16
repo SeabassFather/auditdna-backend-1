@@ -1,4 +1,4 @@
-﻿// TIER 2 - FEE COMPLIANCE ANALYSIS (AI)
+// TIER 2 - FEE COMPLIANCE ANALYSIS (AI)
 // Signature: analyzeFeeCompliance(extractedData, loanData)
 
 const ZERO_TOLERANCE_FEES = ['Origination Fee','Processing Fee','Underwriting Fee','Credit Report Fee','Flood Cert Fee','Tax Service Fee','Document Prep Fee'];

@@ -1,7 +1,7 @@
-﻿require('dotenv').config();
+require('dotenv').config();
 const bcrypt = require('bcryptjs');
 const { Pool } = require('pg');
-const pool = new Pool({ host: 'localhost', port: 5432, database: 'auditdna', user: 'postgres', password: 'auditdna2026', ssl: false });
+const pool = new Pool({ host: 'process.env.DB_HOST', port: 5432, database: 'auditdna', user: 'postgres', password: 'auditdna2026', ssl: false });
 const USERS = [
   { email: 'dsg@mfginc.com', password: 'Seabass#2026', pin: '7731', role: 'admin', name: 'DSG' },
   { email: 'etc@mfginc.com', password: 'Condor#2026', pin: '4482', role: 'admin', name: 'ETC' },

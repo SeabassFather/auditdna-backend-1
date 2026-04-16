@@ -1,4 +1,4 @@
-﻿// TIER 4 - CHAIN OF COMMAND TRACKING (AI)
+// TIER 4 - CHAIN OF COMMAND TRACKING (AI)
 // Signature: analyzeChainOfCommand(extractedData, loanData)
 
 const analyzeChainOfCommand = async (extractedData, loanData) => {

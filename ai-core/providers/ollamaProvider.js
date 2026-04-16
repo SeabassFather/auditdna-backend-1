@@ -2,7 +2,7 @@
 //  OLLAMA LOCAL AI PROVIDER
 //  File: C:\AuditDNA\backend\ai-core\providers\ollamaProvider.js
 //
-//  Wraps the local Ollama REST API (runs on http://localhost:11434)
+//  Wraps the local Ollama REST API (runs on http://process.env.DB_HOST:11434)
 //  Zero cost. Zero latency. Fully offline capable.
 //
 //  Recommended models (run once in terminal to pull):
@@ -14,7 +14,7 @@
 
 'use strict';
 
-const OLLAMA_BASE_URL = process.env.OLLAMA_URL || 'http://localhost:11434';
+const OLLAMA_BASE_URL = process.env.OLLAMA_URL || 'http://process.env.DB_HOST:11434';
 const OLLAMA_MODEL    = process.env.OLLAMA_MODEL || 'llama3.2';
 const OLLAMA_TIMEOUT  = parseInt(process.env.OLLAMA_TIMEOUT || '30000');
 

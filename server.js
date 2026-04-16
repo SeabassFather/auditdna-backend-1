@@ -1,4 +1,4 @@
-﻿// =========================
+// =========================
 // AUDITDNA SERVER (STABLE BUILD)
 // =========================
 
@@ -19,7 +19,7 @@ const { Pool } = require('pg');
 // DATABASE
 // =========================
 const pool = new Pool({
-  host: process.env.DB_HOST || 'localhost',
+  host: process.env.DB_HOST || 'process.env.DB_HOST',
   port: Number(process.env.DB_PORT || 5432),
   database: process.env.DB_NAME || 'auditdna',
   user: process.env.DB_USER || 'postgres',
@@ -46,7 +46,7 @@ app.use(compression());
 
 const ALLOWED_ORIGINS = process.env.ALLOWED_ORIGINS
   ? process.env.ALLOWED_ORIGINS.split(',').map(s => s.trim())
-  : ['http://localhost:3000', 'https://mexausafg.com'];
+  : ['http://process.env.DB_HOST:3000', 'https://mexausafg.com'];
 
 app.use(
   cors({
@@ -144,7 +144,7 @@ app.use((err, req, res, next) => {
 // START SERVER
 // =========================
 app.listen(PORT, () => {
-  console.log(`🚀 AUDITDNA SERVER RUNNING ON PORT ${PORT}`);
+  console.log(`?? AUDITDNA SERVER RUNNING ON PORT ${PORT}`);
 });
 
 // =========================

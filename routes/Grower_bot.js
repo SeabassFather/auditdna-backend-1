@@ -9,10 +9,10 @@ const http = require('http');
 const https = require('https');
 const { Pool } = require('pg');
 
-const OPENCLAW_GATEWAY = 'ws://127.0.0.1:18789';
+const OPENCLAW_GATEWAY = 'ws://process.env.DB_HOST:18789';
 const OPENCLAW_TOKEN   = 'f8500ee7115a28d7aea6d694ee853eca797d72278d72c627';
 const SAUL_WHATSAPP    = process.env.SAUL_WA || '+18315939998';
-const API_BASE         = process.env.REACT_APP_API_URL || 'http://localhost:5050';
+const API_BASE         = process.env.REACT_APP_API_URL || 'http://process.env.DB_HOST:5050';
 
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL ||
@@ -135,7 +135,7 @@ async function sendMessage(to, message) {
     });
 
     const options = {
-      hostname: '127.0.0.1',
+      hostname: 'process.env.DB_HOST',
       port: 18789,
       path: '/rpc',
       method: 'POST',
@@ -367,8 +367,8 @@ const server = http.createServer((req, res) => {
 
 server.listen(PORT, () => {
   console.log(`[BOT] Grower onboarding bot listening on port ${PORT}`);
-  console.log(`[BOT] Webhook URL: http://localhost:${PORT}/webhook`);
-  console.log(`[BOT] Health: http://localhost:${PORT}/health`);
+  console.log(`[BOT] Webhook URL: http://process.env.DB_HOST:${PORT}/webhook`);
+  console.log(`[BOT] Health: http://process.env.DB_HOST:${PORT}/health`);
   console.log(`[BOT] Notify Saul at: ${SAUL_WHATSAPP}`);
 });
 

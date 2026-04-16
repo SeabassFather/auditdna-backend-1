@@ -1,5 +1,5 @@
-﻿const {Pool}=require('pg');
-const p=new Pool({connectionString:'postgresql://postgres:postgres@localhost:5432/auditdna'});
+const {Pool}=require('pg');
+const p=new Pool({connectionString:'postgresql://postgres:postgres@process.env.DB_HOST:5432/auditdna'});
 
 async function fix() {
   // Create shippers table matching the structure CRM expects

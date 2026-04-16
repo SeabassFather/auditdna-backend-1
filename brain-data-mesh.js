@@ -20,8 +20,8 @@
 //   GET  /api/brain/status                          ← CommandSphere health
 // ════════════════════════════════════════════════════════════════════════════
 
-const MINIAPI  = process.env.MINIAPI_URL  || 'http://localhost:4000';
-const MAIN_API = process.env.MAIN_API_URL || 'http://localhost:5050';
+const MINIAPI  = process.env.MINIAPI_URL  || 'http://process.env.DB_HOST:4000';
+const MAIN_API = process.env.MAIN_API_URL || 'http://process.env.DB_HOST:5050';
 const NASS_KEY = process.env.USDA_NASS_KEY || '4F158DB1-85C2-3243-BFFA-58B53FB40D23';
 
 // ── IN-MEMORY BRAIN STATE — shared across all modules ───────────────────────

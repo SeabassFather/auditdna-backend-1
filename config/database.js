@@ -3,7 +3,7 @@ require('dotenv').config();
 
 const connectDB = async () => {
     try {
-        await mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/auditdna', {
+        await mongoose.connect(process.env.MONGODB_URI || 'mongodb://process.env.DB_HOST:27017/auditdna', {
             useNewUrlParser: true,
             useUnifiedTopology: true
         });

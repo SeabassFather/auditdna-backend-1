@@ -814,8 +814,8 @@ const PORT = process.env.PORT || 4000;
 app.listen(PORT, () => {
   console.log('============================================================');
   console.log(`[AuditDNA] Express API Server Running`);
-  console.log(`URL: http://127.0.0.1:${PORT}`);
-  console.log(`Network: http://localhost:${PORT}`);
+  console.log(`URL: http://process.env.DB_HOST:${PORT}`);
+  console.log(`Network: http://process.env.DB_HOST:${PORT}`);
   console.log('------------------------------------------------------------');
   console.log('[INVENTORY] 📦 Loaded Products:');
   console.log(`   • Hass Avocado: 5 sizes (36s, 48s, 60s, 70s, 84s)`);
@@ -832,13 +832,13 @@ app.listen(PORT, () => {
   console.log('[NEW] Editable Pricing: ENABLED 💰');
   console.log('[NEW] Product Variants: ENABLED 📦');
   console.log('[NEW] Email Integration: READY');
-  console.log('[NEW] QR Verification: http://localhost:4000/verify/{invoice}');
+  console.log('[NEW] QR Verification: http://process.env.DB_HOST:4000/verify/{invoice}');
   console.log('[MODULES] Produce Intelligence API: READY');
   console.log('[MODULES] Food Safety Module: ACTIVE');
   console.log('------------------------------------------------------------');
-  console.log('[TEST] Sales: POST http://localhost:' + PORT + '/api/sales/create');
-  console.log('[TEST] Inventory: GET http://localhost:' + PORT + '/api/inventory/products');
-  console.log('[TEST] Customers: GET http://localhost:' + PORT + '/api/customers/search?email=buyer@walmart.com');
+  console.log('[TEST] Sales: POST http://process.env.DB_HOST:' + PORT + '/api/sales/create');
+  console.log('[TEST] Inventory: GET http://process.env.DB_HOST:' + PORT + '/api/inventory/products');
+  console.log('[TEST] Customers: GET http://process.env.DB_HOST:' + PORT + '/api/customers/search?email=buyer@walmart.com');
   console.log('============================================================');
 });
 

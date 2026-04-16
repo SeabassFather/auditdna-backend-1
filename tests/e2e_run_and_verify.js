@@ -9,7 +9,7 @@
  *   node backend/tests/e2e_run_and_verify.js
  *
  * Environment:
- *   API_BASE (optional, default http://localhost:4000)
+ *   API_BASE (optional, default http://process.env.DB_HOST:4000)
  *   GROWER_ID (optional, default placeholder)
  *
  * NOTE: Ensure backend server is running before executing.
@@ -20,7 +20,7 @@ const FormData = require('form-data');
 const fs = require('fs');
 const path = require('path');
 
-const API_BASE = process.env.API_BASE || process.env.REACT_APP_API_URL || 'http://localhost:4000';
+const API_BASE = process.env.API_BASE || process.env.REACT_APP_API_URL || 'http://process.env.DB_HOST:4000';
 const GROWER_ID = process.env.GROWER_ID || '00000000-0000-0000-0000-000000000000';
 const SAMPLE_FILE = path.join(__dirname, '..', 'samples', 'sample_lab_complex.pdf');
 const PRODUCT = 'Avocados';

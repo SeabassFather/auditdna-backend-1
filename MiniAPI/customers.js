@@ -575,7 +575,7 @@ router.post('/order/create', async (req, res) => {
     console.log('[ORDER CREATE]    Total: $' + total);
     
     // Generate QR code for order tracking
-    const qrResponse = await fetch('http://localhost:4000/api/customer-portal/qr/order', {
+    const qrResponse = await fetch('http://process.env.DB_HOST:4000/api/customer-portal/qr/order', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
