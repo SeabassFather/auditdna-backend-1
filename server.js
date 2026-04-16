@@ -1,4 +1,6 @@
-﻿// CLEANED + FIXED AUTH ROUTING (NO LOGIC CHANGES)
+﻿// =========================
+// AUDITDNA SERVER (STABLE BUILD)
+// =========================
 
 const express = require('express');
 const cors = require('cors');
@@ -27,6 +29,9 @@ const pool = new Pool({
   connectionTimeoutMillis: 5000
 });
 
+// =========================
+// APP INIT
+// =========================
 const app = express();
 const PORT = process.env.PORT || 5050;
 const NODE_ENV = process.env.NODE_ENV || 'development';
@@ -86,12 +91,18 @@ const routesDir = path.join(__dirname, 'routes');
 
 if (fs.existsSync(routesDir)) {
   fs.readdirSync(routesDir)
-    .filter(file => file.endsWith('.js')) // ONLY LOAD JS
+    .filter(file => file.endsWith('.js')) // IGNORE .py
     .forEach(file => {
       try {
         const route = require(path.join(routesDir, file));
-        app.use(`/api/${file.replace('.js', '')}`, route);
-        console.log(`[ROUTE LOADED] /api/${file.replace('.js', '')}`);
+
+        if (typeof route === 'function') {
+          app.use(`/api/${file.replace('.js', '')}`, route);
+          console.log(`[ROUTE LOADED] /api/${file.replace('.js', '')}`);
+        } else {
+          console.warn(`[SKIPPED] ${file} (not a router)`);
+        }
+
       } catch (err) {
         console.error(`[ROUTE ERROR] ${file}:`, err.message);
       }
@@ -99,9 +110,15 @@ if (fs.existsSync(routesDir)) {
 }
 
 // =========================
-// AUTH ROUTES
+// AUTH ROUTES (FIXED)
 // =========================
-app.use('/api/auth', require('./src/Auth'));
+const authRouter = require('./src/Auth');
+
+app.use('/api/auth', (req, res, next) => {
+  req.app.locals.pool = pool;
+  next();
+}, authRouter);
+
 app.use('/api/tenant-auth', require('./routes/tenant-auth'));
 
 // =========================
@@ -127,7 +144,10 @@ app.use((err, req, res, next) => {
 // START SERVER
 // =========================
 app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
+  console.log(`🚀 AUDITDNA SERVER RUNNING ON PORT ${PORT}`);
 });
 
+// =========================
+// EXPORT
+// =========================
 module.exports = Object.assign(app, { pool });
