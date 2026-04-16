@@ -3,9 +3,7 @@ const router = express.Router();
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 
-// ✅ SAFE IMPORT (handles BOTH export styles)
-const dbModule = require('../db');
-const getPool = dbModule.getPool || dbModule;
+const { getPool } = require('../db');
 
 const JWT_SECRET = process.env.JWT_SECRET || 'dev_secret';
 const JWT_EXPIRES = process.env.JWT_EXPIRES || '1d';
@@ -14,7 +12,6 @@ router.post('/login', async (req, res) => {
   try {
     const { password, accessCode, pin } = req.body;
 
-    // 🔒 VALIDATION
     if (!password || !accessCode || !pin) {
       return res.status(400).json({
         success: false,
@@ -22,25 +19,8 @@ router.post('/login', async (req, res) => {
       });
     }
 
-    // 🔥 SAFE POOL INIT (NO MORE CRASHES)
-    if (typeof getPool !== 'function') {
-      console.error('DB ERROR: getPool is not a function');
-      return res.status(500).json({
-        success: false,
-        error: 'Database misconfigured'
-      });
-    }
-
     const pool = getPool();
 
-    if (!pool) {
-      return res.status(500).json({
-        success: false,
-        error: 'Database unavailable'
-      });
-    }
-
-    // 🔍 FIND USER
     const result = await pool.query(
       `
       SELECT id, username, role, password_hash, is_active
@@ -61,7 +41,6 @@ router.post('/login', async (req, res) => {
 
     const user = result.rows[0];
 
-    // 🔐 PASSWORD CHECK
     const validPassword = await bcrypt.compare(password, user.password_hash);
 
     if (!validPassword) {
@@ -71,7 +50,6 @@ router.post('/login', async (req, res) => {
       });
     }
 
-    // 🔥 FORCE ACTIVE
     if (!user.is_active) {
       await pool.query(
         `UPDATE auth_users SET is_active = true WHERE id = $1`,
@@ -79,7 +57,6 @@ router.post('/login', async (req, res) => {
       );
     }
 
-    // 🧠 UPDATE LOGIN
     await pool.query(
       `
       UPDATE auth_users
@@ -90,14 +67,6 @@ router.post('/login', async (req, res) => {
       [user.id]
     );
 
-    // 🧠 SESSION
-    if (req.session) {
-      req.session.userId = user.id;
-      req.session.username = user.username;
-      req.session.role = user.role;
-    }
-
-    // 🔑 JWT
     const token = jwt.sign(
       {
         userId: user.id,
@@ -118,11 +87,11 @@ router.post('/login', async (req, res) => {
     });
 
   } catch (err) {
-    console.error('AUTH LOGIN ERROR:', err);
+    console.error('AUTH LOGIN ERROR:', err.message);
 
     return res.status(500).json({
       success: false,
-      error: 'Server error'
+      error: err.message
     });
   }
 });
