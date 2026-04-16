@@ -3,41 +3,50 @@ const router = express.Router();
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 
-// make sure these are already defined/imported in your project
-// const { getPool } = require('../db');
-// const { checkRateLimit, recordFailure, clearAttempts } = require('../rateLimit');
+// ✅ REQUIRED IMPORTS (YOU WERE MISSING THESE)
+const { getPool } = require('../db');
+const {
+  checkRateLimit,
+  recordFailure,
+  clearAttempts
+} = require('../rateLimit');
+
+const JWT_SECRET = process.env.JWT_SECRET;
+const JWT_EXPIRES = process.env.JWT_EXPIRES || '1d';
 
 router.post('/login', async (req, res) => {
-  const ip = req.ip || req.connection.remoteAddress;
-  const limit = checkRateLimit(ip);
-
-  if (!limit.allowed) {
-    return res.status(429).json({
-      success: false,
-      error: `Too many failed attempts. Try again in ${limit.retryAfter}s`,
-      retryAfter: limit.retryAfter
-    });
-  }
-
-  const { password, accessCode, pin } = req.body;
-
-  if (!password || !accessCode || !pin) {
-    return res.status(400).json({
-      success: false,
-      error: 'Password, access code, and PIN required'
-    });
-  }
-
-  const pool = getPool(req);
-  if (!pool) {
-    return res.status(500).json({
-      success: false,
-      error: 'Database unavailable'
-    });
-  }
+  const ip = req.ip || req.connection?.remoteAddress;
 
   try {
-    // 🔥 GET USER BY CODE + PIN ONLY
+    const limit = checkRateLimit(ip);
+
+    if (!limit.allowed) {
+      return res.status(429).json({
+        success: false,
+        error: `Too many failed attempts. Try again in ${limit.retryAfter}s`,
+        retryAfter: limit.retryAfter
+      });
+    }
+
+    const { password, accessCode, pin } = req.body;
+
+    if (!password || !accessCode || !pin) {
+      return res.status(400).json({
+        success: false,
+        error: 'Password, access code, and PIN required'
+      });
+    }
+
+    const pool = getPool(req);
+
+    if (!pool) {
+      return res.status(500).json({
+        success: false,
+        error: 'Database unavailable'
+      });
+    }
+
+    // 🔍 FIND USER
     const { rows } = await pool.query(
       `SELECT * FROM auth_users
        WHERE access_code = $1
@@ -46,7 +55,7 @@ router.post('/login', async (req, res) => {
       [accessCode, pin]
     );
 
-    if (rows.length === 0) {
+    if (!rows.length) {
       recordFailure(ip);
       return res.status(401).json({
         success: false,
@@ -56,7 +65,7 @@ router.post('/login', async (req, res) => {
 
     const user = rows[0];
 
-    // 🔥 PASSWORD CHECK
+    // 🔐 PASSWORD CHECK
     const passOk = await bcrypt.compare(password, user.password_hash);
 
     if (!passOk) {
@@ -67,7 +76,7 @@ router.post('/login', async (req, res) => {
       });
     }
 
-    // 🔥 FORCE ACTIVE IF BROKEN
+    // 🔥 FORCE ACTIVE (SAFE FIX)
     if (user.is_active === false) {
       await pool.query(
         `UPDATE auth_users SET is_active = true WHERE id = $1`,
@@ -85,12 +94,14 @@ router.post('/login', async (req, res) => {
       [user.id]
     );
 
-    // SESSION
-    req.session.userId = user.id;
-    req.session.username = user.username;
-    req.session.role = user.role;
+    // 🧠 SESSION
+    if (req.session) {
+      req.session.userId = user.id;
+      req.session.username = user.username;
+      req.session.role = user.role;
+    }
 
-    // JWT
+    // 🔑 JWT
     const token = jwt.sign(
       {
         userId: user.id,
