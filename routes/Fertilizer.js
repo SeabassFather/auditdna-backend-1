@@ -48,3 +48,4 @@ router.post('/application', (req, res) => {
 router.get('/history/:growerId', (req, res) => res.json({ data: applications.filter(a => a.growerId === req.params.growerId) }));
 
 module.exports = router;
+

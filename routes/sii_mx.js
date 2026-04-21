@@ -1,7 +1,7 @@
-// ═══════════════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 // SII-MX BACKEND ROUTES - FIXED VERSION
 // All CRUD operations for Mexican Real Estate ERP
-// ═══════════════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
 const express = require('express');
 const router = express.Router();
@@ -17,21 +17,21 @@ const pool = new Pool({
 });
 
 // Test connection
-pool.query('SELECT NOW()', (err, res) => {
+global.db.query('SELECT NOW()', (err, res) => {
   if (err) {
-    console.error('❌ SII-MX Database connection error:', err);
+    console.error('âŒ SII-MX Database connection error:', err);
   } else {
-    console.log('✅ SII-MX connected to PostgreSQL');
+    console.log('âœ… SII-MX connected to PostgreSQL');
   }
 });
 
-// ═══════════════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 // DASHBOARD
-// ═══════════════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
 router.get('/dashboard', async (req, res) => {
   try {
-    const stats = await pool.query(`
+    const stats = await global.db.query(`
       SELECT 
         (SELECT COUNT(*) FROM sii_clientes WHERE activo = true) as total_clientes,
         (SELECT COUNT(*) FROM sii_fraccionamientos) as total_fraccionamientos,
@@ -59,17 +59,17 @@ router.get('/dashboard', async (req, res) => {
     });
   } catch (error) {
     console.error('Error fetching dashboard stats:', error);
-    res.status(500).json({ error: 'Error al obtener estadísticas' });
+    res.status(500).json({ error: 'Error al obtener estadÃ­sticas' });
   }
 });
 
-// ═══════════════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 // CLIENTES (Customers)
-// ═══════════════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
 router.get('/clientes', async (req, res) => {
   try {
-    const result = await pool.query('SELECT * FROM sii_clientes ORDER BY created_at DESC');
+    const result = await global.db.query('SELECT * FROM sii_clientes ORDER BY created_at DESC');
     res.json(result.rows);
   } catch (error) {
     console.error('Error fetching clientes:', error);
@@ -79,7 +79,7 @@ router.get('/clientes', async (req, res) => {
 
 router.get('/clientes/:id', async (req, res) => {
   try {
-    const result = await pool.query('SELECT * FROM sii_clientes WHERE id = $1', [req.params.id]);
+    const result = await global.db.query('SELECT * FROM sii_clientes WHERE id = $1', [req.params.id]);
     if (result.rows.length === 0) {
       return res.status(404).json({ error: 'Cliente no encontrado' });
     }
@@ -94,7 +94,7 @@ router.post('/clientes', async (req, res) => {
   try {
     const { nombre, apellido_paterno, apellido_materno, rfc, curp, fecha_nacimiento, telefono, email, direccion, ciudad, estado, codigo_postal, identificacion_oficial, estado_civil, ocupacion, activo } = req.body;
 
-    const result = await pool.query(`
+    const result = await global.db.query(`
       INSERT INTO sii_clientes (
         nombre, apellido_paterno, apellido_materno, rfc, curp,
         fecha_nacimiento, telefono, email, direccion, ciudad,
@@ -116,7 +116,7 @@ router.put('/clientes/:id', async (req, res) => {
     const { id } = req.params;
     const { nombre, apellido_paterno, apellido_materno, rfc, curp, fecha_nacimiento, telefono, email, direccion, ciudad, estado, codigo_postal, identificacion_oficial, estado_civil, ocupacion, activo } = req.body;
 
-    const result = await pool.query(`
+    const result = await global.db.query(`
       UPDATE sii_clientes SET
         nombre = $1, apellido_paterno = $2, apellido_materno = $3,
         rfc = $4, curp = $5, fecha_nacimiento = $6, telefono = $7,
@@ -141,7 +141,7 @@ router.put('/clientes/:id', async (req, res) => {
 
 router.delete('/clientes/:id', async (req, res) => {
   try {
-    const result = await pool.query('DELETE FROM sii_clientes WHERE id = $1 RETURNING *', [req.params.id]);
+    const result = await global.db.query('DELETE FROM sii_clientes WHERE id = $1 RETURNING *', [req.params.id]);
     if (result.rows.length === 0) {
       return res.status(404).json({ error: 'Cliente no encontrado' });
     }
@@ -152,13 +152,13 @@ router.delete('/clientes/:id', async (req, res) => {
   }
 });
 
-// ═══════════════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 // FRACCIONAMIENTOS (Developments)
-// ═══════════════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
 router.get('/fraccionamientos', async (req, res) => {
   try {
-    const result = await pool.query(`
+    const result = await global.db.query(`
       SELECT 
         f.*,
         (SELECT COUNT(*) FROM sii_predios WHERE fraccionamiento_id = f.id) as total_lotes,
@@ -178,7 +178,7 @@ router.post('/fraccionamientos', async (req, res) => {
   try {
     const { nombre, ubicacion, descripcion, total_lotes, precio_m2, servicios } = req.body;
 
-    const result = await pool.query(`
+    const result = await global.db.query(`
       INSERT INTO sii_fraccionamientos (nombre, ubicacion, descripcion, total_lotes, precio_m2, servicios)
       VALUES ($1, $2, $3, $4, $5, $6)
       RETURNING *
@@ -196,7 +196,7 @@ router.put('/fraccionamientos/:id', async (req, res) => {
     const { id } = req.params;
     const { nombre, ubicacion, descripcion, total_lotes, precio_m2, servicios } = req.body;
 
-    const result = await pool.query(`
+    const result = await global.db.query(`
       UPDATE sii_fraccionamientos SET
         nombre = $1, ubicacion = $2, descripcion = $3,
         total_lotes = $4, precio_m2 = $5, servicios = $6,
@@ -218,7 +218,7 @@ router.put('/fraccionamientos/:id', async (req, res) => {
 
 router.delete('/fraccionamientos/:id', async (req, res) => {
   try {
-    const result = await pool.query('DELETE FROM sii_fraccionamientos WHERE id = $1 RETURNING *', [req.params.id]);
+    const result = await global.db.query('DELETE FROM sii_fraccionamientos WHERE id = $1 RETURNING *', [req.params.id]);
     if (result.rows.length === 0) {
       return res.status(404).json({ error: 'Fraccionamiento no encontrado' });
     }
@@ -229,13 +229,13 @@ router.delete('/fraccionamientos/:id', async (req, res) => {
   }
 });
 
-// ═══════════════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 // CONTRATOS (Contracts)
-// ═══════════════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
 router.get('/contratos', async (req, res) => {
   try {
-    const result = await pool.query(`
+    const result = await global.db.query(`
       SELECT 
         c.*,
         cl.nombre || ' ' || cl.apellido_paterno as cliente_nombre,
@@ -256,7 +256,7 @@ router.post('/contratos', async (req, res) => {
   try {
     const { cliente_id, predio_id, folio, fecha_firma, monto_total, enganche, saldo_financiar, numero_mensualidades, monto_mensualidad, tasa_interes, fecha_inicio_pagos, fecha_vencimiento, estatus } = req.body;
 
-    const result = await pool.query(`
+    const result = await global.db.query(`
       INSERT INTO sii_contratos (
         cliente_id, predio_id, folio, fecha_firma, monto_total,
         enganche, saldo_financiar, numero_mensualidades, monto_mensualidad,
@@ -274,7 +274,7 @@ router.post('/contratos', async (req, res) => {
 
 router.delete('/contratos/:id', async (req, res) => {
   try {
-    const result = await pool.query('DELETE FROM sii_contratos WHERE id = $1 RETURNING *', [req.params.id]);
+    const result = await global.db.query('DELETE FROM sii_contratos WHERE id = $1 RETURNING *', [req.params.id]);
     if (result.rows.length === 0) {
       return res.status(404).json({ error: 'Contrato no encontrado' });
     }
@@ -285,13 +285,13 @@ router.delete('/contratos/:id', async (req, res) => {
   }
 });
 
-// ═══════════════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 // MENSUALIDADES (Installments)
-// ═══════════════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
 router.get('/mensualidades', async (req, res) => {
   try {
-    const result = await pool.query(`
+    const result = await global.db.query(`
       SELECT 
         m.*,
         c.folio as contrato_folio,
@@ -313,7 +313,7 @@ router.post('/mensualidades/:id/pagar', async (req, res) => {
     const { id } = req.params;
     const { fecha_pago, monto_pagado, metodo_pago, referencia } = req.body;
 
-    const result = await pool.query(`
+    const result = await global.db.query(`
       UPDATE sii_mensualidades SET
         estatus = 'pagada',
         fecha_pago = $1,
@@ -336,13 +336,13 @@ router.post('/mensualidades/:id/pagar', async (req, res) => {
   }
 });
 
-// ═══════════════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 // SERVICIOS (Services)
-// ═══════════════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
 router.get('/servicios', async (req, res) => {
   try {
-    const result = await pool.query('SELECT * FROM sii_servicios ORDER BY nombre');
+    const result = await global.db.query('SELECT * FROM sii_servicios ORDER BY nombre');
     res.json(result.rows);
   } catch (error) {
     console.error('Error fetching servicios:', error);
@@ -350,8 +350,9 @@ router.get('/servicios', async (req, res) => {
   }
 });
 
-// ═══════════════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 // EXPORT
-// ═══════════════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
 module.exports = router;
+

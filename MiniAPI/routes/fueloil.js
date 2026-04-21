@@ -19,3 +19,4 @@ router.post("/api/ai/fuel-oil", async (req, res) => {
 });
 
 export default router;
+

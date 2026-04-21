@@ -14,3 +14,4 @@ const EscrowSchema = new mongoose.Schema({
 });
 EscrowSchema.pre('save', function(next) { this.updatedAt = Date.now(); next(); });
 module.exports = mongoose.model('Escrow', EscrowSchema);
+

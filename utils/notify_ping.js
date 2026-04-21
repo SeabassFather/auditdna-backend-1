@@ -46,3 +46,4 @@ const sendEmail = async ({ to = 'saul@mexausafg.com', subject = 'AuditDNA Alert'
 };
 
 module.exports = { ping, sendEmail, CHANNEL, NTFY_BASE };
+

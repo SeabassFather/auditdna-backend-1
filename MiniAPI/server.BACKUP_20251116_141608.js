@@ -1,4 +1,4 @@
-// ================================================================
+﻿// ================================================================
 // AUDITDNA BACKEND - EXPRESS SERVER (ES MODULE)
 // ================================================================
 // Date Created: 2025-11-11 18:09:17 UTC
@@ -143,7 +143,7 @@ salesRouter.post('/create', async (req, res) => {
       }
     }
     
-    console.log('[INVENTORY] ✅ Stock availability confirmed');
+    console.log('[INVENTORY] âœ… Stock availability confirmed');
 
     // DEDUCT INVENTORY
     console.log('[INVENTORY] Deducting stock...');
@@ -168,15 +168,15 @@ salesRouter.post('/create', async (req, res) => {
         timestamp: new Date().toISOString()
       });
       
-      console.log(`[INVENTORY] ${product.productName}: ${previousStock} → ${product.currentStock} (-${qty})`);
+      console.log(`[INVENTORY] ${product.productName}: ${previousStock} â†’ ${product.currentStock} (-${qty})`);
       
       // Check low stock alert
       if (product.currentStock < product.reorderPoint) {
-        console.log(`[ALERT] 🚨 LOW STOCK: ${product.productName} (${product.currentStock} < ${product.reorderPoint})`);
+        console.log(`[ALERT] ðŸš¨ LOW STOCK: ${product.productName} (${product.currentStock} < ${product.reorderPoint})`);
       }
     }
     
-    console.log('[INVENTORY] ✅ Stock deducted successfully');
+    console.log('[INVENTORY] âœ… Stock deducted successfully');
 
     // SAVE SALE TO DATABASE
     console.log('[DATABASE] Saving sale record...');
@@ -187,11 +187,11 @@ salesRouter.post('/create', async (req, res) => {
       savedAt: new Date().toISOString()
     });
     
-    console.log('[DATABASE] ✅ Sale saved');
+    console.log('[DATABASE] âœ… Sale saved');
 
     // EMAIL SIMULATION
     const email = saleData.customer?.email || saleData.client?.email || 'no-email';
-    console.log('[EMAIL] ✅ Invoice email sent to:', email);
+    console.log('[EMAIL] âœ… Invoice email sent to:', email);
     
     emailLogDB.push({
       invoiceNumber: saleData.invoiceNumber,
@@ -202,7 +202,7 @@ salesRouter.post('/create', async (req, res) => {
     });
 
     console.log('============================================================');
-    console.log('[SALES] ✅ SALE COMPLETED SUCCESSFULLY');
+    console.log('[SALES] âœ… SALE COMPLETED SUCCESSFULLY');
     console.log('[INVOICE]', saleData.invoiceNumber);
     console.log('[TOTAL]', `$${saleData.total}`);
     console.log('============================================================');
@@ -219,7 +219,7 @@ salesRouter.post('/create', async (req, res) => {
 
   } catch (error) {
     console.error('============================================================');
-    console.error('[SALES] ❌ ERROR:', error.message);
+    console.error('[SALES] âŒ ERROR:', error.message);
     console.error('============================================================');
     
     res.status(500).json({
@@ -376,7 +376,7 @@ app.get('/verify/:invoiceNumber', async (req, res) => {
 </head>
 <body>
   <div class="container">
-    <div class="error">❌</div>
+    <div class="error">âŒ</div>
     <h1>Invoice Not Found</h1>
     <p>The invoice number "${req.params.invoiceNumber}" does not exist in our system.</p>
   </div>
@@ -402,7 +402,7 @@ app.get('/verify/:invoiceNumber', async (req, res) => {
 </head>
 <body>
   <div class="container">
-    <div class="verified">✅</div>
+    <div class="verified">âœ…</div>
     <h1>Invoice Verified</h1>
     <p>This invoice is authentic and has been verified in our system.</p>
     <div class="invoice-number">Invoice #${sale.invoiceNumber}</div>
@@ -564,8 +564,8 @@ app.listen(PORT, () => {
   console.log(`Network: http://process.env.DB_HOST:${PORT}`);
   console.log('------------------------------------------------------------');
   console.log('[NEW] Sales & Inventory System: ACTIVE');
-  console.log('[NEW] Customer Database: ACTIVE ✅');
-  console.log('[NEW] Manifest System: ACTIVE ✅');
+  console.log('[NEW] Customer Database: ACTIVE âœ…');
+  console.log('[NEW] Manifest System: ACTIVE âœ…');
   console.log('[NEW] Email Integration: READY');
   console.log('[NEW] QR Verification: http://process.env.DB_HOST:4000/verify/{invoice}');
   console.log('[NEW] REAL USDA API Proxy: ACTIVE');
@@ -580,3 +580,4 @@ app.listen(PORT, () => {
 });
 
 export default app;
+

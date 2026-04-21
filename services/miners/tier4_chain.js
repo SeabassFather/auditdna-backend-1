@@ -58,3 +58,4 @@ const analyzeChainOfCommand = async (extractedData, loanData) => {
 };
 
 module.exports = { analyzeChainOfCommand };
+

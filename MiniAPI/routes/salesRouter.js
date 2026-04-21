@@ -47,7 +47,7 @@ salesRouter.post('/create', async (req, res) => {
     
     salesDB.push({ ...saleData, id: salesDB.length + 1 });
     
-    console.log('[SALES] ✅ COMPLETED:', saleData.invoiceNumber);
+    console.log('[SALES] âœ… COMPLETED:', saleData.invoiceNumber);
     
     res.json({
       success: true,
@@ -90,3 +90,4 @@ salesRouter.get('/verify/:invoiceNumber', (req, res) => {
 });
 
 export default salesRouter;
+

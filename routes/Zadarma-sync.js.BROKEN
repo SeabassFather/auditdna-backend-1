@@ -1,5 +1,5 @@
-// ============================================================
-// AuditDNA — Zadarma CRM Sync Route
+﻿// ============================================================
+// AuditDNA â€” Zadarma CRM Sync Route
 // Backend: C:\AuditDNA\backend\routes\zadarma-sync.js
 // Purpose: After every email send, push campaign activity to
 //          Zadarma Teamsale CRM per contact (upsert + note)
@@ -23,10 +23,10 @@ const pgPool = new Pool({
   password: process.env.DB_PASSWORD || 'auditdna2026',
 });
 
-// ── Init campaign log table ───────────────────────────────────
+// â”€â”€ Init campaign log table â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 (async () => {
   try {
-    await pgPool.query(`
+    await pgglobal.db.query(`
       CREATE TABLE IF NOT EXISTS zadarma_campaign_log (
         id           SERIAL PRIMARY KEY,
         campaign_id  VARCHAR(64),
@@ -39,13 +39,13 @@ const pgPool = new Pool({
         synced_at    TIMESTAMP DEFAULT NOW()
       )
     `);
-    console.log('[ZadarmаSync] PostgreSQL table ready');
+    console.log('[ZadarmÐ°Sync] PostgreSQL table ready');
   } catch (err) {
     console.error('[ZadarmaSync] Table init failed:', err.message);
   }
 })();
 
-// ── Zadarma HMAC-SHA1 Auth ────────────────────────────────────
+// â”€â”€ Zadarma HMAC-SHA1 Auth â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 // Spec: sign = base64(HMAC-SHA1(key, md5(params) + path + md5(params)))
 function buildAuthHeader(path, params) {
   const paramStr  = Object.keys(params).sort()
@@ -57,8 +57,8 @@ function buildAuthHeader(path, params) {
   return `${ZADARMA_KEY}:${signature}`;
 }
 
-// ── Generic Zadarma API request ───────────────────────────────
-function zadarmаRequest(method, path, params = {}) {
+// â”€â”€ Generic Zadarma API request â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+function zadarmÐ°Request(method, path, params = {}) {
   return new Promise((resolve, reject) => {
     if (!ZADARMA_KEY || !ZADARMA_SECRET) {
       return reject(new Error('ZADARMA_API_KEY / ZADARMA_API_SECRET not set in .env'));
@@ -101,20 +101,20 @@ function zadarmаRequest(method, path, params = {}) {
   });
 }
 
-// ── Find or create contact in Zadarma CRM ────────────────────
+// â”€â”€ Find or create contact in Zadarma CRM â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 async function upsertContact(recipient) {
   const { name, email, phone, company } = recipient;
   try {
     // Search by email first
     if (email) {
-      const search = await zadarmаRequest('GET', '/v1/zcrm/contacts/', { email });
+      const search = await zadarmÐ°Request('GET', '/v1/zcrm/contacts/', { email });
       if (search.status === 'success' && search.data?.contacts?.length) {
         return search.data.contacts[0].id;
       }
     }
     // Search by phone
     if (phone) {
-      const search = await zadarmаRequest('GET', '/v1/zcrm/contacts/', { phone });
+      const search = await zadarmÐ°Request('GET', '/v1/zcrm/contacts/', { phone });
       if (search.status === 'success' && search.data?.contacts?.length) {
         return search.data.contacts[0].id;
       }
@@ -130,7 +130,7 @@ async function upsertContact(recipient) {
       ...(phone   ? { phone }   : {}),
       ...(company ? { company } : {}),
     };
-    const created = await zadarmаRequest('POST', '/v1/zcrm/contacts/', createParams);
+    const created = await zadarmÐ°Request('POST', '/v1/zcrm/contacts/', createParams);
     if (created.status === 'success' && created.data?.id) {
       return created.data.id;
     }
@@ -141,10 +141,10 @@ async function upsertContact(recipient) {
   }
 }
 
-// ── Add activity note to contact card ────────────────────────
+// â”€â”€ Add activity note to contact card â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 async function addContactNote(contactId, note) {
   try {
-    const result = await zadarmаRequest('POST', `/v1/zcrm/contacts/${contactId}/comments/`, {
+    const result = await zadarmÐ°Request('POST', `/v1/zcrm/contacts/${contactId}/comments/`, {
       text: note,
     });
     return result.status === 'success';
@@ -154,12 +154,12 @@ async function addContactNote(contactId, note) {
   }
 }
 
-// ── Add task/follow-up to contact ────────────────────────────
+// â”€â”€ Add task/follow-up to contact â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 async function addFollowUpTask(contactId, subject, dueDate) {
   try {
     const due = dueDate || new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
       .toISOString().split('T')[0];
-    const result = await zadarmаRequest('POST', `/v1/zcrm/tasks/`, {
+    const result = await zadarmÐ°Request('POST', `/v1/zcrm/tasks/`, {
       contact_id:  contactId,
       text:        `Follow up: ${subject}`,
       deadline:    due,
@@ -200,7 +200,7 @@ router.post('/campaign', async (req, res) => {
   // Build the note text logged to each contact's card
   const buildNote = (r) => {
     const lines = [
-      `EMAIL CAMPAIGN SENT — ${sentAt} (PST)`,
+      `EMAIL CAMPAIGN SENT â€” ${sentAt} (PST)`,
       `Subject: ${subject}`,
       `From: Saul Garcia | Mexausa Food Group, Inc. <sales@mexausafg.com>`,
       preview ? `Preview: ${preview}...` : '',
@@ -211,7 +211,7 @@ router.post('/campaign', async (req, res) => {
     return lines;
   };
 
-  // Process each recipient — non-blocking, fire and forget per contact
+  // Process each recipient â€” non-blocking, fire and forget per contact
   const syncPromises = recipients.map(async (r) => {
     try {
       // 1. Upsert contact in Zadarma CRM
@@ -229,7 +229,7 @@ router.post('/campaign', async (req, res) => {
       }
 
       // 4. Save to local PostgreSQL log regardless
-      await pgPool.query(`
+      await pgglobal.db.query(`
         INSERT INTO zadarma_campaign_log
           (campaign_id, subject, recipient, email, zadarma_id, status)
         VALUES ($1, $2, $3, $4, $5, $6)
@@ -245,15 +245,15 @@ router.post('/campaign', async (req, res) => {
   // Run all syncs in parallel (non-blocking for send speed)
   Promise.allSettled(syncPromises).then(() => {
     const synced = results.filter(r => r.status === 'ok').length;
-    console.log(`[ZadarmaSync] Campaign "${subject}" — ${synced}/${recipients.length} contacts synced to Zadarma CRM`);
+    console.log(`[ZadarmaSync] Campaign "${subject}" â€” ${synced}/${recipients.length} contacts synced to Zadarma CRM`);
   });
 
-  // Respond immediately — don't block the send
+  // Respond immediately â€” don't block the send
   res.json({
     success:    true,
     campaignId: campId,
     total:      recipients.length,
-    message:    'Zadarma CRM sync initiated — contacts being logged in background',
+    message:    'Zadarma CRM sync initiated â€” contacts being logged in background',
   });
 });
 
@@ -271,8 +271,8 @@ router.get('/log', async (req, res) => {
       vals.push(`%${subject}%`);
     }
     query += ` ORDER BY sent_at DESC LIMIT ${parseInt(limit)} OFFSET ${parseInt(offset)}`;
-    const result = await pgPool.query(query, vals);
-    const count  = await pgPool.query('SELECT COUNT(*) FROM zadarma_campaign_log');
+    const result = await pgglobal.db.query(query, vals);
+    const count  = await pgglobal.db.query('SELECT COUNT(*) FROM zadarma_campaign_log');
     res.json({
       total:   parseInt(count.rows[0].count),
       records: result.rows,
@@ -288,7 +288,7 @@ router.get('/log', async (req, res) => {
 // ============================================================
 router.get('/stats', async (req, res) => {
   try {
-    const result = await pgPool.query(`
+    const result = await pgglobal.db.query(`
       SELECT
         campaign_id,
         subject,
@@ -312,7 +312,7 @@ router.get('/stats', async (req, res) => {
 // ============================================================
 router.get('/contact/:email', async (req, res) => {
   try {
-    const result = await zadarmаRequest('GET', '/v1/zcrm/contacts/', {
+    const result = await zadarmÐ°Request('GET', '/v1/zcrm/contacts/', {
       email: req.params.email,
     });
     res.json(result);
@@ -327,7 +327,7 @@ router.get('/contact/:email', async (req, res) => {
 // ============================================================
 router.get('/balance', async (req, res) => {
   try {
-    const result = await zadarmаRequest('GET', '/v1/info/balance/', {});
+    const result = await zadarmÐ°Request('GET', '/v1/info/balance/', {});
     res.json(result);
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -336,7 +336,7 @@ router.get('/balance', async (req, res) => {
 
 // ============================================================
 // POST /api/zadarma-sync/webhook
-// Zadarma calls this URL for call events — logs to PG
+// Zadarma calls this URL for call events â€” logs to PG
 // Validate with ?zd_echo= for URL verification
 // ============================================================
 router.get('/webhook', (req, res) => {
@@ -350,7 +350,7 @@ router.post('/webhook', async (req, res) => {
   console.log('[ZadarmaSync] Webhook received:', JSON.stringify(event).slice(0, 200));
   try {
     // Log call events to PG for future call-email correlation
-    await pgPool.query(`
+    await pgglobal.db.query(`
       CREATE TABLE IF NOT EXISTS zadarma_call_log (
         id         SERIAL PRIMARY KEY,
         event      TEXT,
@@ -362,7 +362,7 @@ router.post('/webhook', async (req, res) => {
         received_at TIMESTAMP DEFAULT NOW()
       )
     `);
-    await pgPool.query(`
+    await pgglobal.db.query(`
       INSERT INTO zadarma_call_log (event, caller_id, called_did, call_id, duration, status)
       VALUES ($1, $2, $3, $4, $5, $6)
     `, [
@@ -379,5 +379,6 @@ router.post('/webhook', async (req, res) => {
   res.json({ status: 'ok' });
 });
 
-console.log('[ZadarmaSync] Route loaded — /campaign, /log, /stats, /contact, /balance, /webhook');
+console.log('[ZadarmaSync] Route loaded â€” /campaign, /log, /stats, /contact, /balance, /webhook');
 module.exports = router;
+

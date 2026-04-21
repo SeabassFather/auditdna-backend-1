@@ -9,3 +9,4 @@ const SafetySchema = new mongoose.Schema({
 });
 
 export default mongoose.model('Safety', SafetySchema);
+

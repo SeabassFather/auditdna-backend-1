@@ -18,3 +18,4 @@ const SanitationLogSchema = new mongoose.Schema({
 });
 
 export default mongoose.model('SanitationLog', SanitationLogSchema);
+

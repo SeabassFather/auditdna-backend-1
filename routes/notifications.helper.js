@@ -1,5 +1,5 @@
 // ----------------------------------------------------------------------------
-// NOTIFICATIONS MODULE — C:\AuditDNA\backend\routes\notifications.js
+// NOTIFICATIONS MODULE â€” C:\AuditDNA\backend\routes\notifications.js
 // Used by: properties.js, leads.js, properties01-Sg.js
 // ----------------------------------------------------------------------------
 const nodemailer = require('nodemailer');
@@ -24,7 +24,7 @@ const notifications = {
 
   // Generic send
   send: async ({ to, subject, text, html }) => {
-    if (!transporter) return console.warn('[NOTIFY] No transporter — skipped');
+    if (!transporter) return console.warn('[NOTIFY] No transporter â€” skipped');
     try {
       await transporter.sendMail({
         from: process.env.SMTP_USER || 'noreply@mexausafg.com',
@@ -43,7 +43,7 @@ const notifications = {
 
   // Property inquiry alert
   propertyInquiry: async ({ property, contact }) => {
-    console.log('[NOTIFY] Property inquiry:', property?.title, '—', contact?.email);
+    console.log('[NOTIFY] Property inquiry:', property?.title, 'â€”', contact?.email);
     await notifications.send({
       to:      process.env.ADMIN_EMAIL || process.env.SMTP_USER,
       subject: `New Inquiry: ${property?.title || 'Property'}`,
@@ -85,3 +85,4 @@ const _router = express.Router();
 module.exports = _router;
 module.exports.sendNotification = sendNotification;
 module.exports.transporter = transporter;
+

@@ -33,7 +33,7 @@ async function selectProvider(agentId, taskType, override) {
   if (CLOUD_ONLY_TASKS.has(taskType)) return claudeProvider;
   if (LOCAL_TASKS.has(taskType) || LOCAL_TASKS.has(agentId)) {
     if (await getOllamaStatus()) return ollamaProvider;
-    console.warn(`[ROUTER] Ollama offline — routing ${agentId} to Claude`);
+    console.warn(`[ROUTER] Ollama offline â€” routing ${agentId} to Claude`);
   }
   return claudeProvider;
 }
@@ -56,7 +56,7 @@ async function executeAgent(agentId, payload) {
 
     const conf = response.confidence ?? 0.75;
     if (!confidenceGate(conf)) {
-      return { success: false, error: 'Low confidence — manual review required', confidence: conf, result: response, requiresReview: true, provider: providerName, agentId };
+      return { success: false, error: 'Low confidence â€” manual review required', confidence: conf, result: response, requiresReview: true, provider: providerName, agentId };
     }
 
     const duration = Date.now() - start;
@@ -66,7 +66,7 @@ async function executeAgent(agentId, payload) {
 
   } catch (err) {
     if (err.message.includes('Ollama') || err.message.includes('ECONNREFUSED')) {
-      console.warn(`[ENGINE] Ollama failed — auto-retrying with Claude`);
+      console.warn(`[ENGINE] Ollama failed â€” auto-retrying with Claude`);
       ollamaStatus = false; ollamaCheckedAt = Date.now();
       try {
         const response = await claudeProvider.runAgent(agentId, payload);
@@ -93,3 +93,4 @@ async function getStatus() {
 }
 
 module.exports = { executeAgent, runLocal, runCloud, getStatus };
+

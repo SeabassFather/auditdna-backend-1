@@ -1,15 +1,15 @@
-// ═══════════════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 // AUDITDNA MULTI-AI VERIFICATION ROUTES
 // 81 AI Cowboys - Multi-platform consensus verification system
-// ═══════════════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
 const express = require('express');
 const router = express.Router();
 const { pool } = require('../db');
 
-// ═══════════════════════════════════════════════════════════════
-// AI COWBOYS CONFIGURATION (81 Total = 9 Teams × 9 Cowboys each)
-// ═══════════════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+// AI COWBOYS CONFIGURATION (81 Total = 9 Teams Ã— 9 Cowboys each)
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
 const AI_TEAMS = {
   COMPLIANCE: 'compliance_team',
@@ -32,9 +32,9 @@ const VERIFICATION_STATUS = {
   FAILED: 'failed'
 };
 
-// ═══════════════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 // INIT: Create multi-AI verification tables
-// ═══════════════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
 const initAIVerificationTables = async () => {
   const createTablesSQL = `
@@ -134,18 +134,18 @@ const initAIVerificationTables = async () => {
   `;
 
   try {
-    await pool.query(createTablesSQL);
-    console.log('✅ [Multi-AI Verification] Tables initialized');
+    await global.db.query(createTablesSQL);
+    console.log('âœ… [Multi-AI Verification] Tables initialized');
   } catch (error) {
-    console.error('❌ [Multi-AI Verification] Table init failed:', error.message);
+    console.error('âŒ [Multi-AI Verification] Table init failed:', error.message);
   }
 };
 
 initAIVerificationTables();
 
-// ═══════════════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 // HELPER: Generate verification request ID
-// ═══════════════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
 const generateRequestId = (verificationType) => {
   const prefix = verificationType.substring(0, 4).toUpperCase();
@@ -153,9 +153,9 @@ const generateRequestId = (verificationType) => {
   return `AI-${prefix}-${timestamp}`;
 };
 
-// ═══════════════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 // POST /verify - Submit verification request
-// ═══════════════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
 router.post('/verify', async (req, res) => {
   const client = await pool.connect();
@@ -219,7 +219,7 @@ router.post('/verify', async (req, res) => {
 
     await client.query('COMMIT');
 
-    console.log(`✅ [AI Verification] Request created: ${requestId} (${verificationType})`);
+    console.log(`âœ… [AI Verification] Request created: ${requestId} (${verificationType})`);
     console.log(`   Teams assigned: ${assignedTeams.join(', ')}`);
     console.log(`   Total AI Cowboys: ${totalCowboys}`);
 
@@ -244,9 +244,9 @@ router.post('/verify', async (req, res) => {
   }
 });
 
-// ═══════════════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 // POST /verify/:requestId/response - Submit AI cowboy response
-// ═══════════════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
 router.post('/verify/:requestId/response', async (req, res) => {
   const client = await pool.connect();
@@ -307,7 +307,7 @@ router.post('/verify/:requestId/response', async (req, res) => {
 
     await client.query('COMMIT');
 
-    console.log(`✅ [AI Verification] Response from ${cowboyName} (${team})`);
+    console.log(`âœ… [AI Verification] Response from ${cowboyName} (${team})`);
     console.log(`   Progress: ${request.cowboys_responded}/${request.total_cowboys}`);
 
     res.json({
@@ -330,9 +330,9 @@ router.post('/verify/:requestId/response', async (req, res) => {
   }
 });
 
-// ═══════════════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 // POST /verify/:requestId/analyze - Analyze consensus
-// ═══════════════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
 router.post('/verify/:requestId/analyze', async (req, res) => {
   const client = await pool.connect();
@@ -434,7 +434,7 @@ router.post('/verify/:requestId/analyze', async (req, res) => {
 
     await client.query('COMMIT');
 
-    console.log(`✅ [AI Verification] Consensus analyzed: ${requestId}`);
+    console.log(`âœ… [AI Verification] Consensus analyzed: ${requestId}`);
     console.log(`   Result: ${consensusType} (${majorityPercentage.toFixed(1)}%)`);
     console.log(`   Majority vote: ${majorityVote}`);
 
@@ -462,15 +462,15 @@ router.post('/verify/:requestId/analyze', async (req, res) => {
   }
 });
 
-// ═══════════════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 // GET /verify/:requestId - Get verification request with results
-// ═══════════════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
 router.get('/verify/:requestId', async (req, res) => {
   try {
     const { requestId } = req.params;
 
-    const request = await pool.query(
+    const request = await global.db.query(
       'SELECT * FROM ai_verification_requests WHERE request_id = $1',
       [requestId]
     );
@@ -482,12 +482,12 @@ router.get('/verify/:requestId', async (req, res) => {
       });
     }
 
-    const responses = await pool.query(
+    const responses = await global.db.query(
       'SELECT * FROM ai_cowboy_responses WHERE request_id = $1 ORDER BY responded_at ASC',
       [requestId]
     );
 
-    const consensus = await pool.query(
+    const consensus = await global.db.query(
       'SELECT * FROM ai_consensus_analysis WHERE request_id = $1 ORDER BY created_at DESC LIMIT 1',
       [requestId]
     );
@@ -505,13 +505,13 @@ router.get('/verify/:requestId', async (req, res) => {
   }
 });
 
-// ═══════════════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 // GET /verify/dashboard - AI verification dashboard
-// ═══════════════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
 router.get('/dashboard', async (req, res) => {
   try {
-    const stats = await pool.query(`
+    const stats = await global.db.query(`
       SELECT 
         COUNT(*) as total_requests,
         COUNT(*) FILTER (WHERE status = 'pending') as pending,
@@ -526,7 +526,7 @@ router.get('/dashboard', async (req, res) => {
       WHERE created_at > NOW() - INTERVAL '30 days'
     `);
 
-    const byType = await pool.query(`
+    const byType = await global.db.query(`
       SELECT verification_type, COUNT(*) as count
       FROM ai_verification_requests
       WHERE created_at > NOW() - INTERVAL '30 days'
@@ -534,7 +534,7 @@ router.get('/dashboard', async (req, res) => {
       ORDER BY count DESC
     `);
 
-    const teamPerformance = await pool.query(`
+    const teamPerformance = await global.db.query(`
       SELECT 
         team,
         COUNT(*) as total_responses,
@@ -560,8 +560,9 @@ router.get('/dashboard', async (req, res) => {
   }
 });
 
-// ═══════════════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 // EXPORT
-// ═══════════════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
 module.exports = router;
+

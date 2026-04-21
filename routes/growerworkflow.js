@@ -1,15 +1,15 @@
-// ═══════════════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 // AUDITDNA GROWER WORKFLOW ROUTES
 // Onboarding, compliance tracking, FSMA 204 workflow management
-// ═══════════════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
 const express = require('express');
 const router = express.Router();
 const { pool } = require('../db');
 
-// ═══════════════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 // WORKFLOW STAGES
-// ═══════════════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
 const WORKFLOW_STAGES = {
   REGISTRATION: 'registration',
@@ -31,9 +31,9 @@ const WORKFLOW_STATUS = {
   COMPLETED: 'completed'
 };
 
-// ═══════════════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 // INIT: Create workflow tables
-// ═══════════════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
 const initWorkflowTables = async () => {
   const createTablesSQL = `
@@ -134,18 +134,18 @@ const initWorkflowTables = async () => {
   `;
 
   try {
-    await pool.query(createTablesSQL);
-    console.log('✅ [Grower Workflow] Tables initialized');
+    await global.db.query(createTablesSQL);
+    console.log('âœ… [Grower Workflow] Tables initialized');
   } catch (error) {
-    console.error('❌ [Grower Workflow] Table init failed:', error.message);
+    console.error('âŒ [Grower Workflow] Table init failed:', error.message);
   }
 };
 
 initWorkflowTables();
 
-// ═══════════════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 // POST /workflow/start - Start workflow for new grower
-// ═══════════════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
 router.post('/start', async (req, res) => {
   const client = await pool.connect();
@@ -201,7 +201,7 @@ router.post('/start', async (req, res) => {
 
     await client.query('COMMIT');
 
-    console.log(`✅ [Workflow] Started for grower ${growerName} (ID: ${growerId})`);
+    console.log(`âœ… [Workflow] Started for grower ${growerName} (ID: ${growerId})`);
 
     res.status(201).json({
       success: true,
@@ -219,15 +219,15 @@ router.post('/start', async (req, res) => {
   }
 });
 
-// ═══════════════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 // GET /workflow/:growerId - Get workflow for grower
-// ═══════════════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
 router.get('/:growerId', async (req, res) => {
   try {
     const { growerId } = req.params;
 
-    const workflow = await pool.query(
+    const workflow = await global.db.query(
       'SELECT * FROM grower_workflows WHERE grower_id = $1',
       [growerId]
     );
@@ -239,14 +239,14 @@ router.get('/:growerId', async (req, res) => {
       });
     }
 
-    const tasks = await pool.query(
+    const tasks = await global.db.query(
       `SELECT * FROM workflow_tasks 
        WHERE workflow_id = $1 
        ORDER BY created_at ASC`,
       [workflow.rows[0].id]
     );
 
-    const history = await pool.query(
+    const history = await global.db.query(
       `SELECT * FROM workflow_history 
        WHERE workflow_id = $1 
        ORDER BY created_at DESC 
@@ -267,9 +267,9 @@ router.get('/:growerId', async (req, res) => {
   }
 });
 
-// ═══════════════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 // PUT /workflow/task/:taskId - Update task status
-// ═══════════════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
 router.put('/task/:taskId', async (req, res) => {
   const client = await pool.connect();
@@ -334,7 +334,7 @@ router.put('/task/:taskId', async (req, res) => {
 
     await client.query('COMMIT');
 
-    console.log(`✅ [Workflow] Task updated: ${task.task_name} → ${status}`);
+    console.log(`âœ… [Workflow] Task updated: ${task.task_name} â†’ ${status}`);
 
     res.json({
       success: true,
@@ -351,9 +351,9 @@ router.put('/task/:taskId', async (req, res) => {
   }
 });
 
-// ═══════════════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 // POST /workflow/advance/:workflowId - Advance to next stage
-// ═══════════════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
 router.post('/advance/:workflowId', async (req, res) => {
   const client = await pool.connect();
@@ -412,7 +412,7 @@ router.post('/advance/:workflowId', async (req, res) => {
 
     await client.query('COMMIT');
 
-    console.log(`✅ [Workflow] Advanced: ${workflow.grower_name} → ${nextStage}`);
+    console.log(`âœ… [Workflow] Advanced: ${workflow.grower_name} â†’ ${nextStage}`);
 
     res.json({
       success: true,
@@ -429,13 +429,13 @@ router.post('/advance/:workflowId', async (req, res) => {
   }
 });
 
-// ═══════════════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 // GET /workflow/dashboard - Workflow overview dashboard
-// ═══════════════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
 router.get('/dashboard', async (req, res) => {
   try {
-    const stats = await pool.query(`
+    const stats = await global.db.query(`
       SELECT 
         COUNT(*) as total_workflows,
         COUNT(*) FILTER (WHERE current_stage = 'registration') as in_registration,
@@ -450,7 +450,7 @@ router.get('/dashboard', async (req, res) => {
       WHERE stage_status != 'completed'
     `);
 
-    const taskStats = await pool.query(`
+    const taskStats = await global.db.query(`
       SELECT 
         COUNT(*) as total_tasks,
         COUNT(*) FILTER (WHERE status = 'pending') as pending_tasks,
@@ -472,8 +472,9 @@ router.get('/dashboard', async (req, res) => {
   }
 });
 
-// ═══════════════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 // EXPORT
-// ═══════════════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
 module.exports = router;
+

@@ -1,4 +1,4 @@
-// ══════════════════════════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 //  OLLAMA LOCAL AI PROVIDER
 //  File: C:\AuditDNA\backend\ai-core\providers\ollamaProvider.js
 //
@@ -10,7 +10,7 @@
 //    ollama pull mistral         <-- strong reasoning, 4GB
 //    ollama pull codellama       <-- code repair, 4GB
 //    ollama pull nomic-embed-text <-- embeddings for memory
-// ══════════════════════════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
 'use strict';
 
@@ -18,7 +18,7 @@ const OLLAMA_BASE_URL = process.env.OLLAMA_URL || 'http://process.env.DB_HOST:11
 const OLLAMA_MODEL    = process.env.OLLAMA_MODEL || 'llama3.2';
 const OLLAMA_TIMEOUT  = parseInt(process.env.OLLAMA_TIMEOUT || '30000');
 
-// ── Check if Ollama is running ────────────────────────────────────────────
+// â”€â”€ Check if Ollama is running â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 async function isOllamaOnline() {
   try {
     const res = await fetch(`${OLLAMA_BASE_URL}/api/tags`, {
@@ -30,7 +30,7 @@ async function isOllamaOnline() {
   }
 }
 
-// ── List available local models ───────────────────────────────────────────
+// â”€â”€ List available local models â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 async function listModels() {
   try {
     const res = await fetch(`${OLLAMA_BASE_URL}/api/tags`);
@@ -41,7 +41,7 @@ async function listModels() {
   }
 }
 
-// ── Core: run a prompt against Ollama ────────────────────────────────────
+// â”€â”€ Core: run a prompt against Ollama â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 async function chat(prompt, options = {}) {
   const model   = options.model   || OLLAMA_MODEL;
   const system  = options.system  || 'You are AuditDNA AI. Respond in valid JSON only. No prose, no markdown.';
@@ -79,7 +79,7 @@ async function chat(prompt, options = {}) {
   return data.message?.content || '';
 }
 
-// ── runAgent: matches claudeProvider interface exactly ───────────────────
+// â”€â”€ runAgent: matches claudeProvider interface exactly â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 async function runAgent(agentId, payload) {
   const prompt = buildPrompt(agentId, payload);
 
@@ -126,7 +126,7 @@ Always respond with valid JSON only. No preamble. No markdown fences.`,
   };
 }
 
-// ── Streaming version (for real-time chat UI) ────────────────────────────
+// â”€â”€ Streaming version (for real-time chat UI) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 async function* stream(prompt, options = {}) {
   const model  = options.model  || OLLAMA_MODEL;
   const system = options.system || 'You are AuditDNA AI.';
@@ -169,7 +169,7 @@ async function* stream(prompt, options = {}) {
   }
 }
 
-// ── Generate embeddings (for vector memory) ──────────────────────────────
+// â”€â”€ Generate embeddings (for vector memory) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 async function embed(text, model = 'nomic-embed-text') {
   const res = await fetch(`${OLLAMA_BASE_URL}/api/embed`, {
     method:  'POST',
@@ -182,7 +182,7 @@ async function embed(text, model = 'nomic-embed-text') {
   return data.embeddings?.[0] || data.embedding || null;
 }
 
-// ── Prompt builder ────────────────────────────────────────────────────────
+// â”€â”€ Prompt builder â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function buildPrompt(agentId, payload) {
   return `You are the ${agentId} agent. Analyze this task and respond ONLY with a JSON object.
 
@@ -193,11 +193,11 @@ Respond with ONLY this JSON (no explanation, no markdown):
 {"analysis": "brief analysis", "action": "recommended action", "confidence": 0.85}`;
 }
 
-// ── Health check for server startup ──────────────────────────────────────
+// â”€â”€ Health check for server startup â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 async function healthCheck() {
   const online = await isOllamaOnline();
   if (!online) {
-    console.warn('[OLLAMA] Offline — local AI unavailable. Cloud AI (Claude) will be used as fallback.');
+    console.warn('[OLLAMA] Offline â€” local AI unavailable. Cloud AI (Claude) will be used as fallback.');
     return { online: false };
   }
 
@@ -226,3 +226,4 @@ module.exports = {
   OLLAMA_BASE_URL,
   OLLAMA_MODEL,
 };
+

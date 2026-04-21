@@ -27,3 +27,4 @@ router.post('/inventory', (req, res) => {
 });
 
 module.exports = router;
+

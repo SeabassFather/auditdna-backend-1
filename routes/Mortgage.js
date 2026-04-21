@@ -1,5 +1,5 @@
 // ================================================================
-// mortgage.js — EnjoyBaja Backend Mortgage Route Stubs
+// mortgage.js â€” EnjoyBaja Backend Mortgage Route Stubs
 // C:\AuditDNA\auditdna-realestate\backend\routes\mortgage.js
 // Handles all /api/mortgage/* endpoints called by USAMortgage.jsx
 // ================================================================
@@ -9,7 +9,7 @@ const express = require('express');
 const router  = express.Router();
 const pool    = require('../db');
 
-// Helper — log to brain silently
+// Helper â€” log to brain silently
 const brainLog = (event, data) => {
   try {
     const API = process.env.RAILWAY_PUBLIC_DOMAIN
@@ -23,11 +23,11 @@ const brainLog = (event, data) => {
   } catch {}
 };
 
-// ── POST /api/mortgage/pre-approval ─────────────────────────────
+// â”€â”€ POST /api/mortgage/pre-approval â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 router.post('/pre-approval', async (req, res) => {
   try {
     const d = req.body;
-    await pool.query(
+    await global.db.query(
       `INSERT INTO mortgage_applications (type, name, email, phone, data, status, created_at)
        VALUES ($1,$2,$3,$4,$5,'pending',NOW())
        ON CONFLICT DO NOTHING`,
@@ -41,11 +41,11 @@ router.post('/pre-approval', async (req, res) => {
   }
 });
 
-// ── POST /api/mortgage/mexico-application ────────────────────────
+// â”€â”€ POST /api/mortgage/mexico-application â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 router.post('/mexico-application', async (req, res) => {
   try {
     const d = req.body;
-    await pool.query(
+    await global.db.query(
       `INSERT INTO mortgage_applications (type, name, email, phone, data, status, created_at)
        VALUES ($1,$2,$3,$4,$5,'pending',NOW())
        ON CONFLICT DO NOTHING`,
@@ -59,7 +59,7 @@ router.post('/mexico-application', async (req, res) => {
   }
 });
 
-// ── POST /api/mortgage/inquiry ───────────────────────────────────
+// â”€â”€ POST /api/mortgage/inquiry â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 router.post('/inquiry', async (req, res) => {
   try {
     brainLog('MORTGAGE_BUYER_INQUIRY', { email: req.body.email });
@@ -67,7 +67,7 @@ router.post('/inquiry', async (req, res) => {
   } catch { res.json({ ok: true }); }
 });
 
-// ── POST /api/mortgage/agent-register ───────────────────────────
+// â”€â”€ POST /api/mortgage/agent-register â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 router.post('/agent-register', async (req, res) => {
   try {
     brainLog('MORTGAGE_AGENT_REGISTER', { email: req.body.email });
@@ -75,7 +75,7 @@ router.post('/agent-register', async (req, res) => {
   } catch { res.json({ ok: true }); }
 });
 
-// ── POST /api/mortgage/fsbo ──────────────────────────────────────
+// â”€â”€ POST /api/mortgage/fsbo â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 router.post('/fsbo', async (req, res) => {
   try {
     brainLog('MORTGAGE_FSBO_LISTING', { email: req.body.sellerEmail });
@@ -83,7 +83,7 @@ router.post('/fsbo', async (req, res) => {
   } catch { res.json({ ok: true }); }
 });
 
-// ── POST /api/mortgage/property-request ─────────────────────────
+// â”€â”€ POST /api/mortgage/property-request â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 router.post('/property-request', async (req, res) => {
   try {
     brainLog('MORTGAGE_PROPERTY_REQUEST', { email: req.body.email });
@@ -91,7 +91,7 @@ router.post('/property-request', async (req, res) => {
   } catch { res.json({ ok: true }); }
 });
 
-// ── POST /api/mortgage/contact ───────────────────────────────────
+// â”€â”€ POST /api/mortgage/contact â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 router.post('/contact', async (req, res) => {
   try {
     brainLog('MORTGAGE_CONTACT', { email: req.body.email });
@@ -99,10 +99,10 @@ router.post('/contact', async (req, res) => {
   } catch { res.json({ ok: true }); }
 });
 
-// ── GET /api/mortgage/stats (Admin) ─────────────────────────────
+// â”€â”€ GET /api/mortgage/stats (Admin) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 router.get('/stats', async (req, res) => {
   try {
-    const result = await pool.query(
+    const result = await global.db.query(
       `SELECT
          COUNT(*) FILTER (WHERE type='pre-approval')      AS pre_approvals,
          COUNT(*) FILTER (WHERE type='mexico-application') AS mexico_apps,
@@ -120,3 +120,4 @@ router.get('/stats', async (req, res) => {
 });
 
 module.exports = router;
+

@@ -15,3 +15,4 @@ const labTestSchema = new mongoose.Schema({
 });
 
 module.exports = mongoose.model('LabTest', labTestSchema);
+

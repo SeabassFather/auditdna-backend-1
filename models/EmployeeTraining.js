@@ -21,3 +21,4 @@ const EmployeeTrainingSchema = new mongoose.Schema({
 });
 
 export default mongoose.model('EmployeeTraining', EmployeeTrainingSchema);
+

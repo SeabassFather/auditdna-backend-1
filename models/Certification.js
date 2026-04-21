@@ -49,3 +49,4 @@ CertificationSchema.methods.checkExpiry = function() {
 };
 
 export default mongoose.model('Certification', CertificationSchema);
+

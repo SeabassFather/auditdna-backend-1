@@ -1,8 +1,8 @@
-// ═══════════════════════════════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 // AUDITDNA AI LEARNING EMAIL ROUTE
 // Sends learning data reports to Saul@mexausafg.com
 // Place in: C:\AuditDNA\backend\routes\aiLearningRoutes.js
-// ═══════════════════════════════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
 const express = require('express');
 const router = express.Router();
@@ -32,10 +32,10 @@ if (!fs.existsSync(LEARNING_DATA_PATH)) {
 // Create transporter
 const transporter = nodemailer.createTransport(EMAIL_CONFIG);
 
-// ═══════════════════════════════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 // POST /api/email/send-learning-report
 // Sends AI learning data report via email
-// ═══════════════════════════════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 router.post('/send-learning-report', async (req, res) => {
   try {
     const learningData = req.body;
@@ -66,10 +66,10 @@ router.post('/send-learning-report', async (req, res) => {
         </head>
         <body>
           <div class="container">
-            <h1>🤠 AuditDNA AI Learning Report</h1>
+            <h1>ðŸ¤  AuditDNA AI Learning Report</h1>
             <p style="color: #94a3b8;">Generated: ${new Date().toLocaleString()}</p>
             
-            <h2>📊 Session Statistics</h2>
+            <h2>ðŸ“Š Session Statistics</h2>
             <div class="stat">
               <div class="stat-label">Total Questions Analyzed</div>
               <div class="stat-value">${summary.totalQuestions || 0}</div>
@@ -88,7 +88,7 @@ router.post('/send-learning-report', async (req, res) => {
             </div>
             
             ${learningData.session?.suggestedModules?.length > 0 ? `
-              <h2>🚀 Suggested New Modules</h2>
+              <h2>ðŸš€ Suggested New Modules</h2>
               ${learningData.session.suggestedModules.map(m => `
                 <div class="module">
                   <strong>${m.name}</strong> - ${m.category} (${m.priority} priority)
@@ -97,7 +97,7 @@ router.post('/send-learning-report', async (req, res) => {
             ` : ''}
             
             ${learningData.session?.generatedWorkflows?.length > 0 ? `
-              <h2>⚡ Generated Workflows</h2>
+              <h2>âš¡ Generated Workflows</h2>
               ${learningData.session.generatedWorkflows.map(w => `
                 <div class="workflow">
                   <strong>${w.name}</strong> - Status: ${w.status}
@@ -119,7 +119,7 @@ router.post('/send-learning-report', async (req, res) => {
     const mailOptions = {
       from: '"AuditDNA AI System" <Saul@mexausafg.com>',
       to: 'Saul@mexausafg.com',
-      subject: `🤠 AuditDNA AI Learning Report - ${summary.totalQuestions || 0} Questions Analyzed`,
+      subject: `ðŸ¤  AuditDNA AI Learning Report - ${summary.totalQuestions || 0} Questions Analyzed`,
       html: htmlContent,
       attachments: [{
         filename: fileName,
@@ -164,10 +164,10 @@ router.post('/send-learning-report', async (req, res) => {
   }
 });
 
-// ═══════════════════════════════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 // GET /api/ai-learning/data
 // Retrieves all stored learning data
-// ═══════════════════════════════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 router.get('/data', async (req, res) => {
   try {
     const files = fs.readdirSync(LEARNING_DATA_PATH);
@@ -188,10 +188,10 @@ router.get('/data', async (req, res) => {
   }
 });
 
-// ═══════════════════════════════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 // GET /api/ai-learning/summary
 // Retrieves aggregated learning summary
-// ═══════════════════════════════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 router.get('/summary', async (req, res) => {
   try {
     const files = fs.readdirSync(LEARNING_DATA_PATH);
@@ -236,3 +236,4 @@ router.get('/summary', async (req, res) => {
 });
 
 module.exports = router;
+

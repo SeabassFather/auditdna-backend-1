@@ -12,3 +12,4 @@ const PriceSchema = new mongoose.Schema({
 });
 
 export default mongoose.model('Price', PriceSchema);
+

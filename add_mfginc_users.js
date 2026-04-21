@@ -12,10 +12,11 @@ async function run() {
   for (const u of USERS) {
     const ph = await bcrypt.hash(u.password, 12);
     const pp = await bcrypt.hash(u.pin, 10);
-    await pool.query(`INSERT INTO auth_users (email,password_hash,pin_hash,role,name,status,created_at,updated_at) VALUES ($1,$2,$3,$4,$5,'active',NOW(),NOW()) ON CONFLICT (email) DO UPDATE SET password_hash=$2,pin_hash=$3,role=$4,name=$5,status='active',updated_at=NOW()`,[u.email,ph,pp,u.role,u.name]);
+    await global.db.query(`INSERT INTO auth_users (email,password_hash,pin_hash,role,name,status,created_at,updated_at) VALUES ($1,$2,$3,$4,$5,'active',NOW(),NOW()) ON CONFLICT (email) DO UPDATE SET password_hash=$2,pin_hash=$3,role=$4,name=$5,status='active',updated_at=NOW()`,[u.email,ph,pp,u.role,u.name]);
     console.log('[OK] ' + u.email);
   }
   await pool.end();
   console.log('Done.');
 }
 run().catch(e => { console.error(e); process.exit(1); });
+

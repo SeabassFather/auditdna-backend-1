@@ -11,7 +11,7 @@ router.post('/send', async (req, res) => {
   try {
     const { to, message } = req.body;
     console.log('[SMS] Send request to', to, ':', message);
-    res.json({ ok:true, message:'SMS queued — Twilio integration pending', to, body:message });
+    res.json({ ok:true, message:'SMS queued â€” Twilio integration pending', to, body:message });
   } catch(e) { res.status(500).json({ ok:false, error:e.message }); }
 });
 
@@ -23,3 +23,4 @@ router.post('/blast', async (req, res) => {
 });
 
 module.exports = router;
+

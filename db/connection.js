@@ -22,18 +22,18 @@ const pool = new Pool({
 
 // Test connection on startup
 pool.on('connect', () => {
-  console.log('[DB] ✅ Connected to PostgreSQL - auditdna database');
+  console.log('[DB] âœ… Connected to PostgreSQL - auditdna database');
 });
 
 pool.on('error', (err) => {
-  console.error('[DB] ❌ Unexpected error:', err);
+  console.error('[DB] âŒ Unexpected error:', err);
 });
 
 // Query helper with logging
 async function query(text, params) {
   const start = Date.now();
   try {
-    const result = await pool.query(text, params);
+    const result = await global.db.query(text, params);
     const duration = Date.now() - start;
     if (process.env.NODE_ENV === 'development') {
       console.log('[DB] Query executed', { duration: `${duration}ms`, rows: result.rowCount });
@@ -54,7 +54,7 @@ async function getClient() {
 // Health check
 async function healthCheck() {
   try {
-    const result = await pool.query('SELECT NOW()');
+    const result = await global.db.query('SELECT NOW()');
     return { connected: true, timestamp: result.rows[0].now };
   } catch (error) {
     return { connected: false, error: error.message };
@@ -74,3 +74,4 @@ module.exports = {
   healthCheck,
   queryOne
 };
+

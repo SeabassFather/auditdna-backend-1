@@ -1,7 +1,7 @@
 /**
- * AG Intelligence Routes — AuditDNA Backend
+ * AG Intelligence Routes â€” AuditDNA Backend
  * Save to: C:\AuditDNA\backend\routes\ag_Intel.js
- * Auto-loaded by server.js route scanner → mounts at /api/ag_Intel
+ * Auto-loaded by server.js route scanner â†’ mounts at /api/ag_Intel
  *
  * Endpoints:
  *   GET /api/ag_Intel/usda-price?commodity=avocado&state=CA
@@ -16,7 +16,7 @@ const express = require('express');
 const router = express.Router();
 const pool = require('../db');
 
-// ─── USDA NASS commodity map — Mexico + Central/South America + USA ──────────
+// â”€â”€â”€ USDA NASS commodity map â€” Mexico + Central/South America + USA â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 const USDA_COMMODITY_MAP = {
   // BERRIES
   avocado:      { commodity_desc: 'AVOCADOS',      statisticcat_desc: 'PRICE RECEIVED' },
@@ -25,7 +25,7 @@ const USDA_COMMODITY_MAP = {
   raspberry:    { commodity_desc: 'RASPBERRIES',   statisticcat_desc: 'PRICE RECEIVED' },
   blackberry:   { commodity_desc: 'BLACKBERRIES',  statisticcat_desc: 'PRICE RECEIVED' },
   cranberry:    { commodity_desc: 'CRANBERRIES',   statisticcat_desc: 'PRICE RECEIVED' },
-  // VEGETABLES — Mexico / Baja / Sonora / Sinaloa / CA
+  // VEGETABLES â€” Mexico / Baja / Sonora / Sinaloa / CA
   tomato:       { commodity_desc: 'TOMATOES',      statisticcat_desc: 'PRICE RECEIVED' },
   pepper:       { commodity_desc: 'PEPPERS',       statisticcat_desc: 'PRICE RECEIVED' },
   cucumber:     { commodity_desc: 'CUCUMBERS',     statisticcat_desc: 'PRICE RECEIVED' },
@@ -48,31 +48,31 @@ const USDA_COMMODITY_MAP = {
   potato:       { commodity_desc: 'POTATOES',      statisticcat_desc: 'PRICE RECEIVED' },
   kale:         { commodity_desc: 'KALE',          statisticcat_desc: 'PRICE RECEIVED' },
   arugula:      { commodity_desc: 'ARUGULA',       statisticcat_desc: 'PRICE RECEIVED' },
-  // CITRUS — Mexico / CA / FL
+  // CITRUS â€” Mexico / CA / FL
   lime:         { commodity_desc: 'LIMES',         statisticcat_desc: 'PRICE RECEIVED' },
   lemon:        { commodity_desc: 'LEMONS',        statisticcat_desc: 'PRICE RECEIVED' },
   orange:       { commodity_desc: 'ORANGES',       statisticcat_desc: 'PRICE RECEIVED' },
   grapefruit:   { commodity_desc: 'GRAPEFRUIT',    statisticcat_desc: 'PRICE RECEIVED' },
   tangerine:    { commodity_desc: 'TANGERINES',    statisticcat_desc: 'PRICE RECEIVED' },
-  // TROPICAL — Mexico / Central America / South America
+  // TROPICAL â€” Mexico / Central America / South America
   mango:        { commodity_desc: 'MANGOES',       statisticcat_desc: 'PRICE RECEIVED' },
   papaya:       { commodity_desc: 'PAPAYAS',       statisticcat_desc: 'PRICE RECEIVED' },
   pineapple:    { commodity_desc: 'PINEAPPLES',    statisticcat_desc: 'PRICE RECEIVED' },
   banana:       { commodity_desc: 'BANANAS',       statisticcat_desc: 'PRICE RECEIVED' },
   coconut:      { commodity_desc: 'COCONUTS',      statisticcat_desc: 'PRICE RECEIVED' },
   guava:        { commodity_desc: 'GUAVAS',        statisticcat_desc: 'PRICE RECEIVED' },
-  // GRAPES / STONE FRUIT — CA / Chile / Peru
+  // GRAPES / STONE FRUIT â€” CA / Chile / Peru
   grape:        { commodity_desc: 'GRAPES',        statisticcat_desc: 'PRICE RECEIVED' },
   peach:        { commodity_desc: 'PEACHES',       statisticcat_desc: 'PRICE RECEIVED' },
   plum:         { commodity_desc: 'PLUMS',         statisticcat_desc: 'PRICE RECEIVED' },
   nectarine:    { commodity_desc: 'NECTARINES',    statisticcat_desc: 'PRICE RECEIVED' },
   cherry:       { commodity_desc: 'CHERRIES',      statisticcat_desc: 'PRICE RECEIVED' },
-  // TREE NUTS — CA / Mexico
+  // TREE NUTS â€” CA / Mexico
   almond:       { commodity_desc: 'ALMONDS',       statisticcat_desc: 'PRICE RECEIVED' },
   walnut:       { commodity_desc: 'WALNUTS',       statisticcat_desc: 'PRICE RECEIVED' },
   pistachio:    { commodity_desc: 'PISTACHIOS',    statisticcat_desc: 'PRICE RECEIVED' },
   pecan:        { commodity_desc: 'PECANS',        statisticcat_desc: 'PRICE RECEIVED' },
-  // GRAINS / FIELD CROPS — Mexico / USA / South America
+  // GRAINS / FIELD CROPS â€” Mexico / USA / South America
   corn:         { commodity_desc: 'CORN',          statisticcat_desc: 'PRICE RECEIVED' },
   wheat:        { commodity_desc: 'WHEAT',         statisticcat_desc: 'PRICE RECEIVED' },
   sorghum:      { commodity_desc: 'SORGHUM',       statisticcat_desc: 'PRICE RECEIVED' },
@@ -82,7 +82,7 @@ const USDA_COMMODITY_MAP = {
   chickpea:     { commodity_desc: 'CHICKPEAS',     statisticcat_desc: 'PRICE RECEIVED' },
 };
 
-// ─── FAO commodity code map ───────────────────────────────────────────────────
+// â”€â”€â”€ FAO commodity code map â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 const FAO_ITEM_MAP = {
   avocado:      '572',  strawberry:   '677',  blueberry:    '2029000',
   raspberry:    '2029100', blackberry: '2029200', cranberry: '95',
@@ -107,7 +107,7 @@ const FAO_ITEM_MAP = {
   chickpea:     '191',
 };
 
-// ─── FAO country area code map ───────────────────────────────────────────────
+// â”€â”€â”€ FAO country area code map â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 const FAO_COUNTRY_MAP = {
   MX: '138', US: '231', CN: '41',  IN: '100',
   PE: '170', CL: '40',  CO: '44',  EC: '58',
@@ -120,9 +120,9 @@ const FAO_COUNTRY_MAP = {
 const USDA_KEY = process.env.USDA_NASS_API_KEY || '4F158DB1-85C2-3243-BFFA-58B53FB40D23';
 const CACHE_TTL_HOURS = 24;
 
-// ─── cache table ─────────────────────────────────────────────────────────────
+// â”€â”€â”€ cache table â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 async function ensureCacheTable() {
-  await pool.query(`
+  await global.db.query(`
     CREATE TABLE IF NOT EXISTS ag_intel_cache (
       cache_key  TEXT PRIMARY KEY,
       payload    JSONB NOT NULL,
@@ -133,7 +133,7 @@ async function ensureCacheTable() {
 
 async function getCached(key) {
   try {
-    const r = await pool.query(
+    const r = await global.db.query(
       `SELECT payload, fetched_at FROM ag_intel_cache WHERE cache_key = $1`, [key]
     );
     if (!r.rows.length) return null;
@@ -144,7 +144,7 @@ async function getCached(key) {
 
 async function setCached(key, payload) {
   try {
-    await pool.query(`
+    await global.db.query(`
       INSERT INTO ag_intel_cache (cache_key, payload, fetched_at)
       VALUES ($1, $2, NOW())
       ON CONFLICT (cache_key) DO UPDATE SET payload = $2, fetched_at = NOW()
@@ -152,7 +152,7 @@ async function setCached(key, payload) {
   } catch (e) { console.error('[ag_Intel] cache write error:', e.message); }
 }
 
-// ─── external fetchers ────────────────────────────────────────────────────────
+// â”€â”€â”€ external fetchers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 async function fetchUsda(commodity, state) {
   const meta = USDA_COMMODITY_MAP[commodity.toLowerCase()];
   if (!meta) return { error: 'Commodity not mapped', commodity };
@@ -213,7 +213,7 @@ async function fetchFas(commodity, country) {
   }
 }
 
-// ─── ROUTES ──────────────────────────────────────────────────────────────────
+// â”€â”€â”€ ROUTES â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 router.get('/commodities', (req, res) => {
   res.json({
@@ -272,7 +272,7 @@ router.get('/snapshot', async (req, res) => {
     const fasData  = fas.status  === 'fulfilled' ? fas.value  : { error: fas.reason?.message };
     const snapshot = {
       commodity, country,
-      summary: `${commodity.toUpperCase()} — USDA: ${usdaData.latest?.value || 'N/A'} ${usdaData.latest?.unit || ''} (${usdaData.latest?.year || '—'}) | FAO: ${faoData.latest?.value || 'N/A'} USD/tonne (${faoData.latest?.year || '—'})`,
+      summary: `${commodity.toUpperCase()} â€” USDA: ${usdaData.latest?.value || 'N/A'} ${usdaData.latest?.unit || ''} (${usdaData.latest?.year || 'â€”'}) | FAO: ${faoData.latest?.value || 'N/A'} USD/tonne (${faoData.latest?.year || 'â€”'})`,
       usda: usdaData, fao: faoData, fas: fasData,
       fetched: new Date().toISOString(),
     };
@@ -284,9 +284,10 @@ router.get('/snapshot', async (req, res) => {
 router.delete('/cache', async (req, res) => {
   try {
     await ensureCacheTable();
-    const r = await pool.query(`DELETE FROM ag_intel_cache WHERE fetched_at < NOW() - INTERVAL '${CACHE_TTL_HOURS} hours'`);
+    const r = await global.db.query(`DELETE FROM ag_intel_cache WHERE fetched_at < NOW() - INTERVAL '${CACHE_TTL_HOURS} hours'`);
     res.json({ deleted: r.rowCount, message: 'Expired cache cleared' });
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
 module.exports = router;
+

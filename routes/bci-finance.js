@@ -50,3 +50,4 @@ router.post('/buyer-alert', async (req, res) => {
 });
 
 module.exports = router;
+

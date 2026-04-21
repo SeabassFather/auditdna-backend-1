@@ -9,3 +9,4 @@ const ProductSchema = new mongoose.Schema({
   images: [String],
 });
 module.exports = mongoose.model('Product', ProductSchema);
+

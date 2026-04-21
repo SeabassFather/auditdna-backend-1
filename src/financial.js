@@ -52,12 +52,12 @@ export const CURRENCY_RATES = {
   COP: { symbol: '$', name: 'Colombian Peso', rate: 4150.00 },
   PEN: { symbol: 'S/', name: 'Peruvian Sol', rate: 3.75 },
   CLP: { symbol: '$', name: 'Chilean Peso', rate: 920.00 },
-  EUR: { symbol: '€', name: 'Euro', rate: 0.92 },
+  EUR: { symbol: 'â‚¬', name: 'Euro', rate: 0.92 },
   CAD: { symbol: '$', name: 'Canadian Dollar', rate: 1.36 }
 };
 
 // ============================================================================
-// 🚀 NEW: AI-POWERED RECEIVABLES UPLOAD & ANALYSIS ENGINE
+// ðŸš€ NEW: AI-POWERED RECEIVABLES UPLOAD & ANALYSIS ENGINE
 // ============================================================================
 
 /**
@@ -563,14 +563,14 @@ Dear ${clientSignatory},
 This Letter of Intent ("LOI") outlines the proposed terms for invoice factoring services to be provided by AuditDNA Financial Services ("Factor") to ${clientCompanyName} ("Client").
 
 PROPOSED TERMS:
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
 Facility Amount: $${quote.portfolio.approvedValue.toLocaleString()}
 Advance Rate: ${quote.terms.advanceRate} of invoice face value
 Factoring Fee: ${quote.terms.feeRate} of invoice value
 Service Tier: ${quote.terms.tierName}
 Funding Turnaround: ${quote.terms.turnaround}
 Term Length: 12 months (automatically renewable)
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
 
 APPROVED RECEIVABLES:
 Total Receivables: ${quote.portfolio.approvedCount}
@@ -770,3 +770,4 @@ export function convertCurrency(amount, fromCurrency, toCurrency) {
   const usdAmount = amount / from.rate;
   const convertedAmount = usdAmount * to.rate;
   return {
+

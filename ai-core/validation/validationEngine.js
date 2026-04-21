@@ -8,3 +8,4 @@ class ValidationEngine {
 }
 
 module.exports = new ValidationEngine();
+

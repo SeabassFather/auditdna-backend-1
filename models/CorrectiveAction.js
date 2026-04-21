@@ -26,3 +26,4 @@ const CorrectiveActionSchema = new mongoose.Schema({
 });
 
 export default mongoose.model('CorrectiveAction', CorrectiveActionSchema);
+

@@ -2,7 +2,7 @@ import express from 'express';
 import fetch from 'node-fetch';
 const router = express.Router();
 
-// This is placeholder — replace with real D&B keys later.
+// This is placeholder â€” replace with real D&B keys later.
 const DNB_API_KEY = process.env.DNB_API_KEY || "YOUR_DNB_API_KEY_HERE";
 
 router.post('/lookup', async (req, res) => {
@@ -30,3 +30,4 @@ router.post('/lookup', async (req, res) => {
 });
 
 export default router;
+

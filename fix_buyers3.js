@@ -10,3 +10,4 @@ c = c.replace(/query \+= .* ORDER BY legal_name LIMIT.*?;[\s\S]*?params\.push\(o
 fs.writeFileSync('C:/AuditDNA/backend/routes/buyers.js', c);
 console.log('DONE');
 console.log('Verify:', c.match(/ORDER BY legal_name/)?.[0]);
+

@@ -7,3 +7,4 @@ router.post('/senasica-sync', (req, res) => res.json({ success: true, certificat
 router.post('/fda-alerts', (req, res) => res.json({ success: true, activeAlerts: 5 }));
 router.get('/normalized/:source', (req, res) => res.json({ success: true, source: req.params.source }));
 module.exports = router;
+

@@ -10,7 +10,7 @@ const MONGO_URI = process.env.MONGO_URI;
 
 async function fetchAPHISMexicoAvocadoGrowers() {
   const url = 'https://www.aphis.usda.gov/plant_health/plant_export/downloads/Avocado-Mexico-Approved-Growers.pdf';
-  // For demonstration — recommend using pdf-parse or similar to extract from PDF.
+  // For demonstration â€” recommend using pdf-parse or similar to extract from PDF.
   // For HTML/APIs, use axios + cheerio as below.
 
   // Placeholder for the real implementation.
@@ -32,3 +32,4 @@ mongoose.connect(MONGO_URI, { useNewUrlParser: true, useUnifiedTopology: true })
     console.error(err);
     process.exit(1);
   });
+

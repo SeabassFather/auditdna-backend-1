@@ -1,10 +1,10 @@
 // ================================================================
 // USDA ORGANIC REGISTRY ROUTE
-// MiniAPI — C:\AuditDNA\backend\MiniAPI\routes\usdaRegistry.js
+// MiniAPI â€” C:\AuditDNA\backend\MiniAPI\routes\usdaRegistry.js
 // Endpoints:
-//   GET /api/usda-registry              — search registry
+//   GET /api/usda-registry              â€” search registry
 //   GET /api/usda-registry?commodity=X&country=Y
-//   GET /api/usda-registry/refresh      — force refresh cache
+//   GET /api/usda-registry/refresh      â€” force refresh cache
 // ================================================================
 
 import express from 'express';
@@ -80,3 +80,4 @@ router.get('/refresh', async (req, res) => {
 });
 
 export default router;
+

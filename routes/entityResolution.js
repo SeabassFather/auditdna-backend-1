@@ -71,3 +71,4 @@ router.post('/api/entity/link', [
 // Additional CRUD operations would follow a similar pattern...
 
 module.exports = router;
+

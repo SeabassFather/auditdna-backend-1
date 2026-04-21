@@ -1,17 +1,17 @@
 // C:\AuditDNA\backend\routes\ai.js
-// Anthropic AI proxy — routes all Claude API calls from frontend through backend
+// Anthropic AI proxy â€” routes all Claude API calls from frontend through backend
 // Auto-loaded by server.js via: app.use('/api/ai', require('./routes/ai'));
 //
 // FIX LOG:
-//  1. node-fetch resolved once at module load (not per-request) — prevents Windows/CJS latency spikes
-//  2. anthropic-beta web-search header is now CONDITIONAL — only sent when tools include web_search
-//  3. Default max_tokens raised to 4000 for document generation (was 1200 — cut letters mid-sentence)
+//  1. node-fetch resolved once at module load (not per-request) â€” prevents Windows/CJS latency spikes
+//  2. anthropic-beta web-search header is now CONDITIONAL â€” only sent when tools include web_search
+//  3. Default max_tokens raised to 4000 for document generation (was 1200 â€” cut letters mid-sentence)
 //  4. Added /generate-doc endpoint (8000 token ceiling) for Factoring / PO Finance / LOC / SBA apps
 
 const express = require('express');
 const router = express.Router();
 
-// Resolve node-fetch ONCE at startup — avoids dynamic import overhead on every request
+// Resolve node-fetch ONCE at startup â€” avoids dynamic import overhead on every request
 let _fetch;
 (async () => { _fetch = (await import('node-fetch')).default; })();
 const getFetch = () => _fetch;
@@ -21,7 +21,7 @@ const ANTHROPIC_VERSION = '2023-06-01';
 const WEB_SEARCH_BETA   = 'web-search-2025-03-05';
 const DEFAULT_MODEL     = 'claude-sonnet-4-20250514';
 
-// ─── Shared call helper ───────────────────────────────────────────────────────
+// â”€â”€â”€ Shared call helper â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 async function callAnthropic({ model, max_tokens, messages, tools, system }) {
   const ANTHROPIC_KEY = process.env.ANTHROPIC_API_KEY;
   if (!ANTHROPIC_KEY) throw new Error('ANTHROPIC_API_KEY not set in .env');
@@ -36,7 +36,7 @@ async function callAnthropic({ model, max_tokens, messages, tools, system }) {
 
   // FIX #1: use pre-resolved fetch
   const fetch = getFetch();
-  if (!fetch) throw new Error('node-fetch not yet initialized — retry in 1 second');
+  if (!fetch) throw new Error('node-fetch not yet initialized â€” retry in 1 second');
 
   // FIX #2: only send web-search beta header when tools actually include a web_search tool
   const hasWebSearch = Array.isArray(tools) &&
@@ -69,7 +69,7 @@ async function callAnthropic({ model, max_tokens, messages, tools, system }) {
   return data;
 }
 
-// ─── POST /api/ai/generate ────────────────────────────────────────────────────
+// â”€â”€â”€ POST /api/ai/generate â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 // General-purpose AI call (Brain events, email generation, CRM tasks)
 // Body: { model?, max_tokens?, messages, system?, tools? }
 router.post('/generate', async (req, res) => {
@@ -92,9 +92,9 @@ router.post('/generate', async (req, res) => {
   }
 });
 
-// ─── POST /api/ai/generate-doc ────────────────────────────────────────────────
+// â”€â”€â”€ POST /api/ai/generate-doc â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 // FIX #4: High-token endpoint for long-form document generation
-// Used by: SaulIntelCRM FILES tab → Factoring / PO Finance / LOC / SBA app generators
+// Used by: SaulIntelCRM FILES tab â†’ Factoring / PO Finance / LOC / SBA app generators
 // Body: { docType, clientData, messages?, system? }
 router.post('/generate-doc', async (req, res) => {
   try {
@@ -104,12 +104,12 @@ router.post('/generate-doc', async (req, res) => {
     const finalMessages = messages || [
       {
         role: 'user',
-        content: `Generate a complete, professional ${docType} application letter for the following client:\n\n${JSON.stringify(clientData, null, 2)}\n\nWrite the full letter — no placeholders, no summaries. Include all sections: executive overview, business description, financing purpose, repayment plan, and supporting details. Sign as Saul Garcia, CEO, Mexausa Food Group, Inc..`,
+        content: `Generate a complete, professional ${docType} application letter for the following client:\n\n${JSON.stringify(clientData, null, 2)}\n\nWrite the full letter â€” no placeholders, no summaries. Include all sections: executive overview, business description, financing purpose, repayment plan, and supporting details. Sign as Saul Garcia, CEO, Mexausa Food Group, Inc..`,
       },
     ];
 
     const finalSystem = system ||
-      `You are a senior commercial finance writer for Mexausa Food Group, Inc., a PACA-licensed fresh produce wholesale import/export company based in Ensenada, Baja California. You write complete, professional ${docType} application documents in English. Be direct, specific, and compelling. Output the full letter only — no preamble, no markdown fences.`;
+      `You are a senior commercial finance writer for Mexausa Food Group, Inc., a PACA-licensed fresh produce wholesale import/export company based in Ensenada, Baja California. You write complete, professional ${docType} application documents in English. Be direct, specific, and compelling. Output the full letter only â€” no preamble, no markdown fences.`;
 
     const data = await callAnthropic({
       model:      'claude-sonnet-4-20250514',
@@ -135,7 +135,7 @@ router.post('/generate-doc', async (req, res) => {
   }
 });
 
-// ─── GET /api/ai/health ───────────────────────────────────────────────────────
+// â”€â”€â”€ GET /api/ai/health â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 router.get('/health', (req, res) => {
   const key = process.env.ANTHROPIC_API_KEY;
   res.json({
@@ -148,3 +148,4 @@ router.get('/health', (req, res) => {
 });
 
 module.exports = router;
+

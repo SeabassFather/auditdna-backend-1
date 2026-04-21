@@ -1,6 +1,6 @@
 // ============================================================
 // C:\AuditDNA\backend\routes\agrimaxx.js
-// Agri-Maxx Water Energy System — Campaign API Routes
+// Agri-Maxx Water Energy System â€” Campaign API Routes
 // Register in server.js: app.use('/api/agrimaxx', require('./routes/agrimaxx'));
 // ============================================================
 
@@ -261,7 +261,7 @@ router.post('/track-click', async (req, res) => {
     await db.query(`
       UPDATE agrimaxx_lead_scores
       SET score = LEAST(score + 25, 100),
-          score_reason = 'Link clicked — high intent',
+          score_reason = 'Link clicked â€” high intent',
           scored_at = NOW()
       WHERE contact_id = (SELECT contact_id FROM campaign_sends WHERE id = $1)
     `, [sendId]);
@@ -363,7 +363,7 @@ router.post('/contacts', async (req, res) => {
 
 // ============================================================
 // POST /api/agrimaxx/contacts/bulk
-// Bulk import — array of contacts, deduped by email
+// Bulk import â€” array of contacts, deduped by email
 // Body: { contacts: [...], source_tag: 'wga_import' }
 // ============================================================
 router.post('/contacts/bulk', async (req, res) => {
@@ -419,3 +419,4 @@ router.post('/contacts/bulk', async (req, res) => {
 });
 
 module.exports = router;
+

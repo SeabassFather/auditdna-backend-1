@@ -80,3 +80,4 @@ router.get('/trail/:entityType/:entityId', (req, res) => {
 });
 
 module.exports = router;
+

@@ -1,17 +1,17 @@
 // --------------------------------------------------------------------------
-//  AUDITDNA — AUTH ROUTES (SECURED v2.0)
+//  AUDITDNA â€” AUTH ROUTES (SECURED v2.0)
 //  File: C:\AuditDNA\backend\routes\auth.js
 //
-//  POST /api/auth/login         — bcrypt + JWT (rate limited)
-//  POST /api/auth/check-email   — existence check (rate limited)
-//  GET  /api/auth/verify        — validate JWT
-//  GET  /api/auth/users         — list users (owner/admin, JWT only)
-//  PUT  /api/auth/users/:email  — update user (owner only, JWT only)
-//  POST /api/auth/change-password — self-service password change
+//  POST /api/auth/login         â€” bcrypt + JWT (rate limited)
+//  POST /api/auth/check-email   â€” existence check (rate limited)
+//  GET  /api/auth/verify        â€” validate JWT
+//  GET  /api/auth/users         â€” list users (owner/admin, JWT only)
+//  PUT  /api/auth/users/:email  â€” update user (owner only, JWT only)
+//  POST /api/auth/change-password â€” self-service password change
 //
 //  CHANGES FROM v1.0:
-//    ? ALL credentials stored in DB with bcrypt — zero plaintext in source
-//    ? JWT-only auth — removed x-user-role header fallback
+//    ? ALL credentials stored in DB with bcrypt â€” zero plaintext in source
+//    ? JWT-only auth â€” removed x-user-role header fallback
 //    ? Rate limiting on login (10/min/IP) and check-email (20/min/IP)
 //    ? PUT /users requires owner role (was admin, with forgeable header)
 //    ? No password/pin data ever returned in API responses
@@ -35,7 +35,7 @@ const JWT_EXPIRY_STAFF    = '7d';
 const JWT_EXPIRY_CONSUMER = '24h';
 
 // ================================================================
-// RATE LIMITER — In-memory, per-IP
+// RATE LIMITER â€” In-memory, per-IP
 // ================================================================
 const rateBuckets = new Map();
 
@@ -72,7 +72,7 @@ setInterval(() => {
 // DB TABLE BOOTSTRAP
 // ================================================================
 const initAuthTables = async () => {
-  await pool.query(`
+  await global.db.query(`
     CREATE TABLE IF NOT EXISTS auth_users (
       id            SERIAL PRIMARY KEY,
       email         VARCHAR(150) UNIQUE NOT NULL,
@@ -89,7 +89,7 @@ const initAuthTables = async () => {
     CREATE INDEX IF NOT EXISTS idx_auth_role  ON auth_users(role);
   `).catch(() => {});
 
-  await pool.query(`
+  await global.db.query(`
     CREATE TABLE IF NOT EXISTS auth_login_log (
       id         SERIAL PRIMARY KEY,
       email      VARCHAR(150),
@@ -123,14 +123,14 @@ function issueToken(user) {
 }
 
 async function logLogin(email, ip, success, role, reason) {
-  pool.query(
+  global.db.query(
     'INSERT INTO auth_login_log (email, ip, success, role, reason) VALUES ($1,$2,$3,$4,$5)',
     [email, ip, success, role || null, reason || null]
   ).catch(() => {});
 }
 
 // ================================================================
-// POST /api/auth/login — Rate limited, bcrypt, audit logged
+// POST /api/auth/login â€” Rate limited, bcrypt, audit logged
 // ================================================================
 router.post('/login',
   rateLimit(60000, 10, 'login'),  // 10 attempts per minute per IP
@@ -144,7 +144,7 @@ router.post('/login',
 
     try {
       // Look up user in auth_users table
-      const result = await pool.query(
+      const result = await global.db.query(
         'SELECT id, username, password_hash, access_code, pin, role, display_name, is_active, tier FROM auth_users WHERE LOWER(username) = $1 LIMIT 1',
         [cleanEmail]
       );
@@ -186,7 +186,7 @@ router.post('/login',
       const token = issueToken(user);
 
       // Update last_login
-      pool.query('UPDATE auth_users SET last_login = NOW() WHERE id = $1', [user.id]).catch(() => {});
+      global.db.query('UPDATE auth_users SET last_login = NOW() WHERE id = $1', [user.id]).catch(() => {});
 
       await logLogin(cleanEmail, req.ip, true, user.role, 'success');
       console.log(`? [AUTH] Login: ${user.username} (${user.role})`);
@@ -218,7 +218,7 @@ router.post('/login-agent',
     const cleanEmail = email.toLowerCase().trim();
 
     try {
-      const result = await pool.query(
+      const result = await global.db.query(
         'SELECT agent_code, password_hash, password_hash, salt, nombre, agent_type, role, status FROM agent_registrations WHERE LOWER(agent_code) = $1 LIMIT 1',
         [cleanEmail]
       );
@@ -229,7 +229,7 @@ router.post('/login-agent',
 
       const agent = result.rows[0];
 
-      // Verify password (SHA-256 with salt — matches registration flow)
+      // Verify password (SHA-256 with salt â€” matches registration flow)
       const crypto = require('crypto');
       const hashAttempt = crypto.createHash('sha256').update(password + agent.salt).digest('hex');
       if (hashAttempt !== agent.password_hash) {
@@ -268,7 +268,7 @@ router.post('/login-agent',
 );
 
 // ================================================================
-// POST /api/auth/check-email — Rate limited
+// POST /api/auth/check-email â€” Rate limited
 // ================================================================
 router.post('/check-email',
   rateLimit(60000, 20, 'check-email'),
@@ -277,7 +277,7 @@ router.post('/check-email',
     if (!email) return res.status(400).json({ error: 'Email required' });
 
     try {
-      const result = await pool.query(
+      const result = await global.db.query(
         'SELECT role FROM auth_users WHERE LOWER(email) = $1 AND status = $2 LIMIT 1',
         [email.toLowerCase().trim(), 'active']
       );
@@ -289,7 +289,7 @@ router.post('/check-email',
       }
 
       // Check agent_registrations
-      const agentResult = await pool.query(
+      const agentResult = await global.db.query(
         'SELECT agent_code FROM agent_registrations WHERE LOWER(agent_code) = $1 OR LOWER(email) = $1 LIMIT 1',
         [email.toLowerCase().trim()]
       );
@@ -298,7 +298,7 @@ router.post('/check-email',
       }
 
       // Check consumers table
-      const consumerResult = await pool.query(
+      const consumerResult = await global.db.query(
         'SELECT id FROM consumers WHERE LOWER(email) = $1 LIMIT 1',
         [email.toLowerCase().trim()]
       ).catch(() => ({ rows: [] }));
@@ -311,7 +311,7 @@ router.post('/check-email',
 );
 
 // ================================================================
-// GET /api/auth/verify — Validate JWT
+// GET /api/auth/verify â€” Validate JWT
 // ================================================================
 router.get('/verify', (req, res) => {
   const token = req.headers.authorization?.replace('Bearer ', '');
@@ -328,12 +328,12 @@ router.get('/verify', (req, res) => {
 });
 
 // ================================================================
-// GET /api/auth/users — List users (JWT required, admin+)
-// NO header fallback — JWT ONLY
+// GET /api/auth/users â€” List users (JWT required, admin+)
+// NO header fallback â€” JWT ONLY
 // ================================================================
 router.get('/users', requireAdmin, async (req, res) => {
   try {
-    const { rows } = await pool.query(
+    const { rows } = await global.db.query(
       `SELECT email, name, role, status, last_login, created_at
        FROM auth_users ORDER BY role ASC, name ASC`
     );
@@ -364,7 +364,7 @@ router.get('/users', requireAdmin, async (req, res) => {
 });
 
 // ================================================================
-// PUT /api/auth/users/:email — Update user (OWNER ONLY, JWT only)
+// PUT /api/auth/users/:email â€” Update user (OWNER ONLY, JWT only)
 // Can change: name, role, status
 // Password changes go through /change-password
 // ================================================================
@@ -391,7 +391,7 @@ router.put('/users/:email', requireOwner, async (req, res) => {
     }
 
     params.push(targetEmail);
-    const { rows } = await pool.query(
+    const { rows } = await global.db.query(
       `UPDATE auth_users SET ${sets.join(', ')} WHERE LOWER(email) = $${params.length} RETURNING email, name, role, status`,
       params
     );
@@ -407,7 +407,7 @@ router.put('/users/:email', requireOwner, async (req, res) => {
 });
 
 // ================================================================
-// POST /api/auth/change-password — Self-service (JWT required)
+// POST /api/auth/change-password â€” Self-service (JWT required)
 // ================================================================
 router.post('/change-password', async (req, res) => {
   const token = req.headers.authorization?.replace('Bearer ', '');
@@ -429,7 +429,7 @@ router.post('/change-password', async (req, res) => {
   }
 
   try {
-    const result = await pool.query(
+    const result = await global.db.query(
       'SELECT id, password_hash FROM auth_users WHERE LOWER(email) = $1',
       [decoded.email.toLowerCase()]
     );
@@ -449,7 +449,7 @@ router.post('/change-password', async (req, res) => {
     }
 
     params.push(user.id);
-    await pool.query(
+    await global.db.query(
       `UPDATE auth_users SET ${updates.join(', ')} WHERE id = $${params.length}`,
       params
     );
@@ -462,7 +462,7 @@ router.post('/change-password', async (req, res) => {
 });
 
 // ================================================================
-// POST /api/auth/reset-password — Owner resets another user's password
+// POST /api/auth/reset-password â€” Owner resets another user's password
 // ================================================================
 router.post('/reset-password', requireOwner, async (req, res) => {
   const { targetEmail, newPassword, newPin } = req.body;
@@ -481,7 +481,7 @@ router.post('/reset-password', requireOwner, async (req, res) => {
     }
 
     params.push(targetEmail.toLowerCase());
-    const { rows } = await pool.query(
+    const { rows } = await global.db.query(
       `UPDATE auth_users SET ${updates.join(', ')} WHERE LOWER(email) = $${params.length} RETURNING email, name, role`,
       params
     );
@@ -496,6 +496,7 @@ router.post('/reset-password', requireOwner, async (req, res) => {
 });
 
 module.exports = router;// rebuild trigger v2
+
 
 
 

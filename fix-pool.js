@@ -10,7 +10,7 @@ files.forEach(f => {
   let c = fs.readFileSync(fp, 'utf8');
   const before = c;
 
-  // Fix: const pool = require('../db')  →  const { pool } = require('../db')
+  // Fix: const pool = require('../db')  â†’  const { pool } = require('../db')
   c = c.replace(/const pool = require\('\.\.\/db'\);/g, "const { pool } = require('../db');");
   c = c.replace(/const pool = require\("\.\.\/db"\);/g, 'const { pool } = require("../db");');
 
@@ -25,3 +25,4 @@ files.forEach(f => {
   }
 });
 console.log('Total routes fixed:', fixed);
+

@@ -73,23 +73,24 @@ if (MONGO_URI) {
       useUnifiedTopology: true 
     })
     .then(() => {
-      console.log('✅ MongoDB Connected');
+      console.log('âœ… MongoDB Connected');
       app.listen(PORT, () => {
-        console.log(`🚀 AuditDNA Backend running on port ${PORT}`);
-        console.log(`📊 API URL: http://process.env.DB_HOST:${PORT}`);
+        console.log(`ðŸš€ AuditDNA Backend running on port ${PORT}`);
+        console.log(`ðŸ“Š API URL: http://process.env.DB_HOST:${PORT}`);
       });
     })
     .catch(err => {
-      console.error('❌ MongoDB Connection Error:', err);
+      console.error('âŒ MongoDB Connection Error:', err);
       process.exit(1);
     });
 } else {
   // Start without MongoDB if not configured
-  console.log('⚠️  MongoDB URI not found - starting without database');
+  console.log('âš ï¸  MongoDB URI not found - starting without database');
   app.listen(PORT, () => {
-    console.log(`🚀 AuditDNA Backend running on port ${PORT}`);
-    console.log(`📊 API URL: http://process.env.DB_HOST:${PORT}`);
+    console.log(`ðŸš€ AuditDNA Backend running on port ${PORT}`);
+    console.log(`ðŸ“Š API URL: http://process.env.DB_HOST:${PORT}`);
   });
 }
 
 export default app;
+

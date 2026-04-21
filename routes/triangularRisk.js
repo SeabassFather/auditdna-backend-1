@@ -12,3 +12,4 @@ router.post('/calculate', (req, res) => {
     res.json({ triangularRiskScore: parseFloat(triangularScore), rating, components: { growerRisk, waterRisk, soilRisk, marketRisk, tempRisk } });
 });
 module.exports = router;
+

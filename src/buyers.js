@@ -52,3 +52,4 @@ export const LATAM_BUYERS = [
   { id: 51, name: 'Golden State Fruit', tier: 'Boutique', headquarters: 'Riverside, CA, USA', regions: ['Mexico', 'Chile'], products: ['Avocados', 'Citrus'], volume: 'Boutique (8M+ lbs/year)', contact: 'sales@goldenstatefruit.com', phone: '+1 (951) 686-5533', certifications: ['GlobalGAP'], website: 'www.goldenstatefruit.com', established: 2006, employees: '9+' },
   { id: 52, name: 'Veritable Vegetable', tier: 'Boutique', headquarters: 'San Francisco, CA, USA', regions: ['Mexico', 'Peru'], products: ['Avocados', 'Organic Vegetables'], volume: 'Boutique (8M+ lbs/year)', contact: 'info@veritablevegetable.com', phone: '+1 (415) 647-4747', certifications: ['USDA Organic', 'B Corp'], website: 'www.veritablevegetable.com', established: 1974, employees: '8+' }
 ];
+

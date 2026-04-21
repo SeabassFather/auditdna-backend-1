@@ -35,7 +35,7 @@ const CONFIG = {
 // WEATHER SERVICE
 // ============================================
 const REGIONS = [
-  { name: 'Michoacán, MX', lat: 19.5665, lon: -101.7068, crops: ['avocados'] },
+  { name: 'MichoacÃ¡n, MX', lat: 19.5665, lon: -101.7068, crops: ['avocados'] },
   { name: 'Jalisco, MX', lat: 20.6595, lon: -103.3494, crops: ['avocados', 'blueberries'] },
   { name: 'Baja California, MX', lat: 30.8406, lon: -115.2838, crops: ['strawberries', 'raspberries', 'tomatoes'] },
   { name: 'Sinaloa, MX', lat: 24.8091, lon: -107.3940, crops: ['tomatoes', 'peppers'] },
@@ -75,7 +75,7 @@ async function fetchWeatherData() {
         description: 'Data unavailable',
         crops: region.crops,
         risk: 'unknown',
-        icon: '❓'
+        icon: 'â“'
       };
     }
   }
@@ -103,17 +103,17 @@ function calculateRisk(weather, crops) {
 
 function getWeatherIcon(condition) {
   const icons = {
-    'Clear': '☀️',
-    'Clouds': '☁️',
-    'Rain': '🌧️',
-    'Drizzle': '🌦️',
-    'Thunderstorm': '⛈️',
-    'Snow': '❄️',
-    'Mist': '🌫️',
-    'Fog': '🌫️',
-    'Haze': '🌫️'
+    'Clear': 'â˜€ï¸',
+    'Clouds': 'â˜ï¸',
+    'Rain': 'ðŸŒ§ï¸',
+    'Drizzle': 'ðŸŒ¦ï¸',
+    'Thunderstorm': 'â›ˆï¸',
+    'Snow': 'â„ï¸',
+    'Mist': 'ðŸŒ«ï¸',
+    'Fog': 'ðŸŒ«ï¸',
+    'Haze': 'ðŸŒ«ï¸'
   };
-  return icons[condition] || '☀️';
+  return icons[condition] || 'â˜€ï¸';
 }
 
 // ============================================
@@ -123,10 +123,10 @@ function getMarketData() {
   // In production, this would fetch from your database or USDA API
   return {
     avocados: [
-      { name: 'Hass 48ct Michoacán', price: 42.50, change: 2.3, forecast: 45.80, confidence: 87 },
+      { name: 'Hass 48ct MichoacÃ¡n', price: 42.50, change: 2.3, forecast: 45.80, confidence: 87 },
       { name: 'Hass 48ct Jalisco', price: 40.50, change: 3.0, forecast: 43.20, confidence: 85 },
       { name: 'Hass 48ct California', price: 46.00, change: 1.9, forecast: 48.50, confidence: 82 },
-      { name: 'Hass 60ct Michoacán', price: 38.50, change: 2.1, forecast: 41.00, confidence: 88 },
+      { name: 'Hass 60ct MichoacÃ¡n', price: 38.50, change: 2.1, forecast: 41.00, confidence: 88 },
       { name: 'Organic 48ct', price: 58.00, change: 4.2, forecast: 62.00, confidence: 80 },
     ],
     berries: [
@@ -149,7 +149,7 @@ function getMarketData() {
     peppers: [
       { name: 'Green Bell XL Sonora', price: 24.50, change: 1.5, forecast: 26.00, confidence: 82 },
       { name: 'Red Bell XL', price: 32.80, change: 2.8, forecast: 35.00, confidence: 78 },
-      { name: 'Jalapeño 11lb', price: 18.90, change: 1.2, forecast: 20.00, confidence: 85 },
+      { name: 'JalapeÃ±o 11lb', price: 18.90, change: 1.2, forecast: 20.00, confidence: 85 },
     ],
     citrus: [
       { name: 'Persian Limes 200ct', price: 28.00, change: -0.5, forecast: 26.50, confidence: 88 },
@@ -202,10 +202,10 @@ async function generateMarketLetter() {
     <!-- Weather Alerts -->
     ${alerts.length > 0 ? `
     <div style="background:#fef2f2; border:2px solid #ef4444; margin:1.5rem; padding:1rem; border-radius:8px;">
-      <div style="font-size:1rem; font-weight:700; color:#ef4444; margin-bottom:0.75rem;">⚠️ WEATHER ALERTS</div>
+      <div style="font-size:1rem; font-weight:700; color:#ef4444; margin-bottom:0.75rem;">âš ï¸ WEATHER ALERTS</div>
       ${alerts.map(a => `
         <div style="margin-bottom:0.5rem; font-size:0.875rem;">
-          <strong>${a.region}</strong>: ${a.icon} ${a.description} (${a.temp}°F)<br>
+          <strong>${a.region}</strong>: ${a.icon} ${a.description} (${a.temp}Â°F)<br>
           <span style="color:#ef4444;">Impact: ${a.impact}</span>
         </div>
       `).join('')}
@@ -214,7 +214,7 @@ async function generateMarketLetter() {
     
     <!-- Weather Conditions Table -->
     <div style="margin:1.5rem; padding:1rem; background:#f8fafc; border-radius:8px;">
-      <div style="font-size:1rem; font-weight:700; margin-bottom:0.75rem;">🌦️ Regional Conditions</div>
+      <div style="font-size:1rem; font-weight:700; margin-bottom:0.75rem;">ðŸŒ¦ï¸ Regional Conditions</div>
       <table style="width:100%; font-size:0.8125rem; border-collapse:collapse;">
         <tr style="border-bottom:1px solid #e2e8f0;">
           <th style="padding:0.5rem; text-align:left; color:#64748b;">Region</th>
@@ -224,7 +224,7 @@ async function generateMarketLetter() {
         ${Object.entries(weather).slice(0, 6).map(([region, data]) => `
           <tr style="border-bottom:1px solid #e2e8f0;">
             <td style="padding:0.5rem;">${region}</td>
-            <td style="padding:0.5rem;">${data.icon} ${data.temp}°F - ${data.description}</td>
+            <td style="padding:0.5rem;">${data.icon} ${data.temp}Â°F - ${data.description}</td>
             <td style="padding:0.5rem; text-align:center;">
               <span style="padding:0.125rem 0.5rem; border-radius:4px; font-size:0.75rem; font-weight:600;
                 background:${data.risk === 'high' ? '#fef2f2' : data.risk === 'medium' ? '#fef9c3' : '#f0fdf4'};
@@ -240,7 +240,7 @@ async function generateMarketLetter() {
     <!-- Avocado Section -->
     <div style="margin:1.5rem;">
       <div style="font-size:1.125rem; font-weight:700; border-bottom:3px solid #22c55e; padding-bottom:0.25rem; margin-bottom:0.75rem;">
-        🥑 AVOCADO UPDATE
+        ðŸ¥‘ AVOCADO UPDATE
       </div>
       <table style="width:100%; font-size:0.875rem; border-collapse:collapse;">
         <tr style="background:#f1f5f9;">
@@ -261,14 +261,14 @@ async function generateMarketLetter() {
         `).join('')}
       </table>
       <div style="font-size:0.8125rem; color:#64748b; margin-top:0.5rem;">
-        🔮 <strong>SI Prediction:</strong> +5-8% over next 4 weeks | Confidence: 85%
+        ðŸ”® <strong>SI Prediction:</strong> +5-8% over next 4 weeks | Confidence: 85%
       </div>
     </div>
     
     <!-- Berries Section -->
     <div style="margin:1.5rem;">
       <div style="font-size:1.125rem; font-weight:700; border-bottom:3px solid #ef4444; padding-bottom:0.25rem; margin-bottom:0.75rem;">
-        🍓 BERRY UPDATE
+        ðŸ“ BERRY UPDATE
       </div>
       <table style="width:100%; font-size:0.875rem; border-collapse:collapse;">
         <tr style="background:#f1f5f9;">
@@ -293,7 +293,7 @@ async function generateMarketLetter() {
     <!-- Lettuce Section -->
     <div style="margin:1.5rem;">
       <div style="font-size:1.125rem; font-weight:700; border-bottom:3px solid #22c55e; padding-bottom:0.25rem; margin-bottom:0.75rem;">
-        🥬 LETTUCE & GREENS
+        ðŸ¥¬ LETTUCE & GREENS
       </div>
       <table style="width:100%; font-size:0.875rem; border-collapse:collapse;">
         <tr style="background:#f1f5f9;">
@@ -319,11 +319,11 @@ async function generateMarketLetter() {
     <div style="border-top:2px solid #e2e8f0; padding:1.5rem; text-align:center; background:#f8fafc;">
       <div style="font-weight:600; margin-bottom:0.5rem;">Mexausa Food Group, Inc. | NMLS #337526</div>
       <div style="font-size:0.8125rem; color:#64748b; margin-bottom:0.75rem;">
-        📞 +52-646-340-2686 | 📧 market@cmproducts.com
+        ðŸ“ž +52-646-340-2686 | ðŸ“§ market@cmproducts.com
       </div>
       <div style="font-size:0.75rem; color:#94a3b8; margin-bottom:0.75rem;">
-        🤖 This report was autonomously generated by AuditDNA Synthetic Intelligence<br>
-        📊 Data sources: USDA, NOAA, CONAGUA, OpenWeatherMap
+        ðŸ¤– This report was autonomously generated by AuditDNA Synthetic Intelligence<br>
+        ðŸ“Š Data sources: USDA, NOAA, CONAGUA, OpenWeatherMap
       </div>
       <div style="font-size:0.75rem;">
         <a href="{{unsubscribe_url}}" style="color:#3b82f6; margin-right:1rem;">Unsubscribe</a>
@@ -338,7 +338,7 @@ async function generateMarketLetter() {
   `;
   
   return {
-    subject: `🥑 Mexausa Food Group Market Intelligence - Week of ${date}`,
+    subject: `ðŸ¥‘ Mexausa Food Group Market Intelligence - Week of ${date}`,
     html,
     text: generatePlainText(market, weather, alerts)
   };
@@ -355,19 +355,19 @@ Week of ${date}
 `;
 
   if (alerts.length > 0) {
-    text += `⚠️ WEATHER ALERTS\n`;
+    text += `âš ï¸ WEATHER ALERTS\n`;
     alerts.forEach(a => {
-      text += `${a.region}: ${a.description} (${a.temp}°F) - ${a.impact}\n`;
+      text += `${a.region}: ${a.description} (${a.temp}Â°F) - ${a.impact}\n`;
     });
     text += `\n`;
   }
 
-  text += `🥑 AVOCADO PRICES\n`;
+  text += `ðŸ¥‘ AVOCADO PRICES\n`;
   market.avocados.forEach(item => {
     text += `${item.name}: $${item.price.toFixed(2)} (${item.change >= 0 ? '+' : ''}${item.change}%)\n`;
   });
   
-  text += `\n🍓 BERRY PRICES\n`;
+  text += `\nðŸ“ BERRY PRICES\n`;
   market.berries.forEach(item => {
     text += `${item.name}: $${item.price.toFixed(2)} (${item.change >= 0 ? '+' : ''}${item.change}%)\n`;
   });
@@ -423,18 +423,18 @@ async function sendEmail(to, subject, html, text) {
   
   try {
     await sgMail.default.send(msg);
-    console.log(`✓ Email sent to ${to}`);
+    console.log(`âœ“ Email sent to ${to}`);
     return true;
   } catch (error) {
-    console.error(`✗ Failed to send to ${to}:`, error);
+    console.error(`âœ— Failed to send to ${to}:`, error);
     return false;
   }
 }
 
 async function sendMarketLetter(schedule = 'all') {
   console.log(`\n${'='.repeat(60)}`);
-  console.log(`📧 SI MARKETING AGENT - Sending Market Letter`);
-  console.log(`📅 ${new Date().toLocaleString()}`);
+  console.log(`ðŸ“§ SI MARKETING AGENT - Sending Market Letter`);
+  console.log(`ðŸ“… ${new Date().toLocaleString()}`);
   console.log(`${'='.repeat(60)}\n`);
   
   const letter = await generateMarketLetter();
@@ -445,7 +445,7 @@ async function sendMarketLetter(schedule = 'all') {
     ? subscribers.filter(s => s.status === 'active')
     : subscribers.filter(s => s.status === 'active' && s.schedule === schedule);
   
-  console.log(`📋 Recipients: ${recipients.length}`);
+  console.log(`ðŸ“‹ Recipients: ${recipients.length}`);
   
   let sent = 0;
   let failed = 0;
@@ -464,7 +464,7 @@ async function sendMarketLetter(schedule = 'all') {
     await new Promise(resolve => setTimeout(resolve, 100));
   }
   
-  console.log(`\n✅ Sent: ${sent} | ❌ Failed: ${failed}`);
+  console.log(`\nâœ… Sent: ${sent} | âŒ Failed: ${failed}`);
   console.log(`${'='.repeat(60)}\n`);
   
   return { sent, failed, total: recipients.length };
@@ -475,35 +475,35 @@ async function sendMarketLetter(schedule = 'all') {
 // ============================================
 function startScheduler() {
   console.log(`\n${'='.repeat(60)}`);
-  console.log(`🤖 SI EMAIL MARKETING AGENT ACTIVATED`);
+  console.log(`ðŸ¤– SI EMAIL MARKETING AGENT ACTIVATED`);
   console.log(`${'='.repeat(60)}`);
   
   // Daily schedule (6 AM)
   cron.schedule(CONFIG.schedule.daily, () => {
-    console.log('⏰ Daily trigger - sending to daily subscribers');
+    console.log('â° Daily trigger - sending to daily subscribers');
     sendMarketLetter('daily');
   }, { timezone: 'America/Los_Angeles' });
   
   // M/W/F schedule (6 AM)
   cron.schedule(CONFIG.schedule.mwf, () => {
-    console.log('⏰ MWF trigger - sending to MWF subscribers');
+    console.log('â° MWF trigger - sending to MWF subscribers');
     sendMarketLetter('mwf');
   }, { timezone: 'America/Los_Angeles' });
   
   // Weekly schedule (Monday 6 AM)
   cron.schedule(CONFIG.schedule.weekly, () => {
-    console.log('⏰ Weekly trigger - sending to weekly subscribers');
+    console.log('â° Weekly trigger - sending to weekly subscribers');
     sendMarketLetter('weekly');
   }, { timezone: 'America/Los_Angeles' });
   
   console.log(`
-📅 Schedules Active:
-   ├── Daily:  6:00 AM PST (every day)
-   ├── M/W/F:  6:00 AM PST (Mon, Wed, Fri)
-   └── Weekly: 6:00 AM PST (Monday)
+ðŸ“… Schedules Active:
+   â”œâ”€â”€ Daily:  6:00 AM PST (every day)
+   â”œâ”€â”€ M/W/F:  6:00 AM PST (Mon, Wed, Fri)
+   â””â”€â”€ Weekly: 6:00 AM PST (Monday)
    
-🌍 Weather Monitoring: ${REGIONS.length} regions
-📊 Market Data: Avocados, Berries, Lettuce, Tomatoes, Peppers, Citrus
+ðŸŒ Weather Monitoring: ${REGIONS.length} regions
+ðŸ“Š Market Data: Avocados, Berries, Lettuce, Tomatoes, Peppers, Citrus
 
 SI Agent is now running autonomously...
 ${'='.repeat(60)}
@@ -524,3 +524,4 @@ export {
 if (process.argv[1] === fileURLToPath(import.meta.url)) {
   startScheduler();
 }
+

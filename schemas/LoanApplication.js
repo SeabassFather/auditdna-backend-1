@@ -19,3 +19,4 @@ const loanApplicationSchema = new mongoose.Schema({
 });
 
 module.exports = mongoose.model('LoanApplication', loanApplicationSchema);
+

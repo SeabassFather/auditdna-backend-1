@@ -2,7 +2,7 @@
 // C:\AuditDNA\auditdna-realestate\backend\routes\did-video.js
 // D-ID AI Video Generator Route
 // Generates talking-head videos from photo + script
-// Uses D-ID API — key in .env as DID_API_KEY
+// Uses D-ID API â€” key in .env as DID_API_KEY
 // ============================================================
 'use strict';
 const express = require('express');
@@ -47,7 +47,7 @@ router.get('/credits', async (req, res) => {
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
-// POST /api/did/generate — create talking-head video
+// POST /api/did/generate â€” create talking-head video
 router.post('/generate', async (req, res) => {
   const { script, photo_url, language, voice } = req.body;
   if (!script) return res.status(400).json({ error: 'script required' });
@@ -99,7 +99,7 @@ router.post('/generate', async (req, res) => {
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
-// GET /api/did/status/:id — poll video status
+// GET /api/did/status/:id â€” poll video status
 router.get('/status/:id', async (req, res) => {
   try {
     const r = await didRequest('GET', `/talks/${req.params.id}`);
@@ -113,3 +113,4 @@ router.get('/status/:id', async (req, res) => {
 });
 
 module.exports = router;
+

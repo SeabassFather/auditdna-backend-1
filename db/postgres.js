@@ -12,7 +12,7 @@ const requiredEnv = [
 // Fail fast if env is broken
 for (const key of requiredEnv) {
   if (!process.env[key]) {
-    console.error(`❌ Missing required env var: ${key}`);
+    console.error(`âŒ Missing required env var: ${key}`);
     process.exit(1);
   }
 }
@@ -30,6 +30,7 @@ export const pool = new Pool({
 });
 
 export async function checkDb() {
-  const res = await pool.query('SELECT now() as now');
+  const res = await global.db.query('SELECT now() as now');
   return res.rows[0];
 }
+

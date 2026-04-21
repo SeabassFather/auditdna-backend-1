@@ -90,3 +90,4 @@ router.get('/forecast/:commodity', async (req, res) => {
 });
 
 module.exports = router;
+

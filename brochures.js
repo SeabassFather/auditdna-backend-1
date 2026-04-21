@@ -1,8 +1,8 @@
 // ============================================================================
 // Brochures Route
 // File: C:\AuditDNA\backend\routes\brochures.js
-// GET /api/brochures/cocolove-deck  — serves CocoLove PDF
-// GET /api/brochures/cocolove-video — serves video card HTML
+// GET /api/brochures/cocolove-deck  â€” serves CocoLove PDF
+// GET /api/brochures/cocolove-video â€” serves video card HTML
 // ============================================================================
 'use strict';
 const express = require('express');
@@ -46,3 +46,4 @@ router.get('/list', (req, res) => {
 });
 
 module.exports = router;
+

@@ -158,7 +158,7 @@ function determineTrack(segment) {
 function detectLanguage(country, rawLang) {
   if (rawLang) {
     const l = rawLang.toLowerCase();
-    if (l.includes('es') || l.includes('spanish') || l.includes('español')) return 'es';
+    if (l.includes('es') || l.includes('spanish') || l.includes('espaÃ±ol')) return 'es';
     if (l.includes('en') || l.includes('english')) return 'en';
   }
   const espCountries = ['mexico', 'mx', 'peru', 'pe', 'chile', 'cl', 'colombia', 'co',
@@ -404,3 +404,4 @@ main().catch(err => {
 // Import custom CSV with auto-detect:
 //   node agrimaxx-bulk-import.js --source=custom --file=my_contacts.csv
 // ============================================================
+

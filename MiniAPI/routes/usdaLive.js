@@ -51,7 +51,7 @@ router.get("/pricing", async (req, res) => {
     const yearStart = yearEnd - yearsBack;
 
     const url = `${USDA_BASE}/?key=${USDA_KEY}&commodity_desc=${commodity}&year__GE=${yearStart}&year__LE=${yearEnd}&unit_desc=POUND&format=JSON`;
-    console.log("🌎 USDA PRICING Query:", url);
+    console.log("ðŸŒŽ USDA PRICING Query:", url);
 
     const { data } = await axios.get(url, { timeout: 15000 });
 
@@ -92,7 +92,7 @@ router.get("/pricing", async (req, res) => {
 
     res.json({ current: yearly, average5yr });
   } catch (err) {
-    console.error("❌ USDA Pricing Error:", err.message);
+    console.error("âŒ USDA Pricing Error:", err.message);
     res.status(500).json({ error: "Failed to fetch USDA data" });
   }
 });
@@ -124,9 +124,10 @@ router.get("/live-commodities", async (req, res) => {
     const list = data?.param_values?.sort() || [];
     res.json({ total: list.length, commodities: list });
   } catch (err) {
-    console.error("❌ USDA Live Commodity Error:", err.message);
+    console.error("âŒ USDA Live Commodity Error:", err.message);
     res.status(500).json({ error: "Failed to retrieve USDA commodities" });
   }
 });
 
 export default router;
+

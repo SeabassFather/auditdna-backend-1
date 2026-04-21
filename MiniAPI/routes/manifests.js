@@ -29,3 +29,4 @@ router.get('/inventory/realtime', (req, res) => {
 });
 
 export default router;
+

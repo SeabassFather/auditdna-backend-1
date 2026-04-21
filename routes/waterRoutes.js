@@ -1,15 +1,15 @@
-// ═══════════════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 // AUDITDNA WATER TECHNOLOGY ROUTES
 // Water quality testing, irrigation management, AgriMAXX integration
-// ═══════════════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
 const express = require('express');
 const router = express.Router();
 const { pool } = require('../db');
 
-// ═══════════════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 // INIT: Create water management tables
-// ═══════════════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
 const initWaterTables = async () => {
   const createTablesSQL = `
@@ -87,18 +87,18 @@ const initWaterTables = async () => {
   `;
 
   try {
-    await pool.query(createTablesSQL);
-    console.log('✅ [Water Tech] Tables initialized');
+    await global.db.query(createTablesSQL);
+    console.log('âœ… [Water Tech] Tables initialized');
   } catch (error) {
-    console.error('❌ [Water Tech] Table init failed:', error.message);
+    console.error('âŒ [Water Tech] Table init failed:', error.message);
   }
 };
 
 initWaterTables();
 
-// ═══════════════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 // POST /water/tests - Submit new water test
-// ═══════════════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
 router.post('/tests', async (req, res) => {
   try {
@@ -127,7 +127,7 @@ router.post('/tests', async (req, res) => {
       issues.push('Coliform bacteria detected');
     }
 
-    const result = await pool.query(
+    const result = await global.db.query(
       `INSERT INTO water_tests (
         grower_id, grower_name, test_type, sample_location,
         ph_level, tds_ppm, ec_value, nitrate_ppm, phosphate_ppm,
@@ -163,16 +163,16 @@ router.post('/tests', async (req, res) => {
   }
 });
 
-// ═══════════════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 // GET /water/tests/:growerId - Get all tests for a grower
-// ═══════════════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
 router.get('/tests/:growerId', async (req, res) => {
   try {
     const { growerId } = req.params;
     const limit = parseInt(req.query.limit) || 50;
 
-    const result = await pool.query(
+    const result = await global.db.query(
       `SELECT * FROM water_tests 
        WHERE grower_id = $1 
        ORDER BY sample_date DESC 
@@ -192,9 +192,9 @@ router.get('/tests/:growerId', async (req, res) => {
   }
 });
 
-// ═══════════════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 // POST /water/irrigation - Register irrigation system
-// ═══════════════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
 router.post('/irrigation', async (req, res) => {
   try {
@@ -204,7 +204,7 @@ router.post('/irrigation', async (req, res) => {
       agrimaxXInstalled, treatmentSystem
     } = req.body;
 
-    const result = await pool.query(
+    const result = await global.db.query(
       `INSERT INTO irrigation_systems (
         grower_id, grower_name, system_type, coverage_acres,
         water_source, pump_capacity_gpm, efficiency_rating,
@@ -231,9 +231,9 @@ router.post('/irrigation', async (req, res) => {
   }
 });
 
-// ═══════════════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 // POST /water/treatment - Record water treatment
-// ═══════════════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
 router.post('/treatment', async (req, res) => {
   try {
@@ -243,7 +243,7 @@ router.post('/treatment', async (req, res) => {
       operatorName, agrimaxXProduct, results
     } = req.body;
 
-    const result = await pool.query(
+    const result = await global.db.query(
       `INSERT INTO water_treatments (
         grower_id, treatment_type, chemical_used, dosage_amount,
         dosage_unit, area_treated_acres, water_volume_gallons,
@@ -269,16 +269,16 @@ router.post('/treatment', async (req, res) => {
   }
 });
 
-// ═══════════════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 // GET /water/compliance/:growerId - Get compliance status
-// ═══════════════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
 router.get('/compliance/:growerId', async (req, res) => {
   try {
     const { growerId } = req.params;
 
     // Get latest test
-    const latestTest = await pool.query(
+    const latestTest = await global.db.query(
       `SELECT * FROM water_tests 
        WHERE grower_id = $1 
        ORDER BY sample_date DESC 
@@ -287,14 +287,14 @@ router.get('/compliance/:growerId', async (req, res) => {
     );
 
     // Get irrigation systems
-    const systems = await pool.query(
+    const systems = await global.db.query(
       `SELECT * FROM irrigation_systems 
        WHERE grower_id = $1 AND status = 'active'`,
       [growerId]
     );
 
     // Get recent treatments
-    const treatments = await pool.query(
+    const treatments = await global.db.query(
       `SELECT * FROM water_treatments 
        WHERE grower_id = $1 
        ORDER BY treatment_date DESC 
@@ -325,13 +325,13 @@ router.get('/compliance/:growerId', async (req, res) => {
   }
 });
 
-// ═══════════════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 // GET /water/dashboard - Overall water management dashboard
-// ═══════════════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
 router.get('/dashboard', async (req, res) => {
   try {
-    const stats = await pool.query(`
+    const stats = await global.db.query(`
       SELECT 
         COUNT(DISTINCT grower_id) as total_growers,
         COUNT(*) FILTER (WHERE compliance_status = 'compliant') as compliant_tests,
@@ -342,7 +342,7 @@ router.get('/dashboard', async (req, res) => {
       WHERE sample_date > NOW() - INTERVAL '90 days'
     `);
 
-    const systemStats = await pool.query(`
+    const systemStats = await global.db.query(`
       SELECT 
         COUNT(*) as total_systems,
         SUM(coverage_acres) as total_acres,
@@ -364,8 +364,9 @@ router.get('/dashboard', async (req, res) => {
   }
 });
 
-// ═══════════════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 // EXPORT
-// ═══════════════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
 module.exports = router;
+

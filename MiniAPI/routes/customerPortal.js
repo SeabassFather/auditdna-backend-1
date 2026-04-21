@@ -27,7 +27,7 @@ router.post('/qr/manifest', async (req, res) => {
     const qrData = `https://cmproducts.com/customer-portal/manifest/${manifestId}`;
     const qrCode = await QRCode.toDataURL(qrData);
     
-    console.log('[QR CODE] ✅ Generated for manifest:', manifestId);
+    console.log('[QR CODE] âœ… Generated for manifest:', manifestId);
     
     res.json({
       success: true,
@@ -39,7 +39,7 @@ router.post('/qr/manifest', async (req, res) => {
     });
     
   } catch (error) {
-    console.error('[QR CODE] ❌ Error:', error.message);
+    console.error('[QR CODE] âŒ Error:', error.message);
     res.status(500).json({ success: false, error: error.message });
   }
 });
@@ -52,7 +52,7 @@ router.post('/qr/invoice', async (req, res) => {
     const qrData = `https://cmproducts.com/verify/${invoiceNumber}`;
     const qrCode = await QRCode.toDataURL(qrData);
     
-    console.log('[QR CODE] ✅ Generated for invoice:', invoiceNumber);
+    console.log('[QR CODE] âœ… Generated for invoice:', invoiceNumber);
     
     res.json({
       success: true,
@@ -64,7 +64,7 @@ router.post('/qr/invoice', async (req, res) => {
     });
     
   } catch (error) {
-    console.error('[QR CODE] ❌ Error:', error.message);
+    console.error('[QR CODE] âŒ Error:', error.message);
     res.status(500).json({ success: false, error: error.message });
   }
 });
@@ -77,7 +77,7 @@ router.post('/qr/order', async (req, res) => {
     const qrData = `https://cmproducts.com/customer-portal/order/${orderNumber}`;
     const qrCode = await QRCode.toDataURL(qrData);
     
-    console.log('[QR CODE] ✅ Generated for order:', orderNumber);
+    console.log('[QR CODE] âœ… Generated for order:', orderNumber);
     
     res.json({
       success: true,
@@ -89,7 +89,7 @@ router.post('/qr/order', async (req, res) => {
     });
     
   } catch (error) {
-    console.error('[QR CODE] ❌ Error:', error.message);
+    console.error('[QR CODE] âŒ Error:', error.message);
     res.status(500).json({ success: false, error: error.message });
   }
 });
@@ -102,7 +102,7 @@ router.post('/qr/product', async (req, res) => {
     const qrData = `https://cmproducts.com/customer-portal/product/${sku}`;
     const qrCode = await QRCode.toDataURL(qrData);
     
-    console.log('[QR CODE] ✅ Generated for product:', sku);
+    console.log('[QR CODE] âœ… Generated for product:', sku);
     
     res.json({
       success: true,
@@ -114,7 +114,7 @@ router.post('/qr/product', async (req, res) => {
     });
     
   } catch (error) {
-    console.error('[QR CODE] ❌ Error:', error.message);
+    console.error('[QR CODE] âŒ Error:', error.message);
     res.status(500).json({ success: false, error: error.message });
   }
 });
@@ -146,7 +146,7 @@ router.get('/order/:orderNumber', async (req, res) => {
     });
     
   } catch (error) {
-    console.error('[ORDER TRACKING] ❌ Error:', error.message);
+    console.error('[ORDER TRACKING] âŒ Error:', error.message);
     res.status(500).json({ success: false, error: error.message });
   }
 });
@@ -174,9 +174,10 @@ router.get('/orders', async (req, res) => {
     });
     
   } catch (error) {
-    console.error('[ORDERS LIST] ❌ Error:', error.message);
+    console.error('[ORDERS LIST] âŒ Error:', error.message);
     res.status(500).json({ success: false, error: error.message });
   }
 });
 
 export default router;
+

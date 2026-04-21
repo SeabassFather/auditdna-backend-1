@@ -1,9 +1,9 @@
-// ═══════════════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 // USDA API INTEGRATION - GROWER DATA FETCHER
-// ═══════════════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 // Fetches real grower data from USDA National Organic Program
 // API Key: 4F158DB1-85C2-3243-BFFA-58B53FB40D23
-// ═══════════════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
 const express = require('express');
 const axios = require('axios');
@@ -18,12 +18,12 @@ const USDA_ORGANIC_URL = 'https://organic.ams.usda.gov/integrity/';
 // FDA API Configuration  
 const FDA_BASE_URL = 'https://api.fda.gov/food/enforcement.json';
 
-// ═══════════════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 // FETCH USDA GROWERS - USA
-// ═══════════════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 router.get('/fetch-usda-growers', async (req, res) => {
   try {
-    console.log('🌾 Fetching USDA grower data...');
+    console.log('ðŸŒ¾ Fetching USDA grower data...');
     
     // Fetch from USDA Farmers Market API
     const response = await axios.get(USDA_BASE_URL);
@@ -61,7 +61,7 @@ router.get('/fetch-usda-growers', async (req, res) => {
       count++;
     }
     
-    console.log(`✅ Fetched ${growers.length} USA growers from USDA`);
+    console.log(`âœ… Fetched ${growers.length} USA growers from USDA`);
     
     // Insert into database
     await insertGrowers(growers);
@@ -75,17 +75,17 @@ router.get('/fetch-usda-growers', async (req, res) => {
     });
     
   } catch (error) {
-    console.error('❌ USDA fetch error:', error.message);
+    console.error('âŒ USDA fetch error:', error.message);
     res.status(500).json({ error: error.message });
   }
 });
 
-// ═══════════════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 // FETCH FDA REGISTERED FACILITIES - USA
-// ═══════════════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 router.get('/fetch-fda-facilities', async (req, res) => {
   try {
-    console.log('🏭 Fetching FDA registered facilities...');
+    console.log('ðŸ­ Fetching FDA registered facilities...');
     
     // FDA Food Facility Registry
     const response = await axios.get(`${FDA_BASE_URL}?limit=1000`);
@@ -119,7 +119,7 @@ router.get('/fetch-fda-facilities', async (req, res) => {
       growers.push(grower);
     }
     
-    console.log(`✅ Fetched ${growers.length} FDA facilities`);
+    console.log(`âœ… Fetched ${growers.length} FDA facilities`);
     
     await insertGrowers(growers);
     
@@ -132,26 +132,26 @@ router.get('/fetch-fda-facilities', async (req, res) => {
     });
     
   } catch (error) {
-    console.error('❌ FDA fetch error:', error.message);
+    console.error('âŒ FDA fetch error:', error.message);
     res.status(500).json({ error: error.message });
   }
 });
 
-// ═══════════════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 // GENERATE MEXICO GROWERS
-// ═══════════════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 router.post('/generate-mexico-growers', async (req, res) => {
   try {
-    console.log('🇲🇽 Generating Mexico grower data...');
+    console.log('ðŸ‡²ðŸ‡½ Generating Mexico grower data...');
     
     const mexicoStates = [
-      'Michoacán', 'Jalisco', 'Sinaloa', 'Baja California', 'Sonora',
+      'MichoacÃ¡n', 'Jalisco', 'Sinaloa', 'Baja California', 'Sonora',
       'Guanajuato', 'Veracruz', 'Puebla', 'Chiapas', 'Nayarit'
     ];
     
     const mexicoCities = [
-      'Uruapan', 'Guadalajara', 'Culiacán', 'Mexicali', 'Hermosillo',
-      'León', 'Veracruz', 'Puebla', 'Tapachula', 'Tepic'
+      'Uruapan', 'Guadalajara', 'CuliacÃ¡n', 'Mexicali', 'Hermosillo',
+      'LeÃ³n', 'Veracruz', 'Puebla', 'Tapachula', 'Tepic'
     ];
     
     const products = [
@@ -189,7 +189,7 @@ router.post('/generate-mexico-growers', async (req, res) => {
       growers.push(grower);
     }
     
-    console.log(`✅ Generated ${growers.length} Mexico growers`);
+    console.log(`âœ… Generated ${growers.length} Mexico growers`);
     
     await insertGrowers(growers);
     
@@ -202,26 +202,26 @@ router.post('/generate-mexico-growers', async (req, res) => {
     });
     
   } catch (error) {
-    console.error('❌ Mexico generation error:', error.message);
+    console.error('âŒ Mexico generation error:', error.message);
     res.status(500).json({ error: error.message });
   }
 });
 
-// ═══════════════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 // GENERATE CENTRAL & SOUTH AMERICA GROWERS
-// ═══════════════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 router.post('/generate-latam-growers', async (req, res) => {
   try {
-    console.log('🌎 Generating Central & South America grower data...');
+    console.log('ðŸŒŽ Generating Central & South America grower data...');
     
     const countries = [
       { name: 'Guatemala', cities: ['Guatemala City', 'Quetzaltenango', 'Escuintla'] },
       { name: 'Honduras', cities: ['Tegucigalpa', 'San Pedro Sula', 'Choloma'] },
-      { name: 'Costa Rica', cities: ['San José', 'Limón', 'Puntarenas'] },
-      { name: 'Colombia', cities: ['Bogotá', 'Medellín', 'Cali'] },
+      { name: 'Costa Rica', cities: ['San JosÃ©', 'LimÃ³n', 'Puntarenas'] },
+      { name: 'Colombia', cities: ['BogotÃ¡', 'MedellÃ­n', 'Cali'] },
       { name: 'Ecuador', cities: ['Quito', 'Guayaquil', 'Cuenca'] },
       { name: 'Peru', cities: ['Lima', 'Arequipa', 'Trujillo'] },
-      { name: 'Chile', cities: ['Santiago', 'Valparaíso', 'Concepción'] }
+      { name: 'Chile', cities: ['Santiago', 'ValparaÃ­so', 'ConcepciÃ³n'] }
     ];
     
     const products = [
@@ -260,7 +260,7 @@ router.post('/generate-latam-growers', async (req, res) => {
       }
     }
     
-    console.log(`✅ Generated ${growers.length} LATAM growers`);
+    console.log(`âœ… Generated ${growers.length} LATAM growers`);
     
     await insertGrowers(growers);
     
@@ -273,14 +273,14 @@ router.post('/generate-latam-growers', async (req, res) => {
     });
     
   } catch (error) {
-    console.error('❌ LATAM generation error:', error.message);
+    console.error('âŒ LATAM generation error:', error.message);
     res.status(500).json({ error: error.message });
   }
 });
 
-// ═══════════════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 // HELPER FUNCTIONS
-// ═══════════════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
 function extractState(address) {
   if (!address) return null;
@@ -316,14 +316,14 @@ function determineMexicoCertifications() {
 }
 
 function generateMexicanName() {
-  const first = ['Juan', 'María', 'José', 'Ana', 'Carlos', 'Laura', 'Miguel', 'Sofia'];
-  const last = ['García', 'Rodríguez', 'Hernández', 'López', 'Martínez', 'González', 'Pérez', 'Sánchez'];
+  const first = ['Juan', 'MarÃ­a', 'JosÃ©', 'Ana', 'Carlos', 'Laura', 'Miguel', 'Sofia'];
+  const last = ['GarcÃ­a', 'RodrÃ­guez', 'HernÃ¡ndez', 'LÃ³pez', 'MartÃ­nez', 'GonzÃ¡lez', 'PÃ©rez', 'SÃ¡nchez'];
   return `${first[Math.floor(Math.random() * first.length)]} ${last[Math.floor(Math.random() * last.length)]}`;
 }
 
 function generateLatinName() {
-  const first = ['Diego', 'Valentina', 'Santiago', 'Isabella', 'Mateo', 'Camila', 'Sebastián', 'Lucía'];
-  const last = ['Silva', 'Torres', 'Ramírez', 'Flores', 'Rivera', 'Gómez', 'Díaz', 'Cruz'];
+  const first = ['Diego', 'Valentina', 'Santiago', 'Isabella', 'Mateo', 'Camila', 'SebastiÃ¡n', 'LucÃ­a'];
+  const last = ['Silva', 'Torres', 'RamÃ­rez', 'Flores', 'Rivera', 'GÃ³mez', 'DÃ­az', 'Cruz'];
   return `${first[Math.floor(Math.random() * first.length)]} ${last[Math.floor(Math.random() * last.length)]}`;
 }
 
@@ -382,3 +382,4 @@ async function insertGrowers(growers) {
 }
 
 module.exports = router;
+

@@ -1,4 +1,4 @@
-// ================================================================
+﻿// ================================================================
 // CUSTOMER ROUTES - LOGIN & AUTHENTICATION
 // ================================================================
 // Created: 2025-11-17 07:28:11 UTC
@@ -58,13 +58,13 @@ router.post('/login', async (req, res) => {
   try {
     const { email, password } = req.body;
 
-    console.log('[CUSTOMER LOGIN] 🔐 Attempt:', email);
+    console.log('[CUSTOMER LOGIN] ðŸ” Attempt:', email);
 
     // Find customer
     const customer = customersDB.find(c => c.email === email);
 
     if (!customer) {
-      console.log('[CUSTOMER LOGIN] ❌ Customer not found:', email);
+      console.log('[CUSTOMER LOGIN] âŒ Customer not found:', email);
       return res.status(404).json({
         success: false,
         error: 'Customer not found'
@@ -73,7 +73,7 @@ router.post('/login', async (req, res) => {
 
     // Check password
     if (customer.password !== password) {
-      console.log('[CUSTOMER LOGIN] ❌ Invalid password for:', email);
+      console.log('[CUSTOMER LOGIN] âŒ Invalid password for:', email);
       return res.status(401).json({
         success: false,
         error: 'Invalid password'
@@ -82,7 +82,7 @@ router.post('/login', async (req, res) => {
 
     // Check account status
     if (customer.accountStatus === 'OVERDUE') {
-      console.log('[CUSTOMER LOGIN] ⚠️ Account overdue:', email);
+      console.log('[CUSTOMER LOGIN] âš ï¸ Account overdue:', email);
       return res.status(403).json({
         success: false,
         error: 'Account on hold - payment overdue',
@@ -90,7 +90,7 @@ router.post('/login', async (req, res) => {
       });
     }
 
-    console.log('[CUSTOMER LOGIN] ✅ Success:', customer.companyName);
+    console.log('[CUSTOMER LOGIN] âœ… Success:', customer.companyName);
 
     // Remove password from response
     const { password: _, ...customerData } = customer;
@@ -103,7 +103,7 @@ router.post('/login', async (req, res) => {
     });
 
   } catch (error) {
-    console.error('[CUSTOMER LOGIN] ❌ Error:', error.message);
+    console.error('[CUSTOMER LOGIN] âŒ Error:', error.message);
     res.status(500).json({
       success: false,
       error: error.message
@@ -157,7 +157,7 @@ router.post('/order/submit', async (req, res) => {
   try {
     const { customerEmail, items, deliveryMethod } = req.body;
 
-    console.log('[ORDER SUBMIT] 📦 New order from:', customerEmail);
+    console.log('[ORDER SUBMIT] ðŸ“¦ New order from:', customerEmail);
 
     const orderNumber = `ORD-${Date.now()}`;
     const total = items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
@@ -174,7 +174,7 @@ router.post('/order/submit', async (req, res) => {
 
     ordersDB.push(newOrder);
 
-    console.log('[ORDER SUBMIT] ✅ Order created:', orderNumber, '- Total: $' + total.toFixed(2));
+    console.log('[ORDER SUBMIT] âœ… Order created:', orderNumber, '- Total: $' + total.toFixed(2));
 
     res.json({
       success: true,
@@ -186,7 +186,7 @@ router.post('/order/submit', async (req, res) => {
     });
 
   } catch (error) {
-    console.error('[ORDER SUBMIT] ❌ Error:', error.message);
+    console.error('[ORDER SUBMIT] âŒ Error:', error.message);
     res.status(500).json({
       success: false,
       error: error.message
@@ -195,3 +195,4 @@ router.post('/order/submit', async (req, res) => {
 });
 
 export default router;
+

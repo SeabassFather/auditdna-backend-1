@@ -8,3 +8,4 @@ const p=new Pool({host:'process.env.DB_HOST',port:5432,database:'auditdna',user:
   try{const b=await p.query('SELECT * FROM buyers LIMIT 1');console.log('\n=== BUYER COLUMNS ===');console.log(Object.keys(b.rows[0]||{}))}catch(e){console.log('buyers:',e.message)}
   await p.end();
 })()
+

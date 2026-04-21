@@ -61,3 +61,4 @@ router.get('/pricing/regional/:region', async (req, res) => {
 });
 
 module.exports = router;
+

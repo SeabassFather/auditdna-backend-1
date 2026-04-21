@@ -31,3 +31,4 @@ const LabResultSchema = new mongoose.Schema({
 });
 
 export default mongoose.model('LabResult', LabResultSchema);
+

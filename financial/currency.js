@@ -43,7 +43,7 @@ router.get('/supported', (req, res) => {
     { code: 'COP', name: 'Colombian Peso', symbol: '$' },
     { code: 'PEN', name: 'Peruvian Sol', symbol: 'S/' },
     { code: 'CLP', name: 'Chilean Peso', symbol: '$' },
-    { code: 'EUR', name: 'Euro', symbol: '€' },
+    { code: 'EUR', name: 'Euro', symbol: 'â‚¬' },
     { code: 'CAD', name: 'Canadian Dollar', symbol: '$' }
   ];
   
@@ -223,3 +223,4 @@ router.post('/risk-exposure', (req, res) => {
 });
 
 export default router;
+

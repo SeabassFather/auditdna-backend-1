@@ -545,3 +545,4 @@ class Brain extends EventEmitter {
 // Singleton
 const brain = new Brain();
 module.exports = brain;
+

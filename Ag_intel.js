@@ -1,5 +1,5 @@
 // ============================================================
-// ag-intel.js — Agricultural Intelligence API Routes
+// ag-intel.js â€” Agricultural Intelligence API Routes
 // AuditDNA Backend | Port 5050
 // Aggregates: USDA NASS, FAOSTAT, USDA FAS
 // Cache: Railway PostgreSQL (24hr TTL)
@@ -14,10 +14,10 @@ const pool = require('../db'); // existing pool
 const USDA_KEY = '4F158DB1-85C2-3243-BFFA-58B53FB40D23';
 const CACHE_TTL_MS = 24 * 60 * 60 * 1000; // 24 hours
 
-// ─── ENSURE CACHE TABLE EXISTS ────────────────────────────────
+// â”€â”€â”€ ENSURE CACHE TABLE EXISTS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 const ensureCache = async () => {
   try {
-    await pool.query(`
+    await global.db.query(`
       CREATE TABLE IF NOT EXISTS ag_intel_cache (
         cache_key   TEXT PRIMARY KEY,
         payload     JSONB NOT NULL,
@@ -30,10 +30,10 @@ const ensureCache = async () => {
 };
 ensureCache();
 
-// ─── CACHE HELPERS ────────────────────────────────────────────
+// â”€â”€â”€ CACHE HELPERS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 const getCache = async (key) => {
   try {
-    const r = await pool.query(
+    const r = await global.db.query(
       `SELECT payload, fetched_at FROM ag_intel_cache WHERE cache_key = $1`, [key]
     );
     if (!r.rows.length) return null;
@@ -45,7 +45,7 @@ const getCache = async (key) => {
 
 const setCache = async (key, payload) => {
   try {
-    await pool.query(
+    await global.db.query(
       `INSERT INTO ag_intel_cache (cache_key, payload, fetched_at)
        VALUES ($1, $2, NOW())
        ON CONFLICT (cache_key) DO UPDATE SET payload = $2, fetched_at = NOW()`,
@@ -56,8 +56,8 @@ const setCache = async (key, payload) => {
   }
 };
 
-// ─── COMMODITY MAP ─────────────────────────────────────────────
-// Maps friendly names → USDA NASS commodity strings + FAO item codes
+// â”€â”€â”€ COMMODITY MAP â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// Maps friendly names â†’ USDA NASS commodity strings + FAO item codes
 const COMMODITY_MAP = {
   avocado:      { nass: 'AVOCADOS',          fao_code: '572',  fao_name: 'Avocados'         },
   strawberry:   { nass: 'STRAWBERRIES',       fao_code: '768',  fao_name: 'Strawberries'     },
@@ -82,7 +82,7 @@ const COMMODITY_MAP = {
   cantaloupe:   { nass: 'CANTALOUPES',        fao_code: '568',  fao_name: 'Cantaloupes, other melons' },
 };
 
-// ─── ROUTE 1: USDA NASS PRICE ──────────────────────────────────
+// â”€â”€â”€ ROUTE 1: USDA NASS PRICE â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 // GET /api/intel/usda-price?commodity=avocado&state=CA&year=2024
 router.get('/usda-price', async (req, res) => {
   const { commodity = 'avocado', state = '', year = new Date().getFullYear() } = req.query;
@@ -138,7 +138,7 @@ router.get('/usda-price', async (req, res) => {
   }
 });
 
-// ─── ROUTE 2: FAOSTAT GLOBAL PRICE ─────────────────────────────
+// â”€â”€â”€ ROUTE 2: FAOSTAT GLOBAL PRICE â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 // GET /api/intel/fao-global?commodity=avocado&country=MX&year=2022
 router.get('/fao-global', async (req, res) => {
   const { commodity = 'avocado', country = '', year = '2022' } = req.query;
@@ -194,7 +194,7 @@ router.get('/fao-global', async (req, res) => {
   }
 });
 
-// ─── ROUTE 3: USDA FAS TRADE FLOWS ─────────────────────────────
+// â”€â”€â”€ ROUTE 3: USDA FAS TRADE FLOWS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 // GET /api/intel/fas-trade?commodity=avocado&country=MX&type=imports
 router.get('/fas-trade', async (req, res) => {
   const { commodity = 'avocado', country = 'MX', type = 'imports' } = req.query;
@@ -236,7 +236,7 @@ router.get('/fas-trade', async (req, res) => {
       year,
       data: tradeData,
       note: tradeData.length === 0
-        ? 'FAS PSD data unavailable for this commodity/country — use USDA GATS portal for detailed trade flows'
+        ? 'FAS PSD data unavailable for this commodity/country â€” use USDA GATS portal for detailed trade flows'
         : undefined,
       fas_portal: `https://apps.fas.usda.gov/gats/default.aspx`,
       fetched_at: new Date().toISOString()
@@ -249,7 +249,7 @@ router.get('/fas-trade', async (req, res) => {
   }
 });
 
-// ─── ROUTE 4: COMBINED INTEL SNAPSHOT ──────────────────────────
+// â”€â”€â”€ ROUTE 4: COMBINED INTEL SNAPSHOT â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 // GET /api/intel/snapshot?commodity=avocado
 // Returns USDA + FAO + trade summary in one call for Brain Sync
 router.get('/snapshot', async (req, res) => {
@@ -264,7 +264,7 @@ router.get('/snapshot', async (req, res) => {
 
   const results = { commodity, map_data: map, sources: {} };
 
-  // Parallel fetch — don't let one failure block the others
+  // Parallel fetch â€” don't let one failure block the others
   const [usdaResult, faoResult] = await Promise.allSettled([
     fetch(`https://quickstats.nass.usda.gov/api/api_GET/?key=${USDA_KEY}&commodity_desc=${encodeURIComponent(map.nass)}&statisticcat_desc=PRICE+RECEIVED&unit_desc=%24+%2F+CWT&freq_desc=ANNUAL&year=${new Date().getFullYear()-1}&format=JSON`, { timeout: 8000 }).then(r => r.json()),
     fetch(`https://fenixservices.fao.org/faostat/api/v1/en/data/PP/?item=${map.fao_code}&element=5532&year=2022&output_type=objects`, { timeout: 10000, headers: { Accept: 'application/json' } }).then(r => r.json())
@@ -278,7 +278,7 @@ router.get('/snapshot', async (req, res) => {
       unit: '$ / CWT',
       year: new Date().getFullYear()-1,
       data_points: items.length,
-      note: `USDA NASS — ${items.length} state records`
+      note: `USDA NASS â€” ${items.length} state records`
     };
   }
 
@@ -307,7 +307,7 @@ router.get('/snapshot', async (req, res) => {
   res.json({ source: 'live', ...results });
 });
 
-// ─── ROUTE 5: LIST AVAILABLE COMMODITIES ───────────────────────
+// â”€â”€â”€ ROUTE 5: LIST AVAILABLE COMMODITIES â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 router.get('/commodities', (req, res) => {
   res.json({
     count: Object.keys(COMMODITY_MAP).length,
@@ -320,17 +320,17 @@ router.get('/commodities', (req, res) => {
   });
 });
 
-// ─── ROUTE 6: CLEAR CACHE (admin) ──────────────────────────────
+// â”€â”€â”€ ROUTE 6: CLEAR CACHE (admin) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 router.delete('/cache', async (req, res) => {
   try {
-    await pool.query(`DELETE FROM ag_intel_cache WHERE fetched_at < NOW() - INTERVAL '24 hours'`);
+    await global.db.query(`DELETE FROM ag_intel_cache WHERE fetched_at < NOW() - INTERVAL '24 hours'`);
     res.json({ ok: true, msg: 'Expired cache cleared' });
   } catch (e) {
     res.status(500).json({ error: e.message });
   }
 });
 
-// ─── HELPERS ────────────────────────────────────────────────────
+// â”€â”€â”€ HELPERS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function buildSummary(results) {
   const lines = [];
   if (results.sources.usda?.avg_price_cwt) {
@@ -347,3 +347,4 @@ function buildSummary(results) {
 }
 
 module.exports = router;
+

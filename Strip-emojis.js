@@ -12,27 +12,27 @@ function stripEmojis(str) {
 // Replace common emoji text patterns in console.log strings
 function replaceEmojiPatterns(str) {
   return str
-    .replace(/✅/g,  '[OK]')
-    .replace(/❌/g,  '[ERROR]')
-    .replace(/⚠️/g,  '[WARN]')
-    .replace(/⚠/g,   '[WARN]')
-    .replace(/🔥/g,  '[HOT]')
-    .replace(/🚀/g,  '[START]')
-    .replace(/💡/g,  '[INFO]')
-    .replace(/🔑/g,  '[KEY]')
-    .replace(/📦/g,  '[PKG]')
-    .replace(/🌱/g,  '[GROWER]')
-    .replace(/💧/g,  '[WATER]')
-    .replace(/🧪/g,  '[LAB]')
-    .replace(/📊/g,  '[DATA]')
-    .replace(/🤖/g,  '[AI]')
-    .replace(/🛡/g,   '[SHIELD]')
-    .replace(/🔒/g,  '[LOCK]')
-    .replace(/📧/g,  '[EMAIL]')
-    .replace(/📱/g,  '[MOBILE]')
-    .replace(/🌍/g,  '[GLOBE]')
-    .replace(/📍/g,  '[PIN]')
-    .replace(/⚡/g,  '[FAST]');
+    .replace(/âœ…/g,  '[OK]')
+    .replace(/âŒ/g,  '[ERROR]')
+    .replace(/âš ï¸/g,  '[WARN]')
+    .replace(/âš /g,   '[WARN]')
+    .replace(/ðŸ”¥/g,  '[HOT]')
+    .replace(/ðŸš€/g,  '[START]')
+    .replace(/ðŸ’¡/g,  '[INFO]')
+    .replace(/ðŸ”‘/g,  '[KEY]')
+    .replace(/ðŸ“¦/g,  '[PKG]')
+    .replace(/ðŸŒ±/g,  '[GROWER]')
+    .replace(/ðŸ’§/g,  '[WATER]')
+    .replace(/ðŸ§ª/g,  '[LAB]')
+    .replace(/ðŸ“Š/g,  '[DATA]')
+    .replace(/ðŸ¤–/g,  '[AI]')
+    .replace(/ðŸ›¡/g,   '[SHIELD]')
+    .replace(/ðŸ”’/g,  '[LOCK]')
+    .replace(/ðŸ“§/g,  '[EMAIL]')
+    .replace(/ðŸ“±/g,  '[MOBILE]')
+    .replace(/ðŸŒ/g,  '[GLOBE]')
+    .replace(/ðŸ“/g,  '[PIN]')
+    .replace(/âš¡/g,  '[FAST]');
 }
 
 const targets = [
@@ -65,3 +65,4 @@ targets.forEach(fp => {
 });
 
 console.log(`\nDone. ${totalFixed} files stripped of emojis.`);
+

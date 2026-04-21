@@ -27,8 +27,9 @@ export async function sendReportEmail(reportName, recipient = process.env.ADMIN_
 
   try {
     await transporter.sendMail(mailOptions);
-    return { success: true, message: `✅ Report emailed to ${recipient}` };
+    return { success: true, message: `âœ… Report emailed to ${recipient}` };
   } catch (err) {
     return { success: false, message: err.message };
   }
 }
+

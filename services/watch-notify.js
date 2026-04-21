@@ -1,22 +1,22 @@
 // ============================================================
-// watch-notify.js — SmartWatch Notification Bridge
+// watch-notify.js â€” SmartWatch Notification Bridge
 // AuditDNA Backend | C:\AuditDNA\backend\services\watch-notify.js
-// Uses ntfy.sh — free, no API key, works on any smartwatch
+// Uses ntfy.sh â€” free, no API key, works on any smartwatch
 //   via companion phone app (Android / iOS)
 // ============================================================
 
 const fetch = (...args) =>
   import('node-fetch').then(({ default: f }) => f(...args));
 
-// ── Config ───────────────────────────────────────────────────
+// â”€â”€ Config â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 const NTFY_BASE   = 'https://ntfy.sh';
 const CHANNEL     = process.env.WATCH_CHANNEL || 'auditdna-agro-YOUR_SECRET'; // override in .env
 const NTFY_TOKEN  = process.env.NTFY_TOKEN    || '';   // optional: paid ntfy account token
 
-// Priority levels  (ntfy scale: 1=min … 5=urgent)
+// Priority levels  (ntfy scale: 1=min â€¦ 5=urgent)
 const P = { MIN: 1, LOW: 2, DEFAULT: 3, HIGH: 4, URGENT: 5 };
 
-// Tag → ntfy emoji shortcode map (ntfy renders these as icons on watch)
+// Tag â†’ ntfy emoji shortcode map (ntfy renders these as icons on watch)
 const TAGS = {
   grs:       ['chart_with_upwards_trend', 'rotating_light'],
   fsma:      ['calendar', 'warning'],
@@ -32,7 +32,7 @@ const TAGS = {
   buyer:     ['shopping_cart', 'seedling'],
 };
 
-// ── Core sender ──────────────────────────────────────────────
+// â”€â”€ Core sender â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 async function sendWatch({ title, message, priority = P.DEFAULT, tags = [], actions = [] }) {
   const headers = {
     'Content-Type': 'text/plain',
@@ -51,7 +51,7 @@ async function sendWatch({ title, message, priority = P.DEFAULT, tags = [], acti
       body:    message,
     });
     const ok = res.ok;
-    console.log(`[WatchNotify] ${ok ? 'SENT' : 'FAIL'} → ${title}`);
+    console.log(`[WatchNotify] ${ok ? 'SENT' : 'FAIL'} â†’ ${title}`);
     return { ok, status: res.status };
   } catch (err) {
     console.error('[WatchNotify] Network error:', err.message);
@@ -59,13 +59,13 @@ async function sendWatch({ title, message, priority = P.DEFAULT, tags = [], acti
   }
 }
 
-// ── Event Builders ───────────────────────────────────────────
+// â”€â”€ Event Builders â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 /** GRS Risk Tier Change */
 async function notifyGRSTierChange({ growerName, oldTier, newTier, growerId }) {
   const escalating = newTier > oldTier;
   return sendWatch({
-    title:    `GRS Tier ${escalating ? 'ESCALATED' : 'Improved'} — ${growerName}`,
+    title:    `GRS Tier ${escalating ? 'ESCALATED' : 'Improved'} â€” ${growerName}`,
     message:  `Grower #${growerId} moved from Tier ${oldTier} to Tier ${newTier}. ${escalating ? 'Review required.' : 'Risk reduced.'}`,
     priority: escalating ? (newTier >= 3 ? P.URGENT : P.HIGH) : P.DEFAULT,
     tags:     TAGS.grs,
@@ -76,7 +76,7 @@ async function notifyGRSTierChange({ growerName, oldTier, newTier, growerId }) {
 async function notifyFSMADeadline({ growerName, lot, daysRemaining, dueDate }) {
   const urgent = daysRemaining <= 1;
   return sendWatch({
-    title:    `FSMA 204 Due ${urgent ? 'TODAY' : `in ${daysRemaining}d`} — ${growerName}`,
+    title:    `FSMA 204 Due ${urgent ? 'TODAY' : `in ${daysRemaining}d`} â€” ${growerName}`,
     message:  `Lot: ${lot} | Due: ${dueDate}. ${urgent ? 'IMMEDIATE action required.' : 'Prepare documentation.'}`,
     priority: urgent ? P.URGENT : daysRemaining <= 3 ? P.HIGH : P.DEFAULT,
     tags:     TAGS.fsma,
@@ -86,7 +86,7 @@ async function notifyFSMADeadline({ growerName, lot, daysRemaining, dueDate }) {
 /** TraceSafe Scan Confirmation */
 async function notifyTraceSafeScan({ growerName, lot, product, location, success }) {
   return sendWatch({
-    title:    `TraceSafe ${success ? 'Scan OK' : 'Scan FAILED'} — ${product}`,
+    title:    `TraceSafe ${success ? 'Scan OK' : 'Scan FAILED'} â€” ${product}`,
     message:  `Grower: ${growerName} | Lot: ${lot} | Location: ${location}`,
     priority: success ? P.DEFAULT : P.HIGH,
     tags:     TAGS.trace,
@@ -96,7 +96,7 @@ async function notifyTraceSafeScan({ growerName, lot, product, location, success
 /** New Grower KYC Submission */
 async function notifyNewKYC({ growerName, growerId, tier, submittedAt }) {
   return sendWatch({
-    title:    `New KYC Submission — ${growerName}`,
+    title:    `New KYC Submission â€” ${growerName}`,
     message:  `Grower #${growerId} submitted registration. Initial Tier: ${tier}. Submitted: ${submittedAt}`,
     priority: P.HIGH,
     tags:     TAGS.kyc,
@@ -107,7 +107,7 @@ async function notifyNewKYC({ growerName, growerId, tier, submittedAt }) {
 /** Tier 3 Risk Escalation (critical) */
 async function notifyTier3Escalation({ growerName, growerId, reason }) {
   return sendWatch({
-    title:    `TIER 3 ALERT — ${growerName}`,
+    title:    `TIER 3 ALERT â€” ${growerName}`,
     message:  `Critical risk flag on Grower #${growerId}. Reason: ${reason}. Immediate review required.`,
     priority: P.URGENT,
     tags:     TAGS.tier3,
@@ -117,7 +117,7 @@ async function notifyTier3Escalation({ growerName, growerId, reason }) {
 /** LOI / LOC Pipeline Stage Change */
 async function notifyLOIPipeline({ dealName, stage, previousStage, amount }) {
   return sendWatch({
-    title:    `Deal Pipeline — ${stage}`,
+    title:    `Deal Pipeline â€” ${stage}`,
     message:  `${dealName} moved from [${previousStage}] to [${stage}]. Amount: $${Number(amount).toLocaleString()}`,
     priority: P.HIGH,
     tags:     TAGS.loi,
@@ -128,7 +128,7 @@ async function notifyLOIPipeline({ dealName, stage, previousStage, amount }) {
 async function notifyShipmentStatus({ shipmentId, product, status, location, delay }) {
   const isDelay = !!delay;
   return sendWatch({
-    title:    `Shipment ${isDelay ? 'DELAYED' : 'Update'} — ${product}`,
+    title:    `Shipment ${isDelay ? 'DELAYED' : 'Update'} â€” ${product}`,
     message:  `#${shipmentId} | Status: ${status} | Location: ${location}${isDelay ? ` | Delay: ${delay}` : ''}`,
     priority: isDelay ? P.HIGH : P.DEFAULT,
     tags:     TAGS.shipment,
@@ -138,7 +138,7 @@ async function notifyShipmentStatus({ shipmentId, product, status, location, del
 /** USDA / Market Price Alert */
 async function notifyMarketAlert({ product, currentPrice, threshold, direction, region }) {
   return sendWatch({
-    title:    `Market Alert — ${product} ${direction === 'above' ? 'HIGH' : 'LOW'}`,
+    title:    `Market Alert â€” ${product} ${direction === 'above' ? 'HIGH' : 'LOW'}`,
     message:  `${product} in ${region} hit $${currentPrice}/unit. Threshold: $${threshold}. Direction: ${direction} threshold.`,
     priority: P.HIGH,
     tags:     TAGS.market,
@@ -149,7 +149,7 @@ async function notifyMarketAlert({ product, currentPrice, threshold, direction, 
 async function notifyWaterAlert({ field, currentUsage, threshold, unit }) {
   const pct = Math.round((currentUsage / threshold) * 100);
   return sendWatch({
-    title:    `Water Alert — ${field} at ${pct}%`,
+    title:    `Water Alert â€” ${field} at ${pct}%`,
     message:  `Field: ${field} | Usage: ${currentUsage}${unit} / Threshold: ${threshold}${unit}. ${pct >= 100 ? 'THRESHOLD EXCEEDED.' : 'Approaching limit.'}`,
     priority: pct >= 100 ? P.URGENT : P.HIGH,
     tags:     TAGS.water,
@@ -160,8 +160,8 @@ async function notifyWaterAlert({ field, currentUsage, threshold, unit }) {
 async function notifyHeatWarning({ region, tempC, uvIndex, advisory }) {
   const tempF = Math.round(tempC * 9 / 5 + 32);
   return sendWatch({
-    title:    `Heat Advisory — ${region}`,
-    message:  `Temp: ${tempC}°C (${tempF}°F) | UV Index: ${uvIndex}. ${advisory}`,
+    title:    `Heat Advisory â€” ${region}`,
+    message:  `Temp: ${tempC}Â°C (${tempF}Â°F) | UV Index: ${uvIndex}. ${advisory}`,
     priority: uvIndex >= 11 || tempC >= 40 ? P.URGENT : P.HIGH,
     tags:     TAGS.heat,
   });
@@ -172,7 +172,7 @@ async function notifyBuyerInquiry({ buyerName, company, products, quantity, unit
   const productList = Array.isArray(products) ? products.join(', ') : products;
   const urgencyPriority = { high: P.URGENT, medium: P.HIGH, low: P.DEFAULT };
   return sendWatch({
-    title:    `Buyer Inquiry${urgency === 'high' ? ' — URGENT' : ''} — ${buyerName}`,
+    title:    `Buyer Inquiry${urgency === 'high' ? ' â€” URGENT' : ''} â€” ${buyerName}`,
     message:  `Products: ${productList}${quantity ? ` | Qty: ${quantity}${unit ? ' ' + unit : ''}` : ''}${company ? ` | Co: ${company}` : ''}${phone ? ` | ${phone}` : ''}${email ? ` | ${email}` : ''}${notes ? ` | ${notes}` : ''}`,
     priority: urgencyPriority[urgency] || P.HIGH,
     tags:     TAGS.buyer,
@@ -184,7 +184,7 @@ async function notifyNewLead({ name, source, phone, email, score, notes }) {
   const hot = score >= 80;
   const warm = score >= 50;
   return sendWatch({
-    title:    `${hot ? 'HOT LEAD' : warm ? 'New Lead' : 'Lead'} — ${name}`,
+    title:    `${hot ? 'HOT LEAD' : warm ? 'New Lead' : 'Lead'} â€” ${name}`,
     message:  `Source: ${source} | Score: ${score}/100${phone ? ` | ${phone}` : ''}${email ? ` | ${email}` : ''}${notes ? ` | ${notes}` : ''}`,
     priority: hot ? P.URGENT : warm ? P.HIGH : P.DEFAULT,
     tags:     TAGS.lead,
@@ -201,7 +201,7 @@ async function notifyTest() {
   });
 }
 
-// ── Exports ──────────────────────────────────────────────────
+// â”€â”€ Exports â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 module.exports = {
   CHANNEL,
   NTFY_BASE,
@@ -220,3 +220,4 @@ module.exports = {
   notifyBuyerInquiry,
   notifyTest,
 };
+

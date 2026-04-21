@@ -17,7 +17,7 @@ const users = [
 async function run() {
   for (const u of users) {
     const hash = await bcrypt.hash(u.password, 10);
-    await pool.query(
+    await global.db.query(
       `INSERT INTO auth_users (username, password_hash, pin, display_name, role, is_active)
        VALUES ($1,$2,$3,$4,$5,true)
        ON CONFLICT (username) DO UPDATE
@@ -26,8 +26,9 @@ async function run() {
     );
     console.log('[OK] ' + u.username + ' (' + u.role + ')');
   }
-  console.log('\nAll done — try logging in now.');
+  console.log('\nAll done â€” try logging in now.');
   await pool.end();
 }
 
 run().catch(e => { console.error(e.message); pool.end(); });
+

@@ -1,4 +1,4 @@
-// ════════════════════════════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 const { pingRegistration } = require('../utils/notify_ping');
 // GROWER PIPELINE ROUTES v1.0
 // Save to: C:\AuditDNA\backend\routes\growers.js
@@ -6,7 +6,7 @@ const { pingRegistration } = require('../utils/notify_ping');
 // Pool:    req.app.locals.pool
 // Auth:    bcrypt12 passwords + PINs, JWT tokens
 // Upload:  multer -> C:\AuditDNA\uploads\growers\{grower_id}\
-// ════════════════════════════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
 const express = require('express');
 const router  = express.Router();
@@ -20,9 +20,9 @@ const crypto  = require('crypto');
 const SALT_ROUNDS = 12;
 const JWT_SECRET  = process.env.JWT_SECRET || 'auditdna-grower-jwt-dev';
 
-// ════════════════════════════════════════════════════════════════════════════
-// MULTER — file upload to C:\AuditDNA\uploads\growers\{grower_id}\
-// ════════════════════════════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+// MULTER â€” file upload to C:\AuditDNA\uploads\growers\{grower_id}\
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
 const UPLOAD_ROOT = process.env.GROWER_UPLOAD_DIR
   || path.join(__dirname, '..', 'uploads', 'growers');
@@ -51,9 +51,9 @@ const upload = multer({
   },
 });
 
-// ════════════════════════════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 // HELPERS
-// ════════════════════════════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
 // Generate a random alphanumeric password
 function generatePassword(len = 12) {
@@ -82,7 +82,7 @@ function authRequired(req, res, next) {
   }
 }
 
-// Admin-only middleware — checks mfg_token from session/header
+// Admin-only middleware â€” checks mfg_token from session/header
 function adminRequired(req, res, next) {
   // Accept if grower token has role=admin/owner, OR if mfg_token present
   if (req.grower && ['admin', 'owner'].includes(req.grower.role)) return next();
@@ -100,11 +100,11 @@ function adminRequired(req, res, next) {
   return res.status(403).json({ error: 'Admin access required' });
 }
 
-// ════════════════════════════════════════════════════════════════════════════
-// 1. REGISTRATION — POST /api/growers/register
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+// 1. REGISTRATION â€” POST /api/growers/register
 //    Called from ContactIntelHub GROWER INTAKE form
 //    Auto-generates password + PIN, returns credentials once
-// ════════════════════════════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
 router.post('/register', async (req, res) => {
   const pool = req.app.locals.pool;
@@ -121,7 +121,7 @@ router.post('/register', async (req, res) => {
 
   try {
     // Check for duplicate email
-    const exists = await pool.query('SELECT id FROM grower_profiles WHERE email = $1', [email.toLowerCase()]);
+    const exists = await global.db.query('SELECT id FROM grower_profiles WHERE email = $1', [email.toLowerCase()]);
     if (exists.rows.length > 0) {
       return res.status(409).json({ error: 'Email already registered', grower_id: exists.rows[0].id });
     }
@@ -132,7 +132,7 @@ router.post('/register', async (req, res) => {
     const password_hash = await bcrypt.hash(plainPassword, SALT_ROUNDS);
     const pin_hash      = await bcrypt.hash(plainPIN, SALT_ROUNDS);
 
-    const result = await pool.query(`
+    const result = await global.db.query(`
       INSERT INTO grower_profiles (
         first_name, last_name, email, phone, company_name,
         city, state_region, country,
@@ -163,10 +163,10 @@ router.post('/register', async (req, res) => {
         timestamp: new Date().toISOString(),
       };
       // Non-blocking brain event
-      pool.query(
+      global.db.query(
         `INSERT INTO brain_events (event_type, payload, created_at) VALUES ($1, $2, NOW())`,
         ['GROWER_REGISTERED_DB', JSON.stringify(brainPayload)]
-      ).catch(() => { /* brain_events table may not exist yet — silent */ });
+      ).catch(() => { /* brain_events table may not exist yet â€” silent */ });
     } catch { /* non-critical */ }
 
     // Notify owner on new grower registration
@@ -186,7 +186,7 @@ router.post('/register', async (req, res) => {
         email:    email.toLowerCase(),
         password: plainPassword,
         pin:      plainPIN,
-        note:     'SAVE THESE CREDENTIALS — password and PIN cannot be recovered after this response.',
+        note:     'SAVE THESE CREDENTIALS â€” password and PIN cannot be recovered after this response.',
       },
       next_steps: [
         'Upload ID photo and corporate documents at /api/growers/{id}/documents',
@@ -201,9 +201,9 @@ router.post('/register', async (req, res) => {
   }
 });
 
-// ════════════════════════════════════════════════════════════════════════════
-// 2. LOGIN — POST /api/growers/login
-// ════════════════════════════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+// 2. LOGIN â€” POST /api/growers/login
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
 router.post('/login', async (req, res) => {
   const pool = req.app.locals.pool;
@@ -214,7 +214,7 @@ router.post('/login', async (req, res) => {
   }
 
   try {
-    const result = await pool.query(
+    const result = await global.db.query(
       'SELECT * FROM grower_profiles WHERE email = $1 AND status = $2',
       [email.toLowerCase(), 'active']
     );
@@ -230,7 +230,7 @@ router.post('/login', async (req, res) => {
     }
 
     // Update last_login
-    await pool.query('UPDATE grower_profiles SET last_login = NOW() WHERE id = $1', [grower.id]);
+    await global.db.query('UPDATE grower_profiles SET last_login = NOW() WHERE id = $1', [grower.id]);
 
     const token = jwt.sign(
       { id: grower.id, email: grower.email, role: grower.role, company: grower.company_name },
@@ -248,16 +248,16 @@ router.post('/login', async (req, res) => {
   }
 });
 
-// ════════════════════════════════════════════════════════════════════════════
-// 3. PIN VERIFY — POST /api/growers/verify-pin
-// ════════════════════════════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+// 3. PIN VERIFY â€” POST /api/growers/verify-pin
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
 router.post('/verify-pin', authRequired, async (req, res) => {
   const pool = req.app.locals.pool;
   const { pin } = req.body;
 
   try {
-    const result = await pool.query('SELECT pin_hash FROM grower_profiles WHERE id = $1', [req.grower.id]);
+    const result = await global.db.query('SELECT pin_hash FROM grower_profiles WHERE id = $1', [req.grower.id]);
     if (result.rows.length === 0) return res.status(404).json({ error: 'Grower not found' });
 
     const valid = await bcrypt.compare(String(pin), result.rows[0].pin_hash);
@@ -267,9 +267,9 @@ router.post('/verify-pin', authRequired, async (req, res) => {
   }
 });
 
-// ════════════════════════════════════════════════════════════════════════════
-// 4. PROFILE — GET /api/growers/profile/:id
-// ════════════════════════════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+// 4. PROFILE â€” GET /api/growers/profile/:id
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
 router.get('/profile/:id', authRequired, async (req, res) => {
   const pool = req.app.locals.pool;
@@ -281,7 +281,7 @@ router.get('/profile/:id', authRequired, async (req, res) => {
   }
 
   try {
-    const result = await pool.query(
+    const result = await global.db.query(
       'SELECT * FROM grower_profiles WHERE id = $1',
       [id]
     );
@@ -291,8 +291,8 @@ router.get('/profile/:id', authRequired, async (req, res) => {
 
     // Also fetch docs + financials
     const [docs, fins] = await Promise.all([
-      pool.query('SELECT * FROM grower_documents WHERE grower_id = $1 ORDER BY created_at DESC', [id]),
-      pool.query('SELECT * FROM grower_financials WHERE grower_id = $1 ORDER BY created_at DESC', [id]),
+      global.db.query('SELECT * FROM grower_documents WHERE grower_id = $1 ORDER BY created_at DESC', [id]),
+      global.db.query('SELECT * FROM grower_financials WHERE grower_id = $1 ORDER BY created_at DESC', [id]),
     ]);
 
     res.json({ grower, documents: docs.rows, financials: fins.rows });
@@ -301,9 +301,9 @@ router.get('/profile/:id', authRequired, async (req, res) => {
   }
 });
 
-// ════════════════════════════════════════════════════════════════════════════
-// 5. UPDATE PROFILE — PATCH /api/growers/profile/:id
-// ════════════════════════════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+// 5. UPDATE PROFILE â€” PATCH /api/growers/profile/:id
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
 router.patch('/profile/:id', authRequired, async (req, res) => {
   const pool = req.app.locals.pool;
@@ -349,7 +349,7 @@ router.patch('/profile/:id', authRequired, async (req, res) => {
   values.push(id);
 
   try {
-    const result = await pool.query(
+    const result = await global.db.query(
       `UPDATE grower_profiles SET ${updates.join(', ')} WHERE id = $${idx} RETURNING *`,
       values
     );
@@ -362,10 +362,10 @@ router.patch('/profile/:id', authRequired, async (req, res) => {
   }
 });
 
-// ════════════════════════════════════════════════════════════════════════════
-// 6. LIST ALL GROWER PROFILES — GET /api/growers/
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+// 6. LIST ALL GROWER PROFILES â€” GET /api/growers/
 //    Admin / staff only
-// ════════════════════════════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
 router.get('/', async (req, res) => {
   const pool = req.app.locals.pool;
@@ -392,13 +392,13 @@ router.get('/', async (req, res) => {
 
   try {
     const [data, count] = await Promise.all([
-      pool.query(
+      global.db.query(
         `SELECT id, first_name, last_name, email, phone, company_name, city, country, commodities, quantities, certifications, compliance_status, grs_score, risk_tier, id_verified, docs_complete, status, created_at, last_login
          FROM grower_profiles ${clause}
          ORDER BY id DESC LIMIT $${idx} OFFSET $${idx + 1}`,
         [...values, limit, offset]
       ),
-      pool.query(`SELECT COUNT(*) FROM grower_profiles ${clause}`, values),
+      global.db.query(`SELECT COUNT(*) FROM grower_profiles ${clause}`, values),
     ]);
 
     res.json({ data: data.rows, total: parseInt(count.rows[0].count), page, limit });
@@ -407,9 +407,9 @@ router.get('/', async (req, res) => {
   }
 });
 
-// ════════════════════════════════════════════════════════════════════════════
-// 7. DOCUMENT UPLOAD — POST /api/growers/:grower_id/documents
-// ════════════════════════════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+// 7. DOCUMENT UPLOAD â€” POST /api/growers/:grower_id/documents
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
 router.post('/:grower_id/documents', upload.single('file'), async (req, res) => {
   const pool      = req.app.locals.pool;
@@ -421,10 +421,10 @@ router.post('/:grower_id/documents', upload.single('file'), async (req, res) => 
 
   try {
     // Verify grower exists
-    const gCheck = await pool.query('SELECT id FROM grower_profiles WHERE id = $1', [grower_id]);
+    const gCheck = await global.db.query('SELECT id FROM grower_profiles WHERE id = $1', [grower_id]);
     if (gCheck.rows.length === 0) return res.status(404).json({ error: 'Grower not found' });
 
-    const result = await pool.query(`
+    const result = await global.db.query(`
       INSERT INTO grower_documents (grower_id, doc_type, file_name, file_path, file_size, mime_type, notes)
       VALUES ($1, $2, $3, $4, $5, $6, $7)
       RETURNING *
@@ -440,11 +440,11 @@ router.post('/:grower_id/documents', upload.single('file'), async (req, res) => 
 
     // Auto-update id_verified if doc_type is id_photo
     if (doc_type === 'id_photo') {
-      await pool.query('UPDATE grower_profiles SET id_verified = TRUE WHERE id = $1', [grower_id]);
+      await global.db.query('UPDATE grower_profiles SET id_verified = TRUE WHERE id = $1', [grower_id]);
     }
 
     // Check if all required doc types are present
-    const allDocs = await pool.query(
+    const allDocs = await global.db.query(
       'SELECT DISTINCT doc_type FROM grower_documents WHERE grower_id = $1',
       [grower_id]
     );
@@ -452,7 +452,7 @@ router.post('/:grower_id/documents', upload.single('file'), async (req, res) => 
     const required = ['id_photo', 'corporate_id', 'phytosanitary'];
     const complete = required.every(t => docTypes.includes(t));
     if (complete) {
-      await pool.query(
+      await global.db.query(
         `UPDATE grower_profiles SET docs_complete = TRUE, compliance_status = 'submitted' WHERE id = $1 AND compliance_status = 'pending'`,
         [grower_id]
       );
@@ -465,14 +465,14 @@ router.post('/:grower_id/documents', upload.single('file'), async (req, res) => 
   }
 });
 
-// ════════════════════════════════════════════════════════════════════════════
-// 8. LIST DOCUMENTS — GET /api/growers/:grower_id/documents
-// ════════════════════════════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+// 8. LIST DOCUMENTS â€” GET /api/growers/:grower_id/documents
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
 router.get('/:grower_id/documents', async (req, res) => {
   const pool = req.app.locals.pool;
   try {
-    const result = await pool.query(
+    const result = await global.db.query(
       'SELECT * FROM grower_documents WHERE grower_id = $1 ORDER BY created_at DESC',
       [parseInt(req.params.grower_id)]
     );
@@ -482,10 +482,10 @@ router.get('/:grower_id/documents', async (req, res) => {
   }
 });
 
-// ════════════════════════════════════════════════════════════════════════════
-// 9. REVIEW DOCUMENT — PATCH /api/growers/documents/:doc_id/review
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+// 9. REVIEW DOCUMENT â€” PATCH /api/growers/documents/:doc_id/review
 //    Admin-only: approve or reject a document
-// ════════════════════════════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
 router.patch('/documents/:doc_id/review', async (req, res) => {
   const pool   = req.app.locals.pool;
@@ -497,7 +497,7 @@ router.patch('/documents/:doc_id/review', async (req, res) => {
   }
 
   try {
-    const result = await pool.query(`
+    const result = await global.db.query(`
       UPDATE grower_documents
       SET status = $1, reviewed_by = $2, reviewed_at = NOW(), notes = COALESCE($3, notes)
       WHERE id = $4
@@ -508,12 +508,12 @@ router.patch('/documents/:doc_id/review', async (req, res) => {
 
     // If all docs approved for this grower, auto-advance compliance
     const grower_id = result.rows[0].grower_id;
-    const pending = await pool.query(
+    const pending = await global.db.query(
       `SELECT COUNT(*) FROM grower_documents WHERE grower_id = $1 AND status != 'approved'`,
       [grower_id]
     );
     if (parseInt(pending.rows[0].count) === 0) {
-      await pool.query(
+      await global.db.query(
         `UPDATE grower_profiles SET compliance_status = 'approved', risk_tier = 'T1', grs_score = GREATEST(grs_score, 70) WHERE id = $1`,
         [grower_id]
       );
@@ -525,9 +525,9 @@ router.patch('/documents/:doc_id/review', async (req, res) => {
   }
 });
 
-// ════════════════════════════════════════════════════════════════════════════
-// 10. CREATE FINANCIAL RECORD — POST /api/growers/:grower_id/financials
-// ════════════════════════════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+// 10. CREATE FINANCIAL RECORD â€” POST /api/growers/:grower_id/financials
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
 router.post('/:grower_id/financials', async (req, res) => {
   const pool      = req.app.locals.pool;
@@ -546,7 +546,7 @@ router.post('/:grower_id/financials', async (req, res) => {
   }
 
   try {
-    const result = await pool.query(`
+    const result = await global.db.query(`
       INSERT INTO grower_financials (
         grower_id, type, reference_number, amount, currency, status,
         buyer_id, commodity, quantity, unit_price, terms, due_date, notes
@@ -565,9 +565,9 @@ router.post('/:grower_id/financials', async (req, res) => {
   }
 });
 
-// ════════════════════════════════════════════════════════════════════════════
-// 11. LIST FINANCIALS — GET /api/growers/:grower_id/financials
-// ════════════════════════════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+// 11. LIST FINANCIALS â€” GET /api/growers/:grower_id/financials
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
 router.get('/:grower_id/financials', async (req, res) => {
   const pool = req.app.locals.pool;
@@ -581,7 +581,7 @@ router.get('/:grower_id/financials', async (req, res) => {
   if (status) { where.push(`status = $${idx++}`); values.push(status); }
 
   try {
-    const result = await pool.query(
+    const result = await global.db.query(
       `SELECT * FROM grower_financials WHERE ${where.join(' AND ')} ORDER BY created_at DESC`,
       values
     );
@@ -591,9 +591,9 @@ router.get('/:grower_id/financials', async (req, res) => {
   }
 });
 
-// ════════════════════════════════════════════════════════════════════════════
-// 12. COMPLIANCE SUMMARY — GET /api/growers/:grower_id/compliance
-// ════════════════════════════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+// 12. COMPLIANCE SUMMARY â€” GET /api/growers/:grower_id/compliance
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
 router.get('/:grower_id/compliance', async (req, res) => {
   const pool = req.app.locals.pool;
@@ -601,14 +601,14 @@ router.get('/:grower_id/compliance', async (req, res) => {
 
   try {
     const [profile, docs, fins] = await Promise.all([
-      pool.query(
+      global.db.query(
         `SELECT id, first_name, last_name, email, company_name, compliance_status, grs_score, risk_tier, id_verified, docs_complete, created_at
          FROM grower_profiles WHERE id = $1`, [id]
       ),
-      pool.query(
+      global.db.query(
         `SELECT doc_type, status, file_name, created_at, reviewed_at FROM grower_documents WHERE grower_id = $1 ORDER BY created_at`, [id]
       ),
-      pool.query(
+      global.db.query(
         `SELECT type, status, amount, reference_number, created_at FROM grower_financials WHERE grower_id = $1 ORDER BY created_at DESC LIMIT 20`, [id]
       ),
     ]);
@@ -640,17 +640,17 @@ router.get('/:grower_id/compliance', async (req, res) => {
   }
 });
 
-// ════════════════════════════════════════════════════════════════════════════
-// 13. RESET PASSWORD — POST /api/growers/:grower_id/reset-password
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+// 13. RESET PASSWORD â€” POST /api/growers/:grower_id/reset-password
 //     Admin-only: generates new password + PIN
-// ════════════════════════════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
 router.post('/:grower_id/reset-password', async (req, res) => {
   const pool = req.app.locals.pool;
   const id   = parseInt(req.params.grower_id);
 
   try {
-    const gCheck = await pool.query('SELECT id, email FROM grower_profiles WHERE id = $1', [id]);
+    const gCheck = await global.db.query('SELECT id, email FROM grower_profiles WHERE id = $1', [id]);
     if (gCheck.rows.length === 0) return res.status(404).json({ error: 'Grower not found' });
 
     const plainPassword = generatePassword(12);
@@ -658,7 +658,7 @@ router.post('/:grower_id/reset-password', async (req, res) => {
     const password_hash = await bcrypt.hash(plainPassword, SALT_ROUNDS);
     const pin_hash      = await bcrypt.hash(plainPIN, SALT_ROUNDS);
 
-    await pool.query(
+    await global.db.query(
       'UPDATE grower_profiles SET password_hash = $1, pin_hash = $2 WHERE id = $3',
       [password_hash, pin_hash, id]
     );
@@ -669,7 +669,7 @@ router.post('/:grower_id/reset-password', async (req, res) => {
         email:    gCheck.rows[0].email,
         password: plainPassword,
         pin:      plainPIN,
-        note:     'SAVE THESE CREDENTIALS — cannot be recovered after this response.',
+        note:     'SAVE THESE CREDENTIALS â€” cannot be recovered after this response.',
       },
     });
   } catch (e) {
@@ -677,19 +677,19 @@ router.post('/:grower_id/reset-password', async (req, res) => {
   }
 });
 
-// ════════════════════════════════════════════════════════════════════════════
-// 14. DASHBOARD STATS — GET /api/growers/stats/summary
-// ════════════════════════════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+// 14. DASHBOARD STATS â€” GET /api/growers/stats/summary
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
 router.get('/stats/summary', async (req, res) => {
   const pool = req.app.locals.pool;
   try {
     const [total, byStatus, byTier, byCountry, recentDocs] = await Promise.all([
-      pool.query('SELECT COUNT(*) FROM grower_profiles'),
-      pool.query('SELECT compliance_status, COUNT(*) FROM grower_profiles GROUP BY compliance_status'),
-      pool.query('SELECT risk_tier, COUNT(*) FROM grower_profiles GROUP BY risk_tier'),
-      pool.query('SELECT country, COUNT(*) FROM grower_profiles GROUP BY country ORDER BY count DESC LIMIT 10'),
-      pool.query('SELECT COUNT(*) FROM grower_documents WHERE status = $1', ['uploaded']),
+      global.db.query('SELECT COUNT(*) FROM grower_profiles'),
+      global.db.query('SELECT compliance_status, COUNT(*) FROM grower_profiles GROUP BY compliance_status'),
+      global.db.query('SELECT risk_tier, COUNT(*) FROM grower_profiles GROUP BY risk_tier'),
+      global.db.query('SELECT country, COUNT(*) FROM grower_profiles GROUP BY country ORDER BY count DESC LIMIT 10'),
+      global.db.query('SELECT COUNT(*) FROM grower_documents WHERE status = $1', ['uploaded']),
     ]);
 
     res.json({
@@ -720,7 +720,7 @@ router.post('/whatsapp', async (req, res) => {
       status = 'active', lead_status = 'new', lead_temperature = 'WARM'
     } = req.body;
     if (!contact_name) return res.status(400).json({ error: 'contact_name required' });
-    const result = await pool.query(`
+    const result = await global.db.query(`
       INSERT INTO growers
         (contact_name, company_name, country, state_province, city,
          hectares, primary_product, secondary_products, certifications,
@@ -742,7 +742,7 @@ router.post('/whatsapp', async (req, res) => {
 });
 
 // ============================================================
-// PUT /api/growers/:id — Update grower status + credentials
+// PUT /api/growers/:id â€” Update grower status + credentials
 // ============================================================
 router.put('/:id', async (req, res) => {
   const pool = req.app.locals.pool;
@@ -769,7 +769,7 @@ router.put('/:id', async (req, res) => {
     if (fields.length === 1) return res.status(400).json({ error: 'No fields to update' });
 
     values.push(id);
-    const result = await pool.query(
+    const result = await global.db.query(
       `UPDATE growers SET ${fields.join(', ')} WHERE id=$${idx} RETURNING id, contact_name, lead_status, status, portal_username`,
       values
     );
@@ -783,3 +783,4 @@ router.put('/:id', async (req, res) => {
 });
 
 module.exports = router;
+

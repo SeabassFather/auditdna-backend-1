@@ -20,7 +20,7 @@ const users = [
 async function seed() {
   for (const u of users) {
     const hash = await bcrypt.hash(u.password, 10);
-    await pool.query(
+    await global.db.query(
       `INSERT INTO auth_users (username, password_hash, pin, display_name, role, is_active)
        VALUES ($1, $2, $3, $4, $5, true)
        ON CONFLICT (username) DO UPDATE
@@ -38,3 +38,4 @@ async function seed() {
 }
 
 seed().catch(e => { console.error(e.message); pool.end(); });
+

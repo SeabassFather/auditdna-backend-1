@@ -1,11 +1,11 @@
-// ════════════════════════════════════════════════════════════════════════════
-// WEATHER INTELLIGENCE — FULL ROUTE MODULE
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+// WEATHER INTELLIGENCE â€” FULL ROUTE MODULE
 // Add to: C:\AuditDNA\backend\MiniAPI\server.js
 // Sources: Open-Meteo (global, free, no key) + NOAA (US border zones, no key)
-// Covers: Mexico, Central America, South America → US Northern Territories
-// ════════════════════════════════════════════════════════════════════════════
+// Covers: Mexico, Central America, South America â†’ US Northern Territories
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
-// ── GROWING REGIONS — full corridor Baja to Patagonia ────────────────────
+// â”€â”€ GROWING REGIONS â€” full corridor Baja to Patagonia â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 const GROWING_REGIONS = [
   // Mexico
   { id: 'sinaloa',      name: 'Sinaloa, MX',           country: 'MX', commodity: 'Tomato / Pepper / Cucumber',   lat: 24.80, lon: -107.39, zone: null },
@@ -29,13 +29,13 @@ const GROWING_REGIONS = [
   { id: 'brazil',       name: 'Sao Paulo, BR',          country: 'BR', commodity: 'Coffee / Orange / Soy',        lat: -23.55, lon: -46.63, zone: null },
   { id: 'argentina',    name: 'Mendoza, AR',            country: 'AR', commodity: 'Grape / Apple / Pear',         lat: -32.89, lon: -68.84, zone: null },
   // US Border Crossings
-  { id: 'nogales',      name: 'Nogales, AZ',            country: 'US', commodity: 'Border Crossing — #1 Produce', lat: 31.34, lon: -110.93, zone: 'AZZ501' },
-  { id: 'calexico',     name: 'Calexico / Mexicali',    country: 'US', commodity: 'Border Crossing — Imperial Valley', lat: 32.67, lon: -115.50, zone: 'CAZ049' },
-  { id: 'laredo',       name: 'Laredo, TX',             country: 'US', commodity: 'Border Crossing — #1 by Volume', lat: 27.52, lon: -99.49, zone: 'TXZ301' },
-  { id: 'pharr',        name: 'Pharr / McAllen, TX',    country: 'US', commodity: 'Border Crossing — South TX',   lat: 26.19, lon: -98.18,  zone: 'TXZ338' },
+  { id: 'nogales',      name: 'Nogales, AZ',            country: 'US', commodity: 'Border Crossing â€” #1 Produce', lat: 31.34, lon: -110.93, zone: 'AZZ501' },
+  { id: 'calexico',     name: 'Calexico / Mexicali',    country: 'US', commodity: 'Border Crossing â€” Imperial Valley', lat: 32.67, lon: -115.50, zone: 'CAZ049' },
+  { id: 'laredo',       name: 'Laredo, TX',             country: 'US', commodity: 'Border Crossing â€” #1 by Volume', lat: 27.52, lon: -99.49, zone: 'TXZ301' },
+  { id: 'pharr',        name: 'Pharr / McAllen, TX',    country: 'US', commodity: 'Border Crossing â€” South TX',   lat: 26.19, lon: -98.18,  zone: 'TXZ338' },
 ];
 
-// ── OPEN-METEO FETCH — global, no key, fast ───────────────────────────────
+// â”€â”€ OPEN-METEO FETCH â€” global, no key, fast â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 async function fetchOpenMeteo(lat, lon) {
   const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}` +
     `&daily=temperature_2m_max,temperature_2m_min,precipitation_sum,windspeed_10m_max,` +
@@ -55,7 +55,7 @@ async function fetchOpenMeteo(lat, lon) {
   }
 }
 
-// ── NOAA ALERTS — US border zones only ───────────────────────────────────
+// â”€â”€ NOAA ALERTS â€” US border zones only â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 async function fetchNOAAAlerts(zone) {
   if (!zone) return [];
   try {
@@ -73,7 +73,7 @@ async function fetchNOAAAlerts(zone) {
   } catch { return []; }
 }
 
-// ── FORMAT WEATHER DATA ───────────────────────────────────────────────────
+// â”€â”€ FORMAT WEATHER DATA â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function parseWeather(region, meteo, alerts) {
   const current = meteo.current_weather || {};
   const daily = meteo.daily || {};
@@ -125,11 +125,11 @@ function parseWeather(region, meteo, alerts) {
   };
 }
 
-// ════════════════════════════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 // PASTE THESE ROUTES INTO MiniAPI/server.js
-// ════════════════════════════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
-// Route 1: All regions snapshot — full corridor at once
+// Route 1: All regions snapshot â€” full corridor at once
 // GET /api/weather/all
 app.get('/api/weather/all', async (req, res) => {
   try {
@@ -190,7 +190,7 @@ app.get('/api/weather/region', async (req, res) => {
   } catch (e) { res.status(500).json({ success: false, error: e.message }); }
 });
 
-// Route 3: Alerts only — frost / heat / rain risks across all regions
+// Route 3: Alerts only â€” frost / heat / rain risks across all regions
 // GET /api/weather/alerts
 app.get('/api/weather/ag-alerts', async (req, res) => {
   try {
@@ -230,7 +230,7 @@ app.get('/api/weather/ag-alerts', async (req, res) => {
   } catch (e) { res.status(500).json({ success: false, error: e.message }); }
 });
 
-// Route 4: Border crossings only — logistics intelligence
+// Route 4: Border crossings only â€” logistics intelligence
 // GET /api/weather/borders
 app.get('/api/weather/borders', async (req, res) => {
   try {
@@ -295,3 +295,4 @@ app.get('/api/weather/latam', async (req, res) => {
 app.get('/api/weather/regions', (req, res) => {
   res.json({ success: true, regions: GROWING_REGIONS });
 });
+

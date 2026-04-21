@@ -42,3 +42,4 @@ const HACCPPlanSchema = new mongoose.Schema({
 });
 
 export default mongoose.model('HACCPPlan', HACCPPlanSchema);
+

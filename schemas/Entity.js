@@ -11,3 +11,4 @@ const EntitySchema = new mongoose.Schema({
 });
 EntitySchema.pre('save', function(next) { this.updatedAt = Date.now(); next(); });
 module.exports = mongoose.model('Entity', EntitySchema);
+

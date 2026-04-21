@@ -70,3 +70,4 @@ router.get('/calculator/factoring', (req, res) => {
 });
 
 module.exports = router;
+

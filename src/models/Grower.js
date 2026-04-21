@@ -18,3 +18,4 @@ const GrowerSchema = new mongoose.Schema({
 });
 
 export default mongoose.model('Grower', GrowerSchema);
+

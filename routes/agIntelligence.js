@@ -21,3 +21,4 @@ router.post('/weather-regions', async (req, res) => {
 });
 
 module.exports = router;
+

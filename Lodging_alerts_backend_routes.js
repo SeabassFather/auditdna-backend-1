@@ -1,14 +1,14 @@
-// ════════════════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 // LODGING & DESTINATION ALERTS BACKEND ROUTES
 // File: C:\AuditDNA\backend\routes\lodging-alerts.js
-// ════════════════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
 const express = require('express');
 const router = express.Router();
 
-// ──────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 // LODGING MANAGEMENT
-// ──────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 /**
  * GET /api/mauttr/lodging/list
@@ -27,7 +27,7 @@ router.get('/list', async (req, res) => {
           id: 1,
           userId,
           name: 'Hotel Marriott Tijuana',
-          address: 'Av. Revolución 1234, Tijuana, BC 22000',
+          address: 'Av. RevoluciÃ³n 1234, Tijuana, BC 22000',
           phone: '+52-664-123-4567',
           email: 'front.desk@marriott-tijuana.com',
           checkIn: '2026-02-05',
@@ -121,9 +121,9 @@ router.delete('/:id', async (req, res) => {
   }
 });
 
-// ──────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 // DESTINATION CONTACTS
-// ──────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 /**
  * GET /api/mauttr/destination/list
@@ -191,9 +191,9 @@ router.post('/destination/add', async (req, res) => {
   }
 });
 
-// ──────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 // ALERT SENDING SYSTEM
-// ──────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 /**
  * POST /api/mauttr/alerts/send
@@ -263,9 +263,9 @@ async function sendLodgingAlert(lodgingId, alertData) {
   // TODO: Fetch lodging from database
   
   const emailContent = `
-  ═══════════════════════════════════════════════════════
-  🚨 MAUTTR TRAVELER ALERT - IMMEDIATE ATTENTION REQUIRED
-  ═══════════════════════════════════════════════════════
+  â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+  ðŸš¨ MAUTTR TRAVELER ALERT - IMMEDIATE ATTENTION REQUIRED
+  â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
   
   Hotel/Lodging: ${lodgingName}
   Guest Confirmation: ${confirmationCode}
@@ -273,9 +273,9 @@ async function sendLodgingAlert(lodgingId, alertData) {
   ALERT TYPE: ${alertData.incidentType}
   TIME: ${new Date(alertData.timestamp).toLocaleString()}
   
-  ═══════════════════════════════════════════════════════
+  â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
   INCIDENT DETAILS:
-  ═══════════════════════════════════════════════════════
+  â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
   
   ${alertData.message}
   
@@ -287,16 +287,16 @@ async function sendLodgingAlert(lodgingId, alertData) {
   
   CURRENT LOCATION:
   ${alertData.location?.lat}, ${alertData.location?.lng}
-  📍 View on Map: https://maps.google.com/?q=${alertData.location?.lat},${alertData.location?.lng}
+  ðŸ“ View on Map: https://maps.google.com/?q=${alertData.location?.lat},${alertData.location?.lng}
   
   ${alertData.liveStreamUrl ? `
   LIVE VIDEO STREAM:
-  🎥 Watch Live: ${alertData.liveStreamUrl}
+  ðŸŽ¥ Watch Live: ${alertData.liveStreamUrl}
   ` : ''}
   
-  ═══════════════════════════════════════════════════════
+  â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
   RECOMMENDED ACTIONS:
-  ═══════════════════════════════════════════════════════
+  â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
   
   1. Verify guest safety and well-being
   2. Contact guest at registered phone number
@@ -306,12 +306,12 @@ async function sendLodgingAlert(lodgingId, alertData) {
   6. Reply to this email with status update
   
   EMERGENCY CONTACTS NOTIFIED:
-  ✓ Guest emergency contacts
-  ✓ U.S. Embassy / Consulate
-  ✓ Local authorities (if applicable)
-  ✓ Destination contacts
+  âœ“ Guest emergency contacts
+  âœ“ U.S. Embassy / Consulate
+  âœ“ Local authorities (if applicable)
+  âœ“ Destination contacts
   
-  ═══════════════════════════════════════════════════════
+  â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
   
   This is an automated alert from the MAUTTR System
   (Mexico-USA Travel Tracking & Registry)
@@ -319,7 +319,7 @@ async function sendLodgingAlert(lodgingId, alertData) {
   For assistance: emergency@mauttr.com
   Alert ID: ${alertData.alertId}
   
-  ═══════════════════════════════════════════════════════
+  â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
   `;
   
   // TODO: Send email via SendGrid/AWS SES
@@ -333,9 +333,9 @@ async function sendDestinationAlert(destId, alertData) {
   // TODO: Fetch destination from database
   
   const emailContent = `
-  ═══════════════════════════════════════════════════════
-  🚨 MAUTTR TRAVELER ALERT - DELAY OR INCIDENT REPORTED
-  ═══════════════════════════════════════════════════════
+  â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+  ðŸš¨ MAUTTR TRAVELER ALERT - DELAY OR INCIDENT REPORTED
+  â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
   
   Destination Contact: ${contactName}
   Expected Meeting/Arrival: ${expectedArrival}
@@ -343,9 +343,9 @@ async function sendDestinationAlert(destId, alertData) {
   ALERT TYPE: ${alertData.incidentType}
   TIME: ${new Date(alertData.timestamp).toLocaleString()}
   
-  ═══════════════════════════════════════════════════════
+  â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
   INCIDENT DETAILS:
-  ═══════════════════════════════════════════════════════
+  â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
   
   ${alertData.message}
   
@@ -357,16 +357,16 @@ async function sendDestinationAlert(destId, alertData) {
   
   CURRENT LOCATION:
   ${alertData.location?.lat}, ${alertData.location?.lng}
-  📍 View on Map: https://maps.google.com/?q=${alertData.location?.lat},${alertData.location?.lng}
+  ðŸ“ View on Map: https://maps.google.com/?q=${alertData.location?.lat},${alertData.location?.lng}
   
   ${alertData.liveStreamUrl ? `
   LIVE VIDEO STREAM:
-  🎥 Watch Live: ${alertData.liveStreamUrl}
+  ðŸŽ¥ Watch Live: ${alertData.liveStreamUrl}
   ` : ''}
   
-  ═══════════════════════════════════════════════════════
+  â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
   RECOMMENDED ACTIONS:
-  ═══════════════════════════════════════════════════════
+  â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
   
   1. Adjust meeting/arrival expectations
   2. Contact traveler if safe to do so
@@ -375,12 +375,12 @@ async function sendDestinationAlert(destId, alertData) {
   5. Reply to this email for updates
   
   ASSISTANCE PROVIDED:
-  ✓ Emergency services contacted
-  ✓ Local authorities notified
-  ✓ Lodging facility alerted
-  ✓ Embassy/Consulate informed
+  âœ“ Emergency services contacted
+  âœ“ Local authorities notified
+  âœ“ Lodging facility alerted
+  âœ“ Embassy/Consulate informed
   
-  ═══════════════════════════════════════════════════════
+  â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
   
   This is an automated alert from the MAUTTR System
   (Mexico-USA Travel Tracking & Registry)
@@ -388,7 +388,7 @@ async function sendDestinationAlert(destId, alertData) {
   For assistance: emergency@mauttr.com
   Alert ID: ${alertData.alertId}
   
-  ═══════════════════════════════════════════════════════
+  â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
   `;
   
   // TODO: Send email via SendGrid/AWS SES
@@ -455,9 +455,9 @@ router.post('/alerts/delay', async (req, res) => {
 
 module.exports = router;
 
-// ════════════════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 // DATABASE SCHEMA NEEDED
-// ════════════════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
 /**
  * CREATE TABLE mauttr_lodgings (
@@ -507,3 +507,4 @@ module.exports = router;
  *   resolved_at TIMESTAMP
  * );
  */
+

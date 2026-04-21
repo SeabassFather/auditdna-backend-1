@@ -1,6 +1,6 @@
-// ═══════════════════════════════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 // INSERT THIS CODE BEFORE THE PlaceholderTab COMPONENT (Around line 1136)
-// ═══════════════════════════════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
 // DASHBOARD TAB - Replace PlaceholderTab for dashboard
 const DashboardTab = ({ language, C }) => {
@@ -78,10 +78,10 @@ const DashboardTab = ({ language, C }) => {
 // MANIFEST TAB
 const ManifestTab = ({ language, C }) => {
   const [manifests, setManifests] = React.useState([
-    { id: 'MAN-2025-001', product: 'Hass Avocado 48ct', cases: 1200, grower: 'Green Valley', port: 'Nogales', status: 'In Transit', eta: '2025-02-07', temp: '38°F' },
-    { id: 'MAN-2025-002', product: 'Strawberries 8x1lb', cases: 800, grower: 'Sunrise Berry', port: 'Otay Mesa', status: 'Cleared', eta: '2025-02-06', temp: '34°F' },
-    { id: 'MAN-2025-003', product: 'Roma Tomatoes 25lb', cases: 1500, grower: 'Pacific Produce', port: 'Nogales', status: 'Inspection', eta: '2025-02-08', temp: '42°F' },
-    { id: 'MAN-2025-004', product: 'Blueberries 12x6oz', cases: 600, grower: 'Blue Harvest', port: 'Calexico', status: 'Pending', eta: '2025-02-09', temp: '35°F' },
+    { id: 'MAN-2025-001', product: 'Hass Avocado 48ct', cases: 1200, grower: 'Green Valley', port: 'Nogales', status: 'In Transit', eta: '2025-02-07', temp: '38Â°F' },
+    { id: 'MAN-2025-002', product: 'Strawberries 8x1lb', cases: 800, grower: 'Sunrise Berry', port: 'Otay Mesa', status: 'Cleared', eta: '2025-02-06', temp: '34Â°F' },
+    { id: 'MAN-2025-003', product: 'Roma Tomatoes 25lb', cases: 1500, grower: 'Pacific Produce', port: 'Nogales', status: 'Inspection', eta: '2025-02-08', temp: '42Â°F' },
+    { id: 'MAN-2025-004', product: 'Blueberries 12x6oz', cases: 600, grower: 'Blue Harvest', port: 'Calexico', status: 'Pending', eta: '2025-02-09', temp: '35Â°F' },
   ]);
 
   return (
@@ -518,29 +518,30 @@ const SettingsTab = ({ language, C }) => {
   );
 };
 
-// ═══════════════════════════════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 // NOW UPDATE THE TABS ARRAY TO USE THESE COMPONENTS INSTEAD OF PlaceholderTab
 // Replace lines ~1165-1183 with this:
-// ═══════════════════════════════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
 /*
 const TABS = [
-  { id: 'dashboard', label: t.dashboard, icon: '📊', component: DashboardTab },
-  { id: 'market', label: t.marketIntel, icon: '📈', component: MarketIntelligenceTab },
-  { id: 'manifest', label: t.manifest, icon: '📦', component: ManifestTab },
-  { id: 'inventory', label: t.inventory, icon: '🏭', component: InventoryTab },
-  { id: 'sales', label: t.sales, icon: '💰', component: SalesTab },
-  { id: 'traceability', label: t.traceability, icon: '🔗', component: TraceabilityTab },
-  { id: 'analytics', label: t.analytics, icon: '📉', component: AnalyticsTab },
-  { id: 'suppliers', label: t.suppliers, icon: '🌱', component: SuppliersTab },
-  { id: 'financial', label: t.financial, icon: '🏦', component: FinancialTab },
-  { id: 'compliance', label: t.compliance, icon: '✅', component: ComplianceTab },
-  { id: 'logistics', label: t.logistics, icon: '🚚', component: LogisticsTab },
-  { id: 'reports', label: t.reports, icon: '📋', component: ReportsTab },
-  { id: 'documents', label: t.documents, icon: '📁', component: DocumentsTab },
-  { id: 'tenants', label: t.tenants, icon: '👥', component: TenantsTab },
-  { id: 'communication', label: t.communication, icon: '💬', component: CommunicationTab },
-  { id: 'mobile', label: t.mobile, icon: '📱', component: MobileSalesTab },
-  { id: 'settings', label: t.settings, icon: '⚙️', component: SettingsTab },
+  { id: 'dashboard', label: t.dashboard, icon: 'ðŸ“Š', component: DashboardTab },
+  { id: 'market', label: t.marketIntel, icon: 'ðŸ“ˆ', component: MarketIntelligenceTab },
+  { id: 'manifest', label: t.manifest, icon: 'ðŸ“¦', component: ManifestTab },
+  { id: 'inventory', label: t.inventory, icon: 'ðŸ­', component: InventoryTab },
+  { id: 'sales', label: t.sales, icon: 'ðŸ’°', component: SalesTab },
+  { id: 'traceability', label: t.traceability, icon: 'ðŸ”—', component: TraceabilityTab },
+  { id: 'analytics', label: t.analytics, icon: 'ðŸ“‰', component: AnalyticsTab },
+  { id: 'suppliers', label: t.suppliers, icon: 'ðŸŒ±', component: SuppliersTab },
+  { id: 'financial', label: t.financial, icon: 'ðŸ¦', component: FinancialTab },
+  { id: 'compliance', label: t.compliance, icon: 'âœ…', component: ComplianceTab },
+  { id: 'logistics', label: t.logistics, icon: 'ðŸšš', component: LogisticsTab },
+  { id: 'reports', label: t.reports, icon: 'ðŸ“‹', component: ReportsTab },
+  { id: 'documents', label: t.documents, icon: 'ðŸ“', component: DocumentsTab },
+  { id: 'tenants', label: t.tenants, icon: 'ðŸ‘¥', component: TenantsTab },
+  { id: 'communication', label: t.communication, icon: 'ðŸ’¬', component: CommunicationTab },
+  { id: 'mobile', label: t.mobile, icon: 'ðŸ“±', component: MobileSalesTab },
+  { id: 'settings', label: t.settings, icon: 'âš™ï¸', component: SettingsTab },
 ];
 */
+

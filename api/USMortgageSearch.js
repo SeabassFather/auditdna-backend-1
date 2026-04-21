@@ -107,7 +107,7 @@ export default function USMortgageSearch() {
           <Home className="w-12 h-12" />
           <div>
             <h1 className="text-4xl font-bold">US Mortgage Loan Search Engine</h1>
-            <p className="text-xl">Real-Time Lender Matching • Professional Service</p>
+            <p className="text-xl">Real-Time Lender Matching â€¢ Professional Service</p>
           </div>
         </div>
         <p className="text-lg opacity-90">Connect with verified lenders instantly - Conventional, FHA, VA, USDA, Jumbo</p>
@@ -327,7 +327,7 @@ export default function USMortgageSearch() {
 
           <div className="flex items-center justify-between p-4 bg-blue-50 rounded-lg border-2 border-blue-200">
             <span id="ltv-display" className="text-xl font-bold text-blue-700">Computed LTV: 0%</span>
-            <span className="text-sm text-gray-600">LTV = (Loan Amount / Purchase Price) × 100</span>
+            <span className="text-sm text-gray-600">LTV = (Loan Amount / Purchase Price) Ã— 100</span>
           </div>
 
           {/* Additional Options */}
@@ -395,7 +395,7 @@ export default function USMortgageSearch() {
                   <div>
                     <h4 className="text-xl font-bold text-gray-800">{lender.name || `Lender Option ${index + 1}`}</h4>
                     <p className="text-sm text-gray-600 mt-1">
-                      {lender.loanType || formData.loanType.toUpperCase()} • {lender.term || '30'}-Year Fixed
+                      {lender.loanType || formData.loanType.toUpperCase()} â€¢ {lender.term || '30'}-Year Fixed
                     </p>
                   </div>
                   <div className="text-right">
@@ -462,3 +462,4 @@ export default function USMortgageSearch() {
     </div>
   );
 }
+

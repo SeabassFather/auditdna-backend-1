@@ -1,15 +1,15 @@
-// ═══════════════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 // AUDITDNA LAB TEST WORKFLOW ROUTES
 // Soil, Water, Seed testing workflow management
-// ═══════════════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
 const express = require('express');
 const router = express.Router();
 const { pool } = require('../db');
 
-// ═══════════════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 // TEST TYPES & STATUS
-// ═══════════════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
 const TEST_TYPES = {
   SOIL: 'soil',
@@ -33,9 +33,9 @@ const WORKFLOW_STATUS = {
   FAILED: 'failed'
 };
 
-// ═══════════════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 // INIT: Create lab test workflow tables
-// ═══════════════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
 const initLabTestTables = async () => {
   const createTablesSQL = `
@@ -126,18 +126,18 @@ const initLabTestTables = async () => {
   `;
 
   try {
-    await pool.query(createTablesSQL);
-    console.log('✅ [Lab Test Workflow] Tables initialized');
+    await global.db.query(createTablesSQL);
+    console.log('âœ… [Lab Test Workflow] Tables initialized');
   } catch (error) {
-    console.error('❌ [Lab Test Workflow] Table init failed:', error.message);
+    console.error('âŒ [Lab Test Workflow] Table init failed:', error.message);
   }
 };
 
 initLabTestTables();
 
-// ═══════════════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 // HELPER: Generate request number
-// ═══════════════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
 const generateRequestNumber = (testType) => {
   const prefix = testType.substring(0, 3).toUpperCase();
@@ -145,9 +145,9 @@ const generateRequestNumber = (testType) => {
   return `LAB-${prefix}-${timestamp}`;
 };
 
-// ═══════════════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 // POST /lab/request - Create new test request
-// ═══════════════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
 router.post('/request', async (req, res) => {
   const client = await pool.connect();
@@ -189,7 +189,7 @@ router.post('/request', async (req, res) => {
 
     await client.query('COMMIT');
 
-    console.log(`✅ [Lab Test] Request created: ${requestNumber} (${testType})`);
+    console.log(`âœ… [Lab Test] Request created: ${requestNumber} (${testType})`);
 
     res.status(201).json({
       success: true,
@@ -206,9 +206,9 @@ router.post('/request', async (req, res) => {
   }
 });
 
-// ═══════════════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 // PUT /lab/status/:requestId - Update request status
-// ═══════════════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
 router.put('/status/:requestId', async (req, res) => {
   const client = await pool.connect();
@@ -290,7 +290,7 @@ router.put('/status/:requestId', async (req, res) => {
 
     await client.query('COMMIT');
 
-    console.log(`✅ [Lab Test] Status updated: ${currentRequest.rows[0].request_number} → ${status}`);
+    console.log(`âœ… [Lab Test] Status updated: ${currentRequest.rows[0].request_number} â†’ ${status}`);
 
     res.json({
       success: true,
@@ -307,9 +307,9 @@ router.put('/status/:requestId', async (req, res) => {
   }
 });
 
-// ═══════════════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 // POST /lab/results/:requestId - Submit test results
-// ═══════════════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
 router.post('/results/:requestId', async (req, res) => {
   const client = await pool.connect();
@@ -369,7 +369,7 @@ router.post('/results/:requestId', async (req, res) => {
 
     await client.query('COMMIT');
 
-    console.log(`✅ [Lab Test] Results submitted: ${request.request_number}`);
+    console.log(`âœ… [Lab Test] Results submitted: ${request.request_number}`);
 
     res.json({
       success: true,
@@ -387,9 +387,9 @@ router.post('/results/:requestId', async (req, res) => {
   }
 });
 
-// ═══════════════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 // GET /lab/requests/:growerId - Get all requests for grower
-// ═══════════════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
 router.get('/requests/:growerId', async (req, res) => {
   try {
@@ -415,7 +415,7 @@ router.get('/requests/:growerId', async (req, res) => {
     query += ` ORDER BY created_at DESC LIMIT $${paramIndex}`;
     params.push(parseInt(limit));
 
-    const result = await pool.query(query, params);
+    const result = await global.db.query(query, params);
 
     res.json({
       success: true,
@@ -429,15 +429,15 @@ router.get('/requests/:growerId', async (req, res) => {
   }
 });
 
-// ═══════════════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 // GET /lab/request/:requestId - Get single request with details
-// ═══════════════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
 router.get('/request/:requestId', async (req, res) => {
   try {
     const { requestId } = req.params;
 
-    const request = await pool.query(
+    const request = await global.db.query(
       'SELECT * FROM lab_test_requests WHERE id = $1',
       [requestId]
     );
@@ -446,12 +446,12 @@ router.get('/request/:requestId', async (req, res) => {
       return res.status(404).json({ success: false, error: 'Request not found' });
     }
 
-    const results = await pool.query(
+    const results = await global.db.query(
       'SELECT * FROM lab_test_results WHERE request_id = $1 ORDER BY created_at ASC',
       [requestId]
     );
 
-    const history = await pool.query(
+    const history = await global.db.query(
       'SELECT * FROM lab_test_history WHERE request_id = $1 ORDER BY created_at DESC',
       [requestId]
     );
@@ -469,13 +469,13 @@ router.get('/request/:requestId', async (req, res) => {
   }
 });
 
-// ═══════════════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 // GET /lab/dashboard - Lab test workflow dashboard
-// ═══════════════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
 router.get('/dashboard', async (req, res) => {
   try {
-    const stats = await pool.query(`
+    const stats = await global.db.query(`
       SELECT 
         COUNT(*) as total_requests,
         COUNT(*) FILTER (WHERE status = 'requested') as pending_collection,
@@ -491,7 +491,7 @@ router.get('/dashboard', async (req, res) => {
       WHERE created_at > NOW() - INTERVAL '90 days'
     `);
 
-    const byTestType = await pool.query(`
+    const byTestType = await global.db.query(`
       SELECT test_type, COUNT(*) as count
       FROM lab_test_requests
       WHERE created_at > NOW() - INTERVAL '90 days'
@@ -512,8 +512,9 @@ router.get('/dashboard', async (req, res) => {
   }
 });
 
-// ═══════════════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 // EXPORT
-// ═══════════════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
 module.exports = router;
+

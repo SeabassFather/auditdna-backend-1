@@ -1,30 +1,30 @@
-// ════════════════════════════════════════════════════════════════════════════
-// BRAIN DATA MESH v1.0 — AuditDNA Central Intelligence Feed
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+// BRAIN DATA MESH v1.0 â€” AuditDNA Central Intelligence Feed
 // Save to: C:\AuditDNA\backend\brain-data-mesh.js
 // Require in server.js: require('./brain-data-mesh')(app, pool);
 //
 // WHAT THIS DOES:
 // Every API (NASS, Weather, FAOSTAT, AMS, FDA) feeds into Brain on a schedule.
 // Brain processes each data point, fires downstream triggers:
-//   Weather frost → Price alert → CRM email queue → Marketplace price update
-//   NASS acreage down → Supply warning → Grower score update → Buyer notification
-//   FDA recall → Compliance flag → Traceability chain → CRM contact alert
+//   Weather frost â†’ Price alert â†’ CRM email queue â†’ Marketplace price update
+//   NASS acreage down â†’ Supply warning â†’ Grower score update â†’ Buyer notification
+//   FDA recall â†’ Compliance flag â†’ Traceability chain â†’ CRM contact alert
 //
 // ENDPOINTS ADDED TO server.js (port 5050):
-//   GET  /api/ag-intel/snapshot?commodity=avocado   ← App.js line 897 calls this
-//   GET  /api/brain/live-feed                       ← CommandSphere live stream
-//   GET  /api/brain/price-predictions               ← Marketplace + PriceAlerts
-//   GET  /api/brain/weather-alerts                  ← WeatherIntelligence
-//   GET  /api/brain/grower-scores                   ← GrowerIntelligence
-//   POST /api/brain/event                           ← All modules fire into this
-//   GET  /api/brain/status                          ← CommandSphere health
-// ════════════════════════════════════════════════════════════════════════════
+//   GET  /api/ag-intel/snapshot?commodity=avocado   â† App.js line 897 calls this
+//   GET  /api/brain/live-feed                       â† CommandSphere live stream
+//   GET  /api/brain/price-predictions               â† Marketplace + PriceAlerts
+//   GET  /api/brain/weather-alerts                  â† WeatherIntelligence
+//   GET  /api/brain/grower-scores                   â† GrowerIntelligence
+//   POST /api/brain/event                           â† All modules fire into this
+//   GET  /api/brain/status                          â† CommandSphere health
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
 const MINIAPI  = process.env.MINIAPI_URL  || 'http://process.env.DB_HOST:4000';
 const MAIN_API = process.env.MAIN_API_URL || 'http://process.env.DB_HOST:5050';
 const NASS_KEY = process.env.USDA_NASS_KEY || '4F158DB1-85C2-3243-BFFA-58B53FB40D23';
 
-// ── IN-MEMORY BRAIN STATE — shared across all modules ───────────────────────
+// â”€â”€ IN-MEMORY BRAIN STATE â€” shared across all modules â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 const BrainState = {
   weather:     { regions: [], alerts: [], lastUpdated: null },
   prices:      { commodities: {}, predictions: {}, lastUpdated: null },
@@ -36,7 +36,7 @@ const BrainState = {
   activeAlerts:[],   // cross-platform alerts
 };
 
-// ── COMMODITY CATALOG — ALL 467 USDA NASS COMMODITIES ──────────────────────────
+// â”€â”€ COMMODITY CATALOG â€” ALL 467 USDA NASS COMMODITIES â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 // Live from quickstats.nass.usda.gov | Key: 4F158DB1-85C2-3243-BFFA-58B53FB40D23
 // Total: 467 commodities | 58 with growing region mappings
 const COMMODITIES = [
@@ -509,7 +509,7 @@ const COMMODITIES = [
   { name: "yogurt", nass: "YOGURT", unit: "cwt", regions: [] },
 ];
 
-// ── SAFE FETCH WITH TIMEOUT ──────────────────────────────────────────────────
+// â”€â”€ SAFE FETCH WITH TIMEOUT â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 async function safeFetch(url, opts = {}, timeoutMs = 10000) {
   const ctrl = new AbortController();
   const t = setTimeout(() => ctrl.abort(), timeoutMs);
@@ -521,13 +521,13 @@ async function safeFetch(url, opts = {}, timeoutMs = 10000) {
   } catch (e) { clearTimeout(t); return null; }
 }
 
-// ── LOG EVENT TO BRAIN ────────────────────────────────────────────────────────
+// â”€â”€ LOG EVENT TO BRAIN â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 async function brainLog(type, data, source) {
   const event = { type, data, source, ts: new Date().toISOString() };
   BrainState.eventLog.unshift(event);
   // Persist to DB
   try {
-    await pool.query(
+    await global.db.query(
       "INSERT INTO brain_events (event_type, module, miners, payload, created_at) VALUES ($1,$2,$3,$4,NOW())",
       [event.type||'BRAIN_EVENT', event.module||'brain', JSON.stringify(event.miners||[]), JSON.stringify(event)]
     ).catch(()=>{});
@@ -535,20 +535,20 @@ async function brainLog(type, data, source) {
   if (BrainState.eventLog.length > 500) BrainState.eventLog.pop();
 }
 
-// ── PRICE PREDICTION ENGINE ──────────────────────────────────────────────────
+// â”€â”€ PRICE PREDICTION ENGINE â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 // Uses NASS price + weather risk + acreage to predict 7-day price direction
 function generatePricePrediction(commodity, nassPrice, weatherRisk, acreageTrend) {
   let score = 0; // -100 to +100. Positive = price going up.
   const factors = [];
 
   // Weather risk pushes price UP (supply disruption)
-  if (weatherRisk.frostRisk)  { score += 25; factors.push('Frost risk in growing region — supply at risk'); }
-  if (weatherRisk.heatStress) { score += 15; factors.push('Heat stress detected — yield reduction likely'); }
-  if (weatherRisk.rainRisk)   { score += 10; factors.push('Heavy rain — field operations disrupted'); }
+  if (weatherRisk.frostRisk)  { score += 25; factors.push('Frost risk in growing region â€” supply at risk'); }
+  if (weatherRisk.heatStress) { score += 15; factors.push('Heat stress detected â€” yield reduction likely'); }
+  if (weatherRisk.rainRisk)   { score += 10; factors.push('Heavy rain â€” field operations disrupted'); }
 
   // Acreage down = supply decreases = price up
-  if (acreageTrend === 'down')   { score += 20; factors.push('Planted acreage below prior year — tighter supply'); }
-  if (acreageTrend === 'up')     { score -= 15; factors.push('Increased acreage — supply expansion expected'); }
+  if (acreageTrend === 'down')   { score += 20; factors.push('Planted acreage below prior year â€” tighter supply'); }
+  if (acreageTrend === 'up')     { score -= 15; factors.push('Increased acreage â€” supply expansion expected'); }
 
   // Base price momentum (if recent price trending)
   const momentum = nassPrice?.trend || 0;
@@ -570,9 +570,9 @@ function generatePricePrediction(commodity, nassPrice, weatherRisk, acreageTrend
   };
 }
 
-// ════════════════════════════════════════════════════════════════════════════
-// DATA COLLECTORS — run on schedule
-// ════════════════════════════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+// DATA COLLECTORS â€” run on schedule
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
 async function collectWeather() {
   console.log('[BRAIN-MESH] Collecting weather data...');
@@ -617,7 +617,7 @@ async function collectWeather() {
           id: `PA-${Date.now()}-${commodity.name}`,
           type: 'PRICE_ALERT',
           commodity: commodity.name,
-          message: `${commodity.name.toUpperCase()} price expected UP ${pred.expectedChange} — ${pred.factors[0]}`,
+          message: `${commodity.name.toUpperCase()} price expected UP ${pred.expectedChange} â€” ${pred.factors[0]}`,
           confidence: pred.confidence,
           regions: affectedRegions.map(r => r.name),
           ts: new Date().toISOString(),
@@ -677,7 +677,7 @@ async function collectNASSPrices() {
 
 async function collectFAOSTAT() {
   console.log('[BRAIN-MESH] Collecting FAOSTAT data...');
-  // FAOSTAT producer prices — avocado, tomato, strawberry from Mexico
+  // FAOSTAT producer prices â€” avocado, tomato, strawberry from Mexico
   const items = [
     { name: 'avocado', code: '572', country: 'United States of America', countryCode: '231' },
     { name: 'tomato',  code: '388', country: 'United States of America', countryCode: '231' },
@@ -719,13 +719,13 @@ async function collectAMSReports() {
   console.log('[BRAIN-MESH] AMS reports collected');
 }
 
-// ════════════════════════════════════════════════════════════════════════════
-// INSTALL ROUTES — call this from server.js
-// ════════════════════════════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+// INSTALL ROUTES â€” call this from server.js
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
 module.exports = function installBrainMesh(app, pool) {
 
-  // ── /api/ag-intel/snapshot — App.js line 897 calls this ─────────────────
+  // â”€â”€ /api/ag-intel/snapshot â€” App.js line 897 calls this â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   // Returns unified commodity intelligence for the AI chatbot
   app.get('/api/ag-intel/snapshot', async (req, res) => {
     const commodity = (req.query.commodity || 'avocado').toLowerCase();
@@ -753,13 +753,13 @@ module.exports = function installBrainMesh(app, pool) {
       })),
       activeAlerts: BrainState.activeAlerts.filter(a => a.commodity === commodity),
       summary: prediction
-        ? `${commodity.toUpperCase()} — ${prediction.direction} ${prediction.expectedChange} (${prediction.confidence}% confidence). ${prediction.factors[0] || ''}`
+        ? `${commodity.toUpperCase()} â€” ${prediction.direction} ${prediction.expectedChange} (${prediction.confidence}% confidence). ${prediction.factors[0] || ''}`
         : null,
       generated: new Date().toISOString(),
     });
   });
 
-  // ── /api/brain/live-feed — CommandSphere real-time stream ───────────────
+  // â”€â”€ /api/brain/live-feed â€” CommandSphere real-time stream â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   app.get('/api/brain/live-feed', (req, res) => {
     res.json({
       status: 'OPERATIONAL',
@@ -780,7 +780,7 @@ module.exports = function installBrainMesh(app, pool) {
     });
   });
 
-  // ── /api/brain/price-predictions — Marketplace + PriceAlerts ────────────
+  // â”€â”€ /api/brain/price-predictions â€” Marketplace + PriceAlerts â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   app.get('/api/brain/price-predictions', (req, res) => {
     const { commodity } = req.query;
     const predictions = commodity
@@ -796,7 +796,7 @@ module.exports = function installBrainMesh(app, pool) {
     });
   });
 
-  // ── /api/brain/weather-alerts — WeatherIntelligence module ─────────────
+  // â”€â”€ /api/brain/weather-alerts â€” WeatherIntelligence module â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   app.get('/api/brain/weather-alerts', (req, res) => {
     res.json({
       success: true,
@@ -812,11 +812,11 @@ module.exports = function installBrainMesh(app, pool) {
     });
   });
 
-  // ── /api/brain/grower-scores — GrowerIntelligence module ───────────────
+  // â”€â”€ /api/brain/grower-scores â€” GrowerIntelligence module â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   app.get('/api/brain/grower-scores', async (req, res) => {
     try {
       // Pull growers from PostgreSQL and score them via Brain
-      const result = await pool.query(
+      const result = await global.db.query(
         'SELECT id, name, email, commodity, state, country, tier FROM growers LIMIT 100'
       );
 
@@ -849,7 +849,7 @@ module.exports = function installBrainMesh(app, pool) {
     }
   });
 
-  // ── /api/brain/event — All modules POST into this ──────────────────────
+  // â”€â”€ /api/brain/event â€” All modules POST into this â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   app.post('/api/brain/event', async (req, res) => {
     const event = req.body;
     if (!event || !event.type) return res.status(400).json({ error: 'type required' });
@@ -858,7 +858,7 @@ module.exports = function installBrainMesh(app, pool) {
 
     // Trigger downstream actions based on event type
     if (event.type === 'AG_INTEL_QUERY') {
-      // A user asked about a commodity — make sure its prediction is fresh
+      // A user asked about a commodity â€” make sure its prediction is fresh
       const commodity = event.commodity;
       if (commodity && !BrainState.predictions.find(p => p.commodity === commodity)) {
         const com = COMMODITIES.find(c => c.name === commodity);
@@ -877,7 +877,7 @@ module.exports = function installBrainMesh(app, pool) {
     res.json({ success: true, logged: true, eventType: event.type });
   });
 
-  // ── /api/brain/status — CommandSphere health panel ─────────────────────
+  // â”€â”€ /api/brain/status â€” CommandSphere health panel â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   app.get('/api/brain/status', (req, res) => {
     res.json({
       version: '4.0',
@@ -901,7 +901,7 @@ module.exports = function installBrainMesh(app, pool) {
     });
   });
 
-  // ── /api/brain/commodities — full commodity list for dropdowns ──────────
+  // â”€â”€ /api/brain/commodities â€” full commodity list for dropdowns â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   app.get('/api/brain/commodities', (req, res) => {
     res.json({
       success: true,
@@ -917,9 +917,9 @@ module.exports = function installBrainMesh(app, pool) {
     });
   });
 
-  // ════════════════════════════════════════════════════════════════════════
-  // SCHEDULER — feed the Brain on a schedule
-  // ════════════════════════════════════════════════════════════════════════
+  // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+  // SCHEDULER â€” feed the Brain on a schedule
+  // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
   // Run immediately on startup
   setTimeout(async () => {
@@ -947,3 +947,4 @@ module.exports = function installBrainMesh(app, pool) {
 
   return BrainState; // expose state for testing
 };
+

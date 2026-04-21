@@ -1,24 +1,24 @@
-// ═══════════════════════════════════════════════════════════════
-// PROPERTIES ROUTE v4.0 — SECURED — EnjoyBaja / AuditDNA
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+// PROPERTIES ROUTE v4.0 â€” SECURED â€” EnjoyBaja / AuditDNA
 // C:\AuditDNA\backend\routes\properties.js
 //
 // SECURITY MODEL (mirrors Developments.js RBAC):
-//   owner  → Full access (sg01@eb.com)
-//   admin  → Full access (sg01@eb.com, gl@eb.com)
-//   sales  → Own listings + create (REagent-*@eb.com)
-//   public → Approved listings only, sanitized
+//   owner  â†’ Full access (sg01@eb.com)
+//   admin  â†’ Full access (sg01@eb.com, gl@eb.com)
+//   sales  â†’ Own listings + create (REagent-*@eb.com)
+//   public â†’ Approved listings only, sanitized
 //
 // CHANGES FROM v3.0:
-//   ✓ RBAC middleware on all write/admin endpoints
-//   ✓ Public shape strips seller PII, commissions, internal notes
-//   ✓ /stats, /pending, /sold, /all → owner-only
-//   ✓ POST / → requires auth (sales+)
-//   ✓ PUT, DELETE → requires owner/admin or own listing
-//   ✓ Commission rates server-side only (COMMISSION_SCHEDULE)
-//   ✓ Credential generation server-side (POST /agent-registrations)
-//   ✓ Photo upload via base64 capped at 10MB per photo
-//   ✓ Rate limiting on registration endpoint
-// ═══════════════════════════════════════════════════════════════
+//   âœ“ RBAC middleware on all write/admin endpoints
+//   âœ“ Public shape strips seller PII, commissions, internal notes
+//   âœ“ /stats, /pending, /sold, /all â†’ owner-only
+//   âœ“ POST / â†’ requires auth (sales+)
+//   âœ“ PUT, DELETE â†’ requires owner/admin or own listing
+//   âœ“ Commission rates server-side only (COMMISSION_SCHEDULE)
+//   âœ“ Credential generation server-side (POST /agent-registrations)
+//   âœ“ Photo upload via base64 capped at 10MB per photo
+//   âœ“ Rate limiting on registration endpoint
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
 const express = require('express');
 const crypto  = require('crypto');
@@ -27,7 +27,7 @@ const router  = express.Router();
 const { pool } = require('../db');
 
 // ================================================================
-// SINGLE SOURCE OF TRUTH — COMMISSION SCHEDULE
+// SINGLE SOURCE OF TRUTH â€” COMMISSION SCHEDULE
 // ================================================================
 // NEVER expose these to public frontend. Owner/admin only.
 // ================================================================
@@ -41,7 +41,7 @@ const COMMISSION_SCHEDULE = {
 };
 
 // ================================================================
-// RBAC MIDDLEWARE — Same pattern as Developments.js
+// RBAC MIDDLEWARE â€” Same pattern as Developments.js
 // ================================================================
 const jwt = require('jsonwebtoken');
 const JWT_SECRET = process.env.JWT_SECRET || 'Dsg060905#321';
@@ -74,7 +74,7 @@ function getRequestRole(req) {
 }
 
 function requireOwner(req, res, next) {
-  // x-admin bypass — Brain.js and internal server-to-server calls
+  // x-admin bypass â€” Brain.js and internal server-to-server calls
   if (req.headers['x-admin'] === 'true') {
     req.role  = 'owner';
     req.email = 'system';
@@ -104,7 +104,7 @@ function attachRole(req, res, next) {
 }
 
 // ================================================================
-// RATE LIMITER — Simple in-memory for registration/submission
+// RATE LIMITER â€” Simple in-memory for registration/submission
 // ================================================================
 const rateLimits = new Map();
 
@@ -137,11 +137,11 @@ setInterval(() => {
   }
 }, 600000);
 
-// ── Generate property ID ──────────────────────────────────────
+// â”€â”€ Generate property ID â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 const genPropId = () =>
   `EB-${Date.now().toString(36).toUpperCase()}-${Math.random().toString(36).substring(2,5).toUpperCase()}`;
 
-// ── Next 1st or 15th commission pay date ─────────────────────
+// â”€â”€ Next 1st or 15th commission pay date â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 const nextPayDate = (fromDate) => {
   const d   = fromDate ? new Date(fromDate) : new Date();
   const day = d.getDate();
@@ -151,9 +151,9 @@ const nextPayDate = (fromDate) => {
   return pay.toISOString().split('T')[0];
 };
 
-// ── Bootstrap table ───────────────────────────────────────────
+// â”€â”€ Bootstrap table â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 const initTable = async () => {
-  await pool.query(`
+  await global.db.query(`
     CREATE TABLE IF NOT EXISTS properties (
       id               SERIAL PRIMARY KEY,
       property_id      VARCHAR(32) UNIQUE,
@@ -227,7 +227,7 @@ const initTable = async () => {
     CREATE INDEX IF NOT EXISTS idx_props_uploaded_by ON properties(uploaded_by);
   `);
 
-  // v2 → v3 column upgrades
+  // v2 â†’ v3 column upgrades
   const cols = [
     `ALTER TABLE properties ADD COLUMN IF NOT EXISTS property_id      VARCHAR(32) UNIQUE`,
     `ALTER TABLE properties ADD COLUMN IF NOT EXISTS listing_type     VARCHAR(20)  DEFAULT 'fsbo'`,
@@ -253,11 +253,11 @@ const initTable = async () => {
     `ALTER TABLE properties ADD COLUMN IF NOT EXISTS commission_pay_date DATE`,
   ];
   for (const sql of cols) {
-    await pool.query(sql).catch(() => {});
+    await global.db.query(sql).catch(() => {});
   }
 
   // v4: agent_registrations table for secure credential storage
-  await pool.query(`
+  await global.db.query(`
     CREATE TABLE IF NOT EXISTS agent_registrations (
       id            SERIAL PRIMARY KEY,
       agent_code    VARCHAR(100) UNIQUE,
@@ -291,12 +291,12 @@ const initTable = async () => {
     CREATE INDEX IF NOT EXISTS idx_agents_code  ON agent_registrations(agent_code);
   `).catch(() => {});
 
-  console.log('✅ [PROPERTIES] PostgreSQL tables ready (v4.0 secured)');
+  console.log('âœ… [PROPERTIES] PostgreSQL tables ready (v4.0 secured)');
 };
-initTable().catch(e => console.error('❌ [PROPERTIES] Init failed:', e.message));
+initTable().catch(e => console.error('âŒ [PROPERTIES] Init failed:', e.message));
 
 // ================================================================
-// SHAPE FUNCTIONS — Public vs Full
+// SHAPE FUNCTIONS â€” Public vs Full
 // ================================================================
 
 // PUBLIC shape: strips seller PII, commissions, internal notes, buyer data
@@ -316,7 +316,7 @@ const shapePublic = (r) => ({
   // Mexico specifics
   zona_restringida: r.zona_restringida,
   fideicomiso_req:  r.fideicomiso_req,
-  // Address (public — location helps buyers)
+  // Address (public â€” location helps buyers)
   address: {
     colonia:   r.colonia,
     municipio: r.municipio,
@@ -332,7 +332,7 @@ const shapePublic = (r) => ({
     m2Const:   r.m2_const,  sqftConst: r.sqft_const,
     m2Lot:     r.m2_lot,    sqftLot:   r.sqft_lot,
   },
-  // Pricing (public — buyers need to see asking price)
+  // Pricing (public â€” buyers need to see asking price)
   pricing: {
     priceUSD: parseFloat(r.price_usd) || 0,
     priceMXN: parseFloat(r.price_mxn) || 0,
@@ -345,7 +345,7 @@ const shapePublic = (r) => ({
     photos:         r.photos     || [],
     // internalNotes: STRIPPED
   },
-  // seller: STRIPPED — no PII
+  // seller: STRIPPED â€” no PII
   // commission: STRIPPED
   // sold buyer info: STRIPPED
   // Flat fields for PropertySearch gallery compatibility
@@ -363,7 +363,7 @@ const shapePublic = (r) => ({
   createdAt:   r.created_at,
 });
 
-// FULL shape: owner/admin — all fields including PII, commissions, notes
+// FULL shape: owner/admin â€” all fields including PII, commissions, notes
 const shapeFull = (r) => ({
   ...shapePublic(r),
   // Restore full address
@@ -428,10 +428,10 @@ const shapeFull = (r) => ({
 // OWNER-ONLY ENDPOINTS
 // ================================================================
 
-// ── GET /stats (OWNER) ──────────────────────────────────────
+// â”€â”€ GET /stats (OWNER) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 router.get('/stats', async (req, res) => {
   try {
-    const { rows } = await pool.query(`
+    const { rows } = await global.db.query(`
       SELECT
         COUNT(*)                                                   AS total,
         COUNT(*) FILTER (WHERE type='fsbo')                        AS fsbo,
@@ -456,32 +456,32 @@ router.get('/stats', async (req, res) => {
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
-// ── GET /commission-schedule (OWNER) — Single source of truth ──
+// â”€â”€ GET /commission-schedule (OWNER) â€” Single source of truth â”€â”€
 router.get('/commission-schedule', requireOwner, (req, res) => {
   res.json({ success: true, schedule: COMMISSION_SCHEDULE });
 });
 
-// ── GET /pending (OWNER) ─────────────────────────────────────
+// â”€â”€ GET /pending (OWNER) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 router.get('/pending', requireOwner, async (req, res) => {
   try {
-    const { rows } = await pool.query(
+    const { rows } = await global.db.query(
       `SELECT * FROM properties WHERE status='pending_review' ORDER BY created_at ASC`
     );
     res.json({ success: true, count: rows.length, properties: rows.map(shapeFull) });
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
-// ── GET /sold (OWNER — commission tracking) ──────────────────
+// â”€â”€ GET /sold (OWNER â€” commission tracking) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 router.get('/sold', requireOwner, async (req, res) => {
   try {
-    const { rows } = await pool.query(
+    const { rows } = await global.db.query(
       `SELECT * FROM properties WHERE status='sold' ORDER BY sold_at DESC`
     );
     res.json({ success: true, count: rows.length, properties: rows.map(shapeFull) });
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
-// ── GET /all (OWNER) ─────────────────────────────────────────
+// â”€â”€ GET /all (OWNER) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 router.get('/all', requireOwner, async (req, res) => {
   const { status, type, municipio, region, limit = 100, offset = 0 } = req.query;
   const conditions = [];
@@ -493,19 +493,19 @@ router.get('/all', requireOwner, async (req, res) => {
   const where = conditions.length ? 'WHERE ' + conditions.join(' AND ') : '';
   params.push(parseInt(limit), parseInt(offset));
   try {
-    const { rows } = await pool.query(
+    const { rows } = await global.db.query(
       `SELECT * FROM properties ${where} ORDER BY created_at DESC LIMIT $${params.length-1} OFFSET $${params.length}`, params
     );
-    const cnt = await pool.query(`SELECT COUNT(*) FROM properties ${where}`, params.slice(0,-2));
+    const cnt = await global.db.query(`SELECT COUNT(*) FROM properties ${where}`, params.slice(0,-2));
     res.json({ success: true, count: parseInt(cnt.rows[0].count), properties: rows.map(shapeFull) });
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
 // ================================================================
-// PUBLIC ENDPOINTS — Sanitized data only
+// PUBLIC ENDPOINTS â€” Sanitized data only
 // ================================================================
 
-// ── GET / (PUBLIC — approved listings, sanitized) ─────────────
+// â”€â”€ GET / (PUBLIC â€” approved listings, sanitized) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 router.get('/', attachRole, async (req, res) => {
   const { status, municipio, region, tipo, minPrice, maxPrice, beds, featured, limit = 100, offset = 0 } = req.query;
   const statusFilter = status === 'active' ? 'approved' : (status || 'approved');
@@ -522,7 +522,7 @@ router.get('/', attachRole, async (req, res) => {
   params.push(parseInt(limit), parseInt(offset));
 
   try {
-    const { rows } = await pool.query(
+    const { rows } = await global.db.query(
       `SELECT * FROM properties WHERE ${conditions.join(' AND ')}
        ORDER BY featured DESC, created_at DESC
        LIMIT $${params.length-1} OFFSET $${params.length}`, params
@@ -532,10 +532,10 @@ router.get('/', attachRole, async (req, res) => {
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
-// ── GET /public-stats — hero stats (limited, no financials) ──
+// â”€â”€ GET /public-stats â€” hero stats (limited, no financials) â”€â”€
 router.get('/public-stats', async (req, res) => {
   try {
-    const { rows } = await pool.query(`
+    const { rows } = await global.db.query(`
       SELECT
         COUNT(*) FILTER (WHERE status='approved') AS total_listings,
         COUNT(*) FILTER (WHERE status='sold')     AS sold_listings
@@ -544,7 +544,7 @@ router.get('/public-stats', async (req, res) => {
     // Agent count from registrations
     let agentCount = 0;
     try {
-      const agents = await pool.query(`SELECT COUNT(*) FROM agent_registrations`);
+      const agents = await global.db.query(`SELECT COUNT(*) FROM agent_registrations`);
       agentCount = parseInt(agents.rows[0].count) || 0;
     } catch {}
     res.json({
@@ -557,24 +557,24 @@ router.get('/public-stats', async (req, res) => {
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
-// ── GET /:id (PUBLIC — sanitized for non-owners) ─────────────
+// â”€â”€ GET /:id (PUBLIC â€” sanitized for non-owners) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 router.get('/:id', attachRole, async (req, res) => {
   try {
-    const { rows } = await pool.query(
+    const { rows } = await global.db.query(
       'SELECT * FROM properties WHERE id=$1 OR property_id=$1', [req.params.id]
     );
     if (!rows.length) return res.status(404).json({ error: 'Property not found' });
-    pool.query('UPDATE properties SET views=views+1 WHERE id=$1', [rows[0].id]).catch(() => {});
+    global.db.query('UPDATE properties SET views=views+1 WHERE id=$1', [rows[0].id]).catch(() => {});
     const shaper = (req.role === 'owner' || req.role === 'admin') ? shapeFull : shapePublic;
     res.json({ success: true, property: shaper(rows[0]) });
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
 // ================================================================
-// AUTH-REQUIRED ENDPOINTS — Create / Update / Delete
+// AUTH-REQUIRED ENDPOINTS â€” Create / Update / Delete
 // ================================================================
 
-// ── POST /fsbo — PUBLIC FSBO listing (no auth required) ──────
+// â”€â”€ POST /fsbo â€” PUBLIC FSBO listing (no auth required) â”€â”€â”€â”€â”€â”€
 router.post('/fsbo', async (req, res) => {
   const d = req.body;
   if (!d.sellerEmail || !d.calle || !d.priceUSD) {
@@ -584,7 +584,7 @@ router.post('/fsbo', async (req, res) => {
     const propertyId = genPropId();
     const priceUSD   = parseFloat(d.priceUSD) || 0;
     const priceMXN   = parseFloat(d.priceMXN) || (priceUSD * 17.5);
-    const { rows } = await pool.query(`
+    const { rows } = await global.db.query(`
       INSERT INTO properties (
         property_id, type, listing_type, status,
         uploaded_by, uploader_role,
@@ -622,7 +622,7 @@ router.post('/fsbo', async (req, res) => {
   }
 });
 
-// ── POST /traspaso — PUBLIC traspaso listing (no auth) ────────
+// â”€â”€ POST /traspaso â€” PUBLIC traspaso listing (no auth) â”€â”€â”€â”€â”€â”€â”€â”€
 router.post('/traspaso', async (req, res) => {
   const d = req.body;
   if (!d.email || !d.totalPrice) {
@@ -631,7 +631,7 @@ router.post('/traspaso', async (req, res) => {
   try {
     const propertyId = genPropId();
     const priceUSD   = parseFloat(d.totalPrice) || 0;
-    const { rows } = await pool.query(`
+    const { rows } = await global.db.query(`
       INSERT INTO properties (
         property_id, type, listing_type, status,
         uploaded_by, uploader_role,
@@ -664,7 +664,7 @@ router.post('/traspaso', async (req, res) => {
   }
 });
 
-// ── POST / — create listing (REQUIRES AUTH: sales+) ──────────
+// â”€â”€ POST / â€” create listing (REQUIRES AUTH: sales+) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 router.post('/', requireAuth, async (req, res) => {
   const d = req.body;
 
@@ -683,10 +683,10 @@ router.post('/', requireAuth, async (req, res) => {
 
   try {
     const propertyId = genPropId();
-    const role       = req.role; // from middleware — trustworthy
+    const role       = req.role; // from middleware â€” trustworthy
     const isPrivileged = ['owner','admin','sales'].includes(role);
 
-    // Commission rate comes from COMMISSION_SCHEDULE — not from client
+    // Commission rate comes from COMMISSION_SCHEDULE â€” not from client
     const agentType  = (d.agentType || d.type || 'fsbo').toLowerCase();
     const commRate   = COMMISSION_SCHEDULE[agentType] || COMMISSION_SCHEDULE[role] || COMMISSION_SCHEDULE.fsbo;
 
@@ -705,7 +705,7 @@ router.post('/', requireAuth, async (req, res) => {
     const isaiTax      = priceUSD * 0.025;
     const fideicomiso  = (d.zona_restringida || d.zonaRestringida) ? 2500 : 0;
 
-    const { rows } = await pool.query(`
+    const { rows } = await global.db.query(`
       INSERT INTO properties (
         property_id, type, listing_type, status,
         uploaded_by, uploader_role, uploader_name, agent_email,
@@ -731,8 +731,8 @@ router.post('/', requireAuth, async (req, res) => {
       d.type         || (isPrivileged ? 'agent' : 'fsbo'),
       d.listingType  || (isPrivileged ? 'agent' : 'fsbo'),
       status,
-      req.email,         // from auth middleware — not client-supplied
-      role,              // from auth middleware — not client-supplied
+      req.email,         // from auth middleware â€” not client-supplied
+      role,              // from auth middleware â€” not client-supplied
       d.uploaderName || d.uploader_name || req.email,
       d.agentEmail   || d.agent_email   || req.email,
       d.titulo       || d.title         || d.name        || null,
@@ -783,13 +783,13 @@ router.post('/', requireAuth, async (req, res) => {
       property:   shapeFull(rows[0]),
       message:    status === 'approved'
         ? 'Property is now LIVE on the platform.'
-        : 'Property submitted for admin review (FSBO — pending approval).',
+        : 'Property submitted for admin review (FSBO â€” pending approval).',
       closing_estimates: {
         notario_fee: notarioFee,
         isai_tax:    isaiTax,
         fideicomiso: fideicomiso,
         total:       notarioFee + isaiTax + fideicomiso,
-        note:        'Estimates only — final amounts determined by Notario Público',
+        note:        'Estimates only â€” final amounts determined by Notario PÃºblico',
         currency:    'USD',
       },
     });
@@ -799,8 +799,8 @@ router.post('/', requireAuth, async (req, res) => {
   }
 });
 
-// ── PUT /:id — update listing (OWNER/ADMIN or own listing) ───
-// ── POST /agent-listing — admin/agent listing alias ──────────
+// â”€â”€ PUT /:id â€” update listing (OWNER/ADMIN or own listing) â”€â”€â”€
+// â”€â”€ POST /agent-listing â€” admin/agent listing alias â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 router.post('/agent-listing', requireAuth, async (req, res, next) => {
   // Normalize incoming field names from frontend to match POST / handler
   const d = req.body;
@@ -817,7 +817,7 @@ router.put('/:id', requireAuth, async (req, res) => {
   const d = req.body;
   try {
     // Check ownership
-    const existing = await pool.query(
+    const existing = await global.db.query(
       'SELECT uploaded_by, uploader_role FROM properties WHERE id=$1 OR property_id=$1', [req.params.id]
     );
     if (!existing.rows.length) return res.status(404).json({ error: 'Property not found' });
@@ -829,7 +829,7 @@ router.put('/:id', requireAuth, async (req, res) => {
       return res.status(403).json({ error: 'You can only edit your own listings.' });
     }
 
-    const { rows } = await pool.query(`
+    const { rows } = await global.db.query(`
       UPDATE properties SET
         titulo=$1, titulo_es=$2, region=$3,
         calle=$4, num_ext=$5, num_int=$6, colonia=$7, municipio=$8, estado=$9,
@@ -869,7 +869,7 @@ router.put('/:id', requireAuth, async (req, res) => {
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
-// ── PUT /:id/status — approve/reject/feature (OWNER ONLY) ───
+// â”€â”€ PUT /:id/status â€” approve/reject/feature (OWNER ONLY) â”€â”€â”€
 router.put('/:id/status', requireOwner, async (req, res) => {
   const { status, approvedBy, rejectionNote, featured } = req.body;
   const validStatuses = ['pending_review','approved','rejected','sold','withdrawn'];
@@ -894,7 +894,7 @@ router.put('/:id/status', requireOwner, async (req, res) => {
     }
     sets.push('updated_at=NOW()');
     params.push(req.params.id);
-    const { rows } = await pool.query(
+    const { rows } = await global.db.query(
       `UPDATE properties SET ${sets.join(',')} WHERE id=$${params.length} OR property_id=$${params.length} RETURNING *`,
       params
     );
@@ -903,12 +903,12 @@ router.put('/:id/status', requireOwner, async (req, res) => {
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
-// ── PUT /:id/sold — mark sold (OWNER ONLY) ──────────────────
+// â”€â”€ PUT /:id/sold â€” mark sold (OWNER ONLY) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 router.put('/:id/sold', requireOwner, async (req, res) => {
   const { sold_price, buyer_name, buyer_email, closing_date, admin_email } = req.body;
   try {
     const payDate = nextPayDate(closing_date);
-    const { rows } = await pool.query(`
+    const { rows } = await global.db.query(`
       UPDATE properties SET
         status='sold',
         sold_price=$1, buyer_name=$2, buyer_email=$3,
@@ -947,11 +947,11 @@ router.put('/:id/sold', requireOwner, async (req, res) => {
 });
 
 
-// ── POST /:id/approve — approve alias (AdminDashboard calls this) ──
+// â”€â”€ POST /:id/approve â€” approve alias (AdminDashboard calls this) â”€â”€
 router.post('/:id/approve', requireOwner, async (req, res) => {
   const { approvedBy } = req.body;
   try {
-    const { rows } = await pool.query(
+    const { rows } = await global.db.query(
       `UPDATE properties SET status='approved', approved_at=NOW(), approved_by=$1
        WHERE id=$2 OR property_id=$2 RETURNING *`,
       [approvedBy || 'admin', req.params.id]
@@ -961,10 +961,10 @@ router.post('/:id/approve', requireOwner, async (req, res) => {
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
-// ── DELETE /:id (OWNER ONLY) ─────────────────────────────────
+// â”€â”€ DELETE /:id (OWNER ONLY) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 router.delete('/:id', requireOwner, async (req, res) => {
   try {
-    const { rows } = await pool.query(
+    const { rows } = await global.db.query(
       'DELETE FROM properties WHERE id=$1 OR property_id=$1 RETURNING id', [req.params.id]
     );
     if (!rows.length) return res.status(404).json({ error: 'Property not found' });
@@ -973,7 +973,7 @@ router.delete('/:id', requireOwner, async (req, res) => {
 });
 
 // ================================================================
-// AGENT REGISTRATION — Server-side credential generation
+// AGENT REGISTRATION â€” Server-side credential generation
 // ================================================================
 // Replaces frontend Math.random() slot generation with
 // crypto-secure credentials stored in DB.
@@ -995,7 +995,7 @@ router.post('/register-agent',
 
     try {
       // Check for duplicate email
-      const existing = await pool.query(
+      const existing = await global.db.query(
         'SELECT agent_code FROM agent_registrations WHERE LOWER(email) = $1',
         [d.email.toLowerCase()]
       );
@@ -1011,7 +1011,7 @@ router.post('/register-agent',
       for (let attempt = 0; attempt < 20; attempt++) {
         const slotNum = crypto.randomInt(51, 999);
         const candidate = `REagent-${String(slotNum).padStart(2, '0')}@eb.com`;
-        const check = await pool.query(
+        const check = await global.db.query(
           'SELECT 1 FROM agent_registrations WHERE agent_code = $1', [candidate]
         );
         if (!check.rows.length) {
@@ -1035,7 +1035,7 @@ router.post('/register-agent',
       // Commission from server-side schedule
       const commRate = COMMISSION_SCHEDULE[d.agentType] || COMMISSION_SCHEDULE.fsbo;
 
-      await pool.query(`
+      await global.db.query(`
         INSERT INTO agent_registrations (
           agent_code, password_hash, pin_hash, salt,
           nombre, apellidos, email, phone, whatsapp,
@@ -1060,7 +1060,7 @@ router.post('/register-agent',
         uploaded_by: agentCode,
       }); } catch {}
 
-      // Return credentials ONCE — they should save these
+      // Return credentials ONCE â€” they should save these
       // In production: send via email instead of HTTP response
       res.status(201).json({
         success: true,
@@ -1083,3 +1083,4 @@ router.post('/register-agent',
 );
 
 module.exports = router;
+

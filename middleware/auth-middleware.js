@@ -1,9 +1,9 @@
-// ══════════════════════════════════════════════════════════════════════════
-//  AUDITDNA — AUTH MIDDLEWARE (Shared)
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+//  AUDITDNA â€” AUTH MIDDLEWARE (Shared)
 //  File: C:\AuditDNA\backend\middleware\auth-middleware.js
 //
 //  REPLACES: per-file x-access-level / x-user-email header trust
-//  NOW:      JWT Bearer token verification — unforgeable
+//  NOW:      JWT Bearer token verification â€” unforgeable
 //
 //  Usage in any route file:
 //    const { requireOwner, requireAdmin, requireAuth, attachUser } = require('../middleware/auth-middleware');
@@ -13,7 +13,7 @@
 //
 //  After middleware runs, req.user is available:
 //    { email, role, name, iat, exp }
-// ══════════════════════════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
 'use strict';
 
@@ -21,19 +21,19 @@ const jwt = require('jsonwebtoken');
 
 const JWT_SECRET = process.env.JWT_SECRET;
 
-// Safety check — refuse to start with default/missing secret
+// Safety check â€” refuse to start with default/missing secret
 if (!JWT_SECRET || JWT_SECRET === 'auditdna_secret_change_me') {
-  console.error('═══════════════════════════════════════════════════════');
+  console.error('â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•');
   console.error('  FATAL: JWT_SECRET is missing or still set to default');
   console.error('  Set a strong JWT_SECRET in your .env file:');
   console.error('  JWT_SECRET=<random 64+ character string>');
-  console.error('═══════════════════════════════════════════════════════');
+  console.error('â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•');
   if (process.env.NODE_ENV === 'production') {
     process.exit(1);
   }
 }
 
-// ── Role hierarchy ───────────────────────────────────────────
+// â”€â”€ Role hierarchy â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 const ROLE_LEVELS = {
   owner:    100,
   admin:     80,
@@ -47,7 +47,7 @@ const ROLE_LEVELS = {
 const OWNER_EMAILS = new Set(['sg01@eb.com']);
 const ADMIN_EMAILS = new Set(['sg01@eb.com', 'gl@eb.com']);
 
-// ── Extract and verify JWT from Authorization header ─────────
+// â”€â”€ Extract and verify JWT from Authorization header â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function extractUser(req) {
   const authHeader = req.headers.authorization;
   if (!authHeader || !authHeader.startsWith('Bearer ')) return null;
@@ -64,7 +64,7 @@ function extractUser(req) {
       verifiedRole = 'sales'; // downgrade
     }
     if (verifiedRole === 'admin' && !ADMIN_EMAILS.has(decoded.email) && !OWNER_EMAILS.has(decoded.email)) {
-      // Dynamic admins from DB are OK — but we cap at admin, not owner
+      // Dynamic admins from DB are OK â€” but we cap at admin, not owner
       // No downgrade needed for DB-registered admins
     }
 
@@ -81,13 +81,13 @@ function extractUser(req) {
   }
 }
 
-// ── Middleware: attach user if token present (no rejection) ───
+// â”€â”€ Middleware: attach user if token present (no rejection) â”€â”€â”€
 function attachUser(req, res, next) {
   req.user = extractUser(req) || { email: '', role: 'public', name: '', level: 0 };
   next();
 }
 
-// ── Middleware: require any authenticated user ────────────────
+// â”€â”€ Middleware: require any authenticated user â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function requireAuth(req, res, next) {
   req.user = extractUser(req);
   if (!req.user) {
@@ -96,7 +96,7 @@ function requireAuth(req, res, next) {
   next();
 }
 
-// ── Middleware: require minimum role level ────────────────────
+// â”€â”€ Middleware: require minimum role level â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function requireRole(minRole) {
   const minLevel = ROLE_LEVELS[minRole] || 0;
   return (req, res, next) => {
@@ -111,7 +111,7 @@ function requireRole(minRole) {
   };
 }
 
-// ── Convenience: require owner ───────────────────────────────
+// â”€â”€ Convenience: require owner â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function requireOwner(req, res, next) {
   req.user = extractUser(req);
   if (!req.user) {
@@ -123,7 +123,7 @@ function requireOwner(req, res, next) {
   next();
 }
 
-// ── Convenience: require admin (owner also passes) ───────────
+// â”€â”€ Convenience: require admin (owner also passes) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function requireAdmin(req, res, next) {
   req.user = extractUser(req);
   if (!req.user) {
@@ -135,7 +135,7 @@ function requireAdmin(req, res, next) {
   next();
 }
 
-// ── Convenience: require sales+ (owner, admin, sales pass) ───
+// â”€â”€ Convenience: require sales+ (owner, admin, sales pass) â”€â”€â”€
 function requireSales(req, res, next) {
   req.user = extractUser(req);
   if (!req.user) {
@@ -160,3 +160,4 @@ module.exports = {
   ADMIN_EMAILS,
   JWT_SECRET,
 };
+

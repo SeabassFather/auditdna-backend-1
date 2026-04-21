@@ -1,4 +1,4 @@
-// FULL USDA NASS COMMODITY CATALOG — 467 commodities from live API
+// FULL USDA NASS COMMODITY CATALOG â€” 467 commodities from live API
 // Auto-generated from quickstats.nass.usda.gov/api/get_param_values
 // API Key: 4F158DB1-85C2-3243-BFFA-58B53FB40D23
 // Total: 467 commodities
@@ -473,3 +473,4 @@ const NASS_COMMODITIES = [
 ];
 
 module.exports = NASS_COMMODITIES;
+

@@ -1,5 +1,5 @@
 // =============================================================================
-// AUDIT NOTIFICATIONS — Router + Notification Functions
+// AUDIT NOTIFICATIONS â€” Router + Notification Functions
 // Save to: C:\AuditDNA\backend\routes\audit-notifications.js
 // =============================================================================
 
@@ -28,7 +28,7 @@ try {
 
 async function sendEmail(to, subject, html) {
   if (!transporter || !process.env.SMTP_PASS) {
-    console.log(`[NOTIFICATIONS] SMTP offline — would send to ${to}: ${subject}`);
+    console.log(`[NOTIFICATIONS] SMTP offline â€” would send to ${to}: ${subject}`);
     return { accepted: [to], offline: true };
   }
   try {
@@ -43,7 +43,7 @@ async function sendEmail(to, subject, html) {
 
 const fmt = (n) => '$' + (Number(n) || 0).toLocaleString('en-US', { minimumFractionDigits: 2 });
 
-// ── Notification functions ────────────────────────────────────────────────────
+// â”€â”€ Notification functions â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 async function onCFPBComplaint({ caseId, consumer, violations, fees, selectedPath, loanData }) {
   const violationCount = Array.isArray(violations) ? violations.length : 0;
@@ -54,7 +54,7 @@ async function onCFPBComplaint({ caseId, consumer, violations, fees, selectedPat
       <tr><td style="padding:8px;border-bottom:1px solid #eee;color:#666;">Violations</td><td style="padding:8px;border-bottom:1px solid #eee;font-weight:bold;color:#dc2626;">${violationCount}</td></tr>
       <tr><td style="padding:8px;border-bottom:1px solid #eee;color:#666;">Total Recovery</td><td style="padding:8px;font-weight:bold;color:#047857;">${fmt(fees?.total)}</td></tr>
     </table></div></div>`;
-  return sendEmail(ADMIN_EMAIL, `[CFPB] Case ${caseId} — ${violationCount} Violations — ${fmt(fees?.total)}`, html);
+  return sendEmail(ADMIN_EMAIL, `[CFPB] Case ${caseId} â€” ${violationCount} Violations â€” ${fmt(fees?.total)}`, html);
 }
 
 async function onEscrowOpenRequest({ caseId, consumer, fees, selectedPath }) {
@@ -65,7 +65,7 @@ async function onEscrowOpenRequest({ caseId, consumer, fees, selectedPath }) {
       <tr><td style="padding:8px;border-bottom:1px solid #eee;color:#666;">Total Recovery</td><td style="padding:8px;border-bottom:1px solid #eee;font-weight:bold;color:#047857;">${fmt(fees?.total)}</td></tr>
       <tr><td style="padding:8px;color:#666;">Our Fee</td><td style="padding:8px;">${fmt(fees?.fee)}</td></tr>
     </table></div></div>`;
-  return sendEmail(ADMIN_EMAIL, `[ESCROW] Open Request — Case ${caseId} — ${fmt(fees?.total)}`, html);
+  return sendEmail(ADMIN_EMAIL, `[ESCROW] Open Request â€” Case ${caseId} â€” ${fmt(fees?.total)}`, html);
 }
 
 async function onAuditConfirmed({ caseId, consumer, fees }) {
@@ -76,7 +76,7 @@ async function onAuditConfirmed({ caseId, consumer, fees }) {
     <div style="padding:20px;"><p>Dear ${consumer?.name || 'Valued Client'},</p>
     <p>Your mortgage audit has been authorized. Recovery estimate: <strong>${fmt(fees?.total)}</strong>. You receive: <strong>${fmt(fees?.youReceive)}</strong>.</p>
     <p style="font-size:12px;color:#94a3b8;">AuditDNA | NMLS #337526 | Mexausa Food Group, Inc.</p></div></div>`;
-  return sendEmail(consumerEmail, `AuditDNA — Your Audit Is Confirmed — Case ${caseId}`, html);
+  return sendEmail(consumerEmail, `AuditDNA â€” Your Audit Is Confirmed â€” Case ${caseId}`, html);
 }
 
 async function onAuditAdminAlert({ caseId, consumer, fees, selectedPath }) {
@@ -87,10 +87,10 @@ async function onAuditAdminAlert({ caseId, consumer, fees, selectedPath }) {
       <tr><td style="padding:8px;border-bottom:1px solid #eee;color:#666;">Recovery</td><td style="padding:8px;font-weight:bold;color:#047857;">${fmt(fees?.total)}</td></tr>
       <tr><td style="padding:8px;color:#666;">Our Fee</td><td style="padding:8px;font-weight:bold;color:#cba658;">${fmt(fees?.fee)}</td></tr>
     </table></div></div>`;
-  return sendEmail(ADMIN_EMAIL, `[AUTHORIZED] Case ${caseId} — ${fmt(fees?.fee)} Fee`, html);
+  return sendEmail(ADMIN_EMAIL, `[AUTHORIZED] Case ${caseId} â€” ${fmt(fees?.fee)} Fee`, html);
 }
 
-// ── API Routes ────────────────────────────────────────────────────────────────
+// â”€â”€ API Routes â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 router.post('/cfpb', async (req, res) => {
   try { res.json({ success: true, result: await onCFPBComplaint(req.body) }); }
@@ -122,3 +122,4 @@ module.exports.onCFPBComplaint    = onCFPBComplaint;
 module.exports.onEscrowOpenRequest = onEscrowOpenRequest;
 module.exports.onAuditConfirmed   = onAuditConfirmed;
 module.exports.onAuditAdminAlert  = onAuditAdminAlert;
+

@@ -30,3 +30,4 @@ export const BUYERS = [
   },
   // Add more buyers up to 52 as you have them
 ];
+

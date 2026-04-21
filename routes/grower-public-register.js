@@ -8,7 +8,7 @@ const router  = express.Router();
 const pool    = require('../db');
 const bcrypt  = require('bcryptjs');
 
-// ── POST /api/growers/register-public ────────────────────────────────────────
+// â”€â”€ POST /api/growers/register-public â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 // Called from the login card Register form (no auth required)
 router.post('/register-public', async (req, res) => {
   const {
@@ -65,7 +65,7 @@ router.post('/register-public', async (req, res) => {
       ON CONFLICT (email) DO UPDATE SET grower_id=$4, status='pending', role='grower'`,
       [contactEmail, hash, contactName||companyLegal, growerId]
     ).catch(() => {
-      // auth_users may not have grower_id column — insert without it
+      // auth_users may not have grower_id column â€” insert without it
       return client.query(`
         INSERT INTO auth_users (email, password_hash, name, role, status)
         VALUES ($1, $2, $3, 'grower', 'pending')
@@ -79,7 +79,7 @@ router.post('/register-public', async (req, res) => {
       INSERT INTO brain_events (type, payload, created_at)
       VALUES ('GROWER_REGISTRATION_SUBMITTED', $1, NOW())`,
       [JSON.stringify({ growerId, company: companyLegal, email: contactEmail, entityType, commodities, region, fsmaTeir })]
-    ).catch(() => {}); // brain_events table may not exist — non-fatal
+    ).catch(() => {}); // brain_events table may not exist â€” non-fatal
 
     await client.query('COMMIT');
 
@@ -112,7 +112,7 @@ router.post('/register-public', async (req, res) => {
   }
 });
 
-// ── PATCH /api/growers/:id/activate ──────────────────────────────────────────
+// â”€â”€ PATCH /api/growers/:id/activate â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 // Called by admin (GrowerMaster activation queue) to approve a pending grower
 router.patch('/:id/activate', async (req, res) => {
   const { id } = req.params;
@@ -172,16 +172,16 @@ router.patch('/:id/activate', async (req, res) => {
   }
 });
 
-// ── PATCH /api/growers/:id/reject ─────────────────────────────────────────────
+// â”€â”€ PATCH /api/growers/:id/reject â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 router.patch('/:id/reject', async (req, res) => {
   const { id } = req.params;
   const { reason } = req.body;
   try {
-    await pool.query(
+    await global.db.query(
       `UPDATE growers SET status='rejected', admin_notes=$1 WHERE id=$2`,
       [reason||'Application not approved', id]
     );
-    await pool.query(
+    await global.db.query(
       `UPDATE auth_users SET status='suspended'
        WHERE email=(SELECT email FROM growers WHERE id=$1)`, [id]
     ).catch(() => {});
@@ -191,11 +191,11 @@ router.patch('/:id/reject', async (req, res) => {
   }
 });
 
-// ── GET /api/growers/pending ───────────────────────────────────────────────────
+// â”€â”€ GET /api/growers/pending â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 // Returns all growers with status='pending' for the admin approval queue
 router.get('/pending', async (req, res) => {
   try {
-    const result = await pool.query(`
+    const result = await global.db.query(`
       SELECT id, company_name, entity_type, email, phone, city, state, country,
              commodities, region, fsma_tier, gap_cert, global_gap,
              compliance_status, registered_at, notes, contact_email
@@ -210,3 +210,4 @@ router.get('/pending', async (req, res) => {
 });
 
 module.exports = router;
+

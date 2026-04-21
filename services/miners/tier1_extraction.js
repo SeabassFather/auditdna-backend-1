@@ -183,3 +183,4 @@ function extractFees(text) {
 }
 
 module.exports = { extractAllDocuments };
+

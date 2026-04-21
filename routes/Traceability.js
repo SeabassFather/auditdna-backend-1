@@ -4,7 +4,7 @@ const router = express.Router();
 const LIMITS = {
     pH: { min: 6.0, max: 8.5, unit: '' },
     tds: { min: 0, max: 1500, unit: 'mg/L' },
-    conductivity: { min: 0, max: 2500, unit: 'µS/cm' },
+    conductivity: { min: 0, max: 2500, unit: 'ÂµS/cm' },
     nitrate: { min: 0, max: 10, unit: 'mg/L' },
     nitrite: { min: 0, max: 1, unit: 'mg/L' },
     ecoli: { min: 0, max: 0, unit: 'CFU/100mL' },
@@ -92,3 +92,4 @@ router.get('/compliance/:growerId', (req, res) => {
 });
 
 module.exports = router;
+

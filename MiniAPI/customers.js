@@ -5,10 +5,10 @@
 // Updated: 2025-11-16 23:17:58 UTC
 // Author: SeabassFather (Self-Taught Full-Stack Developer)
 // Purpose: Customer-facing portal endpoints for:
-//          • Manifest viewing with QR access
-//          • Direct ordering from manifest
-//          • QR code generation (5 types)
-//          • Order tracking & history
+//          â€¢ Manifest viewing with QR access
+//          â€¢ Direct ordering from manifest
+//          â€¢ QR code generation (5 types)
+//          â€¢ Order tracking & history
 // ================================================================
 // QR CODE TYPES SUPPORTED:
 //   1. Manifest QR - View live inventory
@@ -36,7 +36,7 @@ let qrCodesDB = [];
 
 // POST /api/customer-portal/qr/manifest
 // Generate QR code for manifest access
-// Customer scans → views live inventory → can order directly
+// Customer scans â†’ views live inventory â†’ can order directly
 router.post('/qr/manifest', async (req, res) => {
   try {
     const { manifestId, warehouse, date } = req.body;
@@ -80,7 +80,7 @@ router.post('/qr/manifest', async (req, res) => {
     
     qrCodesDB.push(qrRecord);
     
-    console.log('[QR CODE] ✅ Generated for manifest:', manifestId);
+    console.log('[QR CODE] âœ… Generated for manifest:', manifestId);
     console.log('[QR CODE]    Warehouse:', warehouse || 'Unknown');
     console.log('[QR CODE]    URL:', qrData);
     
@@ -97,7 +97,7 @@ router.post('/qr/manifest', async (req, res) => {
     });
     
   } catch (error) {
-    console.error('[QR CODE] ❌ Error generating manifest QR:', error.message);
+    console.error('[QR CODE] âŒ Error generating manifest QR:', error.message);
     res.status(500).json({
       success: false,
       error: error.message,
@@ -108,7 +108,7 @@ router.post('/qr/manifest', async (req, res) => {
 
 // POST /api/customer-portal/qr/invoice
 // Generate QR code for invoice verification
-// Customer scans → verifies invoice authenticity → sees payment status
+// Customer scans â†’ verifies invoice authenticity â†’ sees payment status
 router.post('/qr/invoice', async (req, res) => {
   try {
     const { invoiceNumber, total, customerName } = req.body;
@@ -148,7 +148,7 @@ router.post('/qr/invoice', async (req, res) => {
     
     qrCodesDB.push(qrRecord);
     
-    console.log('[QR CODE] ✅ Generated for invoice:', invoiceNumber);
+    console.log('[QR CODE] âœ… Generated for invoice:', invoiceNumber);
     console.log('[QR CODE]    Total: $' + (total || 0));
     console.log('[QR CODE]    Customer:', customerName || 'Unknown');
     
@@ -164,7 +164,7 @@ router.post('/qr/invoice', async (req, res) => {
     });
     
   } catch (error) {
-    console.error('[QR CODE] ❌ Error generating invoice QR:', error.message);
+    console.error('[QR CODE] âŒ Error generating invoice QR:', error.message);
     res.status(500).json({
       success: false,
       error: error.message,
@@ -175,7 +175,7 @@ router.post('/qr/invoice', async (req, res) => {
 
 // POST /api/customer-portal/qr/order
 // Generate QR code for order tracking
-// Customer scans → tracks order status → sees delivery updates
+// Customer scans â†’ tracks order status â†’ sees delivery updates
 router.post('/qr/order', async (req, res) => {
   try {
     const { orderNumber, customerEmail, total } = req.body;
@@ -215,7 +215,7 @@ router.post('/qr/order', async (req, res) => {
     
     qrCodesDB.push(qrRecord);
     
-    console.log('[QR CODE] ✅ Generated for order:', orderNumber);
+    console.log('[QR CODE] âœ… Generated for order:', orderNumber);
     console.log('[QR CODE]    Customer:', customerEmail || 'Unknown');
     console.log('[QR CODE]    Total: $' + (total || 0));
     
@@ -231,7 +231,7 @@ router.post('/qr/order', async (req, res) => {
     });
     
   } catch (error) {
-    console.error('[QR CODE] ❌ Error generating order QR:', error.message);
+    console.error('[QR CODE] âŒ Error generating order QR:', error.message);
     res.status(500).json({
       success: false,
       error: error.message,
@@ -242,7 +242,7 @@ router.post('/qr/order', async (req, res) => {
 
 // POST /api/customer-portal/qr/product
 // Generate QR code for product details
-// Customer scans → sees product info → can add to cart directly
+// Customer scans â†’ sees product info â†’ can add to cart directly
 router.post('/qr/product', async (req, res) => {
   try {
     const { sku, productName, price } = req.body;
@@ -282,7 +282,7 @@ router.post('/qr/product', async (req, res) => {
     
     qrCodesDB.push(qrRecord);
     
-    console.log('[QR CODE] ✅ Generated for product:', sku);
+    console.log('[QR CODE] âœ… Generated for product:', sku);
     console.log('[QR CODE]    Product:', productName || 'Unknown');
     console.log('[QR CODE]    Price: $' + (price || 0));
     
@@ -298,7 +298,7 @@ router.post('/qr/product', async (req, res) => {
     });
     
   } catch (error) {
-    console.error('[QR CODE] ❌ Error generating product QR:', error.message);
+    console.error('[QR CODE] âŒ Error generating product QR:', error.message);
     res.status(500).json({
       success: false,
       error: error.message,
@@ -309,7 +309,7 @@ router.post('/qr/product', async (req, res) => {
 
 // POST /api/customer-portal/qr/po
 // Generate QR code for purchase order
-// Supplier scans → sees PO details → can update fulfillment status
+// Supplier scans â†’ sees PO details â†’ can update fulfillment status
 router.post('/qr/po', async (req, res) => {
   try {
     const { poNumber, supplier, total } = req.body;
@@ -349,7 +349,7 @@ router.post('/qr/po', async (req, res) => {
     
     qrCodesDB.push(qrRecord);
     
-    console.log('[QR CODE] ✅ Generated for PO:', poNumber);
+    console.log('[QR CODE] âœ… Generated for PO:', poNumber);
     console.log('[QR CODE]    Supplier:', supplier || 'Unknown');
     console.log('[QR CODE]    Total: $' + (total || 0));
     
@@ -365,7 +365,7 @@ router.post('/qr/po', async (req, res) => {
     });
     
   } catch (error) {
-    console.error('[QR CODE] ❌ Error generating PO QR:', error.message);
+    console.error('[QR CODE] âŒ Error generating PO QR:', error.message);
     res.status(500).json({
       success: false,
       error: error.message,
@@ -405,7 +405,7 @@ router.get('/qr/stats', async (req, res) => {
     });
     
   } catch (error) {
-    console.error('[QR STATS] ❌ Error:', error.message);
+    console.error('[QR STATS] âŒ Error:', error.message);
     res.status(500).json({ success: false, error: error.message });
   }
 });
@@ -422,7 +422,7 @@ router.post('/qr/scan', async (req, res) => {
       qr.scans += 1;
       qr.lastScanned = new Date().toISOString();
       
-      console.log('[QR SCAN] 📱', qr.type, '-', qr.qrId, '- Total scans:', qr.scans);
+      console.log('[QR SCAN] ðŸ“±', qr.type, '-', qr.qrId, '- Total scans:', qr.scans);
     }
     
     res.json({
@@ -432,7 +432,7 @@ router.post('/qr/scan', async (req, res) => {
     });
     
   } catch (error) {
-    console.error('[QR SCAN] ❌ Error:', error.message);
+    console.error('[QR SCAN] âŒ Error:', error.message);
     res.status(500).json({ success: false, error: error.message });
   }
 });
@@ -447,7 +447,7 @@ router.get('/order/:orderNumber', async (req, res) => {
   try {
     const { orderNumber } = req.params;
     
-    console.log('[ORDER TRACKING] 📦 Request for:', orderNumber);
+    console.log('[ORDER TRACKING] ðŸ“¦ Request for:', orderNumber);
     
     // Find order in database
     const order = ordersDB.find(o => o.orderNumber === orderNumber);
@@ -461,7 +461,7 @@ router.get('/order/:orderNumber', async (req, res) => {
       });
     }
     
-    console.log('[ORDER TRACKING] ✅ Found order:', orderNumber, '- Status:', order.status);
+    console.log('[ORDER TRACKING] âœ… Found order:', orderNumber, '- Status:', order.status);
     
     res.json({
       success: true,
@@ -481,7 +481,7 @@ router.get('/order/:orderNumber', async (req, res) => {
     });
     
   } catch (error) {
-    console.error('[ORDER TRACKING] ❌ Error:', error.message);
+    console.error('[ORDER TRACKING] âŒ Error:', error.message);
     res.status(500).json({
       success: false,
       error: error.message,
@@ -504,14 +504,14 @@ router.get('/orders', async (req, res) => {
       });
     }
     
-    console.log('[ORDERS LIST] 📋 Request from:', email);
+    console.log('[ORDERS LIST] ðŸ“‹ Request from:', email);
     
     // Filter orders by customer email
     const customerOrders = ordersDB.filter(o => 
       o.customerEmail.toLowerCase() === email.toLowerCase()
     );
     
-    console.log('[ORDERS LIST] ✅ Found', customerOrders.length, 'orders for', email);
+    console.log('[ORDERS LIST] âœ… Found', customerOrders.length, 'orders for', email);
     
     res.json({
       success: true,
@@ -522,7 +522,7 @@ router.get('/orders', async (req, res) => {
     });
     
   } catch (error) {
-    console.error('[ORDERS LIST] ❌ Error:', error.message);
+    console.error('[ORDERS LIST] âŒ Error:', error.message);
     res.status(500).json({
       success: false,
       error: error.message,
@@ -569,7 +569,7 @@ router.post('/order/create', async (req, res) => {
     
     ordersDB.push(order);
     
-    console.log('[ORDER CREATE] ✅ New order:', orderNumber);
+    console.log('[ORDER CREATE] âœ… New order:', orderNumber);
     console.log('[ORDER CREATE]    Customer:', customerEmail);
     console.log('[ORDER CREATE]    Items:', items.length);
     console.log('[ORDER CREATE]    Total: $' + total);
@@ -597,7 +597,7 @@ router.post('/order/create', async (req, res) => {
     });
     
   } catch (error) {
-    console.error('[ORDER CREATE] ❌ Error:', error.message);
+    console.error('[ORDER CREATE] âŒ Error:', error.message);
     res.status(500).json({
       success: false,
       error: error.message,
@@ -610,3 +610,4 @@ router.post('/order/create', async (req, res) => {
 // EXPORT ROUTER
 // ============================================================
 export default router;
+

@@ -1,22 +1,22 @@
-// ╔═══════════════════════════════════════════════════════════════════════════════╗
-// ║  AUDITDNA CRM API ROUTES                                                      ║
-// ║  Growers + Buyers + Shipper Contacts = 23,380 LEADS                          ║
-// ║  "FROM DOWNTOWN... BANG!!!" 🏀                                                ║
-// ╚═══════════════════════════════════════════════════════════════════════════════╝
+// â•”â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•—
+// â•‘  AUDITDNA CRM API ROUTES                                                      â•‘
+// â•‘  Growers + Buyers + Shipper Contacts = 23,380 LEADS                          â•‘
+// â•‘  "FROM DOWNTOWN... BANG!!!" ðŸ€                                                â•‘
+// â•šâ•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
 const express = require('express');
 const router = express.Router();
 const db = require('../db/connection');
 
-// ═══════════════════════════════════════════════════════════════════════════════
-// 🔥 NEW: GET ALL CONTACTS (GROWERS + BUYERS + SHIPPERS COMBINED)
-// ═══════════════════════════════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+// ðŸ”¥ NEW: GET ALL CONTACTS (GROWERS + BUYERS + SHIPPERS COMBINED)
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
 router.get('/contacts', async (req, res) => {
   try {
     const { limit = 20000, offset = 0, type, temperature, search } = req.query;
 
-    console.log('📡 Loading all contacts...');
+    console.log('ðŸ“¡ Loading all contacts...');
 
     // Query all three tables
     const growers = await db.query(`
@@ -89,7 +89,7 @@ router.get('/contacts', async (req, res) => {
       ...shippers.rows
     ];
 
-    console.log(`✅ Loaded ${allContacts.length} total contacts (Growers: ${growers.rows.length}, Buyers: ${buyers.rows.length}, Shippers: ${shippers.rows.length})`);
+    console.log(`âœ… Loaded ${allContacts.length} total contacts (Growers: ${growers.rows.length}, Buyers: ${buyers.rows.length}, Shippers: ${shippers.rows.length})`);
 
     // Apply filters
     if (type) {
@@ -137,7 +137,7 @@ router.get('/contacts', async (req, res) => {
     });
 
   } catch (error) {
-    console.error('❌ Error fetching contacts:', error);
+    console.error('âŒ Error fetching contacts:', error);
     res.status(500).json({ 
       success: false, 
       error: error.message 
@@ -515,3 +515,4 @@ router.post('/activity', async (req, res) => {
 });
 
 module.exports = router;
+

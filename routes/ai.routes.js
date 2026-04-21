@@ -54,7 +54,7 @@ router.post('/generate-letter', async (req, res) => {
     const anthropicKey = process.env.ANTHROPIC_API_KEY;
 
     if (!anthropicKey) {
-      console.log('🤖 [DEMO MODE] No ANTHROPIC_API_KEY - using template fallback');
+      console.log('ðŸ¤– [DEMO MODE] No ANTHROPIC_API_KEY - using template fallback');
       return res.json({
         letter: generateFallbackLetter(topic, tone, contact, category),
         mode: 'demo',
@@ -65,7 +65,7 @@ router.post('/generate-letter', async (req, res) => {
     // Build the prompt
     const prompt = buildPrompt(topic, tone, contact, category, customPrompt);
 
-    console.log('🤖 Calling Claude API for letter generation...');
+    console.log('ðŸ¤– Calling Claude API for letter generation...');
 
     const response = await fetch(ANTHROPIC_API_URL, {
       method: 'POST',
@@ -93,7 +93,7 @@ router.post('/generate-letter', async (req, res) => {
     const data = await response.json();
     const letter = data.content[0].text;
 
-    console.log('✅ Claude API response received');
+    console.log('âœ… Claude API response received');
 
     res.json({
       letter: letter,
@@ -399,7 +399,7 @@ function generateFallbackLetter(topic, tone, contact, category) {
   
   // Category-specific content
   const categoryContent = {
-    avocados: `We specialize in premium Mexican avocados from Michoacán, Jalisco, and Mexico State.
+    avocados: `We specialize in premium Mexican avocados from MichoacÃ¡n, Jalisco, and Mexico State.
 
 Available sizes: #32, #36, #40, #48, #60, #70, #84
 Packaging: Maya bags (2-6 pack), bulk cartons, clamshells
@@ -433,11 +433,11 @@ I hope this message finds you well. I'm reaching out from Mexausa Food Group, In
 ${content}
 
 Our services include:
-• Competitive FOB and delivered pricing
-• Flexible payment terms (Net 15/30)
-• Invoice factoring and PO financing available
-• Full FSMA 204 compliant traceability
-• Quality inspection at origin
+â€¢ Competitive FOB and delivered pricing
+â€¢ Flexible payment terms (Net 15/30)
+â€¢ Invoice factoring and PO financing available
+â€¢ Full FSMA 204 compliant traceability
+â€¢ Quality inspection at origin
 
 I would welcome the opportunity to discuss how we can support your needs.
 
@@ -447,8 +447,8 @@ Best regards,
 Saul Garcia
 CEO/COO, Mexausa Food Group, Inc.
 NMLS #337526
-📞 (831) 555-0123
-📧 saul@cmproducts.com`;
+ðŸ“ž (831) 555-0123
+ðŸ“§ saul@cmproducts.com`;
 }
 
 function generateMarketingFallback(prompt, category) {
@@ -459,10 +459,10 @@ ${prompt}
 At Mexausa Food Group, Inc., we're committed to providing exceptional products and services for all your ${category || 'agricultural'} needs.
 
 Our team is ready to support you with:
-• Premium quality products
-• Competitive pricing
-• Reliable supply
-• Full compliance and traceability
+â€¢ Premium quality products
+â€¢ Competitive pricing
+â€¢ Reliable supply
+â€¢ Full compliance and traceability
 
 Contact us today to learn more!
 
@@ -473,3 +473,4 @@ NMLS #337526`;
 }
 
 module.exports = router;
+

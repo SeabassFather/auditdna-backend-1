@@ -1,4 +1,4 @@
-// ================================================================
+﻿// ================================================================
 // AUDITDNA BACKEND - EXPRESS SERVER (ES MODULE)
 // ================================================================
 // Date Created: 2025-11-11 18:09:17 UTC
@@ -8,7 +8,7 @@
 // Status: PRODUCTION-READY - FULL ERP WITH SALES & INVENTORY
 // ================================================================
 // UPDATES:
-// - Added 20 product variants (5 products × multiple sizes)
+// - Added 20 product variants (5 products Ã— multiple sizes)
 // - All Hass Avocado cost = $28.00/case
 // - Editable pricing support
 // - Customer database integration
@@ -376,7 +376,7 @@ let salesDB = [];
 let inventoryTransactionsDB = [];
 let emailLogDB = [];
 
-console.log(`[INVENTORY] ✅ Loaded ${inventoryDB.length} products with variants`);
+console.log(`[INVENTORY] âœ… Loaded ${inventoryDB.length} products with variants`);
 
 // ============================================================
 // ROOT ENDPOINT - API DOCUMENTATION
@@ -464,7 +464,7 @@ salesRouter.post('/create', async (req, res) => {
       }
     }
     
-    console.log('[INVENTORY] ✅ Stock availability confirmed');
+    console.log('[INVENTORY] âœ… Stock availability confirmed');
 
     // DEDUCT INVENTORY
     console.log('[INVENTORY] Deducting stock...');
@@ -489,15 +489,15 @@ salesRouter.post('/create', async (req, res) => {
         timestamp: new Date().toISOString()
       });
       
-      console.log(`[INVENTORY] ${product.productName} (${product.size}): ${previousStock} → ${product.currentStock} (-${qty})`);
+      console.log(`[INVENTORY] ${product.productName} (${product.size}): ${previousStock} â†’ ${product.currentStock} (-${qty})`);
       
       // Check low stock alert
       if (product.currentStock < product.reorderPoint) {
-        console.log(`[ALERT] 🚨 LOW STOCK: ${product.productName} (${product.size}) - ${product.currentStock} < ${product.reorderPoint}`);
+        console.log(`[ALERT] ðŸš¨ LOW STOCK: ${product.productName} (${product.size}) - ${product.currentStock} < ${product.reorderPoint}`);
       }
     }
     
-    console.log('[INVENTORY] ✅ Stock deducted successfully');
+    console.log('[INVENTORY] âœ… Stock deducted successfully');
 
     // SAVE SALE TO DATABASE
     console.log('[DATABASE] Saving sale record...');
@@ -508,11 +508,11 @@ salesRouter.post('/create', async (req, res) => {
       savedAt: new Date().toISOString()
     });
     
-    console.log('[DATABASE] ✅ Sale saved');
+    console.log('[DATABASE] âœ… Sale saved');
 
     // EMAIL SIMULATION
     const email = saleData.customer?.email || saleData.client?.email || 'no-email';
-    console.log('[EMAIL] ✅ Invoice email sent to:', email);
+    console.log('[EMAIL] âœ… Invoice email sent to:', email);
     
     emailLogDB.push({
       invoiceNumber: saleData.invoiceNumber,
@@ -523,7 +523,7 @@ salesRouter.post('/create', async (req, res) => {
     });
 
     console.log('============================================================');
-    console.log('[SALES] ✅ SALE COMPLETED SUCCESSFULLY');
+    console.log('[SALES] âœ… SALE COMPLETED SUCCESSFULLY');
     console.log('[INVOICE]', saleData.invoiceNumber);
     console.log('[TOTAL]', `$${saleData.total}`);
     console.log('============================================================');
@@ -540,7 +540,7 @@ salesRouter.post('/create', async (req, res) => {
 
   } catch (error) {
     console.error('============================================================');
-    console.error('[SALES] ❌ ERROR:', error.message);
+    console.error('[SALES] âŒ ERROR:', error.message);
     console.error('============================================================');
     
     res.status(500).json({
@@ -697,7 +697,7 @@ app.get('/verify/:invoiceNumber', async (req, res) => {
 </head>
 <body>
   <div class="container">
-    <div class="error">❌</div>
+    <div class="error">âŒ</div>
     <h1>Invoice Not Found</h1>
     <p>The invoice number "${req.params.invoiceNumber}" does not exist in our system.</p>
   </div>
@@ -723,7 +723,7 @@ app.get('/verify/:invoiceNumber', async (req, res) => {
 </head>
 <body>
   <div class="container">
-    <div class="verified">✅</div>
+    <div class="verified">âœ…</div>
     <h1>Invoice Verified</h1>
     <p>This invoice is authentic and has been verified in our system.</p>
     <div class="invoice-number">Invoice #${sale.invoiceNumber}</div>
@@ -817,20 +817,20 @@ app.listen(PORT, () => {
   console.log(`URL: http://process.env.DB_HOST:${PORT}`);
   console.log(`Network: http://process.env.DB_HOST:${PORT}`);
   console.log('------------------------------------------------------------');
-  console.log('[INVENTORY] 📦 Loaded Products:');
-  console.log(`   • Hass Avocado: 5 sizes (36s, 48s, 60s, 70s, 84s)`);
-  console.log(`   • Roma Tomato: 3 sizes (20lb, 25lb, 40lb)`);
-  console.log(`   • Romaine Lettuce: 3 counts (12, 18, 24)`);
-  console.log(`   • Strawberry Albion: 3 packs (12x6oz, 8x1lb, flat)`);
-  console.log(`   • Red Bell Pepper: 3 sizes (11lb, 20lb, 25lb)`);
-  console.log(`   💰 Total Products: ${inventoryDB.length} SKUs`);
-  console.log(`   💵 All Hass Avocado Cost: $28.00/case (editable pricing in POS)`);
+  console.log('[INVENTORY] ðŸ“¦ Loaded Products:');
+  console.log(`   â€¢ Hass Avocado: 5 sizes (36s, 48s, 60s, 70s, 84s)`);
+  console.log(`   â€¢ Roma Tomato: 3 sizes (20lb, 25lb, 40lb)`);
+  console.log(`   â€¢ Romaine Lettuce: 3 counts (12, 18, 24)`);
+  console.log(`   â€¢ Strawberry Albion: 3 packs (12x6oz, 8x1lb, flat)`);
+  console.log(`   â€¢ Red Bell Pepper: 3 sizes (11lb, 20lb, 25lb)`);
+  console.log(`   ðŸ’° Total Products: ${inventoryDB.length} SKUs`);
+  console.log(`   ðŸ’µ All Hass Avocado Cost: $28.00/case (editable pricing in POS)`);
   console.log('------------------------------------------------------------');
   console.log('[NEW] Sales & Inventory System: ACTIVE');
-  console.log('[NEW] Customer Database: ACTIVE ✅');
-  console.log('[NEW] Manifest System: ACTIVE ✅');
-  console.log('[NEW] Editable Pricing: ENABLED 💰');
-  console.log('[NEW] Product Variants: ENABLED 📦');
+  console.log('[NEW] Customer Database: ACTIVE âœ…');
+  console.log('[NEW] Manifest System: ACTIVE âœ…');
+  console.log('[NEW] Editable Pricing: ENABLED ðŸ’°');
+  console.log('[NEW] Product Variants: ENABLED ðŸ“¦');
   console.log('[NEW] Email Integration: READY');
   console.log('[NEW] QR Verification: http://process.env.DB_HOST:4000/verify/{invoice}');
   console.log('[MODULES] Produce Intelligence API: READY');
@@ -843,3 +843,4 @@ app.listen(PORT, () => {
 });
 
 export default app;
+

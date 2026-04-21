@@ -21,7 +21,7 @@ router.post('/login', async (req, res) => {
 
     const pool = getPool();
 
-    const result = await pool.query(
+    const result = await global.db.query(
       `
       SELECT id, username, role, password_hash, is_active
       FROM auth_users
@@ -51,13 +51,13 @@ router.post('/login', async (req, res) => {
     }
 
     if (!user.is_active) {
-      await pool.query(
+      await global.db.query(
         `UPDATE auth_users SET is_active = true WHERE id = $1`,
         [user.id]
       );
     }
 
-    await pool.query(
+    await global.db.query(
       `
       UPDATE auth_users
       SET last_login = NOW(),

@@ -1,5 +1,5 @@
 // ----------------------------------------------------------------------------
-// TENANT AUTH ROUTE — C:\AuditDNA\backend\routes\tenant-auth.js
+// TENANT AUTH ROUTE â€” C:\AuditDNA\backend\routes\tenant-auth.js
 // ----------------------------------------------------------------------------
 const express = require('express');
 const router  = express.Router();
@@ -13,7 +13,7 @@ router.post('/tenant-login', async (req, res) => {
       return res.status(400).json({ error: 'Email and password required' });
     }
     const pool = req.app.locals.pool;
-    const result = await pool.query(
+    const result = await global.db.query(
       'SELECT * FROM auth_users WHERE email = $1 AND status = $2 LIMIT 1',
       [email.toLowerCase().trim(), 'active']
     );
@@ -51,3 +51,4 @@ router.post('/tenant-verify', (req, res) => {
 });
 
 module.exports = router;
+

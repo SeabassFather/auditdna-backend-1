@@ -18,7 +18,7 @@ const pool = new Pool({
   password: 'postgres'
 });
 
-console.log('✅ [CRM] PostgreSQL pool ready');
+console.log('âœ… [CRM] PostgreSQL pool ready');
 
 // GET ALL CONTACTS
 router.get('/contacts', async (req, res) => {
@@ -50,14 +50,14 @@ router.get('/contacts', async (req, res) => {
     query += ` ORDER BY created_at DESC LIMIT $${params.length + 1} OFFSET $${params.length + 2}`;
     params.push(limit, offset);
 
-    const result = await pool.query(query, params);
+    const result = await global.db.query(query, params);
 
     // GET TOTAL COUNT
     let countQuery = 'SELECT COUNT(*) FROM zadarma_contacts';
     if (search) {
       countQuery += ` WHERE first_name ILIKE $1 OR last_name ILIKE $1 OR email ILIKE $1 OR phone ILIKE $1 OR company ILIKE $1 OR mobile ILIKE $1`;
     }
-    const countResult = await pool.query(countQuery, search ? [`%${search}%`] : []);
+    const countResult = await global.db.query(countQuery, search ? [`%${search}%`] : []);
     const total = parseInt(countResult.rows[0].count);
 
     res.json({
@@ -80,7 +80,7 @@ router.get('/contacts', async (req, res) => {
 router.get('/contacts/:id', async (req, res) => {
   try {
     const { id } = req.params;
-    const result = await pool.query('SELECT * FROM zadarma_contacts WHERE id = $1', [id]);
+    const result = await global.db.query('SELECT * FROM zadarma_contacts WHERE id = $1', [id]);
     
     if (result.rows.length === 0) {
       return res.status(404).json({ error: 'Contact not found' });
@@ -98,7 +98,7 @@ router.post('/contacts', async (req, res) => {
   try {
     const { first_name, last_name, company, phone, mobile, email, position, department, category, tags, notes, source, status } = req.body;
 
-    const result = await pool.query(
+    const result = await global.db.query(
       `INSERT INTO zadarma_contacts 
        (first_name, last_name, company, phone, mobile, email, position, department, category, tags, notes, source, status, created_at, updated_at)
        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, NOW(), NOW())
@@ -119,7 +119,7 @@ router.put('/contacts/:id', async (req, res) => {
     const { id } = req.params;
     const { first_name, last_name, company, phone, mobile, email, position, department, category, tags, notes, source, status } = req.body;
 
-    const result = await pool.query(
+    const result = await global.db.query(
       `UPDATE zadarma_contacts 
        SET first_name = $1, last_name = $2, company = $3, phone = $4, 
            mobile = $5, email = $6, position = $7, department = $8, 
@@ -144,7 +144,7 @@ router.put('/contacts/:id', async (req, res) => {
 router.delete('/contacts/:id', async (req, res) => {
   try {
     const { id } = req.params;
-    const result = await pool.query('DELETE FROM zadarma_contacts WHERE id = $1 RETURNING id', [id]);
+    const result = await global.db.query('DELETE FROM zadarma_contacts WHERE id = $1 RETURNING id', [id]);
 
     if (result.rows.length === 0) {
       return res.status(404).json({ error: 'Contact not found' });
@@ -158,3 +158,4 @@ router.delete('/contacts/:id', async (req, res) => {
 });
 
 module.exports = router;
+

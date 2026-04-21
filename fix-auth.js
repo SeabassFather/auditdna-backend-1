@@ -9,8 +9,9 @@ c = c.split("require('../server').pool").join("require('../db').pool");
 fs.writeFileSync(f, c, 'utf8');
 
 if (before === c) {
-  console.log('NOT FOUND — printing all require lines for inspection:');
+  console.log('NOT FOUND â€” printing all require lines for inspection:');
   c.split('\n').filter(l => l.includes('require')).forEach(l => console.log(' >', l.trim()));
 } else {
-  console.log('Auth.js FIXED — pool now reads from ../db');
+  console.log('Auth.js FIXED â€” pool now reads from ../db');
 }
+

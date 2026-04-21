@@ -1,14 +1,14 @@
-// ════════════════════════════════════════════════════════════════════════════
-// USDA NASS — FULL ROUTE MODULE
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+// USDA NASS â€” FULL ROUTE MODULE
 // Add to: C:\AuditDNA\backend\MiniAPI\server.js
 // Key: 4F158DB1-85C2-3243-BFFA-58B53FB40D23
 // Docs: https://quickstats.nass.usda.gov/api
-// ════════════════════════════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
 const NASS_KEY = process.env.USDA_NASS_KEY || '4F158DB1-85C2-3243-BFFA-58B53FB40D23';
 const NASS_BASE = 'https://quickstats.nass.usda.gov/api/api_GET/';
 
-// Helper — fetch from NASS with timeout failover
+// Helper â€” fetch from NASS with timeout failover
 async function nassQuery(params) {
   const url = new URL(NASS_BASE);
   url.searchParams.set('key', NASS_KEY);
@@ -29,7 +29,7 @@ async function nassQuery(params) {
   }
 }
 
-// ── PASTE THESE ROUTES INTO MiniAPI/server.js ─────────────────────────────
+// â”€â”€ PASTE THESE ROUTES INTO MiniAPI/server.js â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 // Route 1: Commodity production by state
 // GET /api/nass/production?commodity=AVOCADOS&state=CA&year=2023
@@ -48,7 +48,7 @@ app.get('/api/nass/production', async (req, res) => {
   } catch (e) { res.status(500).json({ success: false, error: e.message }); }
 });
 
-// Route 2: Grower counts / operations by county — LEAD GENERATOR
+// Route 2: Grower counts / operations by county â€” LEAD GENERATOR
 // GET /api/nass/growers?commodity=STRAWBERRIES&state=CA
 app.get('/api/nass/growers', async (req, res) => {
   try {
@@ -66,7 +66,7 @@ app.get('/api/nass/growers', async (req, res) => {
   } catch (e) { res.status(500).json({ success: false, error: e.message }); }
 });
 
-// Route 3: Price received by farmers — FOB intelligence
+// Route 3: Price received by farmers â€” FOB intelligence
 // GET /api/nass/prices?commodity=AVOCADOS&state=CA
 app.get('/api/nass/prices', async (req, res) => {
   try {
@@ -83,7 +83,7 @@ app.get('/api/nass/prices', async (req, res) => {
   } catch (e) { res.status(500).json({ success: false, error: e.message }); }
 });
 
-// Route 4: Acreage / area planted — supply forecast
+// Route 4: Acreage / area planted â€” supply forecast
 // GET /api/nass/acreage?commodity=STRAWBERRIES&state=CA&year=2024
 app.get('/api/nass/acreage', async (req, res) => {
   try {
@@ -100,7 +100,7 @@ app.get('/api/nass/acreage', async (req, res) => {
   } catch (e) { res.status(500).json({ success: false, error: e.message }); }
 });
 
-// Route 5: County-level data — full lead map
+// Route 5: County-level data â€” full lead map
 // GET /api/nass/counties?commodity=AVOCADOS&state=CA
 app.get('/api/nass/counties', async (req, res) => {
   try {
@@ -124,7 +124,7 @@ app.get('/api/nass/counties', async (req, res) => {
   } catch (e) { res.status(500).json({ success: false, error: e.message }); }
 });
 
-// Route 6: MASTER SNAPSHOT — all key stats for one commodity
+// Route 6: MASTER SNAPSHOT â€” all key stats for one commodity
 // GET /api/nass/snapshot?commodity=TOMATOES
 app.get('/api/nass/snapshot', async (req, res) => {
   try {
@@ -146,7 +146,7 @@ app.get('/api/nass/snapshot', async (req, res) => {
   } catch (e) { res.status(500).json({ success: false, error: e.message }); }
 });
 
-// Route 7: Lead generator — find all grower operations in a state
+// Route 7: Lead generator â€” find all grower operations in a state
 // GET /api/nass/leads?state=CA&commodity=STRAWBERRIES
 app.get('/api/nass/leads', async (req, res) => {
   try {
@@ -186,3 +186,4 @@ app.get('/api/nass/leads', async (req, res) => {
     res.json({ success: true, state, count: leads.length, leads });
   } catch (e) { res.status(500).json({ success: false, error: e.message }); }
 });
+

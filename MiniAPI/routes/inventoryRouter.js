@@ -34,3 +34,4 @@ inventoryRouter.get('/product/:sku', (req, res) => {
 });
 
 export default inventoryRouter;
+

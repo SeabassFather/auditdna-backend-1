@@ -27,3 +27,4 @@ produceRecordSchema.index({ commodity: 1, variety: 1, pack: 1 });
 produceRecordSchema.index({ region: 1, date: -1 });
 
 module.exports = mongoose.model('ProduceRecord', produceRecordSchema);
+

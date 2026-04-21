@@ -28,3 +28,4 @@ fs.writeFileSync(path.join(outDir, 'public.pem'), publicKey, { mode: 0o644 });
 
 console.log('Keys written to:', outDir);
 console.log('private.pem (keep secure), public.pem (distribute as needed)');
+

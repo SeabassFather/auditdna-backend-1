@@ -15,9 +15,9 @@ let contacts = [];
 try {
   const raw = JSON.parse(fs.readFileSync(dataPath, 'utf8'));
   contacts = raw.contacts || raw;
-  console.log(`✅ Loaded ${contacts.length} SENASICA contacts\n`);
+  console.log(`âœ… Loaded ${contacts.length} SENASICA contacts\n`);
 } catch (err) {
-  console.error('❌ Could not load unified_contacts.json');
+  console.error('âŒ Could not load unified_contacts.json');
   console.error('   Usage: node scrape_senasica_emails.js <path_to_unified_contacts.json>');
   process.exit(1);
 }
@@ -88,9 +88,9 @@ function generateEmails(companyName) {
 }
 
 // Process contacts and generate email candidates
-console.log('╔═══════════════════════════════════════════════════════════════╗');
-console.log('║  GENERATING EMAIL CANDIDATES FOR SENASICA CONTACTS           ║');
-console.log('╚═══════════════════════════════════════════════════════════════╝\n');
+console.log('â•”â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•—');
+console.log('â•‘  GENERATING EMAIL CANDIDATES FOR SENASICA CONTACTS           â•‘');
+console.log('â•šâ•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•\n');
 
 const results = [];
 const byState = {};
@@ -124,7 +124,7 @@ for (const contact of contacts) {
   byCampaign[campaign] = (byCampaign[campaign] || 0) + 1;
 }
 
-console.log(`📊 Processed ${results.length} companies\n`);
+console.log(`ðŸ“Š Processed ${results.length} companies\n`);
 
 // Save to CSV
 const csvPath = 'senasica_email_candidates.csv';
@@ -133,43 +133,44 @@ const rows = results.map(r =>
   Object.values(r).map(v => `"${String(v).replace(/"/g, '""')}"`).join(',')
 );
 fs.writeFileSync(csvPath, headers + '\n' + rows.join('\n'));
-console.log(`✅ Saved: ${csvPath}\n`);
+console.log(`âœ… Saved: ${csvPath}\n`);
 
 // Save JSON for import
 const jsonPath = 'senasica_with_emails.json';
 fs.writeFileSync(jsonPath, JSON.stringify(results, null, 2));
-console.log(`✅ Saved: ${jsonPath}\n`);
+console.log(`âœ… Saved: ${jsonPath}\n`);
 
 // Stats
-console.log('═══════════════════════════════════════════════════════════════');
-console.log('📊 BY STATE (Top 10)');
-console.log('═══════════════════════════════════════════════════════════════');
+console.log('â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•');
+console.log('ðŸ“Š BY STATE (Top 10)');
+console.log('â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•');
 Object.entries(byState)
   .sort((a, b) => b[1] - a[1])
   .slice(0, 10)
   .forEach(([state, count]) => console.log(`   ${state}: ${count}`));
 
-console.log('\n═══════════════════════════════════════════════════════════════');
-console.log('📊 BY CAMPAIGN');
-console.log('═══════════════════════════════════════════════════════════════');
+console.log('\nâ•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•');
+console.log('ðŸ“Š BY CAMPAIGN');
+console.log('â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•');
 Object.entries(byCampaign)
   .sort((a, b) => b[1] - a[1])
   .forEach(([campaign, count]) => console.log(`   ${campaign}: ${count}`));
 
-console.log('\n═══════════════════════════════════════════════════════════════');
-console.log('📧 SAMPLE EMAIL CANDIDATES');
-console.log('═══════════════════════════════════════════════════════════════');
+console.log('\nâ•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•');
+console.log('ðŸ“§ SAMPLE EMAIL CANDIDATES');
+console.log('â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•');
 results.slice(0, 5).forEach(r => {
   console.log(`\n   ${r.company_name}`);
-  console.log(`   → ${r.primary_email}`);
-  console.log(`   → Alternatives: ${r.email_candidates.split('; ').slice(1, 3).join(', ')}`);
+  console.log(`   â†’ ${r.primary_email}`);
+  console.log(`   â†’ Alternatives: ${r.email_candidates.split('; ').slice(1, 3).join(', ')}`);
 });
 
-console.log('\n═══════════════════════════════════════════════════════════════');
-console.log('✅ NEXT STEPS:');
-console.log('═══════════════════════════════════════════════════════════════');
+console.log('\nâ•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•');
+console.log('âœ… NEXT STEPS:');
+console.log('â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•');
 console.log('1. Open senasica_email_candidates.csv in Excel');
 console.log('2. Review/verify email candidates');
 console.log('3. Use email verification service (hunter.io, neverbounce)');
 console.log('4. Import verified emails to CRM');
-console.log('═══════════════════════════════════════════════════════════════\n');
+console.log('â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•\n');
+

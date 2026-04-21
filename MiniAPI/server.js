@@ -71,7 +71,7 @@ const contactsPath = path.join(__dirname, 'data', 'shipper-contacts.json');
 try {
   if (fs.existsSync(contactsPath)) {
     leads = JSON.parse(fs.readFileSync(contactsPath, 'utf-8'));
-    console.log(`✓ Loaded ${leads.length} contacts from shipper-contacts.json`);
+    console.log(`âœ“ Loaded ${leads.length} contacts from shipper-contacts.json`);
   }
 } catch (e) {
   console.log('Note: No contacts file found, starting fresh');
@@ -90,7 +90,7 @@ try {
       const [date, commodity_desc, price, region] = line.split(',');
       return { date, commodity: commodity_desc, price: parseFloat(price), region };
     });
-    console.log(`✓ Loaded ${usdaPrices.length} price records from usda_prices.csv`);
+    console.log(`âœ“ Loaded ${usdaPrices.length} price records from usda_prices.csv`);
   }
 } catch (e) {
   console.log('Note: No prices CSV found');
@@ -710,7 +710,7 @@ calendarRouter.post('/invoice', (req, res) => {
   
   const event = {
     id: 'inv_' + Date.now(),
-    title: `💰 Invoice #${invoiceNumber} - ${customerName}`,
+    title: `ðŸ’° Invoice #${invoiceNumber} - ${customerName}`,
     description: `Amount: $${amount || 'TBD'}\nCustomer: ${customerName}\nItems: ${items || 'See invoice'}`,
     start: dueDate, end: dueDate,
     calendar: assignTo, type: 'invoice',
@@ -736,7 +736,7 @@ calendarRouter.post('/inquiry', (req, res) => {
   
   const event = {
     id: 'inq_' + Date.now(),
-    title: `📞 Sales Inquiry: ${customerName}${priority === 'high' ? ' 🔥' : ''}`,
+    title: `ðŸ“ž Sales Inquiry: ${customerName}${priority === 'high' ? ' ðŸ”¥' : ''}`,
     description: `Customer: ${customerName}\nEmail: ${email || 'N/A'}\nPhone: ${phone || 'N/A'}\nProduct: ${product || 'General'}\nQuantity: ${quantity || 'TBD'}\nNotes: ${notes || 'None'}\nPriority: ${priority.toUpperCase()}`,
     start: contactDate, end: contactDate,
     calendar: assignTo, type: 'inquiry', priority,
@@ -827,3 +827,4 @@ app.listen(PORT, () => {
 });
 
 export default app;
+

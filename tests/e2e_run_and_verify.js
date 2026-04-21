@@ -82,3 +82,4 @@ async function pollReport(verification_id) {
     process.exit(4);
   }
 })();
+

@@ -28,3 +28,4 @@ router.post('/sale', (req, res) => {
 router.get('/customers', (req, res) => res.json({ data: customers }));
 
 module.exports = router;
+

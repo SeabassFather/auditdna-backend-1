@@ -14,7 +14,7 @@ const path = require('path');
 const fs = require('fs');
 const crypto = require('crypto');
 
-// ─── SMTP TRANSPORTER ──────────────────────────────────────────────────────────
+// â”€â”€â”€ SMTP TRANSPORTER â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 const transporter = nodemailer.createTransport({
   host: process.env.SMTP_HOST || 'smtpout.secureserver.net',
   port: parseInt(process.env.SMTP_PORT || '465'),
@@ -25,7 +25,7 @@ const transporter = nodemailer.createTransport({
   }
 });
 
-// ─── FILE UPLOAD CONFIG ─────────────────────────────────────────────────────────
+// â”€â”€â”€ FILE UPLOAD CONFIG â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 const uploadDir = path.join(__dirname, '..', 'uploads', 'kyc');
 if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir, { recursive: true });
 
@@ -48,14 +48,14 @@ const upload = multer({
   }
 });
 
-// ─── HELPERS ───────────────────────────────────────────────────────────────────
+// â”€â”€â”€ HELPERS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function generateOTP() {
   return Math.floor(100000 + Math.random() * 900000).toString();
 }
 
 async function fireBrainEvent(event_type, payload, tenant_id = null) {
   try {
-    await pool.query(
+    await global.db.query(
       `INSERT INTO brain_events (event_type, payload, source, tenant_id)
        VALUES ($1, $2, $3, $4)`,
       [event_type, JSON.stringify(payload), 'onboarding', tenant_id]
@@ -68,31 +68,31 @@ async function fireBrainEvent(event_type, payload, tenant_id = null) {
 function calculateKYCScore(kyc) {
   let score = 0;
 
-  // Government ID — up to 25 pts
+  // Government ID â€” up to 25 pts
   if (kyc.gov_id_front_path && kyc.gov_id_back_path) score += 25;
   else if (kyc.gov_id_front_path) score += 12;
 
-  // Liveness check — 5 pts
+  // Liveness check â€” 5 pts
   if (kyc.liveness_passed) score += 5;
 
-  // Business identity — up to 20 pts
+  // Business identity â€” up to 20 pts
   if (kyc.legal_name && kyc.ein_rfc) score += 20;
   else if (kyc.legal_name) score += 10;
 
-  // Contact verification — up to 15 pts
+  // Contact verification â€” up to 15 pts
   if (kyc.email_verified) score += 10;
   if (kyc.phone_verified) score += 5;
 
-  // Agricultural credentials — up to 15 pts
+  // Agricultural credentials â€” up to 15 pts
   if (kyc.usda_farm_id) score += 8;
   if (kyc.grower_reg_num) score += 4;
   if (kyc.fsma_status === 'compliant') score += 3;
 
-  // Geolocation — up to 10 pts
+  // Geolocation â€” up to 10 pts
   if (kyc.gps_lat && kyc.gps_lng) score += 7;
   if (kyc.country === 'US' || kyc.country === 'MX') score += 3;
 
-  // OFAC cleared — 10 pts
+  // OFAC cleared â€” 10 pts
   if (kyc.ofac_cleared) score += 10;
 
   return Math.min(score, 100);
@@ -104,7 +104,7 @@ function getKYCStatus(score) {
   return 'rejected';
 }
 
-// ─── OTP EMAIL TEMPLATE ────────────────────────────────────────────────────────
+// â”€â”€â”€ OTP EMAIL TEMPLATE â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function otpEmailHTML(code, type = 'email') {
   return `
     <!DOCTYPE html>
@@ -140,10 +140,10 @@ function otpEmailHTML(code, type = 'email') {
   `;
 }
 
-// ══════════════════════════════════════════════════════════════════════════════
-// PHASE 1 — LEAD CAPTURE
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+// PHASE 1 â€” LEAD CAPTURE
 // POST /api/onboarding/lead
-// ══════════════════════════════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 router.post('/lead', async (req, res) => {
   const { email, phone, crop_type, business_name, source, agent_id } = req.body;
 
@@ -152,7 +152,7 @@ router.post('/lead', async (req, res) => {
   }
 
   try {
-    const result = await pool.query(
+    const result = await global.db.query(
       `INSERT INTO tenant_leads (email, phone, crop_type, business_name, source, agent_id)
        VALUES ($1, $2, $3, $4, $5, $6)
        ON CONFLICT (email) DO UPDATE SET
@@ -186,7 +186,7 @@ router.post('/lead', async (req, res) => {
       await transporter.sendMail({
         from:    '"AuditDNA Platform" <saul@mexausafg.com>',
         to:      email,
-        subject: 'Welcome to AuditDNA — Complete Your Registration',
+        subject: 'Welcome to AuditDNA â€” Complete Your Registration',
         html:    `
           <body style="margin:0;background:#0f172a;font-family:sans-serif;padding:40px 20px">
             <div style="max-width:480px;margin:0 auto;background:#1e293b;border-radius:10px;
@@ -198,7 +198,7 @@ router.post('/lead', async (req, res) => {
               </h2>
               <p style="color:#94a3b0;margin:0 0 24px;font-size:14px;line-height:1.6">
                 Complete your registration to access the full AuditDNA agricultural
-                intelligence platform — USDA data, FSMA traceability, cross-border
+                intelligence platform â€” USDA data, FSMA traceability, cross-border
                 trade tools, and back-office automation built for operators like you.
               </p>
               <a href="${process.env.REACT_APP_FRONTEND_URL || 'https://auditdna.netlify.app'}/onboarding"
@@ -225,10 +225,10 @@ router.post('/lead', async (req, res) => {
   }
 });
 
-// ══════════════════════════════════════════════════════════════════════════════
-// PHASE 2 — OTP: SEND
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+// PHASE 2 â€” OTP: SEND
 // POST /api/onboarding/otp/send
-// ══════════════════════════════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 router.post('/otp/send', async (req, res) => {
   const { identifier, type } = req.body;
 
@@ -238,7 +238,7 @@ router.post('/otp/send', async (req, res) => {
 
   // Rate limit: check for recent unsent OTP within 60 seconds
   try {
-    const recent = await pool.query(
+    const recent = await global.db.query(
       `SELECT created_at FROM tenant_otp
        WHERE identifier = $1 AND type = $2 AND verified = FALSE
          AND created_at > NOW() - INTERVAL '60 seconds'
@@ -255,13 +255,13 @@ router.post('/otp/send', async (req, res) => {
     const expires = new Date(Date.now() + 10 * 60 * 1000);
 
     // Invalidate old OTPs
-    await pool.query(
+    await global.db.query(
       `UPDATE tenant_otp SET verified = TRUE
        WHERE identifier = $1 AND type = $2 AND verified = FALSE`,
       [identifier, type]
     );
 
-    await pool.query(
+    await global.db.query(
       `INSERT INTO tenant_otp (identifier, type, code, expires_at)
        VALUES ($1, $2, $3, $4)`,
       [identifier, type, code, expires]
@@ -271,7 +271,7 @@ router.post('/otp/send', async (req, res) => {
       await transporter.sendMail({
         from:    '"AuditDNA Platform" <saul@mexausafg.com>',
         to:      identifier,
-        subject: 'AuditDNA — Your Verification Code',
+        subject: 'AuditDNA â€” Your Verification Code',
         html:    otpEmailHTML(code, 'email')
       });
     } else {
@@ -289,10 +289,10 @@ router.post('/otp/send', async (req, res) => {
   }
 });
 
-// ══════════════════════════════════════════════════════════════════════════════
-// PHASE 2 — OTP: VERIFY
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+// PHASE 2 â€” OTP: VERIFY
 // POST /api/onboarding/otp/verify
-// ══════════════════════════════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 router.post('/otp/verify', async (req, res) => {
   const { identifier, type, code, lead_id } = req.body;
 
@@ -301,7 +301,7 @@ router.post('/otp/verify', async (req, res) => {
   }
 
   try {
-    const result = await pool.query(
+    const result = await global.db.query(
       `SELECT * FROM tenant_otp
        WHERE identifier = $1 AND type = $2
          AND verified = FALSE AND expires_at > NOW()
@@ -317,14 +317,14 @@ router.post('/otp/verify', async (req, res) => {
 
     // Check lockout
     if (otp.attempts >= 3) {
-      await pool.query(`UPDATE tenant_otp SET verified = TRUE WHERE id = $1`, [otp.id]);
+      await global.db.query(`UPDATE tenant_otp SET verified = TRUE WHERE id = $1`, [otp.id]);
       return res.status(429).json({
         error: 'Too many failed attempts. Please request a new code.'
       });
     }
 
     // Increment attempt
-    await pool.query(
+    await global.db.query(
       `UPDATE tenant_otp SET attempts = attempts + 1 WHERE id = $1`,
       [otp.id]
     );
@@ -337,12 +337,12 @@ router.post('/otp/verify', async (req, res) => {
     }
 
     // Mark verified
-    await pool.query(`UPDATE tenant_otp SET verified = TRUE WHERE id = $1`, [otp.id]);
+    await global.db.query(`UPDATE tenant_otp SET verified = TRUE WHERE id = $1`, [otp.id]);
 
     // Update KYC record
     if (lead_id) {
       const col = type === 'email' ? 'email_verified' : 'phone_verified';
-      await pool.query(
+      await global.db.query(
         `UPDATE tenant_kyc SET ${col} = TRUE, updated_at = NOW() WHERE lead_id = $1`,
         [lead_id]
       );
@@ -356,17 +356,17 @@ router.post('/otp/verify', async (req, res) => {
   }
 });
 
-// ══════════════════════════════════════════════════════════════════════════════
-// PHASE 2 — KYC: INIT (create blank KYC record for lead)
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+// PHASE 2 â€” KYC: INIT (create blank KYC record for lead)
 // POST /api/onboarding/kyc/init
-// ══════════════════════════════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 router.post('/kyc/init', async (req, res) => {
   const { lead_id } = req.body;
   if (!lead_id) return res.status(400).json({ error: 'lead_id required' });
 
   try {
     // Verify lead exists
-    const lead = await pool.query(
+    const lead = await global.db.query(
       `SELECT id FROM tenant_leads WHERE id = $1`, [lead_id]
     );
     if (lead.rows.length === 0) {
@@ -374,7 +374,7 @@ router.post('/kyc/init', async (req, res) => {
     }
 
     // Create or return existing KYC record
-    const result = await pool.query(
+    const result = await global.db.query(
       `INSERT INTO tenant_kyc (lead_id) VALUES ($1)
        ON CONFLICT (lead_id) DO UPDATE SET updated_at = NOW()
        RETURNING id, current_step, status`,
@@ -389,10 +389,10 @@ router.post('/kyc/init', async (req, res) => {
   }
 });
 
-// ══════════════════════════════════════════════════════════════════════════════
-// PHASE 2 — KYC: STEP 1 — Business Identity
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+// PHASE 2 â€” KYC: STEP 1 â€” Business Identity
 // POST /api/onboarding/kyc/step1
-// ══════════════════════════════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 router.post('/kyc/step1', async (req, res) => {
   const { lead_id, legal_name, ein_rfc, business_type,
           incorporation_state, contact_title } = req.body;
@@ -402,7 +402,7 @@ router.post('/kyc/step1', async (req, res) => {
   }
 
   try {
-    await pool.query(
+    await global.db.query(
       `UPDATE tenant_kyc SET
          legal_name = $2, ein_rfc = $3, business_type = $4,
          incorporation_state = $5, contact_title = $6,
@@ -419,16 +419,16 @@ router.post('/kyc/step1', async (req, res) => {
   }
 });
 
-// ══════════════════════════════════════════════════════════════════════════════
-// PHASE 2 — KYC: STEP 2 — Contact Verification (OTP already handled above)
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+// PHASE 2 â€” KYC: STEP 2 â€” Contact Verification (OTP already handled above)
 // POST /api/onboarding/kyc/step2/complete
-// ══════════════════════════════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 router.post('/kyc/step2/complete', async (req, res) => {
   const { lead_id } = req.body;
   if (!lead_id) return res.status(400).json({ error: 'lead_id required' });
 
   try {
-    const result = await pool.query(
+    const result = await global.db.query(
       `SELECT email_verified, phone_verified FROM tenant_kyc WHERE lead_id = $1`,
       [lead_id]
     );
@@ -441,7 +441,7 @@ router.post('/kyc/step2/complete', async (req, res) => {
       return res.status(400).json({ error: 'Email not verified. Please complete email OTP.' });
     }
 
-    await pool.query(
+    await global.db.query(
       `UPDATE tenant_kyc SET current_step = GREATEST(current_step, 3),
          updated_at = NOW() WHERE lead_id = $1`,
       [lead_id]
@@ -454,10 +454,10 @@ router.post('/kyc/step2/complete', async (req, res) => {
   }
 });
 
-// ══════════════════════════════════════════════════════════════════════════════
-// PHASE 2 — KYC: STEP 3 — Government ID Upload
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+// PHASE 2 â€” KYC: STEP 3 â€” Government ID Upload
 // POST /api/onboarding/kyc/step3
-// ══════════════════════════════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 router.post('/kyc/step3',
   upload.fields([
     { name: 'gov_id_front', maxCount: 1 },
@@ -477,7 +477,7 @@ router.post('/kyc/step3',
     const backPath  = req.files.gov_id_back?.[0]?.path || null;
 
     try {
-      await pool.query(
+      await global.db.query(
         `UPDATE tenant_kyc SET
            gov_id_front_path  = $2, gov_id_back_path = $3,
            gov_id_type        = $4, liveness_passed  = $5,
@@ -497,7 +497,7 @@ router.post('/kyc/step3',
 
       // Log to document vault
       if (frontPath) {
-        await pool.query(
+        await global.db.query(
           `INSERT INTO document_vault
              (owner_id, owner_type, file_name, file_path, file_type, category)
            SELECT id, 'tenant_kyc', $2, $3, $4, 'government_id'
@@ -514,10 +514,10 @@ router.post('/kyc/step3',
   }
 );
 
-// ══════════════════════════════════════════════════════════════════════════════
-// PHASE 2 — KYC: STEP 4 — Agricultural Credentials
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+// PHASE 2 â€” KYC: STEP 4 â€” Agricultural Credentials
 // POST /api/onboarding/kyc/step4
-// ══════════════════════════════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 router.post('/kyc/step4',
   upload.single('organic_cert'),
   async (req, res) => {
@@ -529,7 +529,7 @@ router.post('/kyc/step4',
     const certPath = req.file?.path || null;
 
     try {
-      await pool.query(
+      await global.db.query(
         `UPDATE tenant_kyc SET
            usda_farm_id       = $2, grower_reg_num    = $3,
            food_safety_license = $4, fsma_status      = $5,
@@ -542,7 +542,7 @@ router.post('/kyc/step4',
       );
 
       if (certPath) {
-        await pool.query(
+        await global.db.query(
           `INSERT INTO document_vault
              (owner_id, owner_type, file_name, file_path, file_type, category)
            SELECT id, 'tenant_kyc', $2, $3, 'pdf', 'organic_certification'
@@ -559,10 +559,10 @@ router.post('/kyc/step4',
   }
 );
 
-// ══════════════════════════════════════════════════════════════════════════════
-// PHASE 2 — KYC: STEP 5 — Address + Geolocation
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+// PHASE 2 â€” KYC: STEP 5 â€” Address + Geolocation
 // POST /api/onboarding/kyc/step5
-// ══════════════════════════════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 router.post('/kyc/step5', async (req, res) => {
   const { lead_id, address_line1, city, state_region,
           postal_code, country, gps_lat, gps_lng,
@@ -582,7 +582,7 @@ router.post('/kyc/step5', async (req, res) => {
   ) ? 85 : (country === 'US' || country === 'MX' ? 50 : 20);
 
   try {
-    await pool.query(
+    await global.db.query(
       `UPDATE tenant_kyc SET
          address_line1       = $2, city             = $3,
          state_region        = $4, postal_code      = $5,
@@ -606,16 +606,16 @@ router.post('/kyc/step5', async (req, res) => {
   }
 });
 
-// ══════════════════════════════════════════════════════════════════════════════
-// PHASE 2 — KYC: COMPLETE — Score + Status + Brain Event
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+// PHASE 2 â€” KYC: COMPLETE â€” Score + Status + Brain Event
 // POST /api/onboarding/kyc/complete
-// ══════════════════════════════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 router.post('/kyc/complete', async (req, res) => {
   const { lead_id } = req.body;
   if (!lead_id) return res.status(400).json({ error: 'lead_id required' });
 
   try {
-    const result = await pool.query(
+    const result = await global.db.query(
       `SELECT k.*, l.email, l.phone, l.crop_type, l.business_name, l.agent_id
        FROM tenant_kyc k
        JOIN tenant_leads l ON l.id = k.lead_id
@@ -629,13 +629,13 @@ router.post('/kyc/complete', async (req, res) => {
 
     const kyc = result.rows[0];
 
-    // OFAC stub — mark cleared by default (integrate OFAC API for Tier 4+)
+    // OFAC stub â€” mark cleared by default (integrate OFAC API for Tier 4+)
     const ofac_cleared = true; // TODO: wire real OFAC/SDN API check
 
     const score = calculateKYCScore({ ...kyc, ofac_cleared });
     const status = getKYCStatus(score);
 
-    await pool.query(
+    await global.db.query(
       `UPDATE tenant_kyc SET
          kyc_score = $2, ofac_cleared = $3, status = $4, updated_at = NOW()
        WHERE lead_id = $1`,
@@ -643,7 +643,7 @@ router.post('/kyc/complete', async (req, res) => {
     );
 
     // Update lead status
-    await pool.query(
+    await global.db.query(
       `UPDATE tenant_leads SET status = $2, updated_at = NOW() WHERE id = $1`,
       [lead_id, status === 'approved' ? 'kyc_approved' :
                 status === 'manual_review' ? 'kyc_review' : 'kyc_rejected']
@@ -665,7 +665,7 @@ router.post('/kyc/complete', async (req, res) => {
         await transporter.sendMail({
           from:    '"AuditDNA Platform" <saul@mexausafg.com>',
           to:      'saul@mexausafg.com',
-          subject: `[AuditDNA] KYC Manual Review Required — ${kyc.legal_name || kyc.email}`,
+          subject: `[AuditDNA] KYC Manual Review Required â€” ${kyc.legal_name || kyc.email}`,
           html: `
             <body style="background:#0f172a;font-family:sans-serif;padding:40px">
               <div style="background:#1e293b;padding:28px;border-radius:8px;border:1px solid #b8944d">
@@ -674,7 +674,7 @@ router.post('/kyc/complete', async (req, res) => {
                 <p style="color:#cbd5e1;margin:0 0 8px">Email: ${kyc.email}</p>
                 <p style="color:#cbd5e1;margin:0 0 8px">KYC Score: ${score}/100</p>
                 <p style="color:#94a3b0;margin:16px 0 0;font-size:12px">
-                  Review in Command Sphere → Onboarding Queue
+                  Review in Command Sphere â†’ Onboarding Queue
                 </p>
               </div>
             </body>
@@ -699,12 +699,12 @@ router.post('/kyc/complete', async (req, res) => {
   }
 });
 
-// ══════════════════════════════════════════════════════════════════════════════
-// STATUS CHECK — GET /api/onboarding/status/:lead_id
-// ══════════════════════════════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+// STATUS CHECK â€” GET /api/onboarding/status/:lead_id
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 router.get('/status/:lead_id', async (req, res) => {
   try {
-    const result = await pool.query(
+    const result = await global.db.query(
       `SELECT k.current_step, k.kyc_score, k.status,
               k.email_verified, k.phone_verified,
               l.email, l.crop_type, l.business_name
@@ -724,9 +724,9 @@ router.get('/status/:lead_id', async (req, res) => {
   }
 });
 
-// ══════════════════════════════════════════════════════════════════════════════
-// PHASE 3 — TIER CATALOG (single source of truth)
-// ══════════════════════════════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+// PHASE 3 â€” TIER CATALOG (single source of truth)
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
 const TIER_CATALOG = [
   { id: 0, name: 'Seed',       price_monthly: 0,    docs: ['AUP'] },
@@ -737,7 +737,7 @@ const TIER_CATALOG = [
   { id: 5, name: 'Enterprise', price_monthly: 3500, docs: ['MSA','DPA','FSMA','AUP','NDA','NMLS','USDA','EXPORT','CUSTOM_MSA'] },
 ];
 
-// AI tier recommendation — based on KYC record data
+// AI tier recommendation â€” based on KYC record data
 function recommendTier(kyc) {
   const score         = kyc.kyc_score        || 0;
   const latamCount    = (kyc.latam_countries || []).length;
@@ -746,34 +746,34 @@ function recommendTier(kyc) {
   const hasGrowerNum  = !!kyc.grower_reg_num;
   const country       = kyc.country          || 'US';
 
-  // Tier 5 — Enterprise
+  // Tier 5 â€” Enterprise
   if (score >= 80 && latamCount >= 3 && fsma === 'compliant' &&
       (country === 'MX' || latamCount > 0)) return 5;
 
-  // Tier 4 — Trade
+  // Tier 4 â€” Trade
   if (score >= 70 && latamCount >= 2 &&
       (fsma === 'compliant' || fsma === 'in_progress')) return 4;
 
-  // Tier 3 — Market
+  // Tier 3 â€” Market
   if (score >= 60 && (hasUsda || hasGrowerNum) && latamCount >= 1) return 3;
 
-  // Tier 2 — Harvest
+  // Tier 2 â€” Harvest
   if (score >= 50 && (hasUsda || hasGrowerNum || fsma !== 'unknown')) return 2;
 
-  // Tier 1 — Field
+  // Tier 1 â€” Field
   if (score >= 30) return 1;
 
-  // Tier 0 — Seed
+  // Tier 0 â€” Seed
   return 0;
 }
 
-// ══════════════════════════════════════════════════════════════════════════════
-// PHASE 3 — TIER RECOMMEND
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+// PHASE 3 â€” TIER RECOMMEND
 // GET /api/onboarding/tier/recommend/:lead_id
-// ══════════════════════════════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 router.get('/tier/recommend/:lead_id', async (req, res) => {
   try {
-    const result = await pool.query(
+    const result = await global.db.query(
       `SELECT k.kyc_score, k.latam_countries, k.fsma_status,
               k.usda_farm_id, k.grower_reg_num, k.country,
               l.crop_type
@@ -808,10 +808,10 @@ router.get('/tier/recommend/:lead_id', async (req, res) => {
   }
 });
 
-// ══════════════════════════════════════════════════════════════════════════════
-// PHASE 3 — TIER SELECT
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+// PHASE 3 â€” TIER SELECT
 // POST /api/onboarding/tier/select
-// ══════════════════════════════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 router.post('/tier/select', async (req, res) => {
   const { lead_id, tier_id, billing_cycle } = req.body;
 
@@ -819,16 +819,16 @@ router.post('/tier/select', async (req, res) => {
   if (tier_id === undefined || tier_id === null) return res.status(400).json({ error: 'tier_id required' });
 
   const tier = TIER_CATALOG[parseInt(tier_id)];
-  if (!tier) return res.status(400).json({ error: 'Invalid tier_id (0–5 only)' });
+  if (!tier) return res.status(400).json({ error: 'Invalid tier_id (0â€“5 only)' });
 
   const cycle      = billing_cycle === 'annual' ? 'annual' : 'monthly';
   const price_paid = cycle === 'annual'
-    ? parseFloat((tier.price_monthly * 10).toFixed(2))   // 10 months — 2 months free
+    ? parseFloat((tier.price_monthly * 10).toFixed(2))   // 10 months â€” 2 months free
     : tier.price_monthly;
 
   try {
     // Verify KYC exists and was not rejected
-    const kyc = await pool.query(
+    const kyc = await global.db.query(
       `SELECT k.kyc_score, k.latam_countries, k.fsma_status,
               k.usda_farm_id, k.grower_reg_num, k.country, k.status
        FROM tenant_kyc k WHERE k.lead_id = $1`,
@@ -839,13 +839,13 @@ router.post('/tier/select', async (req, res) => {
       return res.status(404).json({ error: 'KYC record not found' });
     }
     if (kyc.rows[0].status === 'rejected') {
-      return res.status(403).json({ error: 'KYC rejected — tier selection not available.' });
+      return res.status(403).json({ error: 'KYC rejected â€” tier selection not available.' });
     }
 
     const ai_recommended = recommendTier(kyc.rows[0]);
 
     // Upsert tier selection
-    const result = await pool.query(
+    const result = await global.db.query(
       `INSERT INTO tenant_tier_selections
          (lead_id, tier_id, tier_name, billing_cycle,
           price_monthly, price_paid, ai_recommended, ai_score_basis, status)
@@ -893,10 +893,10 @@ router.post('/tier/select', async (req, res) => {
   }
 });
 
-// ══════════════════════════════════════════════════════════════════════════════
-// PHASE 4 — LEGAL DOCUMENT TEMPLATES
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+// PHASE 4 â€” LEGAL DOCUMENT TEMPLATES
 // Hardcoded. Version-controlled via DOC_VERSION.
-// ══════════════════════════════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
 const DOC_VERSION = '1.0';
 
@@ -984,7 +984,7 @@ By typing your full legal name below, you acknowledge that you have read, unders
     version: DOC_VERSION,
     body: `FSMA 204 COMPLIANCE ACKNOWLEDGMENT
 MexaUSA Food Group Inc. / Mexausa Food Group, Inc. | NMLS #337526
-Food Safety Modernization Act — Section 204 Traceability Rule
+Food Safety Modernization Act â€” Section 204 Traceability Rule
 
 1. REGULATORY BACKGROUND
 The FDA Food Safety Modernization Act Section 204 ("FSMA 204") establishes traceability recordkeeping requirements for food on the Food Traceability List (FTL). Covered entities must maintain Key Data Elements (KDEs) at Critical Tracking Events (CTEs) including growing, receiving, transforming, creating, and shipping.
@@ -992,7 +992,7 @@ The FDA Food Safety Modernization Act Section 204 ("FSMA 204") establishes trace
 2. TENANT RESPONSIBILITY
 Tenant acknowledges and agrees that:
 (a) Tenant, not Platform Provider, is the regulated entity responsible for FSMA 204 compliance;
-(b) The AuditDNA Platform provides traceability infrastructure tools only — it does not constitute legal compliance advice;
+(b) The AuditDNA Platform provides traceability infrastructure tools only â€” it does not constitute legal compliance advice;
 (c) Tenant is solely responsible for the accuracy, completeness, and timeliness of all traceability records entered into the Platform;
 (d) Tenant must ensure its use of the Platform satisfies applicable FDA requirements for its specific commodities, operations, and role in the supply chain;
 (e) Platform Provider bears zero liability for Tenant's regulatory submissions, FDA enforcement actions, or compliance failures;
@@ -1156,9 +1156,9 @@ By typing your full legal name below, you certify that the foregoing representat
   },
 
   CUSTOM_MSA: {
-    title:   'Enterprise Custom MSA — Owner Review Required',
+    title:   'Enterprise Custom MSA â€” Owner Review Required',
     version: DOC_VERSION,
-    body: `ENTERPRISE CUSTOM MSA — OWNER REVIEW REQUIRED
+    body: `ENTERPRISE CUSTOM MSA â€” OWNER REVIEW REQUIRED
 MexaUSA Food Group Inc. / Mexausa Food Group, Inc. | NMLS #337526
 
 NOTICE TO ENTERPRISE TIER APPLICANTS
@@ -1190,7 +1190,7 @@ By typing your full legal name below, you acknowledge that you understand Enterp
 
 };
 
-// Required docs per tier — single source of truth
+// Required docs per tier â€” single source of truth
 const TIER_DOCS = {
   0: ['AUP'],
   1: ['MSA','DPA','FSMA','AUP','NMLS'],
@@ -1200,13 +1200,13 @@ const TIER_DOCS = {
   5: ['MSA','DPA','FSMA','NDA','AUP','NMLS','USDA','EXPORT','CUSTOM_MSA'],
 };
 
-// ══════════════════════════════════════════════════════════════════════════════
-// PHASE 4 — GET REQUIRED DOCS FOR LEAD
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+// PHASE 4 â€” GET REQUIRED DOCS FOR LEAD
 // GET /api/onboarding/legal/required/:lead_id
-// ══════════════════════════════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 router.get('/legal/required/:lead_id', async (req, res) => {
   try {
-    const tier = await pool.query(
+    const tier = await global.db.query(
       `SELECT tier_id, tier_name FROM tenant_tier_selections WHERE lead_id = $1`,
       [req.params.lead_id]
     );
@@ -1215,7 +1215,7 @@ router.get('/legal/required/:lead_id', async (req, res) => {
     }
 
     const required   = TIER_DOCS[tier.rows[0].tier_id] || ['AUP'];
-    const signed     = await pool.query(
+    const signed     = await global.db.query(
       `SELECT doc_key, signer_name, signed_at
        FROM tenant_legal_acceptances
        WHERE lead_id = $1 ORDER BY signed_at ASC`,
@@ -1246,22 +1246,22 @@ router.get('/legal/required/:lead_id', async (req, res) => {
   }
 });
 
-// ══════════════════════════════════════════════════════════════════════════════
-// PHASE 4 — GET FULL DOC TEXT
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+// PHASE 4 â€” GET FULL DOC TEXT
 // GET /api/onboarding/legal/doc/:doc_key
-// ══════════════════════════════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 router.get('/legal/doc/:doc_key', (req, res) => {
   const doc = LEGAL_DOCS[req.params.doc_key.toUpperCase()];
   if (!doc) return res.status(404).json({ error: 'Document not found' });
   res.json({ key: req.params.doc_key.toUpperCase(), ...doc });
 });
 
-// ══════════════════════════════════════════════════════════════════════════════
-// PHASE 4 — SIGN A DOCUMENT
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+// PHASE 4 â€” SIGN A DOCUMENT
 // POST /api/onboarding/legal/sign
 // Body: { lead_id, doc_key, signer_name }
-// Timestamp + IP captured server-side — never trust client timestamps
-// ══════════════════════════════════════════════════════════════════════════════
+// Timestamp + IP captured server-side â€” never trust client timestamps
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 router.post('/legal/sign', async (req, res) => {
   const { lead_id, doc_key, signer_name } = req.body;
 
@@ -1272,13 +1272,13 @@ router.post('/legal/sign', async (req, res) => {
   const key = doc_key.toUpperCase();
   if (!LEGAL_DOCS[key]) return res.status(400).json({ error: `Unknown document: ${doc_key}` });
 
-  // Capture IP — Railway sends real IP via x-forwarded-for
+  // Capture IP â€” Railway sends real IP via x-forwarded-for
   const signer_ip  = (req.headers['x-forwarded-for'] || req.ip || 'unknown').split(',')[0].trim();
   const user_agent = (req.headers['user-agent'] || '').substring(0, 500);
   const signed_at  = new Date();
   const doc        = LEGAL_DOCS[key];
 
-  // SHA-256 checksum — immutable audit record
+  // SHA-256 checksum â€” immutable audit record
   const checksum = require('crypto')
     .createHash('sha256')
     .update(`${key}|${doc.version}|${signer_name.trim()}|${signed_at.toISOString()}`)
@@ -1286,7 +1286,7 @@ router.post('/legal/sign', async (req, res) => {
 
   try {
     // Verify lead exists and KYC was not rejected
-    const lead = await pool.query(
+    const lead = await global.db.query(
       `SELECT l.id FROM tenant_leads l
        JOIN tenant_kyc k ON k.lead_id = l.id
        WHERE l.id = $1 AND k.status != 'rejected'`,
@@ -1296,8 +1296,8 @@ router.post('/legal/sign', async (req, res) => {
       return res.status(403).json({ error: 'Lead not found or KYC not approved.' });
     }
 
-    // Insert — conflict on (lead_id, doc_key, doc_version) = already signed, no-op
-    await pool.query(
+    // Insert â€” conflict on (lead_id, doc_key, doc_version) = already signed, no-op
+    await global.db.query(
       `INSERT INTO tenant_legal_acceptances
          (lead_id, doc_key, doc_version, doc_title,
           signer_name, signed_at, signer_ip, user_agent, checksum)
@@ -1319,7 +1319,7 @@ router.post('/legal/sign', async (req, res) => {
     });
 
     // Check if all required docs are now signed
-    const tierResult = await pool.query(
+    const tierResult = await global.db.query(
       `SELECT tier_id FROM tenant_tier_selections WHERE lead_id = $1`,
       [lead_id]
     );
@@ -1328,7 +1328,7 @@ router.post('/legal/sign', async (req, res) => {
 
     if (tierResult.rows.length > 0) {
       const required   = TIER_DOCS[tierResult.rows[0].tier_id] || ['AUP'];
-      const signedRows = await pool.query(
+      const signedRows = await global.db.query(
         `SELECT doc_key FROM tenant_legal_acceptances WHERE lead_id = $1`,
         [lead_id]
       );
@@ -1343,7 +1343,7 @@ router.post('/legal/sign', async (req, res) => {
           completed_at: new Date().toISOString(),
         });
 
-        await pool.query(
+        await global.db.query(
           `UPDATE tenant_tier_selections
            SET status = 'legal_complete', updated_at = NOW()
            WHERE lead_id = $1`,
@@ -1369,13 +1369,13 @@ router.post('/legal/sign', async (req, res) => {
   }
 });
 
-// ══════════════════════════════════════════════════════════════════════════════
-// PHASE 4 — LEGAL STATUS SUMMARY
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+// PHASE 4 â€” LEGAL STATUS SUMMARY
 // GET /api/onboarding/legal/status/:lead_id
-// ══════════════════════════════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 router.get('/legal/status/:lead_id', async (req, res) => {
   try {
-    const result = await pool.query(
+    const result = await global.db.query(
       `SELECT doc_key, doc_title, doc_version, signer_name, signed_at, checksum
        FROM tenant_legal_acceptances
        WHERE lead_id = $1 ORDER BY signed_at ASC`,
@@ -1387,13 +1387,13 @@ router.get('/legal/status/:lead_id', async (req, res) => {
   }
 });
 
-// ══════════════════════════════════════════════════════════════════════════════
-// PHASE 5 — PAYMENT + BILLING (Stripe card + ACH)
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+// PHASE 5 â€” PAYMENT + BILLING (Stripe card + ACH)
 // .env required:
 //   STRIPE_SECRET_KEY=process.env.STRIPE_SECRET_KEY...
 //   STRIPE_WEBHOOK_SECRET=whsec_... (set after creating webhook in Stripe dashboard)
 // npm install stripe
-// ══════════════════════════════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
 let stripe;
 try {
@@ -1402,39 +1402,39 @@ try {
   console.warn('[WARN] Stripe not installed. Run: npm install stripe');
 }
 
-// ── Invoice number generator ──────────────────────────────────────────────────
+// â”€â”€ Invoice number generator â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 async function nextInvoiceNumber() {
-  const result = await pool.query(`SELECT NEXTVAL('invoice_seq') AS n`);
+  const result = await global.db.query(`SELECT NEXTVAL('invoice_seq') AS n`);
   const n      = result.rows[0].n.toString().padStart(6, '0');
   return `AUDIT-${new Date().getFullYear()}-${n}`;
 }
 
-// ── Create invoice record after successful payment (QB-style auto-categorized) ─
+// â”€â”€ Create invoice record after successful payment (QB-style auto-categorized) â”€
 async function createInvoiceRecord(lead_id, payment_id, tier_name, amount_cents, billing_cycle) {
   const invoice_number = await nextInvoiceNumber();
   const now            = new Date();
   const periodEnd      = new Date(now);
   periodEnd.setMonth(periodEnd.getMonth() + (billing_cycle === 'annual' ? 12 : 1));
 
-  await pool.query(
+  await global.db.query(
     `INSERT INTO tenant_invoices
        (lead_id, payment_id, invoice_number, amount_cents, line_item, billing_period, payment_status)
      VALUES ($1,$2,$3,$4,$5,$6,'paid')`,
     [
       lead_id, payment_id, invoice_number, amount_cents,
-      `AuditDNA ${tier_name} Plan — ${billing_cycle === 'annual' ? 'Annual' : 'Monthly'}`,
-      `${now.toLocaleDateString('en-US')} – ${periodEnd.toLocaleDateString('en-US')}`,
+      `AuditDNA ${tier_name} Plan â€” ${billing_cycle === 'annual' ? 'Annual' : 'Monthly'}`,
+      `${now.toLocaleDateString('en-US')} â€“ ${periodEnd.toLocaleDateString('en-US')}`,
     ]
   );
 
   return invoice_number;
 }
 
-// ══════════════════════════════════════════════════════════════════════════════
-// PHASE 5 — CREATE PAYMENT INTENT
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+// PHASE 5 â€” CREATE PAYMENT INTENT
 // POST /api/onboarding/payment/create-intent
 // Body: { lead_id }
-// ══════════════════════════════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 router.post('/payment/create-intent', async (req, res) => {
   if (!stripe) return res.status(503).json({ error: 'Stripe not configured. Run: npm install stripe' });
 
@@ -1442,7 +1442,7 @@ router.post('/payment/create-intent', async (req, res) => {
   if (!lead_id) return res.status(400).json({ error: 'lead_id required' });
 
   try {
-    const tierResult = await pool.query(
+    const tierResult = await global.db.query(
       `SELECT t.tier_id, t.tier_name, t.billing_cycle, t.price_monthly, t.price_paid,
               l.email, l.business_name, k.legal_name
        FROM tenant_tier_selections t
@@ -1458,7 +1458,7 @@ router.post('/payment/create-intent', async (req, res) => {
 
     const tier = tierResult.rows[0];
 
-    // Tier 0 is free — no payment needed
+    // Tier 0 is free â€” no payment needed
     if (tier.tier_id === 0) {
       return res.json({ free: true, tier_name: tier.tier_name });
     }
@@ -1468,7 +1468,7 @@ router.post('/payment/create-intent', async (req, res) => {
 
     // Retrieve existing Stripe customer or create new
     let stripe_customer_id;
-    const existing = await pool.query(
+    const existing = await global.db.query(
       `SELECT stripe_customer_id FROM tenant_payments
        WHERE lead_id = $1 AND stripe_customer_id IS NOT NULL LIMIT 1`,
       [lead_id]
@@ -1485,13 +1485,13 @@ router.post('/payment/create-intent', async (req, res) => {
       stripe_customer_id = customer.id;
     }
 
-    // Create PaymentIntent — card + ACH
+    // Create PaymentIntent â€” card + ACH
     const intent = await stripe.paymentIntents.create({
       amount:               amount_cents,
       currency:             'usd',
       customer:             stripe_customer_id,
       payment_method_types: ['card', 'us_bank_account'],
-      description:          `AuditDNA ${tier.tier_name} — ${tier.billing_cycle}`,
+      description:          `AuditDNA ${tier.tier_name} â€” ${tier.billing_cycle}`,
       metadata: {
         lead_id,
         tier_id:       tier.tier_id.toString(),
@@ -1502,7 +1502,7 @@ router.post('/payment/create-intent', async (req, res) => {
     });
 
     // Store pending payment record
-    await pool.query(
+    await global.db.query(
       `INSERT INTO tenant_payments
          (lead_id, stripe_customer_id, stripe_pi_id,
           amount_cents, billing_cycle, tier_id, tier_name, status)
@@ -1535,11 +1535,11 @@ router.post('/payment/create-intent', async (req, res) => {
   }
 });
 
-// ══════════════════════════════════════════════════════════════════════════════
-// PHASE 5 — CONFIRM PAYMENT
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+// PHASE 5 â€” CONFIRM PAYMENT
 // POST /api/onboarding/payment/confirm
 // Body: { lead_id, stripe_pi_id }
-// ══════════════════════════════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 router.post('/payment/confirm', async (req, res) => {
   if (!stripe) return res.status(503).json({ error: 'Stripe not configured.' });
 
@@ -1549,7 +1549,7 @@ router.post('/payment/confirm', async (req, res) => {
   }
 
   try {
-    // Verify with Stripe — never trust client-side status
+    // Verify with Stripe â€” never trust client-side status
     const intent = await stripe.paymentIntents.retrieve(stripe_pi_id);
     if (intent.status !== 'succeeded') {
       return res.status(400).json({
@@ -1558,7 +1558,7 @@ router.post('/payment/confirm', async (req, res) => {
       });
     }
 
-    const tierResult = await pool.query(
+    const tierResult = await global.db.query(
       `SELECT tier_id, tier_name, billing_cycle, price_paid
        FROM tenant_tier_selections WHERE lead_id = $1`,
       [lead_id]
@@ -1566,7 +1566,7 @@ router.post('/payment/confirm', async (req, res) => {
     const tier = tierResult.rows[0];
 
     // Update payment record
-    const paymentResult = await pool.query(
+    const paymentResult = await global.db.query(
       `UPDATE tenant_payments SET
          status       = 'succeeded',
          stripe_pm_id = $3,
@@ -1584,7 +1584,7 @@ router.post('/payment/confirm', async (req, res) => {
     const payment_id   = paymentResult.rows[0].id;
     const amount_cents = paymentResult.rows[0].amount_cents;
 
-    await pool.query(
+    await global.db.query(
       `UPDATE tenant_tier_selections
        SET status = 'payment_complete', updated_at = NOW()
        WHERE lead_id = $1`,
@@ -1619,17 +1619,17 @@ router.post('/payment/confirm', async (req, res) => {
   }
 });
 
-// ══════════════════════════════════════════════════════════════════════════════
-// PHASE 5 — FREE TIER ACTIVATE (Tier 0 skips payment)
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+// PHASE 5 â€” FREE TIER ACTIVATE (Tier 0 skips payment)
 // POST /api/onboarding/payment/free-activate
 // Body: { lead_id }
-// ══════════════════════════════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 router.post('/payment/free-activate', async (req, res) => {
   const { lead_id } = req.body;
   if (!lead_id) return res.status(400).json({ error: 'lead_id required' });
 
   try {
-    const tierResult = await pool.query(
+    const tierResult = await global.db.query(
       `SELECT tier_id, tier_name FROM tenant_tier_selections
        WHERE lead_id = $1 AND tier_id = 0`,
       [lead_id]
@@ -1638,7 +1638,7 @@ router.post('/payment/free-activate', async (req, res) => {
       return res.status(400).json({ error: 'Not a free tier account.' });
     }
 
-    await pool.query(
+    await global.db.query(
       `UPDATE tenant_tier_selections
        SET status = 'payment_complete', updated_at = NOW()
        WHERE lead_id = $1`,
@@ -1661,13 +1661,13 @@ router.post('/payment/free-activate', async (req, res) => {
   }
 });
 
-// ══════════════════════════════════════════════════════════════════════════════
-// PHASE 5 — STRIPE WEBHOOK
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+// PHASE 5 â€” STRIPE WEBHOOK
 // POST /api/onboarding/payment/webhook
-// Register in Stripe Dashboard → Developers → Webhooks
+// Register in Stripe Dashboard â†’ Developers â†’ Webhooks
 // Events: payment_intent.succeeded | payment_intent.payment_failed
 // NOTE: mount express.raw() for this path in server.js BEFORE express.json()
-// ══════════════════════════════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 router.post('/payment/webhook',
   express.raw({ type: 'application/json' }),
   async (req, res) => {
@@ -1691,7 +1691,7 @@ router.post('/payment/webhook',
         const intent  = event.data.object;
         const lead_id = intent.metadata?.lead_id;
         if (lead_id) {
-          await pool.query(
+          await global.db.query(
             `UPDATE tenant_payments SET status = 'succeeded', paid_at = NOW()
              WHERE stripe_pi_id = $1 AND status != 'succeeded'`,
             [intent.id]
@@ -1705,7 +1705,7 @@ router.post('/payment/webhook',
         const lead_id     = intent.metadata?.lead_id;
         const failure_msg = intent.last_payment_error?.message || 'Payment failed';
         if (lead_id) {
-          await pool.query(
+          await global.db.query(
             `UPDATE tenant_payments SET status = 'failed', failure_reason = $2, updated_at = NOW()
              WHERE stripe_pi_id = $1`,
             [intent.id, failure_msg]
@@ -1713,7 +1713,7 @@ router.post('/payment/webhook',
           await fireBrainEvent('payment_failed', {
             lead_id, stripe_pi_id: intent.id, reason: failure_msg,
           });
-          console.error(`[WEBHOOK] Payment failed: ${intent.id} — ${failure_msg}`);
+          console.error(`[WEBHOOK] Payment failed: ${intent.id} â€” ${failure_msg}`);
         }
       }
 
@@ -1725,13 +1725,13 @@ router.post('/payment/webhook',
   }
 );
 
-// ══════════════════════════════════════════════════════════════════════════════
-// PHASE 5 — GET INVOICE
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+// PHASE 5 â€” GET INVOICE
 // GET /api/onboarding/payment/invoice/:lead_id
-// ══════════════════════════════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 router.get('/payment/invoice/:lead_id', async (req, res) => {
   try {
-    const result = await pool.query(
+    const result = await global.db.query(
       `SELECT i.*, p.payment_method, p.stripe_pi_id
        FROM tenant_invoices i
        JOIN tenant_payments p ON p.id = i.payment_id
@@ -1745,15 +1745,15 @@ router.get('/payment/invoice/:lead_id', async (req, res) => {
   }
 });
 
-// ══════════════════════════════════════════════════════════════════════════════
-// PHASE 6 — TENANT PROVISIONING
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+// PHASE 6 â€” TENANT PROVISIONING
 // Triggered after payment_complete. Creates tenant record, generates PIN,
 // assigns modules + miners, wires to brain, sends credentials via SMTP.
-// ══════════════════════════════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
 const bcrypt = require('bcryptjs');
 
-// Module sets per tier — mirrors TIER_DATA in TenantOnboarding.jsx
+// Module sets per tier â€” mirrors TIER_DATA in TenantOnboarding.jsx
 const TIER_MODULES = {
   0: [
     'grower_registration','fsma_intro','compliance_checklist',
@@ -1894,19 +1894,19 @@ function credentialsEmailHTML(email, pin, tier_name, legal_name) {
 </html>`;
 }
 
-// ══════════════════════════════════════════════════════════════════════════════
-// PHASE 6 — PROVISION TENANT
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+// PHASE 6 â€” PROVISION TENANT
 // POST /api/onboarding/provision
 // Body: { lead_id }
-// Idempotent — safe to call multiple times
-// ══════════════════════════════════════════════════════════════════════════════
+// Idempotent â€” safe to call multiple times
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 router.post('/provision', async (req, res) => {
   const { lead_id } = req.body;
   if (!lead_id) return res.status(400).json({ error: 'lead_id required' });
 
   try {
-    // ── 1. Verify payment complete ──────────────────────────────────────────
-    const tierResult = await pool.query(
+    // â”€â”€ 1. Verify payment complete â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    const tierResult = await global.db.query(
       `SELECT t.tier_id, t.tier_name, t.billing_cycle, t.price_monthly, t.status,
               l.email, l.business_name, l.crop_type,
               k.legal_name, k.contact_title, k.gps_lat, k.gps_lng,
@@ -1930,8 +1930,8 @@ router.post('/provision', async (req, res) => {
       });
     }
 
-    // ── 2. Idempotency — return existing if already provisioned ─────────────
-    const existing = await pool.query(
+    // â”€â”€ 2. Idempotency â€” return existing if already provisioned â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    const existing = await global.db.query(
       `SELECT id, email, tier_name, status FROM tenants WHERE lead_id = $1`,
       [lead_id]
     );
@@ -1946,24 +1946,24 @@ router.post('/provision', async (req, res) => {
       });
     }
 
-    // ── 3. Generate PIN + hash (bcrypt rounds=12) ────────────────────────────
+    // â”€â”€ 3. Generate PIN + hash (bcrypt rounds=12) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     const pin      = generatePIN();
     const pin_hash = await bcrypt.hash(pin, 12);
 
-    // ── 4. Assign modules + miners ───────────────────────────────────────────
+    // â”€â”€ 4. Assign modules + miners â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     const module_set      = TIER_MODULES[data.tier_id] || TIER_MODULES[0];
     const latam           = data.latam_countries || [];
     const assigned_miners = assignMiners(data.tier_id, latam, data.country || 'US');
 
-    // ── 5. Renewal date ──────────────────────────────────────────────────────
+    // â”€â”€ 5. Renewal date â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     const renewalDate = new Date();
     renewalDate.setMonth(renewalDate.getMonth() + (data.billing_cycle === 'annual' ? 12 : 1));
 
-    // ── 6. Brain tenant ID ───────────────────────────────────────────────────
+    // â”€â”€ 6. Brain tenant ID â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     const brain_tenant_id = `tenant_${lead_id.replace(/-/g, '').substring(0, 12)}`;
 
-    // ── 7. Insert tenant record ──────────────────────────────────────────────
-    const tenantResult = await pool.query(
+    // â”€â”€ 7. Insert tenant record â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    const tenantResult = await global.db.query(
       `INSERT INTO tenants (
          lead_id, email, legal_name, business_name, contact_title,
          pin_hash, pin_temp,
@@ -2001,18 +2001,18 @@ router.post('/provision', async (req, res) => {
 
     const tenant_id = tenantResult.rows[0].id;
 
-    // ── 8. Insert module access rows ─────────────────────────────────────────
+    // â”€â”€ 8. Insert module access rows â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     if (module_set.length > 0) {
       const moduleValues = module_set.map((_, i) => `($1, $${i + 2})`).join(', ');
-      await pool.query(
+      await global.db.query(
         `INSERT INTO tenant_module_access (tenant_id, module_key)
          VALUES ${moduleValues} ON CONFLICT DO NOTHING`,
         [tenant_id, ...module_set]
       );
     }
 
-    // ── 9. Create owner user record ──────────────────────────────────────────
-    await pool.query(
+    // â”€â”€ 9. Create owner user record â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    await global.db.query(
       `INSERT INTO tenant_users
          (tenant_id, email, name, role, pin_hash, pin_temp, status, activated_at)
        VALUES ($1,$2,$3,'owner',$4,TRUE,'active',NOW())
@@ -2020,15 +2020,15 @@ router.post('/provision', async (req, res) => {
       [tenant_id, data.email, data.legal_name || data.business_name || data.email, pin_hash]
     );
 
-    // ── 10. Advance tier selection status ────────────────────────────────────
-    await pool.query(
+    // â”€â”€ 10. Advance tier selection status â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    await global.db.query(
       `UPDATE tenant_tier_selections
        SET status = 'provisioned', updated_at = NOW()
        WHERE lead_id = $1`,
       [lead_id]
     );
 
-    // ── 11. Brain event: tenant_provisioned ──────────────────────────────────
+    // â”€â”€ 11. Brain event: tenant_provisioned â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     await fireBrainEvent('tenant_provisioned', {
       tenant_id,
       lead_id,
@@ -2044,7 +2044,7 @@ router.post('/provision', async (req, res) => {
       latam_countries: latam,
     }, tenant_id);
 
-    // ── 12. Send credentials email via GoDaddy SMTP ──────────────────────────
+    // â”€â”€ 12. Send credentials email via GoDaddy SMTP â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     try {
       await transporter.sendMail({
         from:    '"AuditDNA Platform" <saul@mexausafg.com>',
@@ -2059,12 +2059,12 @@ router.post('/provision', async (req, res) => {
       console.error('[PROVISION] Credentials email failed:', mailErr.message);
     }
 
-    // ── 13. Notify owner ─────────────────────────────────────────────────────
+    // â”€â”€ 13. Notify owner â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     try {
       await transporter.sendMail({
         from:    '"AuditDNA Platform" <saul@mexausafg.com>',
         to:      'saul@mexausafg.com',
-        subject: `[AuditDNA] New Tenant — ${data.legal_name || data.email} (${data.tier_name})`,
+        subject: `[AuditDNA] New Tenant â€” ${data.legal_name || data.email} (${data.tier_name})`,
         html: `
           <body style="background:#0f172a;font-family:sans-serif;padding:40px">
             <div style="background:#1e293b;padding:28px;border-radius:8px;
@@ -2104,13 +2104,13 @@ router.post('/provision', async (req, res) => {
   }
 });
 
-// ══════════════════════════════════════════════════════════════════════════════
-// PHASE 6 — PROVISION STATUS
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+// PHASE 6 â€” PROVISION STATUS
 // GET /api/onboarding/provision/status/:lead_id
-// ══════════════════════════════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 router.get('/provision/status/:lead_id', async (req, res) => {
   try {
-    const result = await pool.query(
+    const result = await global.db.query(
       `SELECT id, email, tier_id, tier_name, billing_cycle,
               module_set, assigned_miners, brain_tenant_id,
               renewal_date, status, provisioned_at
@@ -2139,17 +2139,17 @@ router.get('/provision/status/:lead_id', async (req, res) => {
   }
 });
 
-// ══════════════════════════════════════════════════════════════════════════════
-// PHASE 6 — VERIFY TEMP PIN (first login)
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+// PHASE 6 â€” VERIFY TEMP PIN (first login)
 // POST /api/onboarding/provision/verify-pin
 // Body: { email, pin }
-// ══════════════════════════════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 router.post('/provision/verify-pin', async (req, res) => {
   const { email, pin } = req.body;
   if (!email || !pin) return res.status(400).json({ error: 'email and pin required' });
 
   try {
-    const result = await pool.query(
+    const result = await global.db.query(
       `SELECT id, pin_hash, pin_temp, tier_id, tier_name, status
        FROM tenants WHERE email = $1`,
       [email.toLowerCase().trim()]
@@ -2164,7 +2164,7 @@ router.post('/provision/verify-pin', async (req, res) => {
     const valid = await bcrypt.compare(pin.toString(), tenant.pin_hash);
     if (!valid) return res.status(401).json({ error: 'Invalid PIN.' });
 
-    await pool.query(`UPDATE tenants SET last_login = NOW() WHERE id = $1`, [tenant.id]);
+    await global.db.query(`UPDATE tenants SET last_login = NOW() WHERE id = $1`, [tenant.id]);
 
     res.json({
       success:   true,
@@ -2179,11 +2179,11 @@ router.post('/provision/verify-pin', async (req, res) => {
   }
 });
 
-// ══════════════════════════════════════════════════════════════════════════════
-// PHASE 6 — SET NEW PIN
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+// PHASE 6 â€” SET NEW PIN
 // POST /api/onboarding/provision/set-pin
 // Body: { tenant_id, new_pin }
-// ══════════════════════════════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 router.post('/provision/set-pin', async (req, res) => {
   const { tenant_id, new_pin } = req.body;
   if (!tenant_id || !new_pin) return res.status(400).json({ error: 'tenant_id and new_pin required' });
@@ -2194,11 +2194,11 @@ router.post('/provision/set-pin', async (req, res) => {
   try {
     const pin_hash = await bcrypt.hash(new_pin.toString(), 12);
 
-    await pool.query(
+    await global.db.query(
       `UPDATE tenants SET pin_hash = $2, pin_temp = FALSE, updated_at = NOW() WHERE id = $1`,
       [tenant_id, pin_hash]
     );
-    await pool.query(
+    await global.db.query(
       `UPDATE tenant_users SET pin_hash = $2, pin_temp = FALSE
        WHERE tenant_id = $1 AND role = 'owner'`,
       [tenant_id, pin_hash]
@@ -2213,20 +2213,20 @@ router.post('/provision/set-pin', async (req, res) => {
   }
 });
 
-// ══════════════════════════════════════════════════════════════════════════════
-// PHASE 7 — ONBOARDING WIZARD
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+// PHASE 7 â€” ONBOARDING WIZARD
 // Step 1: Business Profile Confirmation (auto-populated from KYC)
-// ══════════════════════════════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
-// ══════════════════════════════════════════════════════════════════════════════
-// PHASE 7 — LOAD WIZARD STATE + PRE-POPULATED PROFILE
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+// PHASE 7 â€” LOAD WIZARD STATE + PRE-POPULATED PROFILE
 // GET /api/onboarding/wizard/:tenant_id
 // Returns wizard progress + full KYC/tenant data for auto-population
-// ══════════════════════════════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 router.get('/wizard/:tenant_id', async (req, res) => {
   try {
     // Get tenant core data
-    const tenantResult = await pool.query(
+    const tenantResult = await global.db.query(
       `SELECT t.id, t.email, t.legal_name, t.business_name, t.contact_title,
               t.tier_id, t.tier_name, t.billing_cycle, t.country,
               t.gps_lat, t.gps_lng, t.latam_countries, t.crop_types,
@@ -2248,17 +2248,17 @@ router.get('/wizard/:tenant_id', async (req, res) => {
     const tenant = tenantResult.rows[0];
 
     // Get or create wizard progress record
-    let wizardResult = await pool.query(
+    let wizardResult = await global.db.query(
       `SELECT * FROM tenant_wizard_progress WHERE tenant_id = $1`,
       [req.params.tenant_id]
     );
 
     if (wizardResult.rows.length === 0) {
-      await pool.query(
+      await global.db.query(
         `INSERT INTO tenant_wizard_progress (tenant_id) VALUES ($1)`,
         [req.params.tenant_id]
       );
-      wizardResult = await pool.query(
+      wizardResult = await global.db.query(
         `SELECT * FROM tenant_wizard_progress WHERE tenant_id = $1`,
         [req.params.tenant_id]
       );
@@ -2266,7 +2266,7 @@ router.get('/wizard/:tenant_id', async (req, res) => {
 
     const wizard = wizardResult.rows[0];
 
-    // Build auto-populated profile — wizard overrides take precedence over KYC
+    // Build auto-populated profile â€” wizard overrides take precedence over KYC
     const profile = {
       legal_name:    wizard.profile_legal_name    || tenant.legal_name    || tenant.business_name || '',
       dba:           wizard.profile_dba           || tenant.business_name || '',
@@ -2313,14 +2313,14 @@ router.get('/wizard/:tenant_id', async (req, res) => {
   }
 });
 
-// ══════════════════════════════════════════════════════════════════════════════
-// PHASE 7 — SAVE STEP 1: BUSINESS PROFILE
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+// PHASE 7 â€” SAVE STEP 1: BUSINESS PROFILE
 // POST /api/onboarding/wizard/step1
 // Body: { tenant_id, profile: { legal_name, dba, address, city, state,
 //         postal, country, ein_rfc, contact_name, contact_title,
 //         contact_email, contact_phone, usda_farm_id, fiscal_year,
 //         currency, bank_name } }
-// ══════════════════════════════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 router.post('/wizard/step1', async (req, res) => {
   const { tenant_id, profile } = req.body;
 
@@ -2332,15 +2332,15 @@ router.post('/wizard/step1', async (req, res) => {
 
   try {
     // Verify tenant exists
-    const tenantCheck = await pool.query(
+    const tenantCheck = await global.db.query(
       `SELECT id, email FROM tenants WHERE id = $1`, [tenant_id]
     );
     if (tenantCheck.rows.length === 0) {
       return res.status(404).json({ error: 'Tenant not found' });
     }
 
-    // Upsert wizard progress — set step1 complete, save all profile fields
-    await pool.query(
+    // Upsert wizard progress â€” set step1 complete, save all profile fields
+    await global.db.query(
       `INSERT INTO tenant_wizard_progress (
          tenant_id, step1_profile,
          profile_legal_name, profile_dba, profile_address, profile_city,
@@ -2391,7 +2391,7 @@ router.post('/wizard/step1', async (req, res) => {
     );
 
     // Also update the canonical tenants record with confirmed legal name
-    await pool.query(
+    await global.db.query(
       `UPDATE tenants SET
          legal_name    = $2,
          business_name = COALESCE($3, business_name),
@@ -2421,13 +2421,13 @@ router.post('/wizard/step1', async (req, res) => {
   }
 });
 
-// ══════════════════════════════════════════════════════════════════════════════
-// PHASE 7 — SKIP A STEP
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+// PHASE 7 â€” SKIP A STEP
 // POST /api/onboarding/wizard/skip
-// Body: { tenant_id, step }  — step: 1–6
+// Body: { tenant_id, step }  â€” step: 1â€“6
 // Marks a step as skipped (wizard_progress column set true) so tenant
 // can proceed without completing it. They can return later via dashboard badge.
-// ══════════════════════════════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 router.post('/wizard/skip', async (req, res) => {
   const { tenant_id, step } = req.body;
   if (!tenant_id || !step) return res.status(400).json({ error: 'tenant_id and step required' });
@@ -2437,17 +2437,17 @@ router.post('/wizard/skip', async (req, res) => {
     4: 'step4_docs',    5: 'step5_team',    6: 'step6_alerts',
   };
   const col = colMap[parseInt(step)];
-  if (!col) return res.status(400).json({ error: 'Invalid step (1–6)' });
+  if (!col) return res.status(400).json({ error: 'Invalid step (1â€“6)' });
 
   try {
-    await pool.query(
+    await global.db.query(
       `UPDATE tenant_wizard_progress SET ${col} = TRUE, updated_at = NOW()
        WHERE tenant_id = $1`,
       [tenant_id]
     );
 
     // Check if all steps are now complete
-    const result = await pool.query(
+    const result = await global.db.query(
       `SELECT step1_profile, step2_catalog, step3_bank,
               step4_docs, step5_team, step6_alerts
        FROM tenant_wizard_progress WHERE tenant_id = $1`,
@@ -2458,7 +2458,7 @@ router.post('/wizard/skip', async (req, res) => {
     const allDone = w && Object.values(w).every(Boolean);
 
     if (allDone) {
-      await pool.query(
+      await global.db.query(
         `UPDATE tenant_wizard_progress
          SET wizard_complete = TRUE, completed_at = NOW()
          WHERE tenant_id = $1`,
@@ -2474,18 +2474,18 @@ router.post('/wizard/skip', async (req, res) => {
   }
 });
 
-// ══════════════════════════════════════════════════════════════════════════════
-// PHASE 7 — WIZARD COMPLETE
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+// PHASE 7 â€” WIZARD COMPLETE
 // POST /api/onboarding/wizard/complete
 // Body: { tenant_id }
 // Force-marks wizard as complete (all steps done or deliberately finished)
-// ══════════════════════════════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 router.post('/wizard/complete', async (req, res) => {
   const { tenant_id } = req.body;
   if (!tenant_id) return res.status(400).json({ error: 'tenant_id required' });
 
   try {
-    await pool.query(
+    await global.db.query(
       `UPDATE tenant_wizard_progress
        SET step1_profile = TRUE, step2_catalog = TRUE, step3_bank = TRUE,
            step4_docs = TRUE, step5_team = TRUE, step6_alerts = TRUE,
@@ -2506,14 +2506,14 @@ router.post('/wizard/complete', async (req, res) => {
   }
 });
 
-// ══════════════════════════════════════════════════════════════════════════════
-// PHASE 8 — BRAIN + MINER ACTIVATION
-// POST /api/onboarding/brain/activate     — activate brain for tenant
-// GET  /api/onboarding/brain/status/:tid  — poll activation status
-// POST /api/onboarding/brain/ping         — miners check-in
-// ══════════════════════════════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+// PHASE 8 â€” BRAIN + MINER ACTIVATION
+// POST /api/onboarding/brain/activate     â€” activate brain for tenant
+// GET  /api/onboarding/brain/status/:tid  â€” poll activation status
+// POST /api/onboarding/brain/ping         â€” miners check-in
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
-// Miner categories by tier — what actually feeds the brain
+// Miner categories by tier â€” what actually feeds the brain
 const MINER_SCHEDULE = {
   weather:      { interval_min: 15,  label: 'Weather Intelligence' },
   usda_nass:    { interval_min: 60,  label: 'USDA NASS Prices' },
@@ -2534,7 +2534,7 @@ router.post('/brain/activate', async (req, res) => {
 
   try {
     // Verify tenant provisioned
-    const tenant = await pool.query(
+    const tenant = await global.db.query(
       `SELECT id, email, tier_id, tier_name, brain_tenant_id,
               assigned_miners, crop_types, latam_countries, country,
               gps_lat, gps_lng
@@ -2547,8 +2547,8 @@ router.post('/brain/activate', async (req, res) => {
 
     const t = tenant.rows[0];
 
-    // Idempotent — return existing if already activated
-    const existing = await pool.query(
+    // Idempotent â€” return existing if already activated
+    const existing = await global.db.query(
       `SELECT * FROM tenant_brain_activations WHERE tenant_id = $1`,
       [tenant_id]
     );
@@ -2567,7 +2567,7 @@ router.post('/brain/activate', async (req, res) => {
     const activatedAt   = new Date();
 
     // Create or update brain activation record
-    await pool.query(
+    await global.db.query(
       `INSERT INTO tenant_brain_activations
          (tenant_id, activated, activated_at, miners_total, miners_active,
           brain_tenant_id, api_key, last_miner_ping)
@@ -2589,7 +2589,7 @@ router.post('/brain/activate', async (req, res) => {
       .filter(m => miners.some(am => am.includes(m.split('_')[0])));
 
     for (const miner of minerCategories.slice(0, 10)) {
-      await pool.query(
+      await global.db.query(
         `INSERT INTO tenant_miner_events
            (tenant_id, miner_key, event_type, payload)
          VALUES ($1, $2, 'activated', $3)`,
@@ -2615,7 +2615,7 @@ router.post('/brain/activate', async (req, res) => {
 
     // Schedule first intelligence report (24h from now)
     const reportAt = new Date(Date.now() + 24 * 60 * 60 * 1000);
-    await pool.query(
+    await global.db.query(
       `INSERT INTO tenant_backoffice_jobs
          (tenant_id, job_type, status, scheduled_at)
        VALUES ($1, 'report_gen', 'pending', $2)
@@ -2628,7 +2628,7 @@ router.post('/brain/activate', async (req, res) => {
       await transporter.sendMail({
         from:    '"AuditDNA Platform" <saul@mexausafg.com>',
         to:      t.email,
-        subject: `AuditDNA — Your Intelligence Miners Are Active`,
+        subject: `AuditDNA â€” Your Intelligence Miners Are Active`,
         html: `
           <body style="margin:0;background:#0f172a;font-family:sans-serif;padding:40px 20px">
             <div style="max-width:520px;margin:0 auto;background:#1e293b;border-radius:10px;
@@ -2683,7 +2683,7 @@ router.post('/brain/activate', async (req, res) => {
 
 router.get('/brain/status/:tenant_id', async (req, res) => {
   try {
-    const result = await pool.query(
+    const result = await global.db.query(
       `SELECT b.*, t.tier_name, t.assigned_miners, t.email
        FROM tenant_brain_activations b
        JOIN tenants t ON t.id = b.tenant_id
@@ -2698,7 +2698,7 @@ router.get('/brain/status/:tenant_id', async (req, res) => {
     const b = result.rows[0];
 
     // Get recent miner events
-    const events = await pool.query(
+    const events = await global.db.query(
       `SELECT miner_key, event_type, payload, created_at
        FROM tenant_miner_events
        WHERE tenant_id = $1
@@ -2731,14 +2731,14 @@ router.post('/brain/ping', async (req, res) => {
   }
 
   try {
-    await pool.query(
+    await global.db.query(
       `UPDATE tenant_brain_activations
        SET last_miner_ping = NOW(), updated_at = NOW()
        WHERE tenant_id = $1`,
       [tenant_id]
     );
 
-    await pool.query(
+    await global.db.query(
       `INSERT INTO tenant_miner_events
          (tenant_id, miner_key, event_type, payload)
        VALUES ($1, $2, 'data_collected', $3)`,
@@ -2751,16 +2751,16 @@ router.post('/brain/ping', async (req, res) => {
   }
 });
 
-// ══════════════════════════════════════════════════════════════════════════════
-// PHASE 9 — BACK OFFICE AUTOMATION
-// GET  /api/onboarding/backoffice/status/:tid  — QB-style ops dashboard data
-// POST /api/onboarding/backoffice/settings     — save settings
-// POST /api/onboarding/backoffice/run-job      — trigger a job manually
-// ══════════════════════════════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+// PHASE 9 â€” BACK OFFICE AUTOMATION
+// GET  /api/onboarding/backoffice/status/:tid  â€” QB-style ops dashboard data
+// POST /api/onboarding/backoffice/settings     â€” save settings
+// POST /api/onboarding/backoffice/run-job      â€” trigger a job manually
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
 router.get('/backoffice/status/:tenant_id', async (req, res) => {
   try {
-    const tenant = await pool.query(
+    const tenant = await global.db.query(
       `SELECT id, email, tier_id, tier_name, billing_cycle,
               price_monthly, renewal_date
        FROM tenants WHERE id = $1`,
@@ -2773,23 +2773,23 @@ router.get('/backoffice/status/:tenant_id', async (req, res) => {
     const t = tenant.rows[0];
 
     // Get or create settings
-    let settings = await pool.query(
+    let settings = await global.db.query(
       `SELECT * FROM tenant_backoffice_settings WHERE tenant_id = $1`,
       [req.params.tenant_id]
     );
     if (settings.rows.length === 0) {
-      await pool.query(
+      await global.db.query(
         `INSERT INTO tenant_backoffice_settings (tenant_id) VALUES ($1)`,
         [req.params.tenant_id]
       );
-      settings = await pool.query(
+      settings = await global.db.query(
         `SELECT * FROM tenant_backoffice_settings WHERE tenant_id = $1`,
         [req.params.tenant_id]
       );
     }
 
     // Get recent jobs
-    const jobs = await pool.query(
+    const jobs = await global.db.query(
       `SELECT job_type, status, records_processed, created_at, completed_at, error_msg
        FROM tenant_backoffice_jobs
        WHERE tenant_id = $1
@@ -2798,7 +2798,7 @@ router.get('/backoffice/status/:tenant_id', async (req, res) => {
     );
 
     // Get invoices
-    const invoices = await pool.query(
+    const invoices = await global.db.query(
       `SELECT invoice_number, amount_cents, line_item, billing_period,
               issued_at, payment_status
        FROM tenant_invoices
@@ -2864,7 +2864,7 @@ router.post('/backoffice/settings', async (req, res) => {
   }
 
   try {
-    await pool.query(
+    await global.db.query(
       `INSERT INTO tenant_backoffice_settings
          (tenant_id, bank_connected, bank_sync_hour, auto_categorize,
           ocr_enabled, fsma_auto_record, monthly_report)
@@ -2903,7 +2903,7 @@ router.post('/backoffice/run-job', async (req, res) => {
   if (!valid.includes(job_type)) return res.status(400).json({ error: `Invalid job_type. Valid: ${valid.join(', ')}` });
 
   try {
-    const result = await pool.query(
+    const result = await global.db.query(
       `INSERT INTO tenant_backoffice_jobs
          (tenant_id, job_type, status, started_at)
        VALUES ($1, $2, 'running', NOW())
@@ -2916,7 +2916,7 @@ router.post('/backoffice/run-job', async (req, res) => {
     // Simulate job completion (wire real logic per job type here)
     setTimeout(async () => {
       try {
-        await pool.query(
+        await global.db.query(
           `UPDATE tenant_backoffice_jobs
            SET status = 'complete', completed_at = NOW(),
                records_processed = $2
@@ -2935,19 +2935,19 @@ router.post('/backoffice/run-job', async (req, res) => {
   }
 });
 
-// ══════════════════════════════════════════════════════════════════════════════
-// PHASE 10 — RENEWAL + OFFBOARDING
-// GET  /api/onboarding/renewal/status/:tid   — account + renewal info
-// POST /api/onboarding/renewal/renew         — process renewal
-// POST /api/onboarding/renewal/upgrade       — upgrade tier
-// POST /api/onboarding/renewal/cancel        — initiate cancellation
-// POST /api/onboarding/renewal/export        — request data export
-// GET  /api/onboarding/renewal/export/:tid   — check export status
-// ══════════════════════════════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+// PHASE 10 â€” RENEWAL + OFFBOARDING
+// GET  /api/onboarding/renewal/status/:tid   â€” account + renewal info
+// POST /api/onboarding/renewal/renew         â€” process renewal
+// POST /api/onboarding/renewal/upgrade       â€” upgrade tier
+// POST /api/onboarding/renewal/cancel        â€” initiate cancellation
+// POST /api/onboarding/renewal/export        â€” request data export
+// GET  /api/onboarding/renewal/export/:tid   â€” check export status
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
 router.get('/renewal/status/:tenant_id', async (req, res) => {
   try {
-    const result = await pool.query(
+    const result = await global.db.query(
       `SELECT t.id, t.email, t.legal_name, t.tier_id, t.tier_name,
               t.billing_cycle, t.price_monthly, t.renewal_date, t.status,
               t.provisioned_at, t.module_set,
@@ -2970,7 +2970,7 @@ router.get('/renewal/status/:tenant_id', async (req, res) => {
     const daysUntilRenewal = Math.ceil((renewalDate - Date.now()) / (1000 * 60 * 60 * 24));
 
     // Renewal event history
-    const history = await pool.query(
+    const history = await global.db.query(
       `SELECT event_type, old_tier_id, new_tier_id,
               effective_date, created_at, note
        FROM tenant_renewal_events
@@ -3011,7 +3011,7 @@ router.post('/renewal/renew', async (req, res) => {
   if (!tenant_id) return res.status(400).json({ error: 'tenant_id required' });
 
   try {
-    const tenant = await pool.query(
+    const tenant = await global.db.query(
       `SELECT id, email, legal_name, tier_id, tier_name,
               billing_cycle, price_monthly, renewal_date
        FROM tenants WHERE id = $1`,
@@ -3023,12 +3023,12 @@ router.post('/renewal/renew', async (req, res) => {
     const newRenewal = new Date(t.renewal_date);
     newRenewal.setMonth(newRenewal.getMonth() + (t.billing_cycle === 'annual' ? 12 : 1));
 
-    await pool.query(
+    await global.db.query(
       `UPDATE tenants SET renewal_date = $2, updated_at = NOW() WHERE id = $1`,
       [tenant_id, newRenewal.toISOString().split('T')[0]]
     );
 
-    await pool.query(
+    await global.db.query(
       `INSERT INTO tenant_renewal_events
          (tenant_id, event_type, old_tier_id, new_tier_id,
           amount_cents, effective_date, triggered_by)
@@ -3048,7 +3048,7 @@ router.post('/renewal/renew', async (req, res) => {
       await transporter.sendMail({
         from:    '"AuditDNA Platform" <saul@mexausafg.com>',
         to:      t.email,
-        subject: `AuditDNA — Subscription Renewed`,
+        subject: `AuditDNA â€” Subscription Renewed`,
         html: `
           <body style="margin:0;background:#0f172a;font-family:sans-serif;padding:40px 20px">
             <div style="max-width:520px;margin:0 auto;background:#1e293b;border-radius:10px;
@@ -3085,7 +3085,7 @@ router.post('/renewal/cancel', async (req, res) => {
   if (!tenant_id) return res.status(400).json({ error: 'tenant_id required' });
 
   try {
-    const tenant = await pool.query(
+    const tenant = await global.db.query(
       `SELECT id, email, legal_name, tier_id, tier_name,
               billing_cycle, renewal_date
        FROM tenants WHERE id = $1`,
@@ -3100,12 +3100,12 @@ router.post('/renewal/cancel', async (req, res) => {
     const days       = noticeDays[t.tier_id] || 30;
     const effectiveDate = new Date(t.renewal_date);
 
-    await pool.query(
+    await global.db.query(
       `UPDATE tenants SET status = 'cancellation_pending', updated_at = NOW() WHERE id = $1`,
       [tenant_id]
     );
 
-    await pool.query(
+    await global.db.query(
       `INSERT INTO tenant_renewal_events
          (tenant_id, event_type, old_tier_id, note, effective_date, triggered_by)
        VALUES ($1,'cancelled',$2,$3,$4,'tenant')`,
@@ -3123,7 +3123,7 @@ router.post('/renewal/cancel', async (req, res) => {
       await transporter.sendMail({
         from:    '"AuditDNA Platform" <saul@mexausafg.com>',
         to:      'saul@mexausafg.com',
-        subject: `[AuditDNA] Cancellation — ${t.legal_name || t.email} (${t.tier_name})`,
+        subject: `[AuditDNA] Cancellation â€” ${t.legal_name || t.email} (${t.tier_name})`,
         html: `
           <body style="background:#0f172a;font-family:sans-serif;padding:40px">
             <div style="background:#1e293b;padding:28px;border-radius:8px;
@@ -3159,7 +3159,7 @@ router.post('/renewal/export', async (req, res) => {
   try {
     const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000); // 30 days
 
-    const result = await pool.query(
+    const result = await global.db.query(
       `INSERT INTO tenant_data_exports
          (tenant_id, status, expires_at, requested_by)
        VALUES ($1,'queued',$2,$3)
@@ -3186,7 +3186,7 @@ router.post('/renewal/export', async (req, res) => {
 
 router.get('/renewal/export/:tenant_id', async (req, res) => {
   try {
-    const result = await pool.query(
+    const result = await global.db.query(
       `SELECT id, status, download_url, expires_at, file_size_mb, created_at, completed_at
        FROM tenant_data_exports
        WHERE tenant_id = $1
@@ -3199,11 +3199,11 @@ router.get('/renewal/export/:tenant_id', async (req, res) => {
   }
 });
 
-// ══════════════════════════════════════════════════════════════════════════════
-// WIZARD STEP 2 — PRODUCT CATALOG
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+// WIZARD STEP 2 â€” PRODUCT CATALOG
 // POST /api/onboarding/wizard/step2
 // Body: { tenant_id, items: [{ commodity, category, unit, price_min, price_max, cogs_target }] }
-// ══════════════════════════════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 router.post('/wizard/step2', async (req, res) => {
   const { tenant_id, items } = req.body;
   if (!tenant_id)              return res.status(400).json({ error: 'tenant_id required' });
@@ -3213,7 +3213,7 @@ router.post('/wizard/step2', async (req, res) => {
     // Upsert each catalog item
     for (const item of items) {
       if (!item.commodity?.trim()) continue;
-      await pool.query(
+      await global.db.query(
         `INSERT INTO tenant_catalog_items
            (tenant_id, commodity, category, unit,
             price_min, price_max, cogs_target)
@@ -3233,7 +3233,7 @@ router.post('/wizard/step2', async (req, res) => {
       );
     }
 
-    await pool.query(
+    await global.db.query(
       `UPDATE tenant_wizard_progress
        SET step2_catalog = TRUE, updated_at = NOW()
        WHERE tenant_id = $1`,
@@ -3255,7 +3255,7 @@ router.post('/wizard/step2', async (req, res) => {
 // GET catalog items for a tenant
 router.get('/wizard/step2/:tenant_id', async (req, res) => {
   try {
-    const result = await pool.query(
+    const result = await global.db.query(
       `SELECT * FROM tenant_catalog_items WHERE tenant_id = $1 AND active = TRUE ORDER BY commodity`,
       [req.params.tenant_id]
     );
@@ -3265,18 +3265,18 @@ router.get('/wizard/step2/:tenant_id', async (req, res) => {
   }
 });
 
-// ══════════════════════════════════════════════════════════════════════════════
-// WIZARD STEP 3 — BANK CONNECTION
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+// WIZARD STEP 3 â€” BANK CONNECTION
 // POST /api/onboarding/wizard/step3
 // Body: { tenant_id, method, bank_name, account_label, currency, sync_hour }
-// ══════════════════════════════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 router.post('/wizard/step3', async (req, res) => {
   const { tenant_id, method, bank_name, account_label, currency, sync_hour } = req.body;
   if (!tenant_id) return res.status(400).json({ error: 'tenant_id required' });
   if (!method)    return res.status(400).json({ error: 'method required (csv|manual)' });
 
   try {
-    await pool.query(
+    await global.db.query(
       `INSERT INTO tenant_bank_connections
          (tenant_id, method, bank_name, account_label,
           currency, sync_hour, connected, connected_at)
@@ -3295,7 +3295,7 @@ router.post('/wizard/step3', async (req, res) => {
     );
 
     // Also update backoffice settings
-    await pool.query(
+    await global.db.query(
       `INSERT INTO tenant_backoffice_settings
          (tenant_id, bank_connected, bank_sync_hour)
        VALUES ($1, TRUE, $2)
@@ -3306,7 +3306,7 @@ router.post('/wizard/step3', async (req, res) => {
       [tenant_id, parseInt(sync_hour) || 6]
     );
 
-    await pool.query(
+    await global.db.query(
       `UPDATE tenant_wizard_progress
        SET step3_bank = TRUE, updated_at = NOW()
        WHERE tenant_id = $1`,
@@ -3324,11 +3324,11 @@ router.post('/wizard/step3', async (req, res) => {
   }
 });
 
-// ══════════════════════════════════════════════════════════════════════════════
-// WIZARD STEP 4 — FIRST DOCUMENT UPLOAD
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+// WIZARD STEP 4 â€” FIRST DOCUMENT UPLOAD
 // POST /api/onboarding/wizard/step4
 // Multipart: file + tenant_id
-// ══════════════════════════════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
 // Re-use upload middleware from top of file
 const wizardUpload = multer({
@@ -3352,7 +3352,7 @@ const wizardUpload = multer({
   },
 });
 
-// OCR detection — classify document type from filename + mimetype
+// OCR detection â€” classify document type from filename + mimetype
 function detectDocType(filename, mimetype) {
   const f = filename.toLowerCase();
   if (/invoice|factura|inv/.test(f))             return { type: 'invoice',   route: 'accounts_payable' };
@@ -3374,7 +3374,7 @@ router.post('/wizard/step4',
     const fileSizeKb = Math.round(req.file.size / 1024);
 
     try {
-      await pool.query(
+      await global.db.query(
         `INSERT INTO tenant_first_uploads
            (tenant_id, file_name, file_type, file_size_kb,
             detected_type, routed_to)
@@ -3385,7 +3385,7 @@ router.post('/wizard/step4',
       );
 
       // Also log to document vault
-      await pool.query(
+      await global.db.query(
         `INSERT INTO document_vault
            (owner_id, owner_type, file_name, file_path, file_type, category)
          VALUES ($1,'tenant',$2,$3,$4,$5)`,
@@ -3395,7 +3395,7 @@ router.post('/wizard/step4',
          type]
       ).catch(() => {}); // non-blocking if table structure differs
 
-      await pool.query(
+      await global.db.query(
         `UPDATE tenant_wizard_progress
          SET step4_docs = TRUE, updated_at = NOW()
          WHERE tenant_id = $1`,
@@ -3423,17 +3423,17 @@ router.post('/wizard/step4',
   }
 );
 
-// ══════════════════════════════════════════════════════════════════════════════
-// WIZARD STEP 5 — TEAM INVITES
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+// WIZARD STEP 5 â€” TEAM INVITES
 // POST /api/onboarding/wizard/step5
 // Body: { tenant_id, invites: [{ email, name, role }] }
-// ══════════════════════════════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 router.post('/wizard/step5', async (req, res) => {
   const { tenant_id, invites } = req.body;
   if (!tenant_id) return res.status(400).json({ error: 'tenant_id required' });
 
   // Get tenant email to send from
-  const tenantRow = await pool.query(
+  const tenantRow = await global.db.query(
     `SELECT email, legal_name, tier_id FROM tenants WHERE id = $1`, [tenant_id]
   );
   if (tenantRow.rows.length === 0) return res.status(404).json({ error: 'Tenant not found' });
@@ -3448,7 +3448,7 @@ router.post('/wizard/step5', async (req, res) => {
         const role = ['admin','agent','field_inspector'].includes(inv.role) ? inv.role : 'agent';
 
         try {
-          await pool.query(
+          await global.db.query(
             `INSERT INTO tenant_team_invites
                (tenant_id, email, name, role, status)
              VALUES ($1,$2,$3,$4,'pending')
@@ -3460,7 +3460,7 @@ router.post('/wizard/step5', async (req, res) => {
           );
 
           // Also create user record
-          await pool.query(
+          await global.db.query(
             `INSERT INTO tenant_users
                (tenant_id, email, name, role, status)
              VALUES ($1,$2,$3,$4,'invited')
@@ -3508,7 +3508,7 @@ router.post('/wizard/step5', async (req, res) => {
       }
     }
 
-    await pool.query(
+    await global.db.query(
       `UPDATE tenant_wizard_progress
        SET step5_team = TRUE, updated_at = NOW()
        WHERE tenant_id = $1`,
@@ -3526,12 +3526,12 @@ router.post('/wizard/step5', async (req, res) => {
   }
 });
 
-// ══════════════════════════════════════════════════════════════════════════════
-// WIZARD STEP 6 — ALERT CONFIGURATION
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+// WIZARD STEP 6 â€” ALERT CONFIGURATION
 // POST /api/onboarding/wizard/step6
 // Body: { tenant_id, alerts: [{ alert_type, commodity, threshold_above,
 //          threshold_below, threshold_unit, channel }] }
-// ══════════════════════════════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 router.post('/wizard/step6', async (req, res) => {
   const { tenant_id, alerts } = req.body;
   if (!tenant_id) return res.status(400).json({ error: 'tenant_id required' });
@@ -3540,7 +3540,7 @@ router.post('/wizard/step6', async (req, res) => {
     if (alerts && alerts.length > 0) {
       for (const alert of alerts) {
         if (!alert.alert_type) continue;
-        await pool.query(
+        await global.db.query(
           `INSERT INTO tenant_alert_configs
              (tenant_id, alert_type, commodity, threshold_above,
               threshold_below, threshold_unit, channel, active)
@@ -3556,7 +3556,7 @@ router.post('/wizard/step6', async (req, res) => {
       }
     }
 
-    await pool.query(
+    await global.db.query(
       `UPDATE tenant_wizard_progress
        SET step6_alerts = TRUE, wizard_complete = TRUE,
            completed_at = NOW(), updated_at = NOW()
@@ -3584,3 +3584,4 @@ router.post('/wizard/step6', async (req, res) => {
 
 
 module.exports = router;
+

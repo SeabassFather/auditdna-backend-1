@@ -1,15 +1,15 @@
 // ============================================================================
-// AuditDNA — EMAIL CAMPAIGN ENGINE v2.0
+// AuditDNA â€” EMAIL CAMPAIGN ENGINE v2.0
 // File: C:\AuditDNA\backend\routes\email-campaigns.js
 //
 // Routes:
-//   POST /api/email/send-blast        — send immediate blast
-//   POST /api/email/schedule-blast    — schedule future blast
-//   POST /api/email/auto-pilot/run    — run auto-pilot cycle manually
-//   GET  /api/email/campaigns         — list campaigns
-//   GET  /api/email/scheduled         — list scheduled blasts
-//   GET  /api/email/stats             — campaign stats
-//   POST /api/email/unsubscribe       — unsubscribe handler
+//   POST /api/email/send-blast        â€” send immediate blast
+//   POST /api/email/schedule-blast    â€” schedule future blast
+//   POST /api/email/auto-pilot/run    â€” run auto-pilot cycle manually
+//   GET  /api/email/campaigns         â€” list campaigns
+//   GET  /api/email/scheduled         â€” list scheduled blasts
+//   GET  /api/email/stats             â€” campaign stats
+//   POST /api/email/unsubscribe       â€” unsubscribe handler
 // ============================================================================
 'use strict';
 
@@ -92,7 +92,7 @@ async function sendEmail(to, subject, body, lang) {
 async function logSend(req, campaignId, recipientEmail, status, error) {
   try {
     const pool = getPool(req);
-    await pool.query(
+    await global.db.query(
       `INSERT INTO campaign_sends (campaign_id, recipient_email, status, sent_at, error_msg)
        VALUES ($1, $2, $3, NOW(), $4)
        ON CONFLICT DO NOTHING`,
@@ -103,7 +103,7 @@ async function logSend(req, campaignId, recipientEmail, status, error) {
 
 // -- INIT SCHEDULED BLASTS TABLE IF NEEDED ------------------------------------
 async function ensureScheduledTable(pool) {
-  await pool.query(`
+  await global.db.query(`
     CREATE TABLE IF NOT EXISTS scheduled_blasts (
       id           SERIAL PRIMARY KEY,
       blast_id     VARCHAR(50) UNIQUE NOT NULL,
@@ -149,7 +149,7 @@ router.post('/send-blast', async (req, res) => {
   if (campaignId) {
     try {
       const pool = getPool(req);
-      await pool.query(
+      await global.db.query(
         'UPDATE agrimaxx_campaigns SET total_sent = total_sent + $1 WHERE campaign_id = $2',
         [sent, campaignId]
       );
@@ -169,7 +169,7 @@ router.post('/schedule-blast', async (req, res) => {
     const pool = getPool(req);
     await ensureScheduledTable(pool);
     const blastId = `BLAST-${Date.now()}`;
-    await pool.query(
+    await global.db.query(
       `INSERT INTO scheduled_blasts (blast_id, subject, body, segment, recipients, send_at, recurrence)
        VALUES ($1, $2, $3, $4, $5, $6, $7)`,
       [blastId, subject, body || '', segment || 'all', JSON.stringify(recipients || []), sendAt, recurrence || 'once']
@@ -185,7 +185,7 @@ router.get('/scheduled', async (req, res) => {
   try {
     const pool = getPool(req);
     await ensureScheduledTable(pool);
-    const r = await pool.query('SELECT * FROM scheduled_blasts ORDER BY send_at DESC LIMIT 50');
+    const r = await global.db.query('SELECT * FROM scheduled_blasts ORDER BY send_at DESC LIMIT 50');
     res.json({ blasts: r.rows });
   } catch (e) {
     res.json({ blasts: [] });
@@ -196,7 +196,7 @@ router.get('/scheduled', async (req, res) => {
 router.get('/campaigns', async (req, res) => {
   try {
     const pool = getPool(req);
-    const r = await pool.query('SELECT * FROM agrimaxx_campaigns WHERE active = true ORDER BY sequence_order');
+    const r = await global.db.query('SELECT * FROM agrimaxx_campaigns WHERE active = true ORDER BY sequence_order');
     res.json({ campaigns: r.rows });
   } catch (e) {
     res.json({ campaigns: [] });
@@ -208,8 +208,8 @@ router.get('/stats', async (req, res) => {
   try {
     const pool = getPool(req);
     const [totals, recent] = await Promise.all([
-      pool.query('SELECT COUNT(*) as total, COUNT(CASE WHEN status=$1 THEN 1 END) as sent, COUNT(CASE WHEN status=$2 THEN 1 END) as failed FROM campaign_sends', ['sent', 'failed']),
-      pool.query('SELECT * FROM campaign_sends ORDER BY sent_at DESC LIMIT 20'),
+      global.db.query('SELECT COUNT(*) as total, COUNT(CASE WHEN status=$1 THEN 1 END) as sent, COUNT(CASE WHEN status=$2 THEN 1 END) as failed FROM campaign_sends', ['sent', 'failed']),
+      global.db.query('SELECT * FROM campaign_sends ORDER BY sent_at DESC LIMIT 20'),
     ]);
     res.json({ totals: totals.rows[0], recent: recent.rows });
   } catch (e) {
@@ -225,7 +225,7 @@ router.post('/auto-pilot/run', async (req, res) => {
     await ensureScheduledTable(pool);
 
     const now = new Date();
-    const due = await pool.query(
+    const due = await global.db.query(
       `SELECT * FROM scheduled_blasts WHERE status='pending' AND send_at <= $1 LIMIT 5`,
       [now.toISOString()]
     );
@@ -237,7 +237,7 @@ router.post('/auto-pilot/run', async (req, res) => {
     let fired = 0;
     for (const blast of due.rows) {
       // Mark as running
-      await pool.query('UPDATE scheduled_blasts SET status=$1 WHERE blast_id=$2', ['running', blast.blast_id]);
+      await global.db.query('UPDATE scheduled_blasts SET status=$1 WHERE blast_id=$2', ['running', blast.blast_id]);
 
       const recipients = blast.recipients || [];
       let sent = 0;
@@ -258,7 +258,7 @@ router.post('/auto-pilot/run', async (req, res) => {
       if (blast.recurrence === 'daily') nextSendAt = new Date(Date.now() + 86400000).toISOString();
       if (blast.recurrence === 'weekly') nextSendAt = new Date(Date.now() + 604800000).toISOString();
 
-      await pool.query(
+      await global.db.query(
         'UPDATE scheduled_blasts SET status=$1, sent_count=sent_count+$2, send_at=COALESCE($3::timestamp, send_at) WHERE blast_id=$4',
         [nextStatus, sent, nextSendAt, blast.blast_id]
       );
@@ -280,7 +280,7 @@ router.get('/unsubscribe', async (req, res) => {
   if (!email) return res.status(400).send('Invalid unsubscribe link');
   try {
     const pool = getPool(req);
-    await pool.query(
+    await global.db.query(
       `INSERT INTO suppression_list (email, reason, created_at) VALUES ($1, 'unsubscribe', NOW()) ON CONFLICT DO NOTHING`,
       [email.toLowerCase()]
     ).catch(() => {});
@@ -301,7 +301,7 @@ router.post('/send-learning-report', async (req, res) => {
   }
 });
 
-// -- CRON INIT — runs auto-pilot every hour ------------------------------------
+// -- CRON INIT â€” runs auto-pilot every hour ------------------------------------
 function startAutoPilotCron(app) {
   const INTERVAL = 60 * 60 * 1000; // every 1 hour
   setInterval(async () => {
@@ -310,7 +310,7 @@ function startAutoPilotCron(app) {
       const pool = getPool(fakeReq);
       await ensureScheduledTable(pool);
       const now = new Date();
-      const due = await pool.query(
+      const due = await global.db.query(
         `SELECT * FROM scheduled_blasts WHERE status='pending' AND send_at <= $1 LIMIT 10`,
         [now.toISOString()]
       );
@@ -329,7 +329,7 @@ function startAutoPilotCron(app) {
         let nextSendAt = null;
         if (blast.recurrence === 'daily') nextSendAt = new Date(Date.now() + 86400000).toISOString();
         if (blast.recurrence === 'weekly') nextSendAt = new Date(Date.now() + 604800000).toISOString();
-        await pool.query(
+        await global.db.query(
           'UPDATE scheduled_blasts SET status=$1, sent_count=sent_count+$2, send_at=COALESCE($3::timestamp,send_at) WHERE blast_id=$4',
           [nextStatus, sent, nextSendAt, blast.blast_id]
         );
@@ -339,11 +339,12 @@ function startAutoPilotCron(app) {
       console.error('[AUTO-PILOT CRON ERROR]', e.message);
     }
   }, INTERVAL);
-  console.log('[AUTO-PILOT CRON] Started — runs every 60 minutes');
+  console.log('[AUTO-PILOT CRON] Started â€” runs every 60 minutes');
 }
 
 module.exports = router;
 module.exports.startAutoPilotCron = startAutoPilotCron;
+
 
 
 

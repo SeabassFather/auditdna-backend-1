@@ -11,3 +11,4 @@ class DecisionLog {
 }
 
 module.exports = new DecisionLog();
+

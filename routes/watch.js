@@ -1,5 +1,5 @@
 // ============================================================
-// watch-routes.js — SmartWatch Event Trigger API
+// watch-routes.js â€” SmartWatch Event Trigger API
 // AuditDNA Backend | C:\AuditDNA\backend\routes\watch-routes.js
 // Mount in server.js: app.use('/api/watch', require('./routes/watch-routes'));
 // ============================================================
@@ -8,7 +8,7 @@ const express = require('express');
 const router  = express.Router();
 const notify  = require('../services/watch-notify');
 
-// ── GET /api/watch/config ────────────────────────────────────
+// â”€â”€ GET /api/watch/config â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 // Returns ntfy channel so frontend can show subscription QR
 router.get('/config', (req, res) => {
   res.json({
@@ -19,13 +19,13 @@ router.get('/config', (req, res) => {
   });
 });
 
-// ── POST /api/watch/test ─────────────────────────────────────
+// â”€â”€ POST /api/watch/test â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 router.post('/test', async (req, res) => {
   const result = await notify.notifyTest();
   res.json(result);
 });
 
-// ── POST /api/watch/grs-tier ─────────────────────────────────
+// â”€â”€ POST /api/watch/grs-tier â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 // Body: { growerName, oldTier, newTier, growerId }
 router.post('/grs-tier', async (req, res) => {
   const { growerName, oldTier, newTier, growerId } = req.body;
@@ -35,7 +35,7 @@ router.post('/grs-tier', async (req, res) => {
   res.json(result);
 });
 
-// ── POST /api/watch/fsma-deadline ────────────────────────────
+// â”€â”€ POST /api/watch/fsma-deadline â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 // Body: { growerName, lot, daysRemaining, dueDate }
 router.post('/fsma-deadline', async (req, res) => {
   const { growerName, lot, daysRemaining, dueDate } = req.body;
@@ -45,7 +45,7 @@ router.post('/fsma-deadline', async (req, res) => {
   res.json(result);
 });
 
-// ── POST /api/watch/tracesafe-scan ───────────────────────────
+// â”€â”€ POST /api/watch/tracesafe-scan â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 // Body: { growerName, lot, product, location, success }
 router.post('/tracesafe-scan', async (req, res) => {
   const { growerName, lot, product, location, success } = req.body;
@@ -55,7 +55,7 @@ router.post('/tracesafe-scan', async (req, res) => {
   res.json(result);
 });
 
-// ── POST /api/watch/new-kyc ──────────────────────────────────
+// â”€â”€ POST /api/watch/new-kyc â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 // Body: { growerName, growerId, tier, submittedAt }
 router.post('/new-kyc', async (req, res) => {
   const { growerName, growerId, tier, submittedAt } = req.body;
@@ -68,7 +68,7 @@ router.post('/new-kyc', async (req, res) => {
   res.json(result);
 });
 
-// ── POST /api/watch/tier3-alert ──────────────────────────────
+// â”€â”€ POST /api/watch/tier3-alert â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 // Body: { growerName, growerId, reason }
 router.post('/tier3-alert', async (req, res) => {
   const { growerName, growerId, reason } = req.body;
@@ -78,7 +78,7 @@ router.post('/tier3-alert', async (req, res) => {
   res.json(result);
 });
 
-// ── POST /api/watch/loi-pipeline ─────────────────────────────
+// â”€â”€ POST /api/watch/loi-pipeline â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 // Body: { dealName, stage, previousStage, amount }
 router.post('/loi-pipeline', async (req, res) => {
   const { dealName, stage, previousStage, amount } = req.body;
@@ -88,7 +88,7 @@ router.post('/loi-pipeline', async (req, res) => {
   res.json(result);
 });
 
-// ── POST /api/watch/shipment ──────────────────────────────────
+// â”€â”€ POST /api/watch/shipment â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 // Body: { shipmentId, product, status, location, delay? }
 router.post('/shipment', async (req, res) => {
   const { shipmentId, product, status, location, delay } = req.body;
@@ -98,7 +98,7 @@ router.post('/shipment', async (req, res) => {
   res.json(result);
 });
 
-// ── POST /api/watch/market-alert ─────────────────────────────
+// â”€â”€ POST /api/watch/market-alert â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 // Body: { product, currentPrice, threshold, direction, region }
 router.post('/market-alert', async (req, res) => {
   const { product, currentPrice, threshold, direction, region } = req.body;
@@ -108,7 +108,7 @@ router.post('/market-alert', async (req, res) => {
   res.json(result);
 });
 
-// ── POST /api/watch/water-alert ───────────────────────────────
+// â”€â”€ POST /api/watch/water-alert â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 // Body: { field, currentUsage, threshold, unit }
 router.post('/water-alert', async (req, res) => {
   const { field, currentUsage, threshold, unit } = req.body;
@@ -118,7 +118,7 @@ router.post('/water-alert', async (req, res) => {
   res.json(result);
 });
 
-// ── POST /api/watch/heat-warning ─────────────────────────────
+// â”€â”€ POST /api/watch/heat-warning â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 // Body: { region, tempC, uvIndex, advisory }
 router.post('/heat-warning', async (req, res) => {
   const { region, tempC, uvIndex, advisory } = req.body;
@@ -128,7 +128,7 @@ router.post('/heat-warning', async (req, res) => {
   res.json(result);
 });
 
-// ── POST /api/watch/new-lead ──────────────────────────────────
+// â”€â”€ POST /api/watch/new-lead â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 // Body: { name, source, phone?, email?, score, notes? }
 router.post('/new-lead', async (req, res) => {
   const { name, source, phone, email, score, notes } = req.body;
@@ -138,7 +138,7 @@ router.post('/new-lead', async (req, res) => {
   res.json(result);
 });
 
-// ── POST /api/watch/buyer-inquiry ────────────────────────────
+// â”€â”€ POST /api/watch/buyer-inquiry â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 // Body: { buyerName, products[], quantity?, unit?, urgency, company?, phone?, email?, notes? }
 router.post('/buyer-inquiry', async (req, res) => {
   const { buyerName, products, quantity, unit, urgency, company, phone, email, notes } = req.body;
@@ -149,3 +149,4 @@ router.post('/buyer-inquiry', async (req, res) => {
 });
 
 module.exports = router;
+

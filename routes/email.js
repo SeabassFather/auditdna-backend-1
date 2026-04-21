@@ -114,17 +114,17 @@ router.post('/send-campaign', upload.fields([
     const channels = JSON.parse(channelsJson || '["email"]');
     const hashtags = JSON.parse(hashtagsJson || '[]');
 
-    console.log(`\n📧 ═══ CAMPAIGN LAUNCH ═══`);
-    console.log(`📌 Subject: ${subject}`);
-    console.log(`📌 Type: ${contentType}`);
-    console.log(`📌 Recipients: ${recipients.length}`);
-    console.log(`📌 Channels: ${channels.join(', ')}`);
+    console.log(`\nðŸ“§ â•â•â• CAMPAIGN LAUNCH â•â•â•`);
+    console.log(`ðŸ“Œ Subject: ${subject}`);
+    console.log(`ðŸ“Œ Type: ${contentType}`);
+    console.log(`ðŸ“Œ Recipients: ${recipients.length}`);
+    console.log(`ðŸ“Œ Channels: ${channels.join(', ')}`);
 
     let sent = 0;
     let failed = 0;
     const channelResults = {};
 
-    // ─── EMAIL CHANNEL ───
+    // â”€â”€â”€ EMAIL CHANNEL â”€â”€â”€
     if (channels.includes('email') && recipients.length > 0) {
       // Build HTML email body with any embedded images
       let htmlBody = emailBody;
@@ -186,23 +186,23 @@ router.post('/send-campaign', upload.fields([
         sent += gmailResult.sent;
         failed += gmailResult.failed;
         channelResults.email = gmailResult;
-        console.log(`📧 Email: ${gmailResult.sent} sent, ${gmailResult.failed} failed`);
+        console.log(`ðŸ“§ Email: ${gmailResult.sent} sent, ${gmailResult.failed} failed`);
       } else {
-        console.log('⚠️ No valid email addresses found for recipients');
+        console.log('âš ï¸ No valid email addresses found for recipients');
         channelResults.email = { sent: 0, failed: recipients.length, error: 'No valid emails' };
       }
     }
 
-    // ─── SMS CHANNEL (placeholder) ───
+    // â”€â”€â”€ SMS CHANNEL (placeholder) â”€â”€â”€
     if (channels.includes('sms') && smsContent) {
-      console.log(`📱 SMS: Would send "${smsContent}" to ${recipients.length} recipients`);
+      console.log(`ðŸ“± SMS: Would send "${smsContent}" to ${recipients.length} recipients`);
       channelResults.sms = { queued: recipients.length, message: 'SMS integration pending' };
     }
 
-    // ─── SOCIAL CHANNELS (placeholder) ───
+    // â”€â”€â”€ SOCIAL CHANNELS (placeholder) â”€â”€â”€
     const socialChannels = channels.filter(c => ['youtube', 'facebook', 'instagram', 'twitter', 'linkedin'].includes(c));
     if (socialChannels.length > 0) {
-      console.log(`📣 Social: Would post to ${socialChannels.join(', ')}`);
+      console.log(`ðŸ“£ Social: Would post to ${socialChannels.join(', ')}`);
       channelResults.social = { channels: socialChannels, message: 'Social posting pending' };
     }
 
@@ -233,7 +233,7 @@ router.post('/send-campaign', upload.fields([
       createdAt: new Date().toISOString()
     });
 
-    console.log(`📧 ═══ CAMPAIGN COMPLETE: ${sent} sent, ${failed} failed ═══\n`);
+    console.log(`ðŸ“§ â•â•â• CAMPAIGN COMPLETE: ${sent} sent, ${failed} failed â•â•â•\n`);
 
     res.json({
       success: true,
@@ -449,7 +449,7 @@ STYLE RULES:
 - Professional but warm tone
 - Include specific product details when relevant
 - Use real industry terminology (FOB, delivered, case pricing, flats, bins)
-- Reference Mexican growing regions when relevant (Michoacán, Jalisco, Baja California, Sinaloa)
+- Reference Mexican growing regions when relevant (MichoacÃ¡n, Jalisco, Baja California, Sinaloa)
 - Include seasonal market insights
 - Always sign as Saul Garcia, Sales Director/Contract Sales- Load Volume-Multi Distribution Channels/Commodities
 Mexausa Food Group, Inc.- Los Angeles, Ca. & Mexico
@@ -486,7 +486,7 @@ ${type === 'subject' ? 'Generate ONLY an email subject line. No body, no quotes,
     const data = await response.json();
     const generatedContent = data.content[0].text;
 
-    console.log(`[EMAIL AI] ✅ Generated ${type || 'content'} (${generatedContent.length} chars)`);
+    console.log(`[EMAIL AI] âœ… Generated ${type || 'content'} (${generatedContent.length} chars)`);
 
     // If generating content, also generate a subject
     let subject = context?.subject || prompt;
@@ -547,3 +547,4 @@ router.post('/send-marketing', (req, res) => {
 });
 
 module.exports = router;
+

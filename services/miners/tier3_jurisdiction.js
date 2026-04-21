@@ -74,3 +74,4 @@ const analyzeJurisdiction = async (extractedData, state, zip) => {
 };
 
 module.exports = { analyzeJurisdiction };
+

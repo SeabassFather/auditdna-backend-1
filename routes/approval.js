@@ -1,6 +1,6 @@
 // approval.js
 // Save to: C:\AuditDNA\backend\routes\approval.js
-// Handles registration approval queue — owner approves/denies pending users
+// Handles registration approval queue â€” owner approves/denies pending users
 
 const express      = require('express');
 const router       = express.Router();
@@ -17,15 +17,15 @@ const SMTP = nodemailer.createTransport({
 
 const TIER_LABELS = {
   free:  'Free Observer',
-  tier1: 'Tier 1 — Grower MX',
-  tier2: 'Tier 2 — Grower USA',
-  tier3: 'Tier 3 — Buyer',
-  tier4: 'Tier 4 — Shipper/Broker',
-  tier5: 'Tier 5 — Enterprise',
+  tier1: 'Tier 1 â€” Grower MX',
+  tier2: 'Tier 2 â€” Grower USA',
+  tier3: 'Tier 3 â€” Buyer',
+  tier4: 'Tier 4 â€” Shipper/Broker',
+  tier5: 'Tier 5 â€” Enterprise',
   owner: 'Owner',
 };
 
-// ── Auth middleware ───────────────────────────────────────────────────────────
+// â”€â”€ Auth middleware â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function ownerOnly(req, res, next) {
   const header = req.headers.authorization || '';
   const token  = header.replace('Bearer ', '');
@@ -42,7 +42,7 @@ function ownerOnly(req, res, next) {
   }
 }
 
-// ── GET /api/approval/pending ─────────────────────────────────────────────────
+// â”€â”€ GET /api/approval/pending â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 // Returns all users with status = 'pending' or approval_status = 'pending'
 router.get('/pending', ownerOnly, async (req, res) => {
   const pool = getPool(req);
@@ -50,7 +50,7 @@ router.get('/pending', ownerOnly, async (req, res) => {
     // Try approval_registrations table first, fall back to auth_users pending
     let rows = [];
     try {
-      const r = await pool.query(`
+      const r = await global.db.query(`
         SELECT id, name, email, company, origin, phone, country, tier, paca_number,
                docs_completed, created_at, status
         FROM approval_registrations
@@ -59,8 +59,8 @@ router.get('/pending', ownerOnly, async (req, res) => {
       `);
       rows = r.rows;
     } catch {
-      // Table may not exist yet — use auth_users with pending status
-      const r = await pool.query(`
+      // Table may not exist yet â€” use auth_users with pending status
+      const r = await global.db.query(`
         SELECT id, username as name, username as email, '' as company,
                '' as origin, '' as phone, 'unknown' as country,
                tier, '' as paca_number, '[]' as docs_completed,
@@ -78,7 +78,7 @@ router.get('/pending', ownerOnly, async (req, res) => {
   }
 });
 
-// ── POST /api/approval/approve/:id ───────────────────────────────────────────
+// â”€â”€ POST /api/approval/approve/:id â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 router.post('/approve/:id', ownerOnly, async (req, res) => {
   const pool = getPool(req);
   const { id } = req.params;
@@ -96,7 +96,7 @@ router.post('/approve/:id', ownerOnly, async (req, res) => {
 
     // Update approval_registrations if table exists
     try {
-      const r = await pool.query(`
+      const r = await global.db.query(`
         UPDATE approval_registrations
         SET status = 'approved', tier = $1, approved_by = $2, approved_at = $3,
             access_code = $4, pin = $5, approval_note = $6
@@ -110,7 +110,7 @@ router.post('/approve/:id', ownerOnly, async (req, res) => {
       }
     } catch {
       // Fall back to auth_users
-      const r = await pool.query(`
+      const r = await global.db.query(`
         UPDATE auth_users
         SET is_active = true, tier = $1, tier_approved_at = $2, tier_approved_by = $3
         WHERE id = $4
@@ -125,7 +125,7 @@ router.post('/approve/:id', ownerOnly, async (req, res) => {
     // Send approval email
     if (userEmail) {
       await SMTP.sendMail({
-        from: '"AuditDNA — Mexausa Food Group" <saul@mexausafg.com>',
+        from: '"AuditDNA â€” Mexausa Food Group" <saul@mexausafg.com>',
         to: userEmail,
         subject: 'Your AuditDNA Access Has Been Approved',
         text: `
@@ -156,7 +156,7 @@ Mexausa Food Group, Inc. | Mexausa Food Group, Inc. | PACA #20241168
     await SMTP.sendMail({
       from: '"AuditDNA Approvals" <saul@mexausafg.com>',
       to: 'saul@mexausafg.com',
-      subject: `[AuditDNA] Approved: ${userName || userEmail} — ${TIER_LABELS[tier] || tier}`,
+      subject: `[AuditDNA] Approved: ${userName || userEmail} â€” ${TIER_LABELS[tier] || tier}`,
       text: `You approved ${userName} (${userEmail}) for ${TIER_LABELS[tier] || tier}.\nAccess Code: ${finalCode} | PIN: ${finalPin}`,
     }).catch(() => {});
 
@@ -166,7 +166,7 @@ Mexausa Food Group, Inc. | Mexausa Food Group, Inc. | PACA #20241168
   }
 });
 
-// ── POST /api/approval/deny/:id ───────────────────────────────────────────────
+// â”€â”€ POST /api/approval/deny/:id â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 router.post('/deny/:id', ownerOnly, async (req, res) => {
   const pool = getPool(req);
   const { id } = req.params;
@@ -178,7 +178,7 @@ router.post('/deny/:id', ownerOnly, async (req, res) => {
     let userName  = '';
 
     try {
-      const r = await pool.query(`
+      const r = await global.db.query(`
         UPDATE approval_registrations
         SET status = 'denied', approved_by = $1, approved_at = $2, approval_note = $3
         WHERE id = $4
@@ -189,7 +189,7 @@ router.post('/deny/:id', ownerOnly, async (req, res) => {
         userName  = r.rows[0].name;
       }
     } catch {
-      const r = await pool.query(
+      const r = await global.db.query(
         'SELECT username FROM auth_users WHERE id = $1', [id]
       );
       if (r.rows.length > 0) userEmail = r.rows[0].username;
@@ -197,7 +197,7 @@ router.post('/deny/:id', ownerOnly, async (req, res) => {
 
     if (userEmail) {
       await SMTP.sendMail({
-        from: '"AuditDNA — Mexausa Food Group" <saul@mexausafg.com>',
+        from: '"AuditDNA â€” Mexausa Food Group" <saul@mexausafg.com>',
         to: userEmail,
         subject: 'AuditDNA Registration Update',
         text: `
@@ -223,21 +223,21 @@ Mexausa Food Group, Inc. | Mexausa Food Group, Inc. | PACA #20241168
   }
 });
 
-// ── POST /api/approval/update-tier ───────────────────────────────────────────
+// â”€â”€ POST /api/approval/update-tier â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 // Owner can change an existing user's tier at any time
 router.post('/update-tier', ownerOnly, async (req, res) => {
   const pool = getPool(req);
   const { email, tier } = req.body;
   if (!email || !tier) return res.status(400).json({ error: 'email and tier required' });
   try {
-    await pool.query(
+    await global.db.query(
       'UPDATE auth_users SET tier = $1, tier_approved_at = $2, tier_approved_by = $3 WHERE LOWER(username) = LOWER($4)',
       [tier, new Date(), req.user.email, email]
     );
 
     // Notify user of tier change
     await SMTP.sendMail({
-      from: '"AuditDNA — Mexausa Food Group" <saul@mexausafg.com>',
+      from: '"AuditDNA â€” Mexausa Food Group" <saul@mexausafg.com>',
       to: email,
       subject: 'Your AuditDNA Access Tier Has Been Updated',
       text: `Your AuditDNA platform access tier has been updated to: ${TIER_LABELS[tier] || tier}.\n\nLog in at https://mexausafg.com to access your new modules.\n\nMexausa Food Group, Inc. | PACA #20241168`,
@@ -249,12 +249,12 @@ router.post('/update-tier', ownerOnly, async (req, res) => {
   }
 });
 
-// ── POST /api/approval/init-table ────────────────────────────────────────────
+// â”€â”€ POST /api/approval/init-table â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 // Creates approval_registrations table if not exists
 router.post('/init-table', ownerOnly, async (req, res) => {
   const pool = getPool(req);
   try {
-    await pool.query(`
+    await global.db.query(`
       CREATE TABLE IF NOT EXISTS approval_registrations (
         id               SERIAL PRIMARY KEY,
         name             VARCHAR(200),
@@ -284,3 +284,4 @@ router.post('/init-table', ownerOnly, async (req, res) => {
 });
 
 module.exports = router;
+

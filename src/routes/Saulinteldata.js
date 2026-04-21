@@ -1,6 +1,6 @@
 // ============================================================================
-// SAUL INTEL CRM DATA LAYER — SaulIntelData.js
-// All static data, constants, helpers — zero React, zero render cost
+// SAUL INTEL CRM DATA LAYER â€” SaulIntelData.js
+// All static data, constants, helpers â€” zero React, zero render cost
 // ============================================================================
 // -
 // Mexausa Food Group, Inc.
@@ -100,7 +100,7 @@ export const API = {
 };
 export const CRM = API.crm;
 
-// ─── CONTACT FIELD HELPERS ───────────────────────────────────────────────────
+// â”€â”€â”€ CONTACT FIELD HELPERS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 export const gName = c => c?.first_name ? `${c.first_name} ${c.last_name||''}`.trim() : (c?.legal_name || c?.trade_name || c?.name || '');
 export const gComp = c => c?.company || c?.trade_name || c?.legal_name || '';
 export const gCity = c => c?.city || '';
@@ -108,7 +108,7 @@ export const gCtry = c => c?.country || '';
 export const gMail = c => c?.email || c?.email_address || '';
 export const cid   = c => c?.id || c?.email || Math.random().toString(36).slice(2);
 export const gPhone = c => c?.phone || c?.mobile || c?.telephone || c?.phone_number || c?.cell || '';
-// ─────────────────────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 // -
 // 81 MINER NINERS
@@ -262,24 +262,24 @@ export const COMMODITY_CATALOG = [
 
 // TEMPLATE LIBRARY - wired to Brain + grower inventory
 export const TEMPLATE_LIBRARY = [
-  {id:'t-avo',       cat:'Avocados',    name:'Avocado FOB Alert',                   subject:'Avocado FOB Update — Mexausa Food Group',    products:['AVO-48','AVO-60'],
+  {id:'t-avo',       cat:'Avocados',    name:'Avocado FOB Alert',                   subject:'Avocado FOB Update â€” Mexausa Food Group',    products:['AVO-48','AVO-60'],
    body:'<p>Hi {{first_name}},</p><p>We have <strong>Hass Avocados from Michoacan and Jalisco, Mexico</strong> available on the open market this week. Quality is excellent. If {{company}} has a spot need or wants to lock in for the next few weeks, reply or call and I will have pricing to you within one hour.</p>{{PRODUCT_TABLE}}<p>Best regards,<br/>Saul Garcia<br/>CEO, Mexausa Food Group, Inc.<br/>Saul@mexausafg.com | MX: +52-646-340-2686 | US: +1-831-251-3116</p>'},
-  {id:'t-berry',     cat:'Berries',     name:'Berry Season Program',                subject:'Year-Round Berry Programs — Strawberry, Blueberry, Raspberry', products:['STR-ALB','BLU-12','RSP-12','BLK-12'],
+  {id:'t-berry',     cat:'Berries',     name:'Berry Season Program',                subject:'Year-Round Berry Programs â€” Strawberry, Blueberry, Raspberry', products:['STR-ALB','BLU-12','RSP-12','BLK-12'],
    body:'<p>Hi {{first_name}},</p><p>Mexausa Food Group operates <strong>year-round berry programs</strong> from Baja California and Jalisco, Mexico. Strawberry, Blueberry, Raspberry, and Blackberry available weekly spot and fixed-price seasonal contracts.</p>{{PRODUCT_TABLE}}<p>Reply or call me for this week FOB pricing for {{company}}.</p><p>Best regards,<br/>Saul Garcia<br/>Saul@mexausafg.com | MX: +52-646-340-2686 | US: +1-831-251-3116</p>'},
-  {id:'t-cilantro',  cat:'Herbs',       name:'Cilantro Open Market Alert',          subject:'Cilantro Available Now — Baja California FOB This Week', products:['CIL-60'],
-   body:'<p>Hi {{first_name}},</p><p>Quick note — we have <strong>Cilantro 60ct Bunched from Baja California, Mexico</strong> available on the open market this week. Quality is excellent, volume is available, pricing is competitive FOB. Reply or call me directly.</p><p>Best regards,<br/>Saul Garcia<br/>Saul@mexausafg.com | MX: +52-646-340-2686 | US: +1-831-251-3116</p>'},
-  {id:'t-lime',      cat:'Citrus',      name:'Persian Lime Weekly Update',          subject:'Persian Limes 40lb — FOB Pricing This Week', products:['LIM-40'],
-   body:'<p>Hi {{first_name}},</p><p>Persian Limes 40lb from Veracruz and Colima, Mexico — year-round program open for spot and contract purchasing. This week pricing available for {{company}} on request.</p>{{PRODUCT_TABLE}}<p>Best regards,<br/>Saul Garcia<br/>Saul@mexausafg.com | MX: +52-646-340-2686 | US: +1-831-251-3116</p>'},
-  {id:'t-intro',     cat:'General',     name:'Company Introduction — USA Buyers',   subject:'Mexausa Food Group — Direct from Mexico & California Growers', products:['AVO-48','STR-ALB','LIM-40','ROM-24','CIL-60'],
-   body:'<p>Hi {{first_name}},</p><p>My name is Saul Garcia, CEO of <strong>Mexausa Food Group, Inc.</strong> — a licensed PACA wholesale importer headquartered in Ensenada, Baja California. Year-round programs: Hass Avocados, Persian Limes, Mixed Berries, Romaine and Iceberg Lettuce, and Cilantro. PACA Licensed, FSMA 204 traceable, direct from grower.</p>{{PRODUCT_TABLE}}<p>I would like to schedule a 15-minute call to share current availability and pricing for {{company}}.</p><p>Best regards,<br/>Saul Garcia<br/>CEO, Mexausa Food Group, Inc.<br/>Saul@mexausafg.com | MX: +52-646-340-2686 | US: +1-831-251-3116<br/>mexausafg.com</p>'},
-  {id:'t-grower',    cat:'Growers',     name:'Small Grower Program Invite',         subject:'Get Your Produce in Front of 3,000 Verified US Buyers — Free', products:[],
+  {id:'t-cilantro',  cat:'Herbs',       name:'Cilantro Open Market Alert',          subject:'Cilantro Available Now â€” Baja California FOB This Week', products:['CIL-60'],
+   body:'<p>Hi {{first_name}},</p><p>Quick note â€” we have <strong>Cilantro 60ct Bunched from Baja California, Mexico</strong> available on the open market this week. Quality is excellent, volume is available, pricing is competitive FOB. Reply or call me directly.</p><p>Best regards,<br/>Saul Garcia<br/>Saul@mexausafg.com | MX: +52-646-340-2686 | US: +1-831-251-3116</p>'},
+  {id:'t-lime',      cat:'Citrus',      name:'Persian Lime Weekly Update',          subject:'Persian Limes 40lb â€” FOB Pricing This Week', products:['LIM-40'],
+   body:'<p>Hi {{first_name}},</p><p>Persian Limes 40lb from Veracruz and Colima, Mexico â€” year-round program open for spot and contract purchasing. This week pricing available for {{company}} on request.</p>{{PRODUCT_TABLE}}<p>Best regards,<br/>Saul Garcia<br/>Saul@mexausafg.com | MX: +52-646-340-2686 | US: +1-831-251-3116</p>'},
+  {id:'t-intro',     cat:'General',     name:'Company Introduction â€” USA Buyers',   subject:'Mexausa Food Group â€” Direct from Mexico & California Growers', products:['AVO-48','STR-ALB','LIM-40','ROM-24','CIL-60'],
+   body:'<p>Hi {{first_name}},</p><p>My name is Saul Garcia, CEO of <strong>Mexausa Food Group, Inc.</strong> â€” a licensed PACA wholesale importer headquartered in Ensenada, Baja California. Year-round programs: Hass Avocados, Persian Limes, Mixed Berries, Romaine and Iceberg Lettuce, and Cilantro. PACA Licensed, FSMA 204 traceable, direct from grower.</p>{{PRODUCT_TABLE}}<p>I would like to schedule a 15-minute call to share current availability and pricing for {{company}}.</p><p>Best regards,<br/>Saul Garcia<br/>CEO, Mexausa Food Group, Inc.<br/>Saul@mexausafg.com | MX: +52-646-340-2686 | US: +1-831-251-3116<br/>mexausafg.com</p>'},
+  {id:'t-grower',    cat:'Growers',     name:'Small Grower Program Invite',         subject:'Get Your Produce in Front of 3,000 Verified US Buyers â€” Free', products:[],
    body:'<p>Hi {{first_name}},</p><p>My name is Saul Garcia. I run <strong>Mexausa Food Group</strong>, a PACA-licensed wholesale importer. We are opening our <strong>Small Grower Program</strong> to qualified operations in your region. Sell under our PACA license umbrella, get FSMA 204 compliant digitally, and list on AuditDNA visible to 3,000+ verified US buyers. No cost to register. Reply YES and I will send the registration link within 24 hours.</p><p>Best regards,<br/>Saul Garcia<br/>Saul@mexausafg.com | MX: +52-646-340-2686 | US: +1-831-251-3116</p>'},
-  {id:'t-auditdna',  cat:'Platform',    name:'AuditDNA Platform Pitch',             subject:'Free Agricultural Trade Intelligence Platform — AuditDNA', products:[],
-   body:'<p>Hi {{first_name}},</p><p>Beyond our wholesale distribution business, our team has built <strong>AuditDNA</strong> — a full-stack agricultural trade intelligence platform for the produce industry. Free to sign up for buyers and growers.</p><p>For Buyers: Live FOB Pricing, Grower Discovery, FSMA 204 Traceability, AI Market Intelligence, Port and Border Intel, Digital Contract Management.</p><p>Platform stats: 500+ commodity SKUs, 27,000+ contacts, 119 patent-eligible inventions.</p><p>Visit <a href="https://mexausafg.com">mexausafg.com</a> or reply to schedule a 20-minute walkthrough.</p><p>Best regards,<br/>Saul Garcia<br/>CEO, Mexausa Food Group, Inc. and AuditDNA<br/>Saul@mexausafg.com | MX: +52-646-340-2686 | US: +1-831-251-3116</p>'},
+  {id:'t-auditdna',  cat:'Platform',    name:'AuditDNA Platform Pitch',             subject:'Free Agricultural Trade Intelligence Platform â€” AuditDNA', products:[],
+   body:'<p>Hi {{first_name}},</p><p>Beyond our wholesale distribution business, our team has built <strong>AuditDNA</strong> â€” a full-stack agricultural trade intelligence platform for the produce industry. Free to sign up for buyers and growers.</p><p>For Buyers: Live FOB Pricing, Grower Discovery, FSMA 204 Traceability, AI Market Intelligence, Port and Border Intel, Digital Contract Management.</p><p>Platform stats: 500+ commodity SKUs, 27,000+ contacts, 119 patent-eligible inventions.</p><p>Visit <a href="https://mexausafg.com">mexausafg.com</a> or reply to schedule a 20-minute walkthrough.</p><p>Best regards,<br/>Saul Garcia<br/>CEO, Mexausa Food Group, Inc. and AuditDNA<br/>Saul@mexausafg.com | MX: +52-646-340-2686 | US: +1-831-251-3116</p>'},
   {id:'t-price',     cat:'Pricing',     name:'Weekly FOB Price List',               subject:'Mexausa Weekly FOB Update', products:['AVO-48','AVO-60','STR-ALB','BLU-12','LIM-40','CIL-60','ROM-24'],
-   body:'<p>Hi {{first_name}},</p><p>This week FOB pricing from Mexausa Food Group, Inc. — direct from grower, no broker layers. All products PACA compliant, FSMA 204 traceable.</p>{{PRODUCT_TABLE}}<p>Contact me directly for volume pricing and contract programs.</p><p>Best regards,<br/>Saul Garcia<br/>Saul@mexausafg.com | MX: +52-646-340-2686 | US: +1-831-251-3116</p>'},
-  {id:'t-newsletter',cat:'Newsletter',  name:'Weekly Market Intel Newsletter',       subject:'Mexausa Weekly Market Intel — FOB Pricing & Border Updates', products:['AVO-48','STR-ALB','BLU-12','LIM-40','TOM-ROM','CIL-60'],
-   body:'<p>Good morning {{first_name}},</p><p>Your weekly market intelligence from Mexausa Food Group, Inc.</p>{{PRODUCT_TABLE}}<p><strong>BORDER STATUS THIS WEEK:</strong> Nogales 45 min — OPEN. San Diego 2.5 hrs — BUSY. El Paso 1.2 hrs — OPEN. Otay Mesa 4.2 hrs — SLOW.</p><p>Questions or spot needs? Reply directly to this email.</p><p>Best regards,<br/>Saul Garcia<br/>CEO, Mexausa Food Group, Inc.<br/>Saul@mexausafg.com | MX: +52-646-340-2686 | US: +1-831-251-3116</p>'},
+   body:'<p>Hi {{first_name}},</p><p>This week FOB pricing from Mexausa Food Group, Inc. â€” direct from grower, no broker layers. All products PACA compliant, FSMA 204 traceable.</p>{{PRODUCT_TABLE}}<p>Contact me directly for volume pricing and contract programs.</p><p>Best regards,<br/>Saul Garcia<br/>Saul@mexausafg.com | MX: +52-646-340-2686 | US: +1-831-251-3116</p>'},
+  {id:'t-newsletter',cat:'Newsletter',  name:'Weekly Market Intel Newsletter',       subject:'Mexausa Weekly Market Intel â€” FOB Pricing & Border Updates', products:['AVO-48','STR-ALB','BLU-12','LIM-40','TOM-ROM','CIL-60'],
+   body:'<p>Good morning {{first_name}},</p><p>Your weekly market intelligence from Mexausa Food Group, Inc.</p>{{PRODUCT_TABLE}}<p><strong>BORDER STATUS THIS WEEK:</strong> Nogales 45 min â€” OPEN. San Diego 2.5 hrs â€” BUSY. El Paso 1.2 hrs â€” OPEN. Otay Mesa 4.2 hrs â€” SLOW.</p><p>Questions or spot needs? Reply directly to this email.</p><p>Best regards,<br/>Saul Garcia<br/>CEO, Mexausa Food Group, Inc.<br/>Saul@mexausafg.com | MX: +52-646-340-2686 | US: +1-831-251-3116</p>'},
 ];
 
 // SOCIAL PLATFORMS
@@ -448,51 +448,51 @@ export const AG_TEMPLATES=[
   {id:'cold-chain',name:'Cold Chain Capabilities',cat:'Logistics'},
   {id:'quality-report',name:'Quality Report',cat:'Compliance'},
   {id:'partnership',name:'Partnership Proposal',cat:'Business'},
-  // ─── MEXAUSA FOOD GROUP COMPANY TEMPLATES ────────────────────────────────────
+  // â”€â”€â”€ MEXAUSA FOOD GROUP COMPANY TEMPLATES â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   {id:'mfg-intro-en', cat:'Mexausa', name:'Company Introduction (EN)',
-   subject:'Mexausa Food Group — Direct from Mexico & California Growers',
-   body:`<p>Hi {{first_name}},</p><p>My name is Saul Garcia, CEO of <strong>Mexausa Food Group, Inc.</strong> — a licensed PACA wholesale importer and direct distributor headquartered in Ensenada, Baja California, with operations serving California, Arizona, and the greater USA produce corridor.</p><p>We are the technology and commercial partner for <strong>Mexausa Food Group, Inc.</strong> (Los Angeles, CA and Mexico), giving us direct relationships with growers across Baja California, Michoacan, Jalisco, Sinaloa, and the Salinas Valley.</p><p><strong>What we offer {{company}}:</strong></p><ul><li><strong>Year-Round Programs:</strong> Hass Avocados, Persian Limes, Mixed Berries, Romaine and Iceberg Lettuce, and Cilantro</li><li><strong>Seasonal Open Market:</strong> Week-in, week-out competitive FOB pricing</li><li><strong>Contract Programs:</strong> Fixed-price seasonal contracts for volume buyers</li><li><strong>PACA Licensed:</strong> Full compliance, documented chain of custody, FSMA 204 traceability</li><li><strong>Direct from Grower:</strong> No middlemen — better pricing and fresher product</li></ul><p>I would like to schedule a 15-minute call to learn more about {{company}} needs and share our current availability and pricing.</p><p>Best regards,<br/>Saul Garcia<br/>CEO, Mexausa Food Group, Inc.<br/>Saul@mexausafg.com | MX: +52-646-340-2686 | US: +1-831-251-3116<br/>mexausafg.com</p>`},
+   subject:'Mexausa Food Group â€” Direct from Mexico & California Growers',
+   body:`<p>Hi {{first_name}},</p><p>My name is Saul Garcia, CEO of <strong>Mexausa Food Group, Inc.</strong> â€” a licensed PACA wholesale importer and direct distributor headquartered in Ensenada, Baja California, with operations serving California, Arizona, and the greater USA produce corridor.</p><p>We are the technology and commercial partner for <strong>Mexausa Food Group, Inc.</strong> (Los Angeles, CA and Mexico), giving us direct relationships with growers across Baja California, Michoacan, Jalisco, Sinaloa, and the Salinas Valley.</p><p><strong>What we offer {{company}}:</strong></p><ul><li><strong>Year-Round Programs:</strong> Hass Avocados, Persian Limes, Mixed Berries, Romaine and Iceberg Lettuce, and Cilantro</li><li><strong>Seasonal Open Market:</strong> Week-in, week-out competitive FOB pricing</li><li><strong>Contract Programs:</strong> Fixed-price seasonal contracts for volume buyers</li><li><strong>PACA Licensed:</strong> Full compliance, documented chain of custody, FSMA 204 traceability</li><li><strong>Direct from Grower:</strong> No middlemen â€” better pricing and fresher product</li></ul><p>I would like to schedule a 15-minute call to learn more about {{company}} needs and share our current availability and pricing.</p><p>Best regards,<br/>Saul Garcia<br/>CEO, Mexausa Food Group, Inc.<br/>Saul@mexausafg.com | MX: +52-646-340-2686 | US: +1-831-251-3116<br/>mexausafg.com</p>`},
   {id:'mfg-intro-es', cat:'Mexausa', name:'Introduccion Empresa (ES)',
-   subject:'Mexausa Food Group — Directo de Productores de Mexico y California',
-   body:`<p>Estimado/a {{first_name}},</p><p>Mi nombre es Saul Garcia, CEO de <strong>Mexausa Food Group, Inc.</strong> — importador mayorista con licencia PACA y distribuidor directo con sede en Ensenada, Baja California, con operaciones en California, Arizona y el corredor de produccion de EE.UU.</p><p>Somos el socio tecnologico y comercial de <strong>Mexausa Food Group, Inc.</strong> (Los Angeles, CA y Mexico), con relaciones directas con productores en Baja California, Michoacan, Jalisco, Sinaloa y el Valle de Salinas.</p><p><strong>Lo que ofrecemos a {{company}}:</strong></p><ul><li><strong>Programas Todo el Ano:</strong> Aguacates Hass, Limones Persas, Berries Mixtos, Lechuga Romana y Americana, y Cilantro</li><li><strong>Mercado Abierto Estacional:</strong> Precios FOB competitivos semana a semana</li><li><strong>Programas de Contrato:</strong> Contratos a precio fijo para compradores de volumen</li><li><strong>Licencia PACA:</strong> Cumplimiento total, cadena de custodia documentada, trazabilidad FSMA 204</li><li><strong>Directo del Productor:</strong> Sin intermediarios — mejores precios y producto mas fresco</li></ul><p>Me gustaria agendar una llamada de 15 minutos para conocer las necesidades de {{company}} y compartir disponibilidad y precios actuales.</p><p>Saludos,<br/>Saul Garcia<br/>CEO, Mexausa Food Group, Inc.<br/>Saul@mexausafg.com | MX: +52-646-340-2686 | US: +1-831-251-3116<br/>mexausafg.com</p>`},
+   subject:'Mexausa Food Group â€” Directo de Productores de Mexico y California',
+   body:`<p>Estimado/a {{first_name}},</p><p>Mi nombre es Saul Garcia, CEO de <strong>Mexausa Food Group, Inc.</strong> â€” importador mayorista con licencia PACA y distribuidor directo con sede en Ensenada, Baja California, con operaciones en California, Arizona y el corredor de produccion de EE.UU.</p><p>Somos el socio tecnologico y comercial de <strong>Mexausa Food Group, Inc.</strong> (Los Angeles, CA y Mexico), con relaciones directas con productores en Baja California, Michoacan, Jalisco, Sinaloa y el Valle de Salinas.</p><p><strong>Lo que ofrecemos a {{company}}:</strong></p><ul><li><strong>Programas Todo el Ano:</strong> Aguacates Hass, Limones Persas, Berries Mixtos, Lechuga Romana y Americana, y Cilantro</li><li><strong>Mercado Abierto Estacional:</strong> Precios FOB competitivos semana a semana</li><li><strong>Programas de Contrato:</strong> Contratos a precio fijo para compradores de volumen</li><li><strong>Licencia PACA:</strong> Cumplimiento total, cadena de custodia documentada, trazabilidad FSMA 204</li><li><strong>Directo del Productor:</strong> Sin intermediarios â€” mejores precios y producto mas fresco</li></ul><p>Me gustaria agendar una llamada de 15 minutos para conocer las necesidades de {{company}} y compartir disponibilidad y precios actuales.</p><p>Saludos,<br/>Saul Garcia<br/>CEO, Mexausa Food Group, Inc.<br/>Saul@mexausafg.com | MX: +52-646-340-2686 | US: +1-831-251-3116<br/>mexausafg.com</p>`},
   {id:'mfg-product-en', cat:'Mexausa', name:'Year-Round Product Programs (EN)',
-   subject:'Year-Round Avocado, Lime, Berry, Lettuce & Cilantro Programs — Open Now',
+   subject:'Year-Round Avocado, Lime, Berry, Lettuce & Cilantro Programs â€” Open Now',
    body:`<p>Hi {{first_name}},</p><p>At <strong>Mexausa Food Group</strong> we operate five year-round produce programs open for contract and spot-market purchasing. Here is what is available for {{company}} right now:</p><table style="border-collapse:collapse;width:100%;max-width:580px;margin:12px 0"><tr style="background:#0a4d8c"><th style="padding:8px 10px;color:white;text-align:left;font-size:11px">PROGRAM</th><th style="padding:8px 10px;color:white;text-align:left;font-size:11px">ORIGIN</th><th style="padding:8px 10px;color:white;text-align:left;font-size:11px">AVAILABILITY</th><th style="padding:8px 10px;color:white;text-align:left;font-size:11px">PRICING</th></tr><tr style="background:#f8fafc"><td style="padding:8px 10px;font-size:11px;font-weight:700">Hass Avocados (all sizes)</td><td style="padding:8px 10px;font-size:11px">Michoacan and Jalisco, MX</td><td style="padding:8px 10px;font-size:11px">Year-Round</td><td style="padding:8px 10px;font-size:11px">Weekly FOB / Contract</td></tr><tr><td style="padding:8px 10px;font-size:11px;font-weight:700">Persian Limes 40lb</td><td style="padding:8px 10px;font-size:11px">Veracruz and Colima, MX</td><td style="padding:8px 10px;font-size:11px">Year-Round</td><td style="padding:8px 10px;font-size:11px">Weekly FOB / Contract</td></tr><tr style="background:#f8fafc"><td style="padding:8px 10px;font-size:11px;font-weight:700">Berries (Strawberry, Blueberry, Raspberry, Blackberry)</td><td style="padding:8px 10px;font-size:11px">Baja California and Jalisco, MX</td><td style="padding:8px 10px;font-size:11px">Year-Round</td><td style="padding:8px 10px;font-size:11px">Weekly FOB / Contract</td></tr><tr><td style="padding:8px 10px;font-size:11px;font-weight:700">Romaine and Iceberg Lettuce</td><td style="padding:8px 10px;font-size:11px">Guanajuato, MX and Salinas, CA</td><td style="padding:8px 10px;font-size:11px">Year-Round</td><td style="padding:8px 10px;font-size:11px">Weekly FOB / Contract</td></tr><tr style="background:#f8fafc"><td style="padding:8px 10px;font-size:11px;font-weight:700">Cilantro 60ct Bunched</td><td style="padding:8px 10px;font-size:11px">Baja California, MX</td><td style="padding:8px 10px;font-size:11px;color:#156f3e;font-weight:700">OPEN NOW</td><td style="padding:8px 10px;font-size:11px">Spot Market Available</td></tr></table><p>All programs available week-to-week spot or as fixed-price seasonal contracts. We price every Monday at 8:00 AM PST.</p><p>Reply or call me directly for this week pricing for {{company}}.</p><p>Best regards,<br/>Saul Garcia<br/>CEO, Mexausa Food Group, Inc.<br/>Saul@mexausafg.com | MX: +52-646-340-2686 | US: +1-831-251-3116</p>`},
   {id:'mfg-product-es', cat:'Mexausa', name:'Programas de Producto Todo el Ano (ES)',
-   subject:'Programas de Aguacate, Limon, Berries, Lechuga y Cilantro — Disponibles Ahora',
+   subject:'Programas de Aguacate, Limon, Berries, Lechuga y Cilantro â€” Disponibles Ahora',
    body:`<p>Estimado/a {{first_name}},</p><p>En <strong>Mexausa Food Group</strong> operamos cinco programas anuales disponibles en contrato y mercado spot. Esto es lo disponible para {{company}} ahora mismo:</p><table style="border-collapse:collapse;width:100%;max-width:580px;margin:12px 0"><tr style="background:#0a4d8c"><th style="padding:8px 10px;color:white;text-align:left;font-size:11px">PROGRAMA</th><th style="padding:8px 10px;color:white;text-align:left;font-size:11px">ORIGEN</th><th style="padding:8px 10px;color:white;text-align:left;font-size:11px">DISPONIBILIDAD</th><th style="padding:8px 10px;color:white;text-align:left;font-size:11px">PRECIO</th></tr><tr style="background:#f8fafc"><td style="padding:8px 10px;font-size:11px;font-weight:700">Aguacates Hass (todos los tamanos)</td><td style="padding:8px 10px;font-size:11px">Michoacan y Jalisco, MX</td><td style="padding:8px 10px;font-size:11px">Todo el Ano</td><td style="padding:8px 10px;font-size:11px">FOB Semanal / Contrato</td></tr><tr><td style="padding:8px 10px;font-size:11px;font-weight:700">Limones Persas 40lb</td><td style="padding:8px 10px;font-size:11px">Veracruz y Colima, MX</td><td style="padding:8px 10px;font-size:11px">Todo el Ano</td><td style="padding:8px 10px;font-size:11px">FOB Semanal / Contrato</td></tr><tr style="background:#f8fafc"><td style="padding:8px 10px;font-size:11px;font-weight:700">Berries (Fresa, Arandano, Frambuesa, Mora)</td><td style="padding:8px 10px;font-size:11px">Baja California y Jalisco, MX</td><td style="padding:8px 10px;font-size:11px">Todo el Ano</td><td style="padding:8px 10px;font-size:11px">FOB Semanal / Contrato</td></tr><tr><td style="padding:8px 10px;font-size:11px;font-weight:700">Lechuga Romana y Americana</td><td style="padding:8px 10px;font-size:11px">Guanajuato, MX y Salinas, CA</td><td style="padding:8px 10px;font-size:11px">Todo el Ano</td><td style="padding:8px 10px;font-size:11px">FOB Semanal / Contrato</td></tr><tr style="background:#f8fafc"><td style="padding:8px 10px;font-size:11px;font-weight:700">Cilantro 60ct en Manojo</td><td style="padding:8px 10px;font-size:11px">Baja California, MX</td><td style="padding:8px 10px;font-size:11px;color:#156f3e;font-weight:700">DISPONIBLE AHORA</td><td style="padding:8px 10px;font-size:11px">Mercado Spot</td></tr></table><p>Todos los programas disponibles semana a semana o en contratos a precio fijo. Precios cada lunes a las 8:00 AM.</p><p>Respondame o llameme directamente para los precios de esta semana para {{company}}.</p><p>Saludos,<br/>Saul Garcia<br/>CEO, Mexausa Food Group, Inc.<br/>Saul@mexausafg.com | MX: +52-646-340-2686 | US: +1-831-251-3116</p>`},
   {id:'mfg-cilantro-en', cat:'Mexausa', name:'Cilantro Open Market Alert (EN)',
-   subject:'Cilantro Available Now — Baja California FOB This Week',
-   body:`<p>Hi {{first_name}},</p><p>Quick note — we have <strong>Cilantro 60ct Bunched from Baja California, Mexico</strong> available on the open market this week. Quality is excellent, volume is available, pricing is competitive FOB.</p><p>If {{company}} has a need this week or wants to lock in for the next few weeks, reply or call me directly and I will have a quote to you within the hour.</p><p>Best regards,<br/>Saul Garcia<br/>CEO, Mexausa Food Group, Inc.<br/>Saul@mexausafg.com | MX: +52-646-340-2686 | US: +1-831-251-3116</p>`},
+   subject:'Cilantro Available Now â€” Baja California FOB This Week',
+   body:`<p>Hi {{first_name}},</p><p>Quick note â€” we have <strong>Cilantro 60ct Bunched from Baja California, Mexico</strong> available on the open market this week. Quality is excellent, volume is available, pricing is competitive FOB.</p><p>If {{company}} has a need this week or wants to lock in for the next few weeks, reply or call me directly and I will have a quote to you within the hour.</p><p>Best regards,<br/>Saul Garcia<br/>CEO, Mexausa Food Group, Inc.<br/>Saul@mexausafg.com | MX: +52-646-340-2686 | US: +1-831-251-3116</p>`},
   {id:'mfg-cilantro-es', cat:'Mexausa', name:'Alerta Cilantro Mercado Abierto (ES)',
-   subject:'Cilantro Disponible Esta Semana — Baja California FOB',
-   body:`<p>Estimado/a {{first_name}},</p><p>Aviso rapido — tenemos <strong>Cilantro 60ct en Manojo de Baja California, Mexico</strong> disponible en mercado abierto esta semana. Calidad excelente, volumen disponible, precio FOB competitivo.</p><p>Si {{company}} tiene necesidad esta semana o quiere asegurar las proximas semanas, respondame o llameme directamente y le tengo cotizacion en menos de una hora.</p><p>Saludos,<br/>Saul Garcia<br/>CEO, Mexausa Food Group, Inc.<br/>Saul@mexausafg.com | MX: +52-646-340-2686 | US: +1-831-251-3116</p>`},
+   subject:'Cilantro Disponible Esta Semana â€” Baja California FOB',
+   body:`<p>Estimado/a {{first_name}},</p><p>Aviso rapido â€” tenemos <strong>Cilantro 60ct en Manojo de Baja California, Mexico</strong> disponible en mercado abierto esta semana. Calidad excelente, volumen disponible, precio FOB competitivo.</p><p>Si {{company}} tiene necesidad esta semana o quiere asegurar las proximas semanas, respondame o llameme directamente y le tengo cotizacion en menos de una hora.</p><p>Saludos,<br/>Saul Garcia<br/>CEO, Mexausa Food Group, Inc.<br/>Saul@mexausafg.com | MX: +52-646-340-2686 | US: +1-831-251-3116</p>`},
   {id:'mfg-auditdna-en', cat:'Mexausa', name:'AuditDNA Platform Pitch (EN)',
    subject:'Free Agricultural Trade Intelligence Platform for Buyers and Growers',
-   body:`<p>Hi {{first_name}},</p><p>Beyond our wholesale distribution business, our team at Mexausa Food Group has built something we believe will change how the produce industry operates — and we want {{company}} to be among the first to use it.</p><p><strong>Introducing AuditDNA — Agricultural Trade Intelligence Platform</strong></p><p>AuditDNA is a full-stack SaaS platform built from the ground up for the produce industry. It is <strong>free to sign up</strong> for buyers and growers.</p><p><strong>For Buyers:</strong></p><ul><li><strong>Live FOB Pricing Intelligence</strong> — Real-time market pricing across 500+ commodities from Mexico, California, and Latin America</li><li><strong>Grower Discovery Engine</strong> — Search and connect directly with verified growers across 12 countries, filtered by commodity, certification, volume, and region</li><li><strong>FSMA 204 Traceability</strong> — Full chain of custody from field to dock. One scan shows origin, harvest date, handler chain, and lab results</li><li><strong>AI Market Intelligence</strong> — 2-4 week price and supply forecasts powered by USDA data, weather patterns, and border crossing analytics</li><li><strong>Port and Border Intelligence</strong> — Live crossing wait times at all major US-Mexico ports of entry</li><li><strong>Digital Contract Management</strong> — LOI, LOC, and Term Sheet workflows executed and tracked digitally</li><li><strong>Quality Control Hub</strong> — Digital inspection reports, photo documentation, and lab results tied to individual lots</li></ul><p><strong>For Growers:</strong></p><ul><li><strong>GrowerMaster Registration</strong> — 5-step digital KYC that certifies your operation and connects you to 3,000+ verified US and Mexico buyers</li><li><strong>Small Grower Program</strong> — Sell under our PACA license and FSMA compliance umbrella — eliminating the biggest barrier to US market access</li><li><strong>AI Risk Tiering</strong> — Tier 0-3 classification that qualifies you for credit terms and premium buyer programs</li><li><strong>Digital Food Safety Attestations</strong> — Replace paper GAP/GMP records with blockchain-verified digital attestations</li></ul><p><strong>Platform stats:</strong> 500+ commodity SKUs, 27,000+ contacts, 119 patent-eligible inventions, full USDA and border data integration.</p><p><strong>Free to sign up.</strong> Visit <a href="https://mexausafg.com">mexausafg.com</a> or reply to schedule a personal 20-minute walkthrough.</p><p>Best regards,<br/>Saul Garcia<br/>CEO, Mexausa Food Group, Inc. and AuditDNA<br/>Saul@mexausafg.com | MX: +52-646-340-2686 | US: +1-831-251-3116<br/>mexausafg.com</p>`},
+   body:`<p>Hi {{first_name}},</p><p>Beyond our wholesale distribution business, our team at Mexausa Food Group has built something we believe will change how the produce industry operates â€” and we want {{company}} to be among the first to use it.</p><p><strong>Introducing AuditDNA â€” Agricultural Trade Intelligence Platform</strong></p><p>AuditDNA is a full-stack SaaS platform built from the ground up for the produce industry. It is <strong>free to sign up</strong> for buyers and growers.</p><p><strong>For Buyers:</strong></p><ul><li><strong>Live FOB Pricing Intelligence</strong> â€” Real-time market pricing across 500+ commodities from Mexico, California, and Latin America</li><li><strong>Grower Discovery Engine</strong> â€” Search and connect directly with verified growers across 12 countries, filtered by commodity, certification, volume, and region</li><li><strong>FSMA 204 Traceability</strong> â€” Full chain of custody from field to dock. One scan shows origin, harvest date, handler chain, and lab results</li><li><strong>AI Market Intelligence</strong> â€” 2-4 week price and supply forecasts powered by USDA data, weather patterns, and border crossing analytics</li><li><strong>Port and Border Intelligence</strong> â€” Live crossing wait times at all major US-Mexico ports of entry</li><li><strong>Digital Contract Management</strong> â€” LOI, LOC, and Term Sheet workflows executed and tracked digitally</li><li><strong>Quality Control Hub</strong> â€” Digital inspection reports, photo documentation, and lab results tied to individual lots</li></ul><p><strong>For Growers:</strong></p><ul><li><strong>GrowerMaster Registration</strong> â€” 5-step digital KYC that certifies your operation and connects you to 3,000+ verified US and Mexico buyers</li><li><strong>Small Grower Program</strong> â€” Sell under our PACA license and FSMA compliance umbrella â€” eliminating the biggest barrier to US market access</li><li><strong>AI Risk Tiering</strong> â€” Tier 0-3 classification that qualifies you for credit terms and premium buyer programs</li><li><strong>Digital Food Safety Attestations</strong> â€” Replace paper GAP/GMP records with blockchain-verified digital attestations</li></ul><p><strong>Platform stats:</strong> 500+ commodity SKUs, 27,000+ contacts, 119 patent-eligible inventions, full USDA and border data integration.</p><p><strong>Free to sign up.</strong> Visit <a href="https://mexausafg.com">mexausafg.com</a> or reply to schedule a personal 20-minute walkthrough.</p><p>Best regards,<br/>Saul Garcia<br/>CEO, Mexausa Food Group, Inc. and AuditDNA<br/>Saul@mexausafg.com | MX: +52-646-340-2686 | US: +1-831-251-3116<br/>mexausafg.com</p>`},
   {id:'mfg-auditdna-es', cat:'Mexausa', name:'Plataforma AuditDNA (ES)',
    subject:'Plataforma Gratuita de Inteligencia Agricola para Compradores y Productores',
-   body:`<p>Estimado/a {{first_name}},</p><p>Ademas de nuestro negocio de distribucion mayorista, el equipo de Mexausa Food Group ha construido algo que creemos cambiara la industria del produce — y queremos que {{company}} sea de los primeros en utilizarlo.</p><p><strong>Presentamos AuditDNA — Agricultural Trade Intelligence Platform</strong></p><p>AuditDNA es una plataforma SaaS completa construida especificamente para la industria del produce. Es <strong>completamente gratuita</strong> para compradores y productores.</p><p><strong>Para Compradores:</strong></p><ul><li><strong>Precios FOB en Tiempo Real</strong> — Precios de mercado para 500+ productos de Mexico, California y America Latina</li><li><strong>Motor de Descubrimiento de Productores</strong> — Conecte con productores verificados en 12 paises</li><li><strong>Trazabilidad FSMA 204</strong> — Cadena de custodia completa del campo al muelle</li><li><strong>Inteligencia de Mercado AI</strong> — Pronosticos de precio y suministro de 2-4 semanas</li><li><strong>Inteligencia de Puertos y Fronteras</strong> — Tiempos de cruce en tiempo real en puertos Mexico-EE.UU.</li></ul><p><strong>Para Productores:</strong></p><ul><li><strong>Registro GrowerMaster</strong> — KYC digital de 5 pasos que lo conecta con 3,000+ compradores verificados</li><li><strong>Programa Pequenos Productores</strong> — Venda bajo nuestro paraguas PACA y FSMA</li><li><strong>Puntuacion de Riesgo AI</strong> — Clasificacion Tier 0-3 para acceso a credito y programas premium</li></ul><p><strong>Registro completamente gratuito.</strong> Visite <a href="https://mexausafg.com">mexausafg.com</a> para crear su cuenta.</p><p>Saludos,<br/>Saul Garcia<br/>CEO, Mexausa Food Group, Inc. y AuditDNA<br/>Saul@mexausafg.com | MX: +52-646-340-2686 | US: +1-831-251-3116<br/>mexausafg.com</p>`},
+   body:`<p>Estimado/a {{first_name}},</p><p>Ademas de nuestro negocio de distribucion mayorista, el equipo de Mexausa Food Group ha construido algo que creemos cambiara la industria del produce â€” y queremos que {{company}} sea de los primeros en utilizarlo.</p><p><strong>Presentamos AuditDNA â€” Agricultural Trade Intelligence Platform</strong></p><p>AuditDNA es una plataforma SaaS completa construida especificamente para la industria del produce. Es <strong>completamente gratuita</strong> para compradores y productores.</p><p><strong>Para Compradores:</strong></p><ul><li><strong>Precios FOB en Tiempo Real</strong> â€” Precios de mercado para 500+ productos de Mexico, California y America Latina</li><li><strong>Motor de Descubrimiento de Productores</strong> â€” Conecte con productores verificados en 12 paises</li><li><strong>Trazabilidad FSMA 204</strong> â€” Cadena de custodia completa del campo al muelle</li><li><strong>Inteligencia de Mercado AI</strong> â€” Pronosticos de precio y suministro de 2-4 semanas</li><li><strong>Inteligencia de Puertos y Fronteras</strong> â€” Tiempos de cruce en tiempo real en puertos Mexico-EE.UU.</li></ul><p><strong>Para Productores:</strong></p><ul><li><strong>Registro GrowerMaster</strong> â€” KYC digital de 5 pasos que lo conecta con 3,000+ compradores verificados</li><li><strong>Programa Pequenos Productores</strong> â€” Venda bajo nuestro paraguas PACA y FSMA</li><li><strong>Puntuacion de Riesgo AI</strong> â€” Clasificacion Tier 0-3 para acceso a credito y programas premium</li></ul><p><strong>Registro completamente gratuito.</strong> Visite <a href="https://mexausafg.com">mexausafg.com</a> para crear su cuenta.</p><p>Saludos,<br/>Saul Garcia<br/>CEO, Mexausa Food Group, Inc. y AuditDNA<br/>Saul@mexausafg.com | MX: +52-646-340-2686 | US: +1-831-251-3116<br/>mexausafg.com</p>`},
   {id:'mfg-grower-en', cat:'Mexausa', name:'Grower Recruitment (EN)',
-   subject:'Get Your Produce in Front of 3,000 Verified US Buyers — Free',
-   body:`<p>Hi {{first_name}},</p><p>My name is Saul Garcia. I run <strong>Mexausa Food Group</strong>, a PACA-licensed wholesale importer and the company behind <strong>AuditDNA</strong> — an agriculture intelligence platform built for Mexico and Latin American growers who want consistent access to US buyers.</p><p>We are opening our <strong>Small Grower Program</strong> to qualified operations in your region. This program allows growers of any size to:</p><ul><li>Sell under our <strong>PACA license umbrella</strong> — eliminating the biggest compliance barrier to the US market</li><li>Get <strong>FSMA 204 compliant</strong> through our digital attestation system — no paper, no consultants</li><li>List on <strong>AuditDNA</strong> — visible to 3,000+ verified US buyers searching for your commodity now</li><li>Access <strong>AI risk scoring</strong> for credit terms and premium buyer programs</li><li>Receive <strong>weekly FOB market intelligence</strong> so you know your product value before you negotiate</li></ul><p><strong>No cost to register.</strong> We earn through trade finance and logistics, not upfront fees.</p><p>If {{company}} produces avocados, limes, berries, lettuce, cilantro, tomatoes, peppers, or any PACA commodity — reply YES and I will send the registration link and have a specialist call you within 24 hours.</p><p>Best regards,<br/>Saul Garcia<br/>CEO, Mexausa Food Group, Inc.<br/>Saul@mexausafg.com | MX: +52-646-340-2686 | US: +1-831-251-3116<br/>mexausafg.com</p>`},
+   subject:'Get Your Produce in Front of 3,000 Verified US Buyers â€” Free',
+   body:`<p>Hi {{first_name}},</p><p>My name is Saul Garcia. I run <strong>Mexausa Food Group</strong>, a PACA-licensed wholesale importer and the company behind <strong>AuditDNA</strong> â€” an agriculture intelligence platform built for Mexico and Latin American growers who want consistent access to US buyers.</p><p>We are opening our <strong>Small Grower Program</strong> to qualified operations in your region. This program allows growers of any size to:</p><ul><li>Sell under our <strong>PACA license umbrella</strong> â€” eliminating the biggest compliance barrier to the US market</li><li>Get <strong>FSMA 204 compliant</strong> through our digital attestation system â€” no paper, no consultants</li><li>List on <strong>AuditDNA</strong> â€” visible to 3,000+ verified US buyers searching for your commodity now</li><li>Access <strong>AI risk scoring</strong> for credit terms and premium buyer programs</li><li>Receive <strong>weekly FOB market intelligence</strong> so you know your product value before you negotiate</li></ul><p><strong>No cost to register.</strong> We earn through trade finance and logistics, not upfront fees.</p><p>If {{company}} produces avocados, limes, berries, lettuce, cilantro, tomatoes, peppers, or any PACA commodity â€” reply YES and I will send the registration link and have a specialist call you within 24 hours.</p><p>Best regards,<br/>Saul Garcia<br/>CEO, Mexausa Food Group, Inc.<br/>Saul@mexausafg.com | MX: +52-646-340-2686 | US: +1-831-251-3116<br/>mexausafg.com</p>`},
   {id:'mfg-grower-es', cat:'Mexausa', name:'Reclutamiento de Productores (ES)',
-   subject:'Ponga su Producto Frente a 3,000 Compradores de EE.UU. — Gratis',
-   body:`<p>Estimado/a {{first_name}},</p><p>Mi nombre es Saul Garcia. Dirijo <strong>Mexausa Food Group</strong>, importador con licencia PACA y la empresa detras de <strong>AuditDNA</strong> — plataforma de inteligencia agricola para productores de Mexico que quieren acceso constante a compradores de EE.UU.</p><p>Estamos abriendo nuestro <strong>Programa para Pequenos Productores</strong> a operaciones calificadas en su region:</p><ul><li>Venda bajo nuestro <strong>paraguas de licencia PACA</strong></li><li>Cumpla con <strong>FSMA 204</strong> via nuestro sistema digital — sin papel ni consultores</li><li>Listese en <strong>AuditDNA</strong> — visible para 3,000+ compradores verificados de EE.UU.</li><li>Acceda a <strong>puntuacion de riesgo AI</strong> para credito y programas premium</li><li>Reciba <strong>inteligencia de mercado FOB semanal</strong></li></ul><p><strong>Sin costo de registro.</strong> Respondame SI y le envio el enlace de registro.</p><p>Saludos,<br/>Saul Garcia<br/>CEO, Mexausa Food Group, Inc.<br/>Saul@mexausafg.com | MX: +52-646-340-2686 | US: +1-831-251-3116<br/>mexausafg.com</p>`},
+   subject:'Ponga su Producto Frente a 3,000 Compradores de EE.UU. â€” Gratis',
+   body:`<p>Estimado/a {{first_name}},</p><p>Mi nombre es Saul Garcia. Dirijo <strong>Mexausa Food Group</strong>, importador con licencia PACA y la empresa detras de <strong>AuditDNA</strong> â€” plataforma de inteligencia agricola para productores de Mexico que quieren acceso constante a compradores de EE.UU.</p><p>Estamos abriendo nuestro <strong>Programa para Pequenos Productores</strong> a operaciones calificadas en su region:</p><ul><li>Venda bajo nuestro <strong>paraguas de licencia PACA</strong></li><li>Cumpla con <strong>FSMA 204</strong> via nuestro sistema digital â€” sin papel ni consultores</li><li>Listese en <strong>AuditDNA</strong> â€” visible para 3,000+ compradores verificados de EE.UU.</li><li>Acceda a <strong>puntuacion de riesgo AI</strong> para credito y programas premium</li><li>Reciba <strong>inteligencia de mercado FOB semanal</strong></li></ul><p><strong>Sin costo de registro.</strong> Respondame SI y le envio el enlace de registro.</p><p>Saludos,<br/>Saul Garcia<br/>CEO, Mexausa Food Group, Inc.<br/>Saul@mexausafg.com | MX: +52-646-340-2686 | US: +1-831-251-3116<br/>mexausafg.com</p>`},
   {id:'mfg-foodservice-en', cat:'Mexausa', name:'Foodservice Introduction (EN)',
-   subject:'Direct Produce Supply for Your Foodservice Operation — Mexausa Food Group',
-   body:`<p>Hi {{first_name}},</p><p>I am reaching out to introduce <strong>Mexausa Food Group</strong> as a direct produce supply partner for {{company}} foodservice operation.</p><p>We work directly with growers in Mexico and California — no broker layers — which means better pricing, better quality control, and a direct line when you need it most.</p><p><strong>What foodservice operators value most about working with us:</strong></p><ul><li><strong>Consistency</strong> — Year-round programs on avocados, limes, berries, lettuce, and cilantro</li><li><strong>Flexibility</strong> — Spot buys, weekly standing orders, and fixed-price contracts</li><li><strong>Traceability</strong> — Every lot documented from field to delivery. FSMA 204 compliant</li><li><strong>Competitive Pricing</strong> — Direct from grower eliminates 1-2 middleman margins (typically 8-15% of your produce cost)</li><li><strong>PACA Protected</strong> — Federal PACA regulations on every transaction</li></ul><p>I would like to learn about {{company}} current supply chain and show you where we can add value. A 15-minute call is all it takes.</p><p>Best regards,<br/>Saul Garcia<br/>CEO, Mexausa Food Group, Inc.<br/>Saul@mexausafg.com | MX: +52-646-340-2686 | US: +1-831-251-3116</p>`},
+   subject:'Direct Produce Supply for Your Foodservice Operation â€” Mexausa Food Group',
+   body:`<p>Hi {{first_name}},</p><p>I am reaching out to introduce <strong>Mexausa Food Group</strong> as a direct produce supply partner for {{company}} foodservice operation.</p><p>We work directly with growers in Mexico and California â€” no broker layers â€” which means better pricing, better quality control, and a direct line when you need it most.</p><p><strong>What foodservice operators value most about working with us:</strong></p><ul><li><strong>Consistency</strong> â€” Year-round programs on avocados, limes, berries, lettuce, and cilantro</li><li><strong>Flexibility</strong> â€” Spot buys, weekly standing orders, and fixed-price contracts</li><li><strong>Traceability</strong> â€” Every lot documented from field to delivery. FSMA 204 compliant</li><li><strong>Competitive Pricing</strong> â€” Direct from grower eliminates 1-2 middleman margins (typically 8-15% of your produce cost)</li><li><strong>PACA Protected</strong> â€” Federal PACA regulations on every transaction</li></ul><p>I would like to learn about {{company}} current supply chain and show you where we can add value. A 15-minute call is all it takes.</p><p>Best regards,<br/>Saul Garcia<br/>CEO, Mexausa Food Group, Inc.<br/>Saul@mexausafg.com | MX: +52-646-340-2686 | US: +1-831-251-3116</p>`},
   {id:'mfg-followup-en', cat:'Mexausa', name:'Follow-Up First Contact (EN)',
-   subject:'Following Up — Mexausa Food Group / {{company}}',
-   body:`<p>Hi {{first_name}},</p><p>Following up on my previous message about produce supply programs from Mexausa Food Group. I will keep it short — we have <strong>avocados, limes, berries, lettuce, and cilantro</strong> available this week on the open market. If {{company}} has any spot needs or wants to explore a standing program, I can have pricing to you in under an hour.</p><p>If the timing is not right, just let me know and I will circle back next season.</p><p>Best regards,<br/>Saul Garcia<br/>CEO, Mexausa Food Group, Inc.<br/>Saul@mexausafg.com | MX: +52-646-340-2686 | US: +1-831-251-3116</p>`},
+   subject:'Following Up â€” Mexausa Food Group / {{company}}',
+   body:`<p>Hi {{first_name}},</p><p>Following up on my previous message about produce supply programs from Mexausa Food Group. I will keep it short â€” we have <strong>avocados, limes, berries, lettuce, and cilantro</strong> available this week on the open market. If {{company}} has any spot needs or wants to explore a standing program, I can have pricing to you in under an hour.</p><p>If the timing is not right, just let me know and I will circle back next season.</p><p>Best regards,<br/>Saul Garcia<br/>CEO, Mexausa Food Group, Inc.<br/>Saul@mexausafg.com | MX: +52-646-340-2686 | US: +1-831-251-3116</p>`},
   {id:'mfg-followup-es', cat:'Mexausa', name:'Seguimiento Primer Contacto (ES)',
-   subject:'Seguimiento — Mexausa Food Group / {{company}}',
-   body:`<p>Estimado/a {{first_name}},</p><p>Dando seguimiento a mi mensaje anterior sobre programas de suministro de Mexausa Food Group. Se lo hago breve — tenemos <strong>aguacates, limones, berries, lechuga y cilantro</strong> disponibles esta semana. Si {{company}} tiene necesidades spot o quiere explorar un programa permanente, puedo tener precios en menos de una hora.</p><p>Saludos,<br/>Saul Garcia<br/>CEO, Mexausa Food Group, Inc.<br/>Saul@mexausafg.com | MX: +52-646-340-2686 | US: +1-831-251-3116</p>`},
-  // ─── USA BUYER WHOLESALE IMPORTER TEMPLATES (3) ──────────────────────────────
-  {id:'mfg-usa-wholesale-1', cat:'USA Buyers', name:'USA Wholesale — Mexico Import Program',
-   subject:'Direct from Mexico: Avocados, Berries, Limes & More — PACA Licensed Importer',
+   subject:'Seguimiento â€” Mexausa Food Group / {{company}}',
+   body:`<p>Estimado/a {{first_name}},</p><p>Dando seguimiento a mi mensaje anterior sobre programas de suministro de Mexausa Food Group. Se lo hago breve â€” tenemos <strong>aguacates, limones, berries, lechuga y cilantro</strong> disponibles esta semana. Si {{company}} tiene necesidades spot o quiere explorar un programa permanente, puedo tener precios en menos de una hora.</p><p>Saludos,<br/>Saul Garcia<br/>CEO, Mexausa Food Group, Inc.<br/>Saul@mexausafg.com | MX: +52-646-340-2686 | US: +1-831-251-3116</p>`},
+  // â”€â”€â”€ USA BUYER WHOLESALE IMPORTER TEMPLATES (3) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  {id:'mfg-usa-wholesale-1', cat:'USA Buyers', name:'USA Wholesale â€” Mexico Import Program',
+   subject:'Direct from Mexico: Avocados, Berries, Limes & More â€” PACA Licensed Importer',
    body:`<p>Hi {{first_name}},</p>
-<p>My name is Saul Garcia, CEO of <strong>Mexausa Food Group, Inc.</strong> — a PACA-licensed wholesale importer and distributor headquartered in Ensenada, Baja California, with distribution into California, Arizona, and the broader US produce corridor.</p>
+<p>My name is Saul Garcia, CEO of <strong>Mexausa Food Group, Inc.</strong> â€” a PACA-licensed wholesale importer and distributor headquartered in Ensenada, Baja California, with distribution into California, Arizona, and the broader US produce corridor.</p>
 <p>We import direct from verified growers across Mexico and source from California and the West Coast, giving {{company}} a single reliable supply partner across multiple commodities:</p>
 <table style="border-collapse:collapse;width:100%;max-width:600px;margin:14px 0">
   <tr style="background:#0a4d8c"><th style="padding:8px 10px;color:white;text-align:left;font-size:11px">COMMODITY</th><th style="padding:8px 10px;color:white;text-align:left;font-size:11px">ORIGIN</th><th style="padding:8px 10px;color:white;text-align:left;font-size:11px">PROGRAM TYPE</th><th style="padding:8px 10px;color:white;text-align:left;font-size:11px">AVAILABILITY</th></tr>
@@ -504,80 +504,80 @@ export const AG_TEMPLATES=[
 </table>
 <p><strong>Why buyers choose Mexausa:</strong></p>
 <ul>
-  <li>PACA Licensed — federal protection on every transaction</li>
-  <li>FSMA 204 compliant — full traceability field to dock</li>
-  <li>No broker layers — direct grower relationships mean better pricing</li>
+  <li>PACA Licensed â€” federal protection on every transaction</li>
+  <li>FSMA 204 compliant â€” full traceability field to dock</li>
+  <li>No broker layers â€” direct grower relationships mean better pricing</li>
   <li>Weekly FOB pricing every Monday at 8AM PST</li>
-  <li>Dedicated account rep — call or text me directly</li>
+  <li>Dedicated account rep â€” call or text me directly</li>
 </ul>
 <p>I would like to learn about {{company}} current supply needs and send pricing for this week. A 15-minute call is all it takes.</p>
 <p>Best regards,<br/>Saul Garcia<br/>CEO, Mexausa Food Group, Inc. | PACA Licensed Importer &amp; Distributor<br/>Saul@mexausafg.com | MX: +52-646-340-2686 | US: +1-831-251-3116<br/>mexausafg.com</p>`},
 
-  {id:'mfg-usa-wholesale-2', cat:'USA Buyers', name:'USA Wholesale — West Coast Produce Programs',
-   subject:'West Coast Produce Direct: Strawberries, Lettuce, Avocados — Mexausa Food Group',
+  {id:'mfg-usa-wholesale-2', cat:'USA Buyers', name:'USA Wholesale â€” West Coast Produce Programs',
+   subject:'West Coast Produce Direct: Strawberries, Lettuce, Avocados â€” Mexausa Food Group',
    body:`<p>Hi {{first_name}},</p>
-<p>I am reaching out from <strong>Mexausa Food Group, Inc.</strong>, a PACA-licensed wholesale importer and West Coast produce distributor. We work directly with growers in Baja California, California's Salinas Valley, and Oxnard — and import from Michoacan, Jalisco, and Sinaloa, Mexico.</p>
+<p>I am reaching out from <strong>Mexausa Food Group, Inc.</strong>, a PACA-licensed wholesale importer and West Coast produce distributor. We work directly with growers in Baja California, California's Salinas Valley, and Oxnard â€” and import from Michoacan, Jalisco, and Sinaloa, Mexico.</p>
 <p>For {{company}}, we can offer the following West Coast and Mexico-origin programs:</p>
 <ul>
-  <li><strong>Strawberries Albion/San Andreas</strong> — Baja California year-round + Oxnard CA seasonal. 8x1lb flat. Fixed-price and spot programs available.</li>
-  <li><strong>Romaine &amp; Iceberg Lettuce</strong> — Salinas CA + Guanajuato MX. 24ct. Year-round continuity program with weekly pricing.</li>
-  <li><strong>Hass Avocados</strong> — Michoacan &amp; Jalisco MX import. All sizes 32ct through 84ct. Conventional and certified organic.</li>
-  <li><strong>Cilantro 60ct Bunched</strong> — Baja California MX. Open market pricing updated weekly. Strong availability now.</li>
-  <li><strong>Blueberries, Raspberries, Blackberries</strong> — Jalisco MX year-round berry programs.</li>
+  <li><strong>Strawberries Albion/San Andreas</strong> â€” Baja California year-round + Oxnard CA seasonal. 8x1lb flat. Fixed-price and spot programs available.</li>
+  <li><strong>Romaine &amp; Iceberg Lettuce</strong> â€” Salinas CA + Guanajuato MX. 24ct. Year-round continuity program with weekly pricing.</li>
+  <li><strong>Hass Avocados</strong> â€” Michoacan &amp; Jalisco MX import. All sizes 32ct through 84ct. Conventional and certified organic.</li>
+  <li><strong>Cilantro 60ct Bunched</strong> â€” Baja California MX. Open market pricing updated weekly. Strong availability now.</li>
+  <li><strong>Blueberries, Raspberries, Blackberries</strong> â€” Jalisco MX year-round berry programs.</li>
 </ul>
 <p>All product is:</p>
 <ul>
   <li>PACA protected on every invoice</li>
   <li>FSMA 204 digitally traceable from field to delivery</li>
   <li>Available FOB origin or delivered to your dock</li>
-  <li>Priced competitively — we cut the middleman</li>
+  <li>Priced competitively â€” we cut the middleman</li>
 </ul>
 <p>If {{company}} has a spot need this week or wants to discuss a standing weekly program, reply or call me and I will have pricing to you within the hour.</p>
 <p>Best regards,<br/>Saul Garcia<br/>CEO, Mexausa Food Group, Inc.<br/>Saul@mexausafg.com | MX: +52-646-340-2686 | US: +1-831-251-3116 | mexausafg.com</p>`},
 
-  {id:'mfg-usa-wholesale-3', cat:'USA Buyers', name:'USA Wholesale — Distributor Partnership Proposal',
-   subject:'Wholesale Distributor Partnership — Mexausa Food Group | PACA Licensed',
+  {id:'mfg-usa-wholesale-3', cat:'USA Buyers', name:'USA Wholesale â€” Distributor Partnership Proposal',
+   subject:'Wholesale Distributor Partnership â€” Mexausa Food Group | PACA Licensed',
    body:`<p>Hi {{first_name}},</p>
 <p>I want to introduce <strong>Mexausa Food Group, Inc.</strong> as a long-term wholesale supply partner for {{company}}.</p>
-<p>We are a PACA-licensed importer and distributor with direct relationships with growers across Baja California, Michoacan, Jalisco, Sinaloa, and the Salinas Valley. We bring product in under our own PACA license and handle the full import chain — so what {{company}} gets is reliable, consistent, traceable product at competitive pricing without navigating multiple broker relationships.</p>
+<p>We are a PACA-licensed importer and distributor with direct relationships with growers across Baja California, Michoacan, Jalisco, Sinaloa, and the Salinas Valley. We bring product in under our own PACA license and handle the full import chain â€” so what {{company}} gets is reliable, consistent, traceable product at competitive pricing without navigating multiple broker relationships.</p>
 <p><strong>What a partnership with Mexausa looks like:</strong></p>
 <ul>
-  <li><strong>Dedicated weekly pricing</strong> — FOB origin every Monday. Locked contract pricing available for volume commitments.</li>
-  <li><strong>Flexible volume</strong> — from single pallets to full truckloads. We scale with your needs.</li>
+  <li><strong>Dedicated weekly pricing</strong> â€” FOB origin every Monday. Locked contract pricing available for volume commitments.</li>
+  <li><strong>Flexible volume</strong> â€” from single pallets to full truckloads. We scale with your needs.</li>
   <li><strong>Consistent year-round supply</strong> on avocados, limes, berries, and lettuce. No gaps, no scrambling mid-season.</li>
-  <li><strong>Trade finance options</strong> — net terms available for qualified buyers. Invoice factoring and PO financing through our partner network.</li>
-  <li><strong>Full FSMA 204 traceability</strong> — QR-scannable lots, digital chain of custody, instant recall response.</li>
-  <li><strong>One point of contact</strong> — you call or text me directly. No call centers, no ticket systems.</li>
+  <li><strong>Trade finance options</strong> â€” net terms available for qualified buyers. Invoice factoring and PO financing through our partner network.</li>
+  <li><strong>Full FSMA 204 traceability</strong> â€” QR-scannable lots, digital chain of custody, instant recall response.</li>
+  <li><strong>One point of contact</strong> â€” you call or text me directly. No call centers, no ticket systems.</li>
 </ul>
 <p><strong>Commodities available now:</strong> Hass Avocados | Persian Limes | Strawberries | Blueberries | Raspberries | Romaine | Iceberg | Cilantro | Roma Tomatoes | Bell Peppers | Jalisco Mangos | Asparagus.</p>
 <p>I would like to schedule a 20-minute introduction call with {{company}} to share current pricing and discuss what a supply program would look like. Are you available this week?</p>
 <p>Best regards,<br/>Saul Garcia<br/>CEO, Mexausa Food Group, Inc. | PACA Licensed Importer &amp; Distributor<br/>Saul@mexausafg.com | MX: +52-646-340-2686 | US: +1-831-251-3116<br/>mexausafg.com</p>`},
 
-  // ─── MEXICO BUYER WHOLESALE IMPORTER TEMPLATES (3) ────────────────────────────
-  {id:'mfg-mx-wholesale-1', cat:'Mexico Buyers', name:'MX Buyers — Importacion y Distribucion USA',
-   subject:'Mexausa Food Group — Distribuidor Mayorista PACA para el Mercado de EE.UU.',
+  // â”€â”€â”€ MEXICO BUYER WHOLESALE IMPORTER TEMPLATES (3) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  {id:'mfg-mx-wholesale-1', cat:'Mexico Buyers', name:'MX Buyers â€” Importacion y Distribucion USA',
+   subject:'Mexausa Food Group â€” Distribuidor Mayorista PACA para el Mercado de EE.UU.',
    body:`<p>Estimado/a {{first_name}},</p>
-<p>Mi nombre es Saul Garcia, CEO de <strong>Mexausa Food Group, Inc.</strong> — importador mayorista con licencia PACA y distribuidor con sede en Ensenada, Baja California. Somos el puente directo entre productores de Mexico y compradores verificados en todo Estados Unidos.</p>
+<p>Mi nombre es Saul Garcia, CEO de <strong>Mexausa Food Group, Inc.</strong> â€” importador mayorista con licencia PACA y distribuidor con sede en Ensenada, Baja California. Somos el puente directo entre productores de Mexico y compradores verificados en todo Estados Unidos.</p>
 <p>Si {{company}} produce o comercializa frutas y verduras frescas, podemos ser su socio de distribucion en el mercado americano. Asi es como funciona nuestra operacion:</p>
 <ul>
-  <li><strong>Importamos bajo nuestra propia licencia PACA</strong> — usted vende bajo nuestro paraguas de cumplimiento. Sin costo de tramite ni certificacion adicional.</li>
-  <li><strong>Distribuimos a compradores verificados en California, Arizona, Texas y mas alla</strong> — 3,000+ compradores activos en nuestra red.</li>
-  <li><strong>Pagamos en tiempo</strong> — cumplimiento PACA garantiza pago en 10 dias habiles o antes.</li>
-  <li><strong>Trazabilidad FSMA 204 digital</strong> — su producto certificado y rastreable desde la parcela hasta el muelle de descarga en EE.UU.</li>
-  <li><strong>Precios FOB competitivos</strong> — actualizados cada lunes. Sin capas de intermediarios.</li>
+  <li><strong>Importamos bajo nuestra propia licencia PACA</strong> â€” usted vende bajo nuestro paraguas de cumplimiento. Sin costo de tramite ni certificacion adicional.</li>
+  <li><strong>Distribuimos a compradores verificados en California, Arizona, Texas y mas alla</strong> â€” 3,000+ compradores activos en nuestra red.</li>
+  <li><strong>Pagamos en tiempo</strong> â€” cumplimiento PACA garantiza pago en 10 dias habiles o antes.</li>
+  <li><strong>Trazabilidad FSMA 204 digital</strong> â€” su producto certificado y rastreable desde la parcela hasta el muelle de descarga en EE.UU.</li>
+  <li><strong>Precios FOB competitivos</strong> â€” actualizados cada lunes. Sin capas de intermediarios.</li>
 </ul>
 <p>Productos que actualmente importamos y distribuimos: Aguacates Hass | Limones Persas | Fresas, Arandanos, Frambuesas | Lechuga Romana y Americana | Cilantro | Tomates Roma | Chiles | Cebollas | Mangos | Esparragos.</p>
 <p>Si {{company}} quiere explorar como podemos distribuir su producto en EE.UU. o necesita un socio de abastecimiento confiable, respondame o llameme directamente.</p>
 <p>Saludos,<br/>Saul Garcia<br/>CEO, Mexausa Food Group, Inc.<br/>Saul@mexausafg.com | MX: +52-646-340-2686 | US: +1-831-251-3116<br/>mexausafg.com</p>`},
 
-  {id:'mfg-mx-wholesale-2', cat:'Mexico Buyers', name:'MX Buyers — Programa de Aguacate y Berries',
-   subject:'Programa de Aguacate Hass y Berries Mexico — Distribucion Directa EE.UU.',
+  {id:'mfg-mx-wholesale-2', cat:'Mexico Buyers', name:'MX Buyers â€” Programa de Aguacate y Berries',
+   subject:'Programa de Aguacate Hass y Berries Mexico â€” Distribucion Directa EE.UU.',
    body:`<p>Estimado/a {{first_name}},</p>
 <p>Le contacto de parte de <strong>Mexausa Food Group, Inc.</strong>, importador mayorista con licencia PACA especializado en aguacate Hass, berries y citricos de Mexico para el mercado estadounidense.</p>
 <p>Tenemos programas activos de distribucion para los siguientes productos de origen mexicano:</p>
 <table style="border-collapse:collapse;width:100%;max-width:600px;margin:14px 0">
   <tr style="background:#0a4d8c"><th style="padding:8px 10px;color:white;text-align:left;font-size:11px">PRODUCTO</th><th style="padding:8px 10px;color:white;text-align:left;font-size:11px">ORIGEN</th><th style="padding:8px 10px;color:white;text-align:left;font-size:11px">TEMPORADA</th><th style="padding:8px 10px;color:white;text-align:left;font-size:11px">TIPO DE PROGRAMA</th></tr>
-  <tr style="background:#f8fafc"><td style="padding:8px 10px;font-size:11px;font-weight:700">Aguacate Hass 32ct–84ct</td><td style="padding:8px 10px;font-size:11px">Michoacan, Jalisco</td><td style="padding:8px 10px;font-size:11px">Todo el Ano</td><td style="padding:8px 10px;font-size:11px">Contrato / Spot</td></tr>
+  <tr style="background:#f8fafc"><td style="padding:8px 10px;font-size:11px;font-weight:700">Aguacate Hass 32ctâ€“84ct</td><td style="padding:8px 10px;font-size:11px">Michoacan, Jalisco</td><td style="padding:8px 10px;font-size:11px">Todo el Ano</td><td style="padding:8px 10px;font-size:11px">Contrato / Spot</td></tr>
   <tr><td style="padding:8px 10px;font-size:11px;font-weight:700">Fresa Albion 8x1lb</td><td style="padding:8px 10px;font-size:11px">Baja California</td><td style="padding:8px 10px;font-size:11px">Todo el Ano</td><td style="padding:8px 10px;font-size:11px">Contrato / Spot</td></tr>
   <tr style="background:#f8fafc"><td style="padding:8px 10px;font-size:11px;font-weight:700">Arandano 12x6oz</td><td style="padding:8px 10px;font-size:11px">Jalisco</td><td style="padding:8px 10px;font-size:11px">Todo el Ano</td><td style="padding:8px 10px;font-size:11px">Contrato</td></tr>
   <tr><td style="padding:8px 10px;font-size:11px;font-weight:700">Limon Persa 40lb</td><td style="padding:8px 10px;font-size:11px">Veracruz, Colima</td><td style="padding:8px 10px;font-size:11px">Todo el Ano</td><td style="padding:8px 10px;font-size:11px">Contrato / Spot</td></tr>
@@ -586,40 +586,40 @@ export const AG_TEMPLATES=[
 <p>Compramos FOB origen, manejamos el cruce de frontera bajo nuestra licencia y entregamos a compradores mayoristas en todo EE.UU. Si {{company}} tiene volumen disponible esta semana o quiere establecer un programa mensual, respondame con cantidades y origen y le tengo una oferta en menos de 24 horas.</p>
 <p>Saludos,<br/>Saul Garcia<br/>CEO, Mexausa Food Group, Inc.<br/>Saul@mexausafg.com | MX: +52-646-340-2686 | US: +1-831-251-3116<br/>mexausafg.com</p>`},
 
-  {id:'mfg-mx-wholesale-3', cat:'Mexico Buyers', name:'MX Buyers — Propuesta Distribucion Mayorista',
-   subject:'Propuesta de Asociacion Mayorista — Mexausa Food Group | Distribuidor PACA EE.UU.',
+  {id:'mfg-mx-wholesale-3', cat:'Mexico Buyers', name:'MX Buyers â€” Propuesta Distribucion Mayorista',
+   subject:'Propuesta de Asociacion Mayorista â€” Mexausa Food Group | Distribuidor PACA EE.UU.',
    body:`<p>Estimado/a {{first_name}},</p>
 <p>Me comunico para presentar una propuesta de asociacion comercial entre {{company}} y <strong>Mexausa Food Group, Inc.</strong></p>
-<p>Somos un importador mayorista con licencia PACA con sede en Ensenada, Baja California. Nuestra operacion conecta directamente a productores mexicanos con mas de 3,000 compradores verificados en Estados Unidos — sin capas de intermediarios y con proteccion PACA en cada transaccion.</p>
+<p>Somos un importador mayorista con licencia PACA con sede en Ensenada, Baja California. Nuestra operacion conecta directamente a productores mexicanos con mas de 3,000 compradores verificados en Estados Unidos â€” sin capas de intermediarios y con proteccion PACA en cada transaccion.</p>
 <p><strong>Lo que ofrecemos a {{company}} como socio de distribucion:</strong></p>
 <ul>
-  <li><strong>Acceso inmediato al mercado de EE.UU.</strong> — distribuimos en California, Arizona, Nevada, Texas, Illinois, Florida y mas.</li>
-  <li><strong>Importacion bajo nuestra licencia PACA</strong> — usted no necesita licencia propia para vender en EE.UU. con nosotros.</li>
-  <li><strong>Cumplimiento FSMA 204 completo</strong> — certificacion digital incluida en el programa, sin costo adicional.</li>
-  <li><strong>Opciones de financiamiento</strong> — factoraje de facturas y financiamiento de OC disponibles para productores calificados.</li>
-  <li><strong>Precios FOB transparentes</strong> — cotizacion semanal basada en mercado real. Sin sorpresas.</li>
-  <li><strong>Plataforma AuditDNA gratuita</strong> — visibilidad completa de sus envios, precios de mercado en tiempo real y trazabilidad digital desde su cuenta.</li>
+  <li><strong>Acceso inmediato al mercado de EE.UU.</strong> â€” distribuimos en California, Arizona, Nevada, Texas, Illinois, Florida y mas.</li>
+  <li><strong>Importacion bajo nuestra licencia PACA</strong> â€” usted no necesita licencia propia para vender en EE.UU. con nosotros.</li>
+  <li><strong>Cumplimiento FSMA 204 completo</strong> â€” certificacion digital incluida en el programa, sin costo adicional.</li>
+  <li><strong>Opciones de financiamiento</strong> â€” factoraje de facturas y financiamiento de OC disponibles para productores calificados.</li>
+  <li><strong>Precios FOB transparentes</strong> â€” cotizacion semanal basada en mercado real. Sin sorpresas.</li>
+  <li><strong>Plataforma AuditDNA gratuita</strong> â€” visibilidad completa de sus envios, precios de mercado en tiempo real y trazabilidad digital desde su cuenta.</li>
 </ul>
 <p>El siguiente paso es simple: una llamada de 20 minutos para entender el volumen, origen y temporada de {{company}}, y presentarles una propuesta concreta de programa de distribucion.</p>
 <p>Estoy disponible esta semana. Respondame o llameme directamente.</p>
 <p>Saludos,<br/>Saul Garcia<br/>CEO, Mexausa Food Group, Inc.<br/>Saul@mexausafg.com | MX: +52-646-340-2686 | US: +1-831-251-3116<br/>mexausafg.com</p>`},
 
-  // ─── END MEXAUSA TEMPLATES ───────────────────────────────────────────────────
+  // â”€â”€â”€ END MEXAUSA TEMPLATES â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
-  // ─── AUDITDNA PLATFORM MARKETING TEMPLATES (8) ──────────────────────────────
+  // â”€â”€â”€ AUDITDNA PLATFORM MARKETING TEMPLATES (8) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   {id:'auditdna-exec-en', cat:'AuditDNA', name:'Platform Executive Pitch (EN)',
-   subject:'AuditDNA — The Only Field-Driven Agriculture Intelligence Platform for the Produce Industry',
+   subject:'AuditDNA â€” The Only Field-Driven Agriculture Intelligence Platform for the Produce Industry',
    body:`<p>Hi {{first_name}},</p>
 <p>My name is Saul Garcia. I am the founder of <strong>AuditDNA Agriculture Intelligence Platform</strong> and CEO of Mexausa Food Group, Inc. (PACA #20241168), headquartered in Ensenada, Baja California.</p>
 <p>I want to share something I believe will fundamentally change how {{company}} sources, prices, and structures produce transactions.</p>
-<p><strong>AuditDNA is not a marketplace. It is a field-driven intelligence and sourcing platform that provides direct, verified access to agricultural supply at origin — with built-in compliance validation, pricing leverage, and real-time market intelligence.</strong></p>
+<p><strong>AuditDNA is not a marketplace. It is a field-driven intelligence and sourcing platform that provides direct, verified access to agricultural supply at origin â€” with built-in compliance validation, pricing leverage, and real-time market intelligence.</strong></p>
 <table style="border-collapse:collapse;width:100%;max-width:620px;margin:16px 0;background:#0a0f1a;border:1px solid rgba(203,166,88,0.3)">
   <tr><td colspan="2" style="padding:12px 16px;background:linear-gradient(135deg,#1a2a0a,#0f1a2e);border-bottom:2px solid #cba658"><span style="font-family:Arial,sans-serif;font-size:12px;font-weight:900;color:#e8d5a0;letter-spacing:2px">PLATFORM CAPABILITIES</span></td></tr>
   <tr style="background:rgba(203,166,88,0.05)"><td style="padding:10px 16px;font-family:Arial,sans-serif;font-size:11px;font-weight:700;color:#cba658;width:220px;border-bottom:1px solid rgba(255,255,255,0.06)">Real-Time FOB Pricing</td><td style="padding:10px 16px;font-family:Arial,sans-serif;font-size:11px;color:#cbd5e1;border-bottom:1px solid rgba(255,255,255,0.06)">200+ commodities tracked live from Mexico, California, and Latin America</td></tr>
-  <tr><td style="padding:10px 16px;font-family:Arial,sans-serif;font-size:11px;font-weight:700;color:#cba658;border-bottom:1px solid rgba(255,255,255,0.06)">Verified Grower Network</td><td style="padding:10px 16px;font-family:Arial,sans-serif;font-size:11px;color:#cbd5e1;border-bottom:1px solid rgba(255,255,255,0.06)">5,000+ vetted producers across 12 Mexican regions — direct access, no broker layers</td></tr>
+  <tr><td style="padding:10px 16px;font-family:Arial,sans-serif;font-size:11px;font-weight:700;color:#cba658;border-bottom:1px solid rgba(255,255,255,0.06)">Verified Grower Network</td><td style="padding:10px 16px;font-family:Arial,sans-serif;font-size:11px;color:#cbd5e1;border-bottom:1px solid rgba(255,255,255,0.06)">5,000+ vetted producers across 12 Mexican regions â€” direct access, no broker layers</td></tr>
   <tr style="background:rgba(203,166,88,0.05)"><td style="padding:10px 16px;font-family:Arial,sans-serif;font-size:11px;font-weight:700;color:#cba658;border-bottom:1px solid rgba(255,255,255,0.06)">FSMA 204 Traceability</td><td style="padding:10px 16px;font-family:Arial,sans-serif;font-size:11px;color:#cbd5e1;border-bottom:1px solid rgba(255,255,255,0.06)">Full chain of custody, QR lot tracking, blockchain-verified attestations, recall workflows</td></tr>
   <tr><td style="padding:10px 16px;font-family:Arial,sans-serif;font-size:11px;font-weight:700;color:#cba658;border-bottom:1px solid rgba(255,255,255,0.06)">81 Niner Miners AI</td><td style="padding:10px 16px;font-family:Arial,sans-serif;font-size:11px;color:#cbd5e1;border-bottom:1px solid rgba(255,255,255,0.06)">81 specialized AI agents for pricing, compliance, logistics, growers, weather, and finance</td></tr>
-  <tr style="background:rgba(203,166,88,0.05)"><td style="padding:10px 16px;font-family:Arial,sans-serif;font-size:11px;font-weight:700;color:#cba658;border-bottom:1px solid rgba(255,255,255,0.06)">Blind Lender Marketplace</td><td style="padding:10px 16px;font-family:Arial,sans-serif;font-size:11px;color:#cbd5e1;border-bottom:1px solid rgba(255,255,255,0.06)">AR factoring, PO financing, LOI/LOC/Term Sheet digital workflow — lender identity protected until NDA</td></tr>
+  <tr style="background:rgba(203,166,88,0.05)"><td style="padding:10px 16px;font-family:Arial,sans-serif;font-size:11px;font-weight:700;color:#cba658;border-bottom:1px solid rgba(255,255,255,0.06)">Blind Lender Marketplace</td><td style="padding:10px 16px;font-family:Arial,sans-serif;font-size:11px;color:#cbd5e1;border-bottom:1px solid rgba(255,255,255,0.06)">AR factoring, PO financing, LOI/LOC/Term Sheet digital workflow â€” lender identity protected until NDA</td></tr>
   <tr><td style="padding:10px 16px;font-family:Arial,sans-serif;font-size:11px;font-weight:700;color:#cba658;border-bottom:1px solid rgba(255,255,255,0.06)">Contact Intelligence</td><td style="padding:10px 16px;font-family:Arial,sans-serif;font-size:11px;color:#cbd5e1;border-bottom:1px solid rgba(255,255,255,0.06)">23,000+ verified produce industry contacts segmented by commodity, geography, and buying behavior</td></tr>
   <tr style="background:rgba(203,166,88,0.05)"><td style="padding:10px 16px;font-family:Arial,sans-serif;font-size:11px;font-weight:700;color:#cba658">Port & Border Intel</td><td style="padding:10px 16px;font-family:Arial,sans-serif;font-size:11px;color:#cbd5e1">Live crossing wait times, USDA data integration, tariff intelligence for all US-Mexico ports</td></tr>
 </table>
@@ -628,76 +628,76 @@ export const AG_TEMPLATES=[
   <li>Traditional broker-heavy model: reactive sourcing, unknown supply risk, margin leakage at every layer</li>
   <li>AuditDNA model: direct-to-grower access, field-verified supply, proactive intelligence, margin-focused execution</li>
 </ul>
-<p style="font-style:italic;color:#94a3b8;border-left:3px solid #cba658;padding-left:12px;margin:16px 0"><em>"We don't just find supply — we validate it, secure it, and structure it for performance."</em></p>
+<p style="font-style:italic;color:#94a3b8;border-left:3px solid #cba658;padding-left:12px;margin:16px 0"><em>"We don't just find supply â€” we validate it, secure it, and structure it for performance."</em></p>
 <p><strong>Free to sign up.</strong> Tier 0 gets you full access to the intelligence layer. Premium tiers unlock the complete sourcing and finance stack.</p>
 <p>Visit <a href="https://mexausafg.com" style="color:#cba658">mexausafg.com</a> or reply to schedule a 20-minute walkthrough. I will personally run the demo.</p>
 <p>Best regards,<br/>Saul Garcia<br/>Founder, AuditDNA | CEO, Mexausa Food Group, Inc. (PACA #20241168)<br/>Saul@mexausafg.com | MX: +52-646-340-2686 | US: +1-831-251-3116<br/>mexausafg.com</p>`},
 
   {id:'auditdna-buyer-en', cat:'AuditDNA', name:'Buyer Intelligence Pitch (EN)',
-   subject:'Stop Chasing FOB Pricing — AuditDNA Sends It to You Before the Market Moves',
+   subject:'Stop Chasing FOB Pricing â€” AuditDNA Sends It to You Before the Market Moves',
    body:`<p>Hi {{first_name}},</p>
-<p>If {{company}} is still calling brokers every Monday morning to get FOB pricing, you are getting information that is already two days old — and you are paying for it in margin.</p>
+<p>If {{company}} is still calling brokers every Monday morning to get FOB pricing, you are getting information that is already two days old â€” and you are paying for it in margin.</p>
 <p><strong>AuditDNA gives procurement teams direct market intelligence at the source.</strong></p>
 <ul>
-  <li><strong>Real-time FOB pricing</strong> on 200+ commodities — avocados, limes, berries, tomatoes, peppers, lettuce, asparagus, mangos, and more — updated live from origin</li>
-  <li><strong>Price alert system</strong> — set a target price per commodity and get notified the moment it hits, before your competition knows the market moved</li>
-  <li><strong>Grower reliability scoring</strong> — every grower in our network is scored on fill rate, quality consistency, compliance history, and delivery performance</li>
-  <li><strong>Direct grower access</strong> — 5,000+ verified producers across Michoacan, Jalisco, Sinaloa, Sonora, Baja California, and the Salinas Valley. No brokers. No middlemen. No mystery.</li>
-  <li><strong>PACA-compliant transaction management</strong> — every deal structured and documented inside the platform</li>
-  <li><strong>Cross-border execution</strong> — logistics coordination, port wait times, customs alignment, and cold chain monitoring in one dashboard</li>
+  <li><strong>Real-time FOB pricing</strong> on 200+ commodities â€” avocados, limes, berries, tomatoes, peppers, lettuce, asparagus, mangos, and more â€” updated live from origin</li>
+  <li><strong>Price alert system</strong> â€” set a target price per commodity and get notified the moment it hits, before your competition knows the market moved</li>
+  <li><strong>Grower reliability scoring</strong> â€” every grower in our network is scored on fill rate, quality consistency, compliance history, and delivery performance</li>
+  <li><strong>Direct grower access</strong> â€” 5,000+ verified producers across Michoacan, Jalisco, Sinaloa, Sonora, Baja California, and the Salinas Valley. No brokers. No middlemen. No mystery.</li>
+  <li><strong>PACA-compliant transaction management</strong> â€” every deal structured and documented inside the platform</li>
+  <li><strong>Cross-border execution</strong> â€” logistics coordination, port wait times, customs alignment, and cold chain monitoring in one dashboard</li>
 </ul>
-<p>Result for {{company}}: lower cost per box, stronger supply control, and purchasing decisions based on real intelligence — not gut feel and phone calls.</p>
+<p>Result for {{company}}: lower cost per box, stronger supply control, and purchasing decisions based on real intelligence â€” not gut feel and phone calls.</p>
 <p><strong>Free to sign up. No credit card required.</strong></p>
 <p>Visit <a href="https://mexausafg.com" style="color:#cba658">mexausafg.com</a> or reply and I will schedule a personal walkthrough for your team.</p>
 <p>Best regards,<br/>Saul Garcia<br/>CEO, Mexausa Food Group, Inc. | AuditDNA Agriculture Platform<br/>Saul@mexausafg.com | MX: +52-646-340-2686 | US: +1-831-251-3116</p>`},
 
   {id:'auditdna-grower-en', cat:'AuditDNA', name:'Grower Registration Pitch (EN)',
-   subject:'Get Your Farm in Front of 3,000+ Verified US Buyers — Free Digital Registration',
+   subject:'Get Your Farm in Front of 3,000+ Verified US Buyers â€” Free Digital Registration',
    body:`<p>Hi {{first_name}},</p>
-<p>If you are growing produce in Mexico, you already have the most valuable asset in the supply chain. The problem is visibility — and access to US buyers who are ready to buy right now.</p>
+<p>If you are growing produce in Mexico, you already have the most valuable asset in the supply chain. The problem is visibility â€” and access to US buyers who are ready to buy right now.</p>
 <p><strong>AuditDNA solves that. Here is exactly what registration gives your operation:</strong></p>
 <ul>
-  <li><strong>5-step digital GrowerMaster registration</strong> — completes your farm profile, certifies your operation, and makes you discoverable to 3,000+ verified US buyers searching for your commodity today</li>
-  <li><strong>FSMA 204 compliance — digitally, from your phone</strong> — no consultants, no paper binders. Your attestations are blockchain-verified and QR-scannable for any US buyer audit</li>
-  <li><strong>Small Grower Program</strong> — sell under our PACA license umbrella. This eliminates the single biggest barrier to US market access for Mexican growers</li>
-  <li><strong>AI risk tiering</strong> — Tier 0 through Tier 3 classification that unlocks credit terms, premium buyer programs, and financing options</li>
-  <li><strong>Direct connection to terminal market buyers</strong> — Los Angeles, Phoenix, Dallas, Miami, Chicago. Buyers who are actively looking for growers in your region</li>
-  <li><strong>Trade finance access</strong> — invoice factoring and PO financing available for qualified Tier 2+ operations</li>
+  <li><strong>5-step digital GrowerMaster registration</strong> â€” completes your farm profile, certifies your operation, and makes you discoverable to 3,000+ verified US buyers searching for your commodity today</li>
+  <li><strong>FSMA 204 compliance â€” digitally, from your phone</strong> â€” no consultants, no paper binders. Your attestations are blockchain-verified and QR-scannable for any US buyer audit</li>
+  <li><strong>Small Grower Program</strong> â€” sell under our PACA license umbrella. This eliminates the single biggest barrier to US market access for Mexican growers</li>
+  <li><strong>AI risk tiering</strong> â€” Tier 0 through Tier 3 classification that unlocks credit terms, premium buyer programs, and financing options</li>
+  <li><strong>Direct connection to terminal market buyers</strong> â€” Los Angeles, Phoenix, Dallas, Miami, Chicago. Buyers who are actively looking for growers in your region</li>
+  <li><strong>Trade finance access</strong> â€” invoice factoring and PO financing available for qualified Tier 2+ operations</li>
 </ul>
-<p>Registration is free. The platform is free. You bring the product — we bring the buyers.</p>
+<p>Registration is free. The platform is free. You bring the product â€” we bring the buyers.</p>
 <p>Register at <a href="https://mexausafg.com" style="color:#cba658">mexausafg.com</a> or reply YES and I will send you the direct registration link within 24 hours.</p>
 <p>Best regards,<br/>Saul Garcia<br/>CEO, Mexausa Food Group, Inc. (PACA #20241168)<br/>Saul@mexausafg.com | MX: +52-646-340-2686 | US: +1-831-251-3116</p>`},
 
   {id:'auditdna-compliance-en', cat:'AuditDNA', name:'Compliance & Food Safety Teams (EN)',
-   subject:'FSMA 204, GlobalGAP, SENASICA — All in One Dashboard with Live Expiration Alerts',
+   subject:'FSMA 204, GlobalGAP, SENASICA â€” All in One Dashboard with Live Expiration Alerts',
    body:`<p>Hi {{first_name}},</p>
-<p>Managing produce compliance in 2025 means tracking FSMA 204 traceability requirements, GlobalGAP certifications, PrimusGFS audit schedules, SENASICA documentation, and FDA alerts — simultaneously, across multiple suppliers and seasons.</p>
+<p>Managing produce compliance in 2025 means tracking FSMA 204 traceability requirements, GlobalGAP certifications, PrimusGFS audit schedules, SENASICA documentation, and FDA alerts â€” simultaneously, across multiple suppliers and seasons.</p>
 <p>Most teams are doing this in spreadsheets. <strong>AuditDNA was built to replace that entirely.</strong></p>
 <p><strong>What the AuditDNA Compliance Hub gives {{company}}:</strong></p>
 <ul>
-  <li><strong>FSMA 204 full traceability</strong> — QR-scannable lots from field to dock. One scan returns origin, harvest date, handler chain, lab results, and digital GAP attestation</li>
-  <li><strong>Certificate expiration tracking</strong> — GlobalGAP, PrimusGFS, SENASICA, USDA Organic all monitored with automatic alerts 30, 14, and 7 days before expiration</li>
-  <li><strong>Recall response workflow</strong> — identify affected lots, trace forward and backward, generate FDA notification documentation in under 4 hours instead of 4 days</li>
-  <li><strong>Supplier compliance scoring</strong> — every grower in the network is scored on compliance history, inspection results, and certification status</li>
-  <li><strong>Live FDA alert integration</strong> — compliance team is notified immediately when an FDA alert impacts a commodity or region you are sourcing from</li>
-  <li><strong>Digital inspection reports</strong> — photo documentation, temperature logs, and lab results tied to individual lots and stored with full audit trail</li>
+  <li><strong>FSMA 204 full traceability</strong> â€” QR-scannable lots from field to dock. One scan returns origin, harvest date, handler chain, lab results, and digital GAP attestation</li>
+  <li><strong>Certificate expiration tracking</strong> â€” GlobalGAP, PrimusGFS, SENASICA, USDA Organic all monitored with automatic alerts 30, 14, and 7 days before expiration</li>
+  <li><strong>Recall response workflow</strong> â€” identify affected lots, trace forward and backward, generate FDA notification documentation in under 4 hours instead of 4 days</li>
+  <li><strong>Supplier compliance scoring</strong> â€” every grower in the network is scored on compliance history, inspection results, and certification status</li>
+  <li><strong>Live FDA alert integration</strong> â€” compliance team is notified immediately when an FDA alert impacts a commodity or region you are sourcing from</li>
+  <li><strong>Digital inspection reports</strong> â€” photo documentation, temperature logs, and lab results tied to individual lots and stored with full audit trail</li>
 </ul>
 <p>Result: your compliance team stops firefighting and starts managing proactively. Audit prep time drops from weeks to hours.</p>
 <p>Free to sign up. Visit <a href="https://mexausafg.com" style="color:#cba658">mexausafg.com</a> or reply to schedule a walkthrough.</p>
 <p>Best regards,<br/>Saul Garcia<br/>CEO, Mexausa Food Group, Inc. | AuditDNA Platform<br/>Saul@mexausafg.com | MX: +52-646-340-2686 | US: +1-831-251-3116</p>`},
 
   {id:'auditdna-finance-en', cat:'AuditDNA', name:'Trade Finance & Lender Marketplace (EN)',
-   subject:'Blind Lender Marketplace for Produce Trade Finance — AR Factoring, PO Financing, Deal Structuring',
+   subject:'Blind Lender Marketplace for Produce Trade Finance â€” AR Factoring, PO Financing, Deal Structuring',
    body:`<p>Hi {{first_name}},</p>
-<p>The produce industry moves fast. Capital constraints — slow-pay customers, front-loaded grower payments, seasonal inventory peaks — are the primary reason good deals fall apart or margins collapse.</p>
+<p>The produce industry moves fast. Capital constraints â€” slow-pay customers, front-loaded grower payments, seasonal inventory peaks â€” are the primary reason good deals fall apart or margins collapse.</p>
 <p><strong>AuditDNA integrates the financial intelligence that most sourcing platforms have never considered building.</strong></p>
 <p><strong>The AuditDNA Financial Stack:</strong></p>
 <ul>
-  <li><strong>Blind Lender Marketplace</strong> — submit your financing need and receive competing bids from qualified agricultural lenders. Lender identity is protected by NDA/LOI until terms are accepted. No cold calls, no shopping your deal around the market.</li>
-  <li><strong>Accounts Receivable Factoring</strong> — advance up to 90% of invoice value within 24-48 hours. Qualified PACA-compliant transactions only. No liens required on operations under $500K.</li>
-  <li><strong>Purchase Order Financing</strong> — fund confirmed POs from verified US buyers before the product ships. Bridge the grower payment gap without touching your credit line.</li>
-  <li><strong>LOI / LOC / Term Sheet digital workflow</strong> — the full deal lifecycle executed and tracked inside the platform. Every document timestamped, version-controlled, and stored with full audit trail.</li>
-  <li><strong>Risk and payment flow optimization</strong> — AI-powered scoring of every transaction for payment risk, compliance exposure, and deal structure optimization before you commit.</li>
+  <li><strong>Blind Lender Marketplace</strong> â€” submit your financing need and receive competing bids from qualified agricultural lenders. Lender identity is protected by NDA/LOI until terms are accepted. No cold calls, no shopping your deal around the market.</li>
+  <li><strong>Accounts Receivable Factoring</strong> â€” advance up to 90% of invoice value within 24-48 hours. Qualified PACA-compliant transactions only. No liens required on operations under $500K.</li>
+  <li><strong>Purchase Order Financing</strong> â€” fund confirmed POs from verified US buyers before the product ships. Bridge the grower payment gap without touching your credit line.</li>
+  <li><strong>LOI / LOC / Term Sheet digital workflow</strong> â€” the full deal lifecycle executed and tracked inside the platform. Every document timestamped, version-controlled, and stored with full audit trail.</li>
+  <li><strong>Risk and payment flow optimization</strong> â€” AI-powered scoring of every transaction for payment risk, compliance exposure, and deal structure optimization before you commit.</li>
 </ul>
 <p>For {{company}}: faster deal execution, reduced capital constraints, and financial structuring support built specifically for PACA-regulated produce transactions.</p>
 <p>This is not available anywhere else in the produce industry.</p>
@@ -705,47 +705,47 @@ export const AG_TEMPLATES=[
 <p>Best regards,<br/>Saul Garcia<br/>CEO, Mexausa Food Group, Inc. (PACA #20241168)<br/>Saul@mexausafg.com | MX: +52-646-340-2686 | US: +1-831-251-3116</p>`},
 
   {id:'auditdna-agtech-en', cat:'AuditDNA', name:'Ag Technology API Partnership (EN)',
-   subject:'API Access to a Live US-Mexico Produce Intelligence Network — Partnership Opportunity',
+   subject:'API Access to a Live US-Mexico Produce Intelligence Network â€” Partnership Opportunity',
    body:`<p>Hi {{first_name}},</p>
-<p>If {{company}} builds technology for the produce industry, you already know the hardest part is not the software — it is getting access to live, verified, structured data from growers, buyers, and markets across the US-Mexico corridor.</p>
+<p>If {{company}} builds technology for the produce industry, you already know the hardest part is not the software â€” it is getting access to live, verified, structured data from growers, buyers, and markets across the US-Mexico corridor.</p>
 <p><strong>AuditDNA has built that infrastructure. And we are opening API access to qualified technology partners.</strong></p>
 <p><strong>What the AuditDNA Intelligence Layer gives technology partners:</strong></p>
 <ul>
-  <li><strong>Live grower database API</strong> — 5,000+ verified producers with commodity profiles, certification status, capacity data, and compliance scoring. Updated continuously.</li>
-  <li><strong>Real-time FOB pricing feed</strong> — 200+ commodity pricing signals from origin markets, updated live. Structured JSON, ready to embed in any platform.</li>
-  <li><strong>FSMA 204 traceability engine</strong> — QR generation, lot tracking, chain of custody documentation, and blockchain attestation as a service.</li>
-  <li><strong>Border and port intelligence</strong> — live crossing wait times, USDA data integration, and tariff intelligence for all major US-Mexico ports of entry.</li>
-  <li><strong>Buyer and contact intelligence</strong> — 23,000+ verified produce industry contacts with commodity affinity, buying behavior, and geographic segmentation.</li>
-  <li><strong>AI pricing and supply forecasting</strong> — 2-4 week forward price and volume signals powered by 81 Niner Miners agents trained on produce market data.</li>
+  <li><strong>Live grower database API</strong> â€” 5,000+ verified producers with commodity profiles, certification status, capacity data, and compliance scoring. Updated continuously.</li>
+  <li><strong>Real-time FOB pricing feed</strong> â€” 200+ commodity pricing signals from origin markets, updated live. Structured JSON, ready to embed in any platform.</li>
+  <li><strong>FSMA 204 traceability engine</strong> â€” QR generation, lot tracking, chain of custody documentation, and blockchain attestation as a service.</li>
+  <li><strong>Border and port intelligence</strong> â€” live crossing wait times, USDA data integration, and tariff intelligence for all major US-Mexico ports of entry.</li>
+  <li><strong>Buyer and contact intelligence</strong> â€” 23,000+ verified produce industry contacts with commodity affinity, buying behavior, and geographic segmentation.</li>
+  <li><strong>AI pricing and supply forecasting</strong> â€” 2-4 week forward price and volume signals powered by 81 Niner Miners agents trained on produce market data.</li>
 </ul>
 <p>119 patent-eligible inventions across 12 technology families. White-label, co-branding, and revenue-share partnership structures available.</p>
 <p>I am available for a technical partnership call this week. Reply or visit <a href="https://mexausafg.com" style="color:#cba658">mexausafg.com</a>.</p>
 <p>Best regards,<br/>Saul Garcia<br/>CEO, Mexausa Food Group, Inc. | AuditDNA Agriculture Platform<br/>Saul@mexausafg.com | MX: +52-646-340-2686 | US: +1-831-251-3116</p>`},
 
   {id:'auditdna-exec-es', cat:'AuditDNA', name:'Platform Executive Pitch (ES)',
-   subject:'AuditDNA — La Unica Plataforma de Inteligencia Agricola de Campo para la Industria del Produce',
+   subject:'AuditDNA â€” La Unica Plataforma de Inteligencia Agricola de Campo para la Industria del Produce',
    body:`<p>Estimado/a {{first_name}},</p>
 <p>Mi nombre es Saul Garcia, fundador de <strong>AuditDNA Agriculture Intelligence Platform</strong> y CEO de Mexausa Food Group, Inc. (PACA #20241168), con sede en Ensenada, Baja California.</p>
 <p>Quiero compartir algo que creo cambiara fundamentalmente como {{company}} obtiene, cotiza y estructura sus transacciones de produce.</p>
-<p><strong>AuditDNA no es un marketplace. Es una plataforma de inteligencia y abastecimiento de campo que proporciona acceso directo y verificado al suministro agricola en origen — con validacion de cumplimiento integrada, ventaja en precios, e inteligencia de mercado en tiempo real.</strong></p>
+<p><strong>AuditDNA no es un marketplace. Es una plataforma de inteligencia y abastecimiento de campo que proporciona acceso directo y verificado al suministro agricola en origen â€” con validacion de cumplimiento integrada, ventaja en precios, e inteligencia de mercado en tiempo real.</strong></p>
 <table style="border-collapse:collapse;width:100%;max-width:620px;margin:16px 0;background:#0a0f1a;border:1px solid rgba(203,166,88,0.3)">
   <tr><td colspan="2" style="padding:12px 16px;background:linear-gradient(135deg,#1a2a0a,#0f1a2e);border-bottom:2px solid #cba658"><span style="font-family:Arial,sans-serif;font-size:12px;font-weight:900;color:#e8d5a0;letter-spacing:2px">CAPACIDADES DE LA PLATAFORMA</span></td></tr>
   <tr style="background:rgba(203,166,88,0.05)"><td style="padding:10px 16px;font-family:Arial,sans-serif;font-size:11px;font-weight:700;color:#cba658;width:220px;border-bottom:1px solid rgba(255,255,255,0.06)">Precios FOB en Tiempo Real</td><td style="padding:10px 16px;font-family:Arial,sans-serif;font-size:11px;color:#cbd5e1;border-bottom:1px solid rgba(255,255,255,0.06)">200+ productos monitoreados en vivo desde Mexico, California y Latinoamerica</td></tr>
-  <tr><td style="padding:10px 16px;font-family:Arial,sans-serif;font-size:11px;font-weight:700;color:#cba658;border-bottom:1px solid rgba(255,255,255,0.06)">Red de Productores Verificados</td><td style="padding:10px 16px;font-family:Arial,sans-serif;font-size:11px;color:#cbd5e1;border-bottom:1px solid rgba(255,255,255,0.06)">5,000+ productores verificados en 12 regiones de Mexico — acceso directo, sin intermediarios</td></tr>
+  <tr><td style="padding:10px 16px;font-family:Arial,sans-serif;font-size:11px;font-weight:700;color:#cba658;border-bottom:1px solid rgba(255,255,255,0.06)">Red de Productores Verificados</td><td style="padding:10px 16px;font-family:Arial,sans-serif;font-size:11px;color:#cbd5e1;border-bottom:1px solid rgba(255,255,255,0.06)">5,000+ productores verificados en 12 regiones de Mexico â€” acceso directo, sin intermediarios</td></tr>
   <tr style="background:rgba(203,166,88,0.05)"><td style="padding:10px 16px;font-family:Arial,sans-serif;font-size:11px;font-weight:700;color:#cba658;border-bottom:1px solid rgba(255,255,255,0.06)">Trazabilidad FSMA 204</td><td style="padding:10px 16px;font-family:Arial,sans-serif;font-size:11px;color:#cbd5e1;border-bottom:1px solid rgba(255,255,255,0.06)">Cadena de custodia completa, trazabilidad QR por lote, atestaciones blockchain, flujos de retiro</td></tr>
   <tr><td style="padding:10px 16px;font-family:Arial,sans-serif;font-size:11px;font-weight:700;color:#cba658;border-bottom:1px solid rgba(255,255,255,0.06)">81 Niner Miners AI</td><td style="padding:10px 16px;font-family:Arial,sans-serif;font-size:11px;color:#cbd5e1;border-bottom:1px solid rgba(255,255,255,0.06)">81 agentes especializados para precios, cumplimiento, logistica, productores, clima y finanzas</td></tr>
-  <tr style="background:rgba(203,166,88,0.05)"><td style="padding:10px 16px;font-family:Arial,sans-serif;font-size:11px;font-weight:700;color:#cba658;border-bottom:1px solid rgba(255,255,255,0.06)">Mercado Ciego de Prestamistas</td><td style="padding:10px 16px;font-family:Arial,sans-serif;font-size:11px;color:#cbd5e1;border-bottom:1px solid rgba(255,255,255,0.06)">Factoraje, financiamiento OC, flujo LOI/LOC/Term Sheet digital — identidad del prestamista protegida</td></tr>
+  <tr style="background:rgba(203,166,88,0.05)"><td style="padding:10px 16px;font-family:Arial,sans-serif;font-size:11px;font-weight:700;color:#cba658;border-bottom:1px solid rgba(255,255,255,0.06)">Mercado Ciego de Prestamistas</td><td style="padding:10px 16px;font-family:Arial,sans-serif;font-size:11px;color:#cbd5e1;border-bottom:1px solid rgba(255,255,255,0.06)">Factoraje, financiamiento OC, flujo LOI/LOC/Term Sheet digital â€” identidad del prestamista protegida</td></tr>
   <tr><td style="padding:10px 16px;font-family:Arial,sans-serif;font-size:11px;font-weight:700;color:#cba658">Inteligencia de Contactos</td><td style="padding:10px 16px;font-family:Arial,sans-serif;font-size:11px;color:#cbd5e1">23,000+ contactos verificados de la industria segmentados por producto, zona y comportamiento</td></tr>
 </table>
-<p style="font-style:italic;color:#94a3b8;border-left:3px solid #cba658;padding-left:12px;margin:16px 0"><em>"No solo encontramos el suministro — lo validamos, aseguramos y estructuramos para que funcione."</em></p>
+<p style="font-style:italic;color:#94a3b8;border-left:3px solid #cba658;padding-left:12px;margin:16px 0"><em>"No solo encontramos el suministro â€” lo validamos, aseguramos y estructuramos para que funcione."</em></p>
 <p><strong>Registro gratuito.</strong> El Tier 0 da acceso completo a la capa de inteligencia. Los tiers premium desbloquean el stack completo de abastecimiento y finanzas.</p>
 <p>Visita <a href="https://mexausafg.com" style="color:#cba658">mexausafg.com</a> o respondeme para agendar un recorrido personalizado de 20 minutos.</p>
 <p>Saludos,<br/>Saul Garcia<br/>Fundador, AuditDNA | CEO, Mexausa Food Group, Inc. (PACA #20241168)<br/>Saul@mexausafg.com | MX: +52-646-340-2686 | US: +1-831-251-3116<br/>mexausafg.com</p>`},
 
   {id:'auditdna-tier-upgrade-en', cat:'AuditDNA', name:'Tier Upgrade Upsell (EN)',
-   subject:'Your AuditDNA Tier 0 Access Is Active — Here Is What You Are Missing',
+   subject:'Your AuditDNA Tier 0 Access Is Active â€” Here Is What You Are Missing',
    body:`<p>Hi {{first_name}},</p>
-<p>Your free Tier 0 account on AuditDNA is active — and you already have access to more produce intelligence than most sourcing teams see in a week.</p>
+<p>Your free Tier 0 account on AuditDNA is active â€” and you already have access to more produce intelligence than most sourcing teams see in a week.</p>
 <p>But here is what {{company}} is not seeing yet:</p>
 <table style="border-collapse:collapse;width:100%;max-width:600px;margin:14px 0;background:#0a0f1a;border:1px solid rgba(203,166,88,0.2)">
   <tr><td style="padding:10px 16px;background:linear-gradient(135deg,#1a2a0a,#0f1a2e);border-bottom:1px solid rgba(203,166,88,0.3)" colspan="3"><span style="font-family:Arial,sans-serif;font-size:11px;font-weight:900;color:#e8d5a0;letter-spacing:2px">TIER COMPARISON</span></td></tr>
@@ -761,36 +761,36 @@ export const AG_TEMPLATES=[
 <p>Reply to this email or sign in at <a href="https://mexausafg.com" style="color:#cba658">mexausafg.com</a> to upgrade. I will personally walk you through the setup.</p>
 <p>Best regards,<br/>Saul Garcia<br/>CEO, Mexausa Food Group, Inc. | AuditDNA Platform<br/>Saul@mexausafg.com | MX: +52-646-340-2686 | US: +1-831-251-3116</p>`},
 
-  // ─── AGRI-MAXX WATER ENERGY SYSTEM ─────────────────────────────────────────
-  {id:'agrimaxx-a1',cat:'Agri-Maxx',name:'Track A — Day 0 Intro (EN)',
-   subject:'Cut Water Use 20% — Without Changing How You Farm',
+  // â”€â”€â”€ AGRI-MAXX WATER ENERGY SYSTEM â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  {id:'agrimaxx-a1',cat:'Agri-Maxx',name:'Track A â€” Day 0 Intro (EN)',
+   subject:'Cut Water Use 20% â€” Without Changing How You Farm',
    body:`<p>Hi {{first_name}},</p>
 <p>Water costs are rising. Regulations are tightening. Most solutions require ripping out your infrastructure.</p>
-<p>The <strong>Agri-Maxx Water Energy System</strong> attaches inline to your existing irrigation — no replumbing, no downtime. Growers across California, Arizona, and Baja California are reporting:</p>
+<p>The <strong>Agri-Maxx Water Energy System</strong> attaches inline to your existing irrigation â€” no replumbing, no downtime. Growers across California, Arizona, and Baja California are reporting:</p>
 <ul>
   <li>Up to <strong>20% reduction in water use</strong></li>
   <li>Up to <strong>20% less fertilizer and chemicals</strong></li>
-  <li>10–20% <strong>yield improvement</strong> in berries, avocados, and tree crops</li>
+  <li>10â€“20% <strong>yield improvement</strong> in berries, avocados, and tree crops</li>
   <li>Scale and biofilm removed from irrigation lines</li>
 </ul>
-<p>We'd like to send you a <strong>Free Farm Efficiency Report</strong> for your operation — no obligation, no sales pressure.</p>
+<p>We'd like to send you a <strong>Free Farm Efficiency Report</strong> for your operation â€” no obligation, no sales pressure.</p>
 <p>Reply to this email or visit <a href="https://agri-maxx.com">agri-maxx.com</a> to learn more.</p>
-<p>— Saul Garcia | Mexausa Food Group, Inc.<br>Saul@mexausafg.com </p>`},
-  {id:'agrimaxx-a1-es',cat:'Agri-Maxx',name:'Track A — Dia 0 Introduccion (ES)',
-   subject:'Reduzca el Uso de Agua 20% — Sin Cambiar Su Sistema de Riego',
+<p>â€” Saul Garcia | Mexausa Food Group, Inc.<br>Saul@mexausafg.com </p>`},
+  {id:'agrimaxx-a1-es',cat:'Agri-Maxx',name:'Track A â€” Dia 0 Introduccion (ES)',
+   subject:'Reduzca el Uso de Agua 20% â€” Sin Cambiar Su Sistema de Riego',
    body:`<p>Estimado/a {{first_name}},</p>
 <p>Los costos del agua siguen subiendo. Las regulaciones se vuelven mas estrictas. Y la mayoria de las soluciones requieren reemplazar toda la infraestructura.</p>
-<p>El <strong>Sistema Agri-Maxx de Energia de Agua</strong> se instala en linea con su sistema de riego actual — sin obras, sin tiempo de inactividad. Productores en California, Arizona y Baja California reportan:</p>
+<p>El <strong>Sistema Agri-Maxx de Energia de Agua</strong> se instala en linea con su sistema de riego actual â€” sin obras, sin tiempo de inactividad. Productores en California, Arizona y Baja California reportan:</p>
 <ul>
   <li>Hasta un <strong>20% menos de consumo de agua</strong></li>
   <li>Hasta un <strong>20% menos de fertilizantes y quimicos</strong></li>
-  <li>Mejora de rendimiento del <strong>10–20%</strong> en berries, aguacates y frutales</li>
+  <li>Mejora de rendimiento del <strong>10â€“20%</strong> en berries, aguacates y frutales</li>
   <li>Eliminacion de sarro y biopeliculas en las lineas de riego</li>
 </ul>
-<p>Queremos enviarle un <strong>Informe Gratuito de Eficiencia de su Rancho</strong> — sin compromiso.</p>
+<p>Queremos enviarle un <strong>Informe Gratuito de Eficiencia de su Rancho</strong> â€” sin compromiso.</p>
 <p>Responda este correo o visitenos en <a href="https://agri-maxx.com">agri-maxx.com</a>.</p>
-<p>— Saul Garcia | Mexausa Food Group, Inc.<br>Saul@mexausafg.com</p>`},
-  {id:'agrimaxx-a2',cat:'Agri-Maxx',name:'Track A — Day 7 ROI Calculator (EN)',
+<p>â€” Saul Garcia | Mexausa Food Group, Inc.<br>Saul@mexausafg.com</p>`},
+  {id:'agrimaxx-a2',cat:'Agri-Maxx',name:'Track A â€” Day 7 ROI Calculator (EN)',
    subject:'What Would 20% Less Water Cost You This Season?',
    body:`<p>Hi {{first_name}},</p>
 <p>Last week I reached out about the Agri-Maxx Water Energy System. Today I want to make it concrete.</p>
@@ -799,11 +799,11 @@ export const AG_TEMPLATES=[
   <tr style="background:#f8f8f8"><td style="padding:8px;border:1px solid #ddd">Annual water cost</td><td style="padding:8px;border:1px solid #ddd">$180,000</td></tr>
   <tr><td style="padding:8px;border:1px solid #ddd">20% reduction with Agri-Maxx</td><td style="padding:8px;border:1px solid #ddd"><strong>$36,000 saved</strong></td></tr>
   <tr style="background:#f8f8f8"><td style="padding:8px;border:1px solid #ddd">Fertilizer savings (20%)</td><td style="padding:8px;border:1px solid #ddd"><strong>$12,000 saved</strong></td></tr>
-  <tr><td style="padding:8px;border:1px solid #ddd">Typical payback period</td><td style="padding:8px;border:1px solid #ddd"><strong>6–14 months</strong></td></tr>
+  <tr><td style="padding:8px;border:1px solid #ddd">Typical payback period</td><td style="padding:8px;border:1px solid #ddd"><strong>6â€“14 months</strong></td></tr>
 </table>
 <p>Want us to run the numbers for <strong>{{company}}</strong> specifically? Reply with your irrigated acres and primary crop and we'll send a custom ROI estimate within 24 hours.</p>
-<p>— Saul Garcia | Mexausa Food Group, Inc.<br><a href="https://agri-maxx.com">agri-maxx.com</a></p>`},
-  {id:'agrimaxx-a2-es',cat:'Agri-Maxx',name:'Track A — Dia 7 Calculadora ROI (ES)',
+<p>â€” Saul Garcia | Mexausa Food Group, Inc.<br><a href="https://agri-maxx.com">agri-maxx.com</a></p>`},
+  {id:'agrimaxx-a2-es',cat:'Agri-Maxx',name:'Track A â€” Dia 7 Calculadora ROI (ES)',
    subject:'Cuanto Le Costaria Usar 20% Menos de Agua Esta Temporada?',
    body:`<p>Estimado/a {{first_name}},</p>
 <p>La semana pasada le escribi sobre el Sistema Agri-Maxx. Hoy quiero ser especifico.</p>
@@ -812,37 +812,37 @@ export const AG_TEMPLATES=[
   <tr style="background:#f8f8f8"><td style="padding:8px;border:1px solid #ddd">Costo anual de agua</td><td style="padding:8px;border:1px solid #ddd">$180,000</td></tr>
   <tr><td style="padding:8px;border:1px solid #ddd">Ahorro con Agri-Maxx (20%)</td><td style="padding:8px;border:1px solid #ddd"><strong>$36,000</strong></td></tr>
   <tr style="background:#f8f8f8"><td style="padding:8px;border:1px solid #ddd">Ahorro en fertilizantes (20%)</td><td style="padding:8px;border:1px solid #ddd"><strong>$12,000</strong></td></tr>
-  <tr><td style="padding:8px;border:1px solid #ddd">Periodo de recuperacion tipico</td><td style="padding:8px;border:1px solid #ddd"><strong>6–14 meses</strong></td></tr>
+  <tr><td style="padding:8px;border:1px solid #ddd">Periodo de recuperacion tipico</td><td style="padding:8px;border:1px solid #ddd"><strong>6â€“14 meses</strong></td></tr>
 </table>
 <p>Podemos calcular el retorno especifico para <strong>{{company}}</strong>. Respondanos con sus hectareas irrigadas y cultivo principal.</p>
-<p>— Saul Garcia | Mexausa Food Group, Inc.<br><a href="https://agri-maxx.com">agri-maxx.com</a></p>`},
-  {id:'agrimaxx-a3',cat:'Agri-Maxx',name:'Track A — Day 18 Testimonial (EN)',
+<p>â€” Saul Garcia | Mexausa Food Group, Inc.<br><a href="https://agri-maxx.com">agri-maxx.com</a></p>`},
+  {id:'agrimaxx-a3',cat:'Agri-Maxx',name:'Track A â€” Day 18 Testimonial (EN)',
    subject:'What Growers in Your Region Are Saying',
    body:`<p>Hi {{first_name}},</p>
 <p>Sometimes the best proof comes from people farming the same soil.</p>
 <blockquote style="border-left:4px solid #cba658;padding-left:16px;color:#555;font-style:italic">
 "We installed Agri-Maxx on our drip system in April. By harvest we had cut water use 18%, reduced our fertilizer runs, and yields were up 12%. The system paid for itself in the first season."
-<br><em>— Grower, Ventura County CA, Strawberries and Raspberries</em>
+<br><em>â€” Grower, Ventura County CA, Strawberries and Raspberries</em>
 </blockquote>
-<p>Results vary by crop, soil, and water quality — which is exactly why we offer a <strong>Free Farm Efficiency Analysis</strong> before any commitment.</p>
+<p>Results vary by crop, soil, and water quality â€” which is exactly why we offer a <strong>Free Farm Efficiency Analysis</strong> before any commitment.</p>
 <p>Ready to see what your numbers could look like? <a href="https://agri-maxx.com/analysis">Request your analysis here.</a></p>
-<p>— Saul Garcia | Mexausa Food Group, Inc.</p>`},
-  {id:'agrimaxx-a3-es',cat:'Agri-Maxx',name:'Track A — Dia 18 Testimonio (ES)',
+<p>â€” Saul Garcia | Mexausa Food Group, Inc.</p>`},
+  {id:'agrimaxx-a3-es',cat:'Agri-Maxx',name:'Track A â€” Dia 18 Testimonio (ES)',
    subject:'Lo Que Dicen los Productores en Su Region',
    body:`<p>Estimado/a {{first_name}},</p>
 <p>A veces la mejor prueba viene de productores que trabajan la misma tierra.</p>
 <blockquote style="border-left:4px solid #cba658;padding-left:16px;color:#555;font-style:italic">
 "Instalamos Agri-Maxx en nuestro sistema de goteo en abril. Al momento de la cosecha habiamos reducido el uso de agua 18%, reducido las aplicaciones de fertilizante, y el rendimiento subio 12%. El sistema se pago solo en la primera temporada."
-<br><em>— Productor, Condado de Ventura CA, Fresas y Frambuesas</em>
+<br><em>â€” Productor, Condado de Ventura CA, Fresas y Frambuesas</em>
 </blockquote>
-<p>Los resultados varian segun cultivo, suelo y calidad del agua — por eso ofrecemos un <strong>Analisis Gratuito de Eficiencia</strong> antes de cualquier compromiso.</p>
+<p>Los resultados varian segun cultivo, suelo y calidad del agua â€” por eso ofrecemos un <strong>Analisis Gratuito de Eficiencia</strong> antes de cualquier compromiso.</p>
 <p>Listo para ver sus numeros? <a href="https://agri-maxx.com/analysis">Solicite su analisis aqui.</a></p>
-<p>— Saul Garcia | Mexausa Food Group, Inc.</p>`},
-  {id:'agrimaxx-a4',cat:'Agri-Maxx',name:'Track A — Day 30 Close (EN)',
+<p>â€” Saul Garcia | Mexausa Food Group, Inc.</p>`},
+  {id:'agrimaxx-a4',cat:'Agri-Maxx',name:'Track A â€” Day 30 Close (EN)',
    subject:'Last Chance: Free Farm Efficiency Report for {{company}}',
    body:`<p>Hi {{first_name}},</p>
 <p>Over the past month I've shared how growers like you are saving water, reducing inputs, and improving yields with the Agri-Maxx Water Energy System.</p>
-<p>This is my last outreach. I'd like to offer you a <strong>complimentary Farm Efficiency Analysis</strong> — a customized report showing exactly what Agri-Maxx could save at {{company}}.</p>
+<p>This is my last outreach. I'd like to offer you a <strong>complimentary Farm Efficiency Analysis</strong> â€” a customized report showing exactly what Agri-Maxx could save at {{company}}.</p>
 <p><strong>What's included:</strong></p>
 <ul>
   <li>Estimated annual water savings (gallons + dollars)</li>
@@ -852,12 +852,12 @@ export const AG_TEMPLATES=[
 </ul>
 <p>No cost. No commitment. Just data.</p>
 <p>Reply YES and I'll send it within 24 hours.</p>
-<p>— Saul Garcia | CEO, Mexausa Food Group, Inc.<br>Saul@mexausafg.com  | <a href="https://agri-maxx.com">agri-maxx.com</a></p>`},
-  {id:'agrimaxx-a4-es',cat:'Agri-Maxx',name:'Track A — Dia 30 Cierre (ES)',
+<p>â€” Saul Garcia | CEO, Mexausa Food Group, Inc.<br>Saul@mexausafg.com  | <a href="https://agri-maxx.com">agri-maxx.com</a></p>`},
+  {id:'agrimaxx-a4-es',cat:'Agri-Maxx',name:'Track A â€” Dia 30 Cierre (ES)',
    subject:'Ultima Oportunidad: Informe Gratuito de Eficiencia para {{company}}',
    body:`<p>Estimado/a {{first_name}},</p>
 <p>Durante el ultimo mes le comparti como productores como usted estan ahorrando agua, reduciendo insumos y mejorando rendimientos con el Sistema Agri-Maxx.</p>
-<p>Este es mi ultimo contacto. Me gustaria ofrecerle un <strong>Analisis de Eficiencia Gratuito</strong> — un informe personalizado que muestra exactamente que puede ahorrar Agri-Maxx en {{company}}.</p>
+<p>Este es mi ultimo contacto. Me gustaria ofrecerle un <strong>Analisis de Eficiencia Gratuito</strong> â€” un informe personalizado que muestra exactamente que puede ahorrar Agri-Maxx en {{company}}.</p>
 <ul>
   <li>Estimado de ahorro anual de agua (litros + dolares)</li>
   <li>Proyeccion de reduccion de fertilizantes y quimicos</li>
@@ -866,36 +866,36 @@ export const AG_TEMPLATES=[
 </ul>
 <p>Sin costo. Sin compromiso. Solo datos.</p>
 <p>Responda SI y se lo enviamos en 24 horas.</p>
-<p>— Saul Garcia | CEO, Mexausa Food Group, Inc.<br>Saul@mexausafg.com | <a href="https://agri-maxx.com">agri-maxx.com</a></p>`},
-  {id:'agrimaxx-b1',cat:'Agri-Maxx',name:'Track B — Day 0 Processor Intro (EN)',
-   subject:'Cut Facility Water Costs 20% — Without Downtime',
+<p>â€” Saul Garcia | CEO, Mexausa Food Group, Inc.<br>Saul@mexausafg.com | <a href="https://agri-maxx.com">agri-maxx.com</a></p>`},
+  {id:'agrimaxx-b1',cat:'Agri-Maxx',name:'Track B â€” Day 0 Processor Intro (EN)',
+   subject:'Cut Facility Water Costs 20% â€” Without Downtime',
    body:`<p>Hi {{first_name}},</p>
-<p>Water is one of the highest controllable costs in food processing — and most facilities are overpaying.</p>
+<p>Water is one of the highest controllable costs in food processing â€” and most facilities are overpaying.</p>
 <p>The <strong>Agri-Maxx Water Energy System</strong> installs inline on your existing water supply lines. No downtime, no facility modifications. Processing and packing facilities are reporting:</p>
 <ul>
   <li><strong>20% reduction</strong> in total water consumption</li>
   <li><strong>20% reduction</strong> in sanitization chemical usage</li>
   <li>Reduced biofilm and mineral scale in processing lines</li>
   <li>Improved produce shelf life post-wash</li>
-  <li>ROI typically achieved in 8–18 months</li>
+  <li>ROI typically achieved in 8â€“18 months</li>
 </ul>
 <p>We work with facilities across the California-Mexico produce corridor. I'd like to schedule a 15-minute call to see if Agri-Maxx is a fit for <strong>{{company}}</strong>.</p>
-<p>— Saul Garcia | Mexausa Food Group, Inc.<br>Saul@mexausafg.com | <a href="https://agri-maxx.com">agri-maxx.com</a></p>`},
-  {id:'agrimaxx-b1-es',cat:'Agri-Maxx',name:'Track B — Dia 0 Procesadores (ES)',
-   subject:'Reduzca los Costos de Agua de su Planta 20% — Sin Interrupciones',
+<p>â€” Saul Garcia | Mexausa Food Group, Inc.<br>Saul@mexausafg.com | <a href="https://agri-maxx.com">agri-maxx.com</a></p>`},
+  {id:'agrimaxx-b1-es',cat:'Agri-Maxx',name:'Track B â€” Dia 0 Procesadores (ES)',
+   subject:'Reduzca los Costos de Agua de su Planta 20% â€” Sin Interrupciones',
    body:`<p>Estimado/a {{first_name}},</p>
-<p>El agua es uno de los costos controlables mas altos en el procesamiento de alimentos — y la mayoria de las plantas estan pagando de mas.</p>
+<p>El agua es uno de los costos controlables mas altos en el procesamiento de alimentos â€” y la mayoria de las plantas estan pagando de mas.</p>
 <p>El <strong>Sistema Agri-Maxx de Energia de Agua</strong> se instala en las lineas de suministro de agua existentes. Sin tiempo de inactividad, sin modificaciones a la planta. Instalaciones de procesamiento y empaque reportan:</p>
 <ul>
   <li><strong>20% de reduccion</strong> en el consumo total de agua</li>
   <li><strong>20% de reduccion</strong> en el uso de quimicos de sanitizacion</li>
   <li>Reduccion de biopeliculas y sarro mineral en las lineas</li>
   <li>Mayor vida util del producto post-lavado</li>
-  <li>Retorno de inversion tipicamente en 8–18 meses</li>
+  <li>Retorno de inversion tipicamente en 8â€“18 meses</li>
 </ul>
 <p>Trabajamos con plantas en el corredor de produccion California-Mexico. Me gustaria programar una llamada de 15 minutos para evaluar si Agri-Maxx es adecuado para <strong>{{company}}</strong>.</p>
-<p>— Saul Garcia | Mexausa Food Group, Inc.<br>Saul@mexausafg.com | <a href="https://agri-maxx.com">agri-maxx.com</a></p>`},
-  {id:'agrimaxx-b2',cat:'Agri-Maxx',name:'Track B — Day 14 Case Study (EN)',
+<p>â€” Saul Garcia | Mexausa Food Group, Inc.<br>Saul@mexausafg.com | <a href="https://agri-maxx.com">agri-maxx.com</a></p>`},
+  {id:'agrimaxx-b2',cat:'Agri-Maxx',name:'Track B â€” Day 14 Case Study (EN)',
    subject:'How a Salinas Packing House Cut Water Bills $42,000/Year',
    body:`<p>Hi {{first_name}},</p>
 <p>A produce packing facility in the Salinas Valley recently shared their Agri-Maxx results after 12 months of operation:</p>
@@ -908,15 +908,15 @@ export const AG_TEMPLATES=[
 </table>
 <p>Every facility is different. Let me run a <strong>free efficiency estimate</strong> for {{company}} based on your daily water usage and current costs.</p>
 <p>Reply with your approximate daily water volume and I'll have numbers back to you in 24 hours.</p>
-<p>— Saul Garcia | Mexausa Food Group, Inc.<br><a href="https://agri-maxx.com">agri-maxx.com</a></p>`},
-  {id:'agrimaxx-b3',cat:'Agri-Maxx',name:'Track B — Day 30 Close Processor (EN)',
-   subject:'Free Water Efficiency Audit for {{company}} — Final Offer',
+<p>â€” Saul Garcia | Mexausa Food Group, Inc.<br><a href="https://agri-maxx.com">agri-maxx.com</a></p>`},
+  {id:'agrimaxx-b3',cat:'Agri-Maxx',name:'Track B â€” Day 30 Close Processor (EN)',
+   subject:'Free Water Efficiency Audit for {{company}} â€” Final Offer',
    body:`<p>Hi {{first_name}},</p>
 <p>This is my final outreach regarding the Agri-Maxx Water Energy System for {{company}}.</p>
-<p>I'd like to offer a <strong>complimentary Water Efficiency Audit</strong> — no cost, no obligation — that will show you exactly what your facility could save annually on water and chemical costs.</p>
+<p>I'd like to offer a <strong>complimentary Water Efficiency Audit</strong> â€” no cost, no obligation â€” that will show you exactly what your facility could save annually on water and chemical costs.</p>
 <p>For a facility using 50,000+ gallons daily, savings typically range from <strong>$28,000 to $85,000 per year</strong>.</p>
 <p>If the timing isn't right, I completely understand. But if you'd like the audit, simply reply YES and I'll have it to you within 24 hours.</p>
-<p>— Saul Garcia | CEO, Mexausa Food Group, Inc.<br>Saul@mexausafg.com  | <a href="https://agri-maxx.com">agri-maxx.com</a></p>`},
+<p>â€” Saul Garcia | CEO, Mexausa Food Group, Inc.<br>Saul@mexausafg.com  | <a href="https://agri-maxx.com">agri-maxx.com</a></p>`},
 ];
 
 
@@ -989,3 +989,4 @@ export const AGRIMAXX_PDFS = [
     { id:'berry_en', label:'Berry Growers (EN)', file:'agrimaxx_berry_growers_en.pdf', lang:'EN', cat:'Berry' },
     { id:'avocado_en', label:'Avocado & Tree Fruit (EN)', file:'agrimaxx_avocado_treefruit_en.pdf', lang:'EN', cat:'Avocado' },
   ];
+

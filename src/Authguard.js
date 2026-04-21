@@ -1,9 +1,9 @@
-// ═══════════════════════════════════════════════════════════════
-// AUTH MIDDLEWARE — JWT Route Protection
-// ═══════════════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+// AUTH MIDDLEWARE â€” JWT Route Protection
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 // Usage: const { requireAuth } = require('./middleware/authGuard');
 //        router.get('/protected', requireAuth, handler);
-// ═══════════════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
 const jwt = require('jsonwebtoken');
 const JWT_SECRET = process.env.JWT_SECRET || 'AuditDNA_JWT_Secret_2026_MFG_Saul_CHANGE_THIS';
@@ -18,7 +18,7 @@ function requireAuth(req, res, next) {
       req.user = decoded;
       return next();
     } catch {
-      // Token expired or invalid — fall through to session check
+      // Token expired or invalid â€” fall through to session check
     }
   }
 
@@ -42,3 +42,4 @@ function requireOwner(req, res, next) {
 }
 
 module.exports = { requireAuth, requireOwner };
+

@@ -10,23 +10,23 @@ index 0000000..f96fc4a
 --- /dev/null
 +++ b/Growers_final_fix.js
 @@ -0,0 +1,402 @@
-+// GòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉ
++// GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰
 +// AUDITDNA GROWER MANAGEMENT ROUTES - FIXED FOR EXISTING TABLE
 +// Full CRUD operations for grower database (23K+ contacts)
-+// GòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉ
++// GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰
 +
 +const express = require('express');
 +const router = express.Router();
 +const pool = require('../db');
 +
-+// GòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉ
++// GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰
 +// INIT: Fix existing growers table by adding missing columns
-+// GòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉ
++// GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰
 +
 +const initGrowersTable = async () => {
 +  try {
 +    // Step 1: Create table if it doesn't exist (basic structure)
-+    await pool.query(`
++    await global.db.query(`
 +      CREATE TABLE IF NOT EXISTS growers (
 +        id SERIAL PRIMARY KEY,
 +        grower_code VARCHAR(50) UNIQUE,
@@ -52,7 +52,7 @@ index 0000000..f96fc4a
 +    `);
 +    
 +    // Step 2: Add ALL missing columns (works on existing tables)
-+    await pool.query(`
++    await global.db.query(`
 +      ALTER TABLE growers ADD COLUMN IF NOT EXISTS tier_level INTEGER DEFAULT 3;
 +      ALTER TABLE growers ADD COLUMN IF NOT EXISTS compliance_score INTEGER DEFAULT 0;
 +      ALTER TABLE growers ADD COLUMN IF NOT EXISTS risk_rating VARCHAR(20) DEFAULT 'medium';
@@ -69,25 +69,25 @@ index 0000000..f96fc4a
 +    `);
 +    
 +    // Step 3: Create indexes
-+    await pool.query(`
++    await global.db.query(`
 +      CREATE INDEX IF NOT EXISTS idx_growers_code ON growers(grower_code);
 +      CREATE INDEX IF NOT EXISTS idx_growers_country ON growers(country);
 +      CREATE INDEX IF NOT EXISTS idx_growers_status ON growers(status);
 +      CREATE INDEX IF NOT EXISTS idx_growers_tier ON growers(tier_level);
 +    `);
 +    
-+    console.log('G£à [Growers] Table initialized');
++    console.log('GÂ£Ã  [Growers] Table initialized');
 +    
 +  } catch (error) {
-+    console.error('G¥î [Growers] Table init failed:', error.message);
++    console.error('GÂ¥Ã® [Growers] Table init failed:', error.message);
 +  }
 +};
 +
 +initGrowersTable();
 +
-+// GòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉ
++// GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰
 +// HELPER: Generate grower code
-+// GòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉ
++// GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰
 +
 +const generateGrowerCode = (country, companyName) => {
 +  const countryCode = country.substring(0, 2).toUpperCase();
@@ -96,9 +96,9 @@ index 0000000..f96fc4a
 +  return `GW-${countryCode}-${nameCode}-${timestamp}`;
 +};
 +
-+// GòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉ
++// GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰
 +// POST /growers - Create new grower
-+// GòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉ
++// GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰
 +
 +router.post('/', async (req, res) => {
 +  try {
@@ -119,7 +119,7 @@ index 0000000..f96fc4a
 +    else if (totalAcres < 200) tierLevel = 1;
 +    else if (totalAcres < 500) tierLevel = 2;
 +
-+    const result = await pool.query(
++    const result = await global.db.query(
 +      `INSERT INTO growers (
 +        grower_code, company_name, contact_name, email, phone,
 +        country, state_province, city, address, postal_code,
@@ -140,7 +140,7 @@ index 0000000..f96fc4a
 +      ]
 +    );
 +
-+    console.log(`G£à [Growers] Created: ${companyName} (${growerCode})`);
++    console.log(`GÂ£Ã  [Growers] Created: ${companyName} (${growerCode})`);
 +
 +    res.status(201).json({
 +      success: true,
@@ -154,9 +154,9 @@ index 0000000..f96fc4a
 +  }
 +});
 +
-+// GòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉ
++// GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰
 +// GET /growers - Get all growers with filters
-+// GòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉ
++// GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰
 +
 +router.get('/', async (req, res) => {
 +  try {
@@ -204,14 +204,14 @@ index 0000000..f96fc4a
 +    query += ` ORDER BY created_at DESC LIMIT $${paramIndex} OFFSET $${paramIndex + 1}`;
 +    params.push(parseInt(limit), parseInt(offset));
 +
-+    const result = await pool.query(query, params);
++    const result = await global.db.query(query, params);
 +
 +    // Get total count
-+    const countResult = await pool.query('SELECT COUNT(*) FROM growers WHERE 1=1');
++    const countResult = await global.db.query('SELECT COUNT(*) FROM growers WHERE 1=1');
 +
 +    res.json({
 +      success: true,
-+      data: result.rows,  // GåÉ FIXED: Frontend expects "data" not "growers"
++      data: result.rows,  // GÃ¥Ã‰ FIXED: Frontend expects "data" not "growers"
 +      count: result.rows.length,
 +      total: parseInt(countResult.rows[0].count),
 +      limit: parseInt(limit),
@@ -224,15 +224,15 @@ index 0000000..f96fc4a
 +  }
 +});
 +
-+// GòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉ
++// GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰
 +// GET /growers/:id - Get single grower
-+// GòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉ
++// GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰
 +
 +router.get('/:id', async (req, res) => {
 +  try {
 +    const { id } = req.params;
 +
-+    const result = await pool.query(
++    const result = await global.db.query(
 +      'SELECT * FROM growers WHERE id = $1 OR grower_code = $1',
 +      [id]
 +    );
@@ -255,9 +255,9 @@ index 0000000..f96fc4a
 +  }
 +});
 +
-+// GòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉ
++// GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰
 +// PUT /growers/:id - Update grower
-+// GòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉ
++// GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰
 +
 +router.put('/:id', async (req, res) => {
 +  try {
@@ -304,7 +304,7 @@ index 0000000..f96fc4a
 +      RETURNING *
 +    `;
 +
-+    const result = await pool.query(query, values);
++    const result = await global.db.query(query, values);
 +
 +    if (result.rows.length === 0) {
 +      return res.status(404).json({
@@ -313,7 +313,7 @@ index 0000000..f96fc4a
 +      });
 +    }
 +
-+    console.log(`G£à [Growers] Updated: ${result.rows[0].company_name}`);
++    console.log(`GÂ£Ã  [Growers] Updated: ${result.rows[0].company_name}`);
 +
 +    res.json({
 +      success: true,
@@ -327,15 +327,15 @@ index 0000000..f96fc4a
 +  }
 +});
 +
-+// GòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉ
++// GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰
 +// DELETE /growers/:id - Soft delete grower
-+// GòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉ
++// GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰
 +
 +router.delete('/:id', async (req, res) => {
 +  try {
 +    const { id } = req.params;
 +
-+    const result = await pool.query(
++    const result = await global.db.query(
 +      `UPDATE growers 
 +       SET status = 'inactive', updated_at = NOW()
 +       WHERE id = $1 OR grower_code = $1
@@ -350,7 +350,7 @@ index 0000000..f96fc4a
 +      });
 +    }
 +
-+    console.log(`G£à [Growers] Deactivated: ${result.rows[0].company_name}`);
++    console.log(`GÂ£Ã  [Growers] Deactivated: ${result.rows[0].company_name}`);
 +
 +    res.json({
 +      success: true,
@@ -363,13 +363,13 @@ index 0000000..f96fc4a
 +  }
 +});
 +
-+// GòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉ
++// GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰
 +// GET /growers/stats/overview - Grower statistics
-+// GòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉ
++// GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰
 +
 +router.get('/stats/overview', async (req, res) => {
 +  try {
-+    const stats = await pool.query(`
++    const stats = await global.db.query(`
 +      SELECT 
 +        COUNT(*) as total_growers,
 +        COUNT(*) FILTER (WHERE status = 'active') as active_growers,
@@ -386,7 +386,7 @@ index 0000000..f96fc4a
 +      FROM growers
 +    `);
 +
-+    const byCountry = await pool.query(`
++    const byCountry = await global.db.query(`
 +      SELECT country, COUNT(*) as count
 +      FROM growers
 +      WHERE status = 'active'
@@ -407,9 +407,10 @@ index 0000000..f96fc4a
 +  }
 +});
 +
-+// GòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉ
++// GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰
 +// EXPORT
-+// GòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉGòÉ
++// GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰GÃ²Ã‰
 +
 +module.exports = router;
 \ No newline at end of file
+

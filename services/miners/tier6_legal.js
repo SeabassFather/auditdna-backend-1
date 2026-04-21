@@ -81,3 +81,4 @@ const analyzeLegalCompliance = async (extractedData, loanData, state) => {
 };
 
 module.exports = { analyzeLegalCompliance };
+
