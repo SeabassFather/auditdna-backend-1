@@ -1,153 +1,145 @@
-// =========================
-// AUDITDNA SERVER (STABLE BUILD)
-// =========================
+'use strict';
+
+require('dotenv').config();
 
 const express = require('express');
 const cors = require('cors');
-const helmet = require('helmet');
-const compression = require('compression');
-const morgan = require('morgan');
 const fs = require('fs');
 const path = require('path');
-require('dotenv').config();
 
-const session = require('express-session');
-const pgSession = require('connect-pg-simple')(session);
-const { Pool } = require('pg');
-
-// =========================
-// DATABASE
-// =========================
-const pool = new Pool({
-  host: process.env.DB_HOST || 'process.env.DB_HOST',
-  port: Number(process.env.DB_PORT || 5432),
-  database: process.env.DB_NAME || 'auditdna',
-  user: process.env.DB_USER || 'postgres',
-  password: process.env.DB_PASSWORD,
-  max: 40,
-  idleTimeoutMillis: 30000,
-  connectionTimeoutMillis: 5000
-});
-
-// =========================
-// APP INIT
-// =========================
 const app = express();
+
+// ============================================
+// 🔧 CORE CONFIG
+// ============================================
+
 const PORT = process.env.PORT || 5050;
-const NODE_ENV = process.env.NODE_ENV || 'development';
 
-app.locals.pool = pool;
-
-// =========================
-// MIDDLEWARE
-// =========================
-app.use(helmet({ contentSecurityPolicy: false }));
-app.use(compression());
-
-const ALLOWED_ORIGINS = process.env.ALLOWED_ORIGINS
-  ? process.env.ALLOWED_ORIGINS.split(',').map(s => s.trim())
-  : ['http://process.env.DB_HOST:3000', 'https://mexausafg.com'];
-
-app.use(
-  cors({
-    origin: (origin, cb) => {
-      if (!origin || NODE_ENV === 'development') return cb(null, true);
-      if (ALLOWED_ORIGINS.includes(origin)) return cb(null, true);
-      return cb(new Error('Not allowed by CORS'));
-    },
-    credentials: true
-  })
-);
-
-app.use(morgan('dev'));
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
-
-// =========================
-// SESSION
-// =========================
-app.use(
-  session({
-    store: new pgSession({
-      pool,
-      tableName: 'user_sessions'
-    }),
-    name: 'auditdna.sid',
-    secret: process.env.SESSION_SECRET || 'dev-secret',
-    resave: false,
-    saveUninitialized: false,
-    cookie: {
-      secure: NODE_ENV === 'production',
-      httpOnly: true,
-      sameSite: 'lax'
-    }
-  })
-);
-
-// =========================
-// ROUTES AUTO LOAD (SAFE)
-// =========================
-const routesDir = path.join(__dirname, 'routes');
-
-if (fs.existsSync(routesDir)) {
-  fs.readdirSync(routesDir)
-    .filter(file => file.endsWith('.js')) // IGNORE .py
-    .forEach(file => {
-      try {
-        const route = require(path.join(routesDir, file));
-
-        if (typeof route === 'function') {
-          app.use(`/api/${file.replace('.js', '')}`, route);
-          console.log(`[ROUTE LOADED] /api/${file.replace('.js', '')}`);
-        } else {
-          console.warn(`[SKIPPED] ${file} (not a router)`);
-        }
-
-      } catch (err) {
-        console.error(`[ROUTE ERROR] ${file}:`, err.message);
-      }
-    });
+// ⚠️ DO NOT KILL SERVER — just warn
+if (!process.env.JWT_SECRET || process.env.JWT_SECRET === 'dev_secret') {
+  console.warn('⚠️ WARNING: JWT_SECRET is weak or missing (dev mode)');
 }
 
-// =========================
-// AUTH ROUTES (FIXED)
-// =========================
-const authRouter = require('./src/Auth');
+// ============================================
+// 🧠 GLOBAL DB INIT
+// ============================================
 
-app.use('/api/auth', (req, res, next) => {
-  req.app.locals.pool = pool;
-  next();
-}, authRouter);
+let db;
+try {
+  const dbModule = require('./db');
+  const getPool = dbModule.getPool || dbModule;
 
-app.use('/api/tenant-auth', require('./routes/tenant-auth'));
+  if (typeof getPool !== 'function') {
+    throw new Error('getPool is not a function');
+  }
 
-// =========================
-// HEALTH CHECK
-// =========================
+  db = getPool();
+  global.db = db;
+
+  console.log('✅ [DB] Connected (global.db ready)');
+} catch (err) {
+  console.error('❌ [DB] FAILED TO INITIALIZE:', err.message);
+}
+
+// ============================================
+// 🌐 MIDDLEWARE
+// ============================================
+
+app.use(cors({
+  origin: true,
+  credentials: true
+}));
+
+app.options('*', cors());
+
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: true }));
+
+// ============================================
+// 🔍 HEALTH CHECK (ALWAYS AVAILABLE)
+// ============================================
+
 app.get('/health', (req, res) => {
-  res.json({ status: 'ok' });
+  res.json({
+    ok: true,
+    port: PORT,
+    db: !!global.db
+  });
 });
 
-// =========================
-// ERROR HANDLING
-// =========================
-app.use((req, res) => {
-  res.status(404).json({ error: 'Route not found' });
-});
+// ============================================
+// 🔐 EXPLICIT AUTH MOUNT (restores /api/auth/* paths)
+// ============================================
+// Owner portal uses { password, accessCode, pin } → auth.routes.js
+// auth-portal.js and authApi.routes.js are intentionally NOT mounted
+// (different signatures / broken). They're skipped in auto-loader below.
 
-app.use((err, req, res, next) => {
-  console.error('[SERVER ERROR]', err);
-  res.status(500).json({ error: err.message });
-});
+try {
+  app.use('/api/auth', require('./routes/auth.routes'));
+  console.log('✅ [AUTH] /api/auth → auth.routes.js (3-field owner portal)');
+} catch (err) {
+  console.error('❌ [AUTH] Failed to mount auth.routes.js:', err.message);
+}
 
-// =========================
-// START SERVER
-// =========================
+// ============================================
+// 📦 AUTO LOAD ROUTES (SAFE LOADER)
+// ============================================
+
+const routesDir = path.join(__dirname, 'routes');
+
+// Files handled by explicit mounts above — do not double-mount
+const SKIP_AUTOLOAD = new Set([
+  'auth.routes.js',      // mounted above at /api/auth
+  'auth-portal.js',      // wrong signature for owner portal
+  'authApi.routes.js'    // queries nonexistent email column
+]);
+
+if (fs.existsSync(routesDir)) {
+  fs.readdirSync(routesDir).forEach(file => {
+    if (!file.endsWith('.js')) return;
+
+    if (SKIP_AUTOLOAD.has(file)) {
+      console.log(`⏭️  [SKIPPED] ${file} (handled explicitly or disabled)`);
+      return;
+    }
+
+    const routePath = path.join(routesDir, file);
+
+    try {
+      const route = require(routePath);
+
+      if (typeof route === 'function') {
+        app.use('/api', route);
+        console.log(`✅ [ROUTE LOADED] /api/${file}`);
+      } else {
+        console.warn(`⚠️ [SKIPPED] ${file} (not a router)`);
+      }
+
+    } catch (err) {
+      console.error(`❌ FAILED ROUTE: ${file}`);
+      console.error(err.message);
+    }
+  });
+} else {
+  console.warn('⚠️ routes directory not found');
+}
+
+// ============================================
+// 🚀 START SERVER
+// ============================================
+
 app.listen(PORT, () => {
-  console.log(`?? AUDITDNA SERVER RUNNING ON PORT ${PORT}`);
+  console.log(`🚀 SERVER RUNNING ON PORT ${PORT}`);
 });
 
-// =========================
-// EXPORT
-// =========================
-module.exports = Object.assign(app, { pool });
+// ============================================
+// 🛑 GLOBAL ERROR HANDLER (NO CRASH)
+// ============================================
+
+process.on('uncaughtException', err => {
+  console.error('❌ UNCAUGHT EXCEPTION:', err.message);
+});
+
+process.on('unhandledRejection', err => {
+  console.error('❌ UNHANDLED REJECTION:', err);
+});

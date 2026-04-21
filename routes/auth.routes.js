@@ -1,142 +1,170 @@
-// ════════════════════════════════════════════════════════════
-// AUTHENTICATION ROUTES - POSTGRESQL USERS TABLE
-// ════════════════════════════════════════════════════════════
+'use strict';
+
+// ============================================
+// AUTH ROUTES — 3-FIELD OWNER PORTAL
+// POST  /api/auth/login    { password, accessCode, pin } → JWT
+// GET   /api/auth/verify   Bearer <token> → { valid, user }
+// GET   /api/auth/health   → { ok, db }
+// ============================================
 
 const express = require('express');
+const bcrypt  = require('bcrypt');
+const jwt     = require('jsonwebtoken');
+
 const router = express.Router();
-const { pool } = require('../db/connection');
 
-// ════════════════════════════════════════════════════════════
-// LOGIN - STEP 1: USERNAME
-// ════════════════════════════════════════════════════════════
-router.post('/login/username', async (req, res) => {
-  const { username } = req.body;
-  
+// Resilient pool resolver — works whether db.js exports a function,
+// an object with getPool, or global.db is set by server.js.
+function resolvePool() {
+  if (global.db) return global.db;
   try {
-    const result = await pool.query(
-      'SELECT id, username, email, role FROM users WHERE username = $1 OR email = $1',
-      [username]
-    );
-    
-    if (result.rows.length === 0) {
-      return res.status(404).json({ 
-        success: false, 
-        error: 'Username not found' 
-      });
-    }
-    
-    res.json({ 
-      success: true, 
-      user: result.rows[0] 
-    });
-  } catch (error) {
-    console.error('Login username error:', error);
-    res.status(500).json({ 
-      success: false, 
-      error: 'Database error' 
-    });
+    const dbModule = require('../db');
+    const getPool = dbModule.getPool || dbModule;
+    if (typeof getPool === 'function') return getPool();
+  } catch (_) {}
+  return null;
+}
+
+// Handles BOTH bcrypt-hashed ("$2b$...") and plain-text stored values.
+// auth_users column naming suggests:
+//   password_hash → always bcrypt
+//   access_code / pin → likely plain (no _hash suffix) but supports either.
+async function verifySecret(plain, stored) {
+  if (!plain || !stored) return false;
+  if (typeof stored !== 'string') return false;
+  if (stored.startsWith('$2a$') || stored.startsWith('$2b$') || stored.startsWith('$2y$')) {
+    try { return await bcrypt.compare(plain, stored); }
+    catch (_) { return false; }
   }
-});
+  return plain === stored;
+}
 
-// ════════════════════════════════════════════════════════════
-// LOGIN - STEP 2: PASSWORD
-// ════════════════════════════════════════════════════════════
-router.post('/login/password', async (req, res) => {
-  const { username, password } = req.body;
-  
+// ============================================
+// POST /login
+// ============================================
+router.post('/login', async (req, res) => {
   try {
+    const { password, accessCode, pin } = req.body || {};
+
+    if (!password || !accessCode || !pin) {
+      return res.status(400).json({
+        success: false,
+        error: 'Missing credentials (password, accessCode, pin required)'
+      });
+    }
+
+    const pool = resolvePool();
+    if (!pool) {
+      return res.status(500).json({ success: false, error: 'Database unavailable' });
+    }
+
+    // Fetch candidate rows. We do the secret comparison in code (not in SQL)
+    // so bcrypt-hashed access_code/pin still work. In practice there are
+    // very few rows keyed on role='owner'/'admin' so this is cheap.
     const result = await pool.query(
-      'SELECT id, username, email, role, password FROM users WHERE username = $1 OR email = $1',
-      [username]
+      `SELECT id, username, password_hash, access_code, pin, role,
+              display_name, is_active, tier
+         FROM auth_users
+        WHERE COALESCE(is_active, true) = true`
     );
-    
-    if (result.rows.length === 0) {
-      return res.status(404).json({ 
-        success: false, 
-        error: 'User not found' 
-      });
+
+    if (!result.rows.length) {
+      return res.status(401).json({ success: false, error: 'Invalid credentials' });
     }
-    
-    const user = result.rows[0];
-    
-    // Simple password check (in production, use bcrypt!)
-    if (user.password !== password) {
-      return res.status(401).json({ 
-        success: false, 
-        error: 'Invalid password' 
-      });
+
+    let matched = null;
+    for (const row of result.rows) {
+      const accessOk = await verifySecret(accessCode, row.access_code);
+      if (!accessOk) continue;
+      const pinOk = await verifySecret(pin, row.pin);
+      if (!pinOk) continue;
+      const pwOk = await verifySecret(password, row.password_hash);
+      if (!pwOk) continue;
+      matched = row;
+      break;
     }
-    
-    res.json({ 
-      success: true, 
+
+    if (!matched) {
+      return res.status(401).json({ success: false, error: 'Invalid credentials' });
+    }
+
+    // Update last_login / login_count (non-blocking).
+    pool.query(
+      `UPDATE auth_users
+          SET last_login = NOW(),
+              login_count = COALESCE(login_count, 0) + 1
+        WHERE id = $1`,
+      [matched.id]
+    ).catch(err => console.error('[AUTH] last_login update failed:', err.message));
+
+    const secret = process.env.JWT_SECRET;
+    if (!secret) {
+      console.error('[AUTH] JWT_SECRET missing at sign time');
+      return res.status(500).json({ success: false, error: 'Server auth not configured' });
+    }
+
+    const token = jwt.sign(
+      {
+        userId:      matched.id,
+        username:    matched.username,
+        role:        matched.role,
+        displayName: matched.display_name,
+        tier:        matched.tier
+      },
+      secret,
+      { expiresIn: '8h' }
+    );
+
+    return res.json({
+      success: true,
+      token,
       user: {
-        id: user.id,
-        username: user.username,
-        email: user.email,
-        role: user.role
+        id:          matched.id,
+        username:    matched.username,
+        role:        matched.role,
+        displayName: matched.display_name,
+        tier:        matched.tier
       }
     });
-  } catch (error) {
-    console.error('Login password error:', error);
-    res.status(500).json({ 
-      success: false, 
-      error: 'Database error' 
-    });
+
+  } catch (err) {
+    console.error('[AUTH/LOGIN]', err);
+    return res.status(500).json({ success: false, error: err.message });
   }
 });
 
-// ════════════════════════════════════════════════════════════
-// LOGIN - STEP 3: PIN
-// ════════════════════════════════════════════════════════════
-router.post('/login/pin', async (req, res) => {
-  const { username, pin } = req.body;
-  
+// ============================================
+// GET /verify
+// ============================================
+router.get('/verify', (req, res) => {
   try {
-    const result = await pool.query(
-      'SELECT id, username, email, role, pin FROM users WHERE username = $1 OR email = $1',
-      [username]
-    );
-    
-    if (result.rows.length === 0) {
-      return res.status(404).json({ 
-        success: false, 
-        error: 'User not found' 
-      });
-    }
-    
-    const user = result.rows[0];
-    
-    if (user.pin !== pin) {
-      return res.status(401).json({ 
-        success: false, 
-        error: 'Invalid PIN' 
-      });
-    }
-    
-    res.json({ 
-      success: true, 
-      message: 'Login successful',
-      user: {
-        id: user.id,
-        username: user.username,
-        email: user.email,
-        role: user.role
-      }
-    });
-  } catch (error) {
-    console.error('Login PIN error:', error);
-    res.status(500).json({ 
-      success: false, 
-      error: 'Database error' 
-    });
+    const authHeader = req.headers.authorization || '';
+    const token = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : null;
+    if (!token) return res.status(401).json({ valid: false, error: 'No token' });
+
+    const secret = process.env.JWT_SECRET;
+    if (!secret) return res.status(500).json({ valid: false, error: 'Server auth not configured' });
+
+    const payload = jwt.verify(token, secret);
+    return res.json({ valid: true, user: payload });
+  } catch (err) {
+    return res.status(401).json({ valid: false, error: err.message });
   }
 });
 
-// ════════════════════════════════════════════════════════════
-// LOGOUT
-// ════════════════════════════════════════════════════════════
-router.post('/logout', (req, res) => {
-  res.json({ success: true, message: 'Logged out' });
+// ============================================
+// GET /health
+// ============================================
+router.get('/health', async (req, res) => {
+  const pool = resolvePool();
+  let dbOk = false;
+  try {
+    if (pool) {
+      const r = await pool.query('SELECT 1 AS ok');
+      dbOk = r.rows[0].ok === 1;
+    }
+  } catch (_) {}
+  res.json({ ok: true, db: dbOk });
 });
 
 module.exports = router;
