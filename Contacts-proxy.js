@@ -1,8 +1,8 @@
 // ============================================================
-// AuditDNA Contacts Proxy — Express Router
+// AuditDNA Contacts Proxy â€” Express Router
 // Backend: C:\AuditDNA\backend\Contacts-proxy.js
 // Mounted at: /api/contacts-proxy (via server.js)
-// NO standalone server — runs inside port 5050
+// NO standalone server â€” runs inside port 5050
 // Eliminates EADDRINUSE crash on port 5051
 // ============================================================
 const express = require('express');
@@ -23,13 +23,13 @@ pool.connect((err, client, release) => {
     console.error('[Contacts-proxy] PostgreSQL connection FAILED:', err.message);
   } else {
     release();
-    console.log('[Contacts-proxy] PostgreSQL ready — mounted at /api/contacts-proxy');
+    console.log('[Contacts-proxy] PostgreSQL ready â€” mounted at /api/contacts-proxy');
   }
 });
 
 async function getContacts(table) {
   try {
-    const r = await pool.query(`SELECT * FROM ${table} LIMIT 50000`);
+    const r = await global.db.query(`SELECT * FROM ${table} LIMIT 50000`);
     return r.rows;
   } catch (e) {
     console.warn(`[Contacts-proxy] Table "${table}" query failed: ${e.message}`);
@@ -38,7 +38,7 @@ async function getContacts(table) {
 }
 
 async function listTables() {
-  const r = await pool.query(`
+  const r = await global.db.query(`
     SELECT table_name FROM information_schema.tables
     WHERE table_schema = 'public' ORDER BY table_name
   `);
@@ -110,3 +110,4 @@ router.get('/all', async (req, res) => {
 });
 
 module.exports = router;
+
