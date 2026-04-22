@@ -6,7 +6,59 @@
 
 const express = require('express');
 const router = express.Router();
-const db = require('../db/connection');
+// Prefer ../db/connection, fall back to global.db (set in server.js) if it returns undefined.
+let _dbImport;
+try { _dbImport = require('../db/connection'); } catch (e) { _dbImport = null; }
+const db = {
+  query: (...args) => {
+    const pool = (_dbImport && typeof _dbImport.query === 'function') ? _dbImport
+               : (global.db && typeof global.db.query === 'function') ? global.db
+               : null;
+    if (!pool) throw new Error('[CRM] No DB pool available');
+    return pool.query(...args);
+  }
+};
+
+// ============================================================================
+// GET /all-contacts — SINGLE-CALL FULL LOAD (used by frontend boot fast-path)
+// Returns { growers:[], buyers:[], shippers:[] } matching the shape that
+// SaulIntelCRM.jsx and EmailMarketing.jsx boot loaders expect.
+// ============================================================================
+
+router.get('/all-contacts', async (req, res) => {
+  try {
+    console.log('[CRM] /all-contacts - loading growers + buyers + shippers...');
+
+    const [g, b, s] = await Promise.all([
+      db.query('SELECT * FROM growers ORDER BY created_at DESC LIMIT 50000'),
+      db.query('SELECT * FROM buyers ORDER BY created_at DESC LIMIT 50000'),
+      db.query('SELECT * FROM shipper_contacts ORDER BY created_at DESC LIMIT 50000')
+    ]);
+
+    const growers  = g.rows;
+    const buyers   = b.rows;
+    const shippers = s.rows;
+    const total    = growers.length + buyers.length + shippers.length;
+
+    console.log(`[CRM] /all-contacts OK - growers:${growers.length} buyers:${buyers.length} shippers:${shippers.length} total:${total}`);
+
+    res.json({
+      success: true,
+      growers,
+      buyers,
+      shippers,
+      total,
+      breakdown: {
+        growers: growers.length,
+        buyers: buyers.length,
+        shippers: shippers.length
+      }
+    });
+  } catch (error) {
+    console.error('[CRM] /all-contacts error:', error.message);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
 
 // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 // ðŸ”¥ NEW: GET ALL CONTACTS (GROWERS + BUYERS + SHIPPERS COMBINED)
@@ -515,4 +567,3 @@ router.post('/activity', async (req, res) => {
 });
 
 module.exports = router;
-
