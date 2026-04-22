@@ -1,15 +1,16 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { ChevronDown, ChevronRight, TrendingUp, TrendingDown, Bot, Send, X, Zap, Globe, Server, Activity } from 'lucide-react';
-import FinancialServicesHub from './modules/FinancialServicesHub';
 import { IntelligenceProvider } from './context/IntelligenceEngine';
-import { MissionControl } from './modules/MissionControl';
-import CommandSphere from './modules/CommandSphere';
+import DevineInc from './components/DevineInc';
 
 // ================================================================================
 // AUDITDNA PLATFORM v3.6.0 - ADAPTIVE AI LEARNING EDITION
-// 35 AI/SI Cowboys | Auto-Module Generation | Data Capture | Email Reports
+// 81 Niner Miners | Auto-Module Generation | Data Capture | Email Reports
 // ================================================================================
 
+const FinancialServicesHub = React.lazy(() => import('./modules/FinancialServicesHub'));
+const MissionControl = React.lazy(() => import('./modules/MissionControl'));
+const CommandSphere = React.lazy(() => import('./modules/CommandSphere'));
 const MexausaFoodGroupOmegaIntelligence = React.lazy(() => import('./modules/MexausaFoodGroupomegaintelligence'));
 const USDAIntelligence = React.lazy(() => import('./modules/USDAIntelligence'));
 const GrowerDatabase = React.lazy(() => import('./modules/GrowerDatabase'));
@@ -17,13 +18,11 @@ const FinancialServices = React.lazy(() => import('./modules/FinancialServices')
 const Traceability = React.lazy(() => import('./modules/Traceability'));
 const Compliance = React.lazy(() => import('./modules/Compliance'));
 const WaterTech = React.lazy(() => import('./modules/WaterTech'));
+const AgriculturalTestingHub = React.lazy(() => import('./modules/AgriculturalTestingHub'));
 const SoilTech = React.lazy(() => import('./modules/SoilTech'));
 const Marketplace = React.lazy(() => import('./modules/Marketplace'));
 const LATAMIntelligence = React.lazy(() => import('./modules/LATAMIntelligence'));
 const AIAgents = React.lazy(() => import('./modules/AIAgents'));
-const GrowerIntelligence = React.lazy(() => import('./modules/Growerintelligence'));
-const SeasonalCalendar = React.lazy(() => import('./modules/SeasonalCalendar'));
-const BuyerNetwork = React.lazy(() => import('./modules/BuyerNetwork'));
 const USDA502RuralHousing = React.lazy(() => import('./modules/USDA502RuralHousing'));
 const MexicoRealEstate = React.lazy(() => import('./modules/MexicoRealEstate'));
 const Spartan300 = React.lazy(() => import('./modules/Spartan300'));
@@ -32,7 +31,8 @@ const Analytics = React.lazy(() => import('./modules/Analytics'));
 const LogisticsCenter = React.lazy(() => import('./modules/LogisticsCenter'));
 const CustomerPortal = React.lazy(() => import('./modules/CustomerPortal'));
 const ReportsCenter = React.lazy(() => import('./modules/ReportsCenter'));
-const QualityControl = React.lazy(() => import('./modules/QualityControl'));
+const ProduceIntelCenter    = React.lazy(() => import('./modules/ProduceIntelCenter'));
+const GrowerActivationQueue = React.lazy(() => import('./modules/GrowerActivationQueue'));
 const ColdChainMonitoring = React.lazy(() => import('./modules/ColdChainMonitoring'));
 const DocumentVault = React.lazy(() => import('./modules/DocumentVault'));
 const NotificationsCenter = React.lazy(() => import('./modules/NotificationsCenter'));
@@ -40,7 +40,6 @@ const SettingsPreferences = React.lazy(() => import('./modules/SettingsPreferenc
 const CustomerPortalAdvanced = React.lazy(() => import('./modules/CustomerPortalAdvanced'));
 const ZadarmaCRM = React.lazy(() => import('./modules/ZadarmaCRM'));
 const EmailMarketing = React.lazy(() => import('./modules/EmailMarketing'));
-const FieldOperations = React.lazy(() => import('./modules/Fieldoperations'));
 const MobileSalesUpload = React.lazy(() => import('./modules/MobileSalesUpload'));
 const TraceabilityHub = React.lazy(() => import('./modules/TraceabilityHub'));
 const AccountingHub = React.lazy(() => import('./modules/AccountingHub'));
@@ -48,6 +47,7 @@ const AgentDashboard = React.lazy(() => import('./components/AgentDashboard'));
 const MortgageLoanHub = React.lazy(() => import('./modules/MortgageLoanHub'));
 const GrowerManagementHub = React.lazy(() => import('./modules/Growermanagementhub'));
 const GrowerMaster = React.lazy(() => import('./modules/GrowerMaster'));
+const UnifiedSourcing = React.lazy(() => import('./modules/UnifiedSourcing'));
 const USDAIntelligenceDashboard = React.lazy(() => import('./modules/USDAIntelligencedashboard'));
 const AccessControl = React.lazy(() => import('./modules/Accesscontrol'));
 const SecureBuyersIntelligence = React.lazy(() => import('./modules/SecureBuyersIntelligence'));
@@ -58,7 +58,6 @@ const AgriculturalIntelligenceMaster = React.lazy(() => import('./modules/Agricu
 const IntelligenceDashboard = React.lazy(() => import('./modules/INTELLIGENCE_DASHBOARD'));
 const TenantAdmin = React.lazy(() => import('./modules/TenantAdmin'));
 const SII_MX = React.lazy(() => import('./modules/SII_MX'));
-const USDAGrowerSearchEngine = React.lazy(() => import('./pages/usda/USDAGrowerSearchEngine'));
 const MultiAIUploadInterface = React.lazy(() => import('./components/MultiAIUploadInterface'));
 const Dashboard = React.lazy(() => import('./components/Dashboard'));
 const GrowerRecommendationEngine = React.lazy(() => import('./modules/GrowerRecommendationEngine'));
@@ -71,7 +70,63 @@ const FinanceMasterModule = React.lazy(() => import('./modules/FinanceMasterModu
 const FinancialDashboard = React.lazy(() => import('./modules/FinancialDashboard'));
 const FinanceOperations = React.lazy(() => import('./modules/Financeoperations-complete'));
 const TravelProtection = React.lazy(() => import('./modules/TravelProtection'));
-// const PredictiveAnalyzer = React.lazy(() => import('./modules/Predictiveanalyzer'));
+const GmailOAuth = React.lazy(() => import('./components/GmailOAuth'));
+const MarketIntelligence = React.lazy(() => import('./modules/MarketIntelligence'));
+const PredictiveAnalyzer = React.lazy(() => import('./modules/Predectiveanalyzer'));
+const TradeFinance = React.lazy(() => import('./modules/TradeFinance'));
+const LenderMarketplace = React.lazy(() => import('./modules/LenderMarketplace'));
+const Tariffs = React.lazy(() => import('./modules/Tariffs'));
+const OwnerCommandCenter = React.lazy(() => import('./modules/Ownercommandcenter'));
+const AgIntelligence = React.lazy(() => import('./modules/AgIntelligence'));
+const AgMainPage = React.lazy(() => import('./modules/AgMainPage'));
+const Agriculture = React.lazy(() => import('./modules/Agriculture'));
+const LatAmProduceBuyers = React.lazy(() => import('./modules/LatAmProduceBuyers'));
+const UnifiedCRM = React.lazy(() => import('./modules/UnifiedCRM'));
+const ContactIntelHub = React.lazy(() => import('./modules/ContactIntelHub'));
+const SaulIntelCRM = React.lazy(() => import('./modules/SaulIntelCRM'));
+const WatchDashboard = React.lazy(() => import('./modules/WatchDashboard'));
+const CMCreditApplication = React.lazy(() => import('./modules/CMCreditApplication'));
+const CallCenter = React.lazy(() => import('./modules/CallCenter'));
+const SMSGateway = React.lazy(() => import('./modules/SMSGateway'));
+const SecureBuyers = React.lazy(() => import('./modules/SecureBuyers'));
+const CRMWorkflow = React.lazy(() => import('./modules/Crmworkflow'));
+const GrowerFinancialHub = React.lazy(() => import('./modules/Growerfinancialhub'));
+const AgDashboard = React.lazy(() => import('./modules/AgDashboard'));
+const AgMain = React.lazy(() => import('./modules/AgMain'));
+const GrowerManagement = React.lazy(() => import('./modules/GrowerManagement'));
+const USDADashboard = React.lazy(() => import('./modules/USDADashboard'));
+const USDAGrowerSearchEngine = React.lazy(() => import('./modules/USDAGrowerSearchEngine'));
+const WeatherIntelligence = React.lazy(() => import('./modules/WeatherIntelligence'));
+const PortIntelligence = React.lazy(() => import('./modules/PortIntelligence'));
+const ColdChain = React.lazy(() => import('./modules/ColdChain'));
+const HarvestTracker = React.lazy(() => import('./modules/HarvestTracker'));
+const AgIntelMaster = React.lazy(() => import('./modules/AgIntelMaster'));
+const PriceAlerts = React.lazy(() => import('./modules/PriceAlerts'));
+const ReconEngine = React.lazy(() => import('./modules/ReconEngine'));
+const FieldOperations = React.lazy(() => import('./modules/Fieldoperations'));
+const ContactsHub = React.lazy(() => import('./modules/ContactsHub'));
+const GrowerPortal = React.lazy(() => import('./modules/GrowerPortal'));
+const PipelineArchitecture = React.lazy(() => import('./modules/PipelineArchitecture'));
+const BuyerPortal = React.lazy(() => import('./modules/BuyerPortal'));
+const ProductionDeclaration = React.lazy(() => import('./modules/ProductionDeclaration'));
+const FDACompliance = React.lazy(() => import('./modules/FDACompliance'));
+const SmallGrowerProgram = React.lazy(() => import('./modules/SmallGrowerProgram'));
+const Manifests = React.lazy(() => import('./modules/Manifests'));
+const AgCommandCenter = React.lazy(() => import('./modules/AgCommandCenter'));
+const CallForTender = React.lazy(() => import('./modules/CallForTender'));
+const PriceAnalyzer = React.lazy(() => import('./modules/PriceAnalyzer'));
+const ProductSubmission = React.lazy(() => import('./modules/ProductSubmission'));
+const ReconBoard = React.lazy(() => import('./modules/admin/ReconBoard'));
+const BCI = React.lazy(() => import('./modules/BCI'));
+const QualityControl = React.lazy(() => import('./modules/QualityControl'));
+const ProduceMarketWeekly = React.lazy(() => import('./modules/ProduceMarketWeekly'));
+const SeasonalCalendar = React.lazy(() => import('./modules/SeasonalCalendar'));
+const BuyerNetwork = React.lazy(() => import('./modules/BuyerNetwork'));
+const AgriTestingHub = React.lazy(() => import('./modules/AgriculturalTestingHub'));
+const GrowerActivation = React.lazy(() => import('./modules/GrowerActivation'));
+const GrowerHub = React.lazy(() => import('./modules/GrowerHub'));
+
+// PredictiveAnalyzer is now loaded above as Predectiveanalyzer
 
 const ModuleLoader = () => (
   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '300px' }}>
@@ -96,7 +151,7 @@ const AI_LEARNING_ENGINE = {
     systemInsights: []
   },
 
-  cowboys: {
+  ninerMiners: {
     priceHawk: { id: 'PH-001', name: 'Price Hawk', domain: 'pricing', learns: ['price_queries', 'market_trends', 'commodity_requests'] },
     marketOracle: { id: 'MO-002', name: 'Market Oracle', domain: 'forecasting', learns: ['forecast_requests', 'trend_analysis', 'predictions'] },
     commodityTracker: { id: 'CT-003', name: 'Commodity Tracker', domain: 'commodities', learns: ['product_searches', 'commodity_gaps', 'new_products'] },
@@ -142,13 +197,13 @@ const AI_LEARNING_ENGINE = {
       identifiedTopics: [],
       suggestedModules: [],
       workflowOpportunities: [],
-      assignedCowboys: [],
+      assignedMiners: [],
       priority: 'normal'
     };
 
     if (q.includes('price') || q.includes('cost') || q.includes('precio') || q.includes('market')) {
       insights.identifiedTopics.push('pricing_intelligence');
-      insights.assignedCowboys.push('priceHawk', 'marketOracle', 'commodityTracker');
+      insights.assignedMiners.push('priceHawk', 'marketOracle', 'commodityTracker');
       if (q.includes('forecast') || q.includes('predict') || q.includes('future')) {
         insights.suggestedModules.push({ name: 'Price Forecasting Dashboard', category: 'Mexausa Food Group Intell', priority: 'high' });
         insights.workflowOpportunities.push('Automated Price Alert System');
@@ -160,7 +215,7 @@ const AI_LEARNING_ENGINE = {
 
     if (q.includes('compliance') || q.includes('fsma') || q.includes('audit') || q.includes('certif')) {
       insights.identifiedTopics.push('compliance_management');
-      insights.assignedCowboys.push('complianceSheriff', 'auditEngine', 'certValidator');
+      insights.assignedMiners.push('complianceSheriff', 'auditEngine', 'certValidator');
       if (q.includes('expire') || q.includes('renew') || q.includes('vence')) {
         insights.suggestedModules.push({ name: 'Certificate Renewal Tracker', category: 'Compliance & Auditing', priority: 'high' });
         insights.workflowOpportunities.push('Auto-Renewal Reminder System');
@@ -172,7 +227,7 @@ const AI_LEARNING_ENGINE = {
 
     if (q.includes('ship') || q.includes('transport') || q.includes('deliver') || q.includes('logistics') || q.includes('envio')) {
       insights.identifiedTopics.push('logistics_optimization');
-      insights.assignedCowboys.push('routeRanger', 'coldChainGuard', 'deliveryPredictor');
+      insights.assignedMiners.push('routeRanger', 'coldChainGuard', 'deliveryPredictor');
       if (q.includes('track') || q.includes('where') || q.includes('status')) {
         insights.suggestedModules.push({ name: 'Real-Time Shipment Tracker', category: 'Logistics', priority: 'high' });
         insights.workflowOpportunities.push('GPS Shipment Monitoring Workflow');
@@ -184,7 +239,7 @@ const AI_LEARNING_ENGINE = {
 
     if (q.includes('grower') || q.includes('supplier') || q.includes('productor') || q.includes('farm')) {
       insights.identifiedTopics.push('supplier_management');
-      insights.assignedCowboys.push('growerScout', 'farmProfiler', 'yieldPredictor');
+      insights.assignedMiners.push('growerScout', 'farmProfiler', 'yieldPredictor');
       if (q.includes('find') || q.includes('search') || q.includes('buscar')) {
         insights.suggestedModules.push({ name: 'Advanced Grower Search', category: 'Grower Intelligence', priority: 'medium' });
       }
@@ -196,7 +251,7 @@ const AI_LEARNING_ENGINE = {
 
     if (q.includes('quality') || q.includes('lab') || q.includes('test') || q.includes('calidad')) {
       insights.identifiedTopics.push('quality_control');
-      insights.assignedCowboys.push('qualityMarshal', 'pesticideScanner', 'microbeDetector');
+      insights.assignedMiners.push('qualityMarshal', 'pesticideScanner', 'microbeDetector');
       if (q.includes('report') || q.includes('result')) {
         insights.suggestedModules.push({ name: 'Lab Results Dashboard', category: 'Quality Control', priority: 'medium' });
       }
@@ -209,7 +264,7 @@ const AI_LEARNING_ENGINE = {
 
     if (q.includes('payment') || q.includes('invoice') || q.includes('financ') || q.includes('pago')) {
       insights.identifiedTopics.push('financial_operations');
-      insights.assignedCowboys.push('cashWrangler', 'invoiceAuditor', 'factoringEngine');
+      insights.assignedMiners.push('cashWrangler', 'invoiceAuditor', 'factoringEngine');
     }
 
     return insights;
@@ -351,8 +406,8 @@ const getIntelligentResponse = (question, setActiveModule, onLearningUpdate) => 
 
   if (q.match(/^(hi|hello|hey|hola|buenos|buenas|saludos|que tal)/)) {
     response = isSpanish
-      ? 'Hola! Bienvenido a AuditDNA - La Plataforma Premier de Inteligencia Agricola. Tengo 35 Cowboys AI aprendiendo de cada conversacion para mejorar tu experiencia. Puedo ayudarte con: Precios de productos, Cumplimiento FSMA, Envios y logistica, Base de datos de productores. Que te gustaria saber?'
-      : 'Hello! Welcome to AuditDNA - The Premier Agricultural Intelligence Platform. I have 35 AI Cowboys learning from every conversation to improve your experience. I can help you with: Product pricing, FSMA Compliance, Shipping & logistics, Grower database. What would you like to know?';
+      ? 'Hola! Bienvenido a AuditDNA - La Plataforma Premier de Inteligencia Agricola. Tengo 81 Niner Miners AI aprendiendo de cada conversacion para mejorar tu experiencia. Puedo ayudarte con: Precios de productos, Cumplimiento FSMA, Envios y logistica, Base de datos de productores. Que te gustaria saber?'
+      : 'Hello! Welcome to AuditDNA - The Premier Agricultural Intelligence Platform. I have 81 Niner Miners learning from every conversation to improve your experience. I can help you with: Product pricing, FSMA Compliance, Shipping & logistics, Grower database. What would you like to know?';
     return response;
   }
 
@@ -380,8 +435,8 @@ const getIntelligentResponse = (question, setActiveModule, onLearningUpdate) => 
 
   if (q.includes('compliance') || q.includes('cumplimiento') || q.includes('fsma') || q.includes('certif') || q.includes('audit') || q.includes('fda')) {
     response = isSpanish
-      ? 'CUMPLIMIENTO (via Compliance Sheriff AI): Certificaciones: FSMA 204 (Obligatorio 2026), PrimusGFS, GlobalGAP, SENASICA. Nuestros Cowboys AI monitorean vencimientos y alertas FDA. Modulo: Compliance Hub.'
-      : 'COMPLIANCE STATUS (via Compliance Sheriff AI): Certifications: FSMA 204 (Mandatory 2026), PrimusGFS, GlobalGAP, SENASICA. Our AI Cowboys monitor expirations & FDA alerts. Module: Compliance Hub.';
+      ? 'CUMPLIMIENTO (via Compliance Sheriff AI): Certificaciones: FSMA 204 (Obligatorio 2026), PrimusGFS, GlobalGAP, SENASICA. Nuestros Niner Miners AI monitorean vencimientos y alertas FDA. Modulo: Compliance Hub.'
+      : 'COMPLIANCE STATUS (via Compliance Sheriff AI): Certifications: FSMA 204 (Mandatory 2026), PrimusGFS, GlobalGAP, SENASICA. Our Niner Miners monitor expirations & FDA alerts. Module: Compliance Hub.';
     return response + learningNote;
   }
 
@@ -394,8 +449,8 @@ const getIntelligentResponse = (question, setActiveModule, onLearningUpdate) => 
 
   if (q.includes('quality') || q.includes('calidad') || q.includes('lab') || q.includes('test') || q.includes('pesticide')) {
     response = isSpanish
-      ? 'CONTROL DE CALIDAD (via Quality Marshal AI): Pruebas disponibles: Residuos de pesticidas, Microbiologia, Calidad de agua, Composicion del suelo. Cowboys activos: Pesticide Scanner, Water Analyzer, Microbe Detector. Modulo: Quality Control.'
-      : 'QUALITY CONTROL (via Quality Marshal AI): Available tests: Pesticide residue, Microbiology, Water quality, Soil composition. Active cowboys: Pesticide Scanner, Water Analyzer, Microbe Detector. Module: Quality Control.';
+      ? 'CONTROL DE CALIDAD (via Quality Marshal AI): Pruebas disponibles: Residuos de pesticidas, Microbiologia, Calidad de agua, Composicion del suelo. Niner Miners activos: Pesticide Scanner, Water Analyzer, Microbe Detector. Modulo: Quality Control.'
+      : 'QUALITY CONTROL (via Quality Marshal AI): Available tests: Pesticide residue, Microbiology, Water quality, Soil composition. Active ninerMiners: Pesticide Scanner, Water Analyzer, Microbe Detector. Module: Quality Control.';
     return response + learningNote;
   }
 
@@ -408,15 +463,15 @@ const getIntelligentResponse = (question, setActiveModule, onLearningUpdate) => 
 
   if (q.includes('feature') || q.includes('module') || q.includes('what can') || q.includes('help') || q.includes('ayuda')) {
     response = isSpanish
-      ? 'PLATAFORMA AUDITDNA - 230+ Modulos: Mexausa Food Group Intell (19), Agricultura (50), Productores (17), Finanzas (28), Marketplace (15), Cumplimiento (20), Logistica (18), Trazabilidad (12). 35 Cowboys AI/SI activos 24/7 aprendiendo de tus necesidades.'
-      : 'AUDITDNA PLATFORM - 230+ Modules: Mexausa Food Group Intell (19), Agriculture (50), Growers (17), Finance (28), Marketplace (15), Compliance (20), Logistics (18), Traceability (12). 35 AI/SI Cowboys active 24/7 learning from your needs.';
+      ? 'PLATAFORMA AUDITDNA - 230+ Modulos: Mexausa Food Group Intell (19), Agricultura (50), Productores (17), Finanzas (28), Marketplace (15), Cumplimiento (20), Logistica (18), Trazabilidad (12). 81 Niner Miners AI/SI activos 24/7 aprendiendo de tus necesidades.'
+      : 'AUDITDNA PLATFORM - 230+ Modules: Mexausa Food Group Intell (19), Agriculture (50), Growers (17), Finance (28), Marketplace (15), Compliance (20), Logistics (18), Traceability (12). 81 Niner Miners active 24/7 learning from your needs.';
     return response + learningNote;
   }
 
-  if (q.includes('cowboy') || q.includes('ai') || q.includes('agent') || q.includes('robot') || q.includes('learn')) {
+  if (q.includes('miner') || q.includes('ai') || q.includes('agent') || q.includes('robot') || q.includes('learn')) {
     response = isSpanish
-      ? 'COWBOYS AI/SI ACTIVOS (35 desplegados): Price Hawk (precios), Compliance Sheriff (cumplimiento), Route Ranger (logistica), Quality Marshal (calidad), Grower Scout (productores), Cash Wrangler (finanzas), Lot Tracker (trazabilidad), Weather Watcher (clima). Cada cowboy aprende de tus preguntas para generar nuevos modulos y flujos de trabajo automaticamente.'
-      : 'ACTIVE AI/SI COWBOYS (35 deployed): Price Hawk (pricing), Compliance Sheriff (compliance), Route Ranger (logistics), Quality Marshal (quality), Grower Scout (growers), Cash Wrangler (finance), Lot Tracker (traceability), Weather Watcher (weather). Each cowboy learns from your questions to auto-generate new modules and workflows.';
+      ? 'NINER MINERS AI/SI ACTIVOS (81 desplegados): Price Hawk (precios), Compliance Sheriff (cumplimiento), Route Ranger (logistica), Quality Marshal (calidad), Grower Scout (productores), Cash Wrangler (finanzas), Lot Tracker (trazabilidad), Weather Watcher (clima). Cada Niner Miner aprende de tus preguntas para generar nuevos modulos y flujos de trabajo automaticamente.'
+      : 'ACTIVE NINER MINERS (81 deployed): Price Hawk (pricing), Compliance Sheriff (compliance), Route Ranger (logistics), Quality Marshal (quality), Grower Scout (growers), Cash Wrangler (finance), Lot Tracker (traceability), Weather Watcher (weather). Each Niner Miner learns from your questions to auto-generate new modules and workflows.';
     return response + learningNote;
   }
 
@@ -449,8 +504,8 @@ const getIntelligentResponse = (question, setActiveModule, onLearningUpdate) => 
   }
 
   response = isSpanish
-    ? 'Gracias por tu pregunta. AuditDNA puede ayudarte con: Precios de 200+ productos, Cumplimiento FSMA, Logistica, 5,000+ productores, Trazabilidad, Finanzas. Mis 35 Cowboys AI estan aprendiendo de tu pregunta para mejorar la plataforma. Intenta preguntar: "precio de aguacate", "estado de cumplimiento", "informacion de envios". Como puedo ayudarte?'
-    : 'Thanks for your question. AuditDNA can help you with: Pricing for 200+ products, FSMA Compliance, Logistics, 5,000+ growers, Traceability, Finance. My 35 AI Cowboys are learning from your question to improve the platform. Try asking: "avocado price", "compliance status", "shipping info". How can I help you?';
+    ? 'Gracias por tu pregunta. AuditDNA puede ayudarte con: Precios de 200+ productos, Cumplimiento FSMA, Logistica, 5,000+ productores, Trazabilidad, Finanzas. Mis 81 Niner Miners AI estan aprendiendo de tu pregunta para mejorar la plataforma. Intenta preguntar: "precio de aguacate", "estado de cumplimiento", "informacion de envios". Como puedo ayudarte?'
+    : 'Thanks for your question. AuditDNA can help you with: Pricing for 200+ products, FSMA Compliance, Logistics, 5,000+ growers, Traceability, Finance. My 81 Niner Miners are learning from your question to improve the platform. Try asking: "avocado price", "compliance status", "shipping info". How can I help you?';
   return response + learningNote;
 };
 
@@ -466,7 +521,7 @@ const sendLearningDataEmail = async (data) => {
       body: JSON.stringify(data, null, 2)
     };
 
-    await fetch('http://process.env.DB_HOST:5050/api/email/send-learning-report', {
+    await fetch(`${process.env.REACT_APP_API_URL || 'http://localhost:5050'}/api/email/send-learning-report`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(emailData)
@@ -488,7 +543,6 @@ const sendLearningDataEmail = async (data) => {
 const App = () => {
   // AUTHENTICATION GATE - Backend JWT + bcrypt
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  localStorage.removeItem('mfg_token');
   const [authLoading, setAuthLoading] = useState(true);
   const [authUser, setAuthUser] = useState(null);
   const [loginPass, setLoginPass] = useState('');
@@ -496,8 +550,17 @@ const App = () => {
   const [loginPin, setLoginPin] = useState('');
   const [loginError, setLoginError] = useState('');
   const [loginLoading, setLoginLoading] = useState(false);
+  const [showInfoCard, setShowInfoCard] = useState(true);
+  const [loginTab,    setLoginTab]    = useState('admin');
+  const [tenantEmail, setTenantEmail] = useState('');
+  const [tenantPass,  setTenantPass]  = useState('');
+  const [regStep,     setRegStep]     = useState(1);
+  const [regData,     setRegData]     = useState({ entityType:'', companyLegal:'', ein:'', state:'', city:'', pacaNum:'', gapCert:false, globalGap:false, sqf:false, brc:false, fsmaTeir:'1', waterTests:false, soilTests:false, traceability:false, contactName:'', contactEmail:'', contactPhone:'', notes:'' });
+  const [regLoading, setRegLoading] = useState(false);
+  const [regError,   setRegError]   = useState('');
+  const [regSuccess, setRegSuccess] = useState(false);
 
-  const API_BASE = process.env.REACT_APP_API_URL || 'http://process.env.DB_HOST:5050';
+  const API_BASE = process.env.REACT_APP_API_URL || 'http://localhost:5050';
 
   useEffect(() => {
     const token = localStorage.getItem('mfg_token');
@@ -537,6 +600,68 @@ const App = () => {
     setLoginLoading(false);
   };
 
+  // ── AuditDNA Global Intel Bus ─────────────────────────────────────────────
+  useEffect(() => {
+    const onCommodityIntel = (e) => {
+      window.__AuditDNA_Intel = window.__AuditDNA_Intel || {};
+      window.__AuditDNA_Intel.latestCommodity = e.detail;
+      window.__AuditDNA_Intel.campaigns = window.__AuditDNA_Intel.campaigns || [];
+      if (e.detail?.campaign) window.__AuditDNA_Intel.campaigns.unshift(e.detail.campaign);
+    };
+    const onEmailQueued = (e) => { window.__AuditDNA_Intel = window.__AuditDNA_Intel || {}; (window.__AuditDNA_Intel.emailQueue = window.__AuditDNA_Intel.emailQueue||[]).unshift(e.detail); };
+    const onCRMStage    = (e) => { window.__AuditDNA_Intel = window.__AuditDNA_Intel || {}; (window.__AuditDNA_Intel.crmStaged = window.__AuditDNA_Intel.crmStaged||[]).unshift(e.detail); };
+    const onGrowerAct   = (e) => { window.__AuditDNA_Intel = window.__AuditDNA_Intel || {}; (window.__AuditDNA_Intel.activeGrowers = window.__AuditDNA_Intel.activeGrowers||[]).unshift(e.detail); };
+    window.addEventListener('auditdna:commodity-intel',       onCommodityIntel);
+    window.addEventListener('auditdna:email-campaign-queued', onEmailQueued);
+    window.addEventListener('auditdna:crm-buyer-stage',       onCRMStage);
+    window.addEventListener('auditdna:grower-activated',      onGrowerAct);
+    return () => {
+      window.removeEventListener('auditdna:commodity-intel',       onCommodityIntel);
+      window.removeEventListener('auditdna:email-campaign-queued', onEmailQueued);
+      window.removeEventListener('auditdna:crm-buyer-stage',       onCRMStage);
+      window.removeEventListener('auditdna:grower-activated',      onGrowerAct);
+    };
+  }, []);
+
+  const pingBrain = (type, payload) => { try { fetch(`${API_BASE}/api/brain/events`, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ events: [{ type, payload, timestamp: Date.now() }] }) }).catch(()=>{}); } catch {} };
+
+  const handleClientLogin = async () => {
+    if (!tenantEmail || !tenantPass) { setLoginError('Email and password required'); return; }
+    setLoginLoading(true); setLoginError('');
+    try {
+      const res = await fetch(`${API_BASE}/api/auth/login`, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ email: tenantEmail, password: tenantPass }) });
+      const data = await res.json();
+      if (data.success || data.authenticated) {
+        localStorage.setItem('mfg_token', data.token); setIsAuthenticated(true); setAuthUser(data.user); setLoginError('');
+        pingBrain('CLIENT_LOGIN', { email: tenantEmail, role: data.user?.role });
+        const role = data.user?.role?.toLowerCase();
+        if      (role==='grower')     setActiveModule('Grower Intelligence');
+        else if (role==='buyer')      setActiveModule('Grower Intelligence');
+        else if (role==='sales')      setActiveModule('Saul Intel CRM');
+        else if (role==='compliance') setActiveModule('Compliance Hub');
+        else if (role==='importer')   setActiveModule('Grower Intelligence');
+        try { window.dispatchEvent(new CustomEvent('auditdna:user-login', { detail: { email: tenantEmail, role, user: data.user } })); } catch {}
+      }
+      else { setLoginError(data.error || 'Authentication failed'); setTenantPass(''); }
+    } catch { setLoginError('Server unreachable. Check backend connection.'); }
+    setLoginLoading(false);
+  };
+
+  const handleRegistrationSubmit = async () => {
+    if (!regData.entityType || !regData.companyLegal || !regData.contactEmail) { setRegError('Company name, entity type, and contact email are required'); return; }
+    setRegLoading(true); setRegError('');
+    try {
+      const regPayload = { entityType:regData.entityType, companyLegal:regData.companyLegal, ein:regData.ein, state:regData.state, city:regData.city, gapCert:regData.gapCert, globalGap:regData.globalGap, sqf:regData.sqf, brc:regData.brc, fsmaTeir:regData.fsmaTeir, waterTests:regData.waterTests, soilTests:regData.soilTests, traceability:regData.traceability, contactName:regData.contactName, contactEmail:regData.contactEmail, contactPhone:regData.contactPhone, notes:regData.notes };
+      await fetch(`${API_BASE}/api/growers/register-public`, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(regPayload) }).catch(()=>{});
+      await fetch(`${API_BASE}/api/auth/register-request`, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(regPayload) }).catch(()=>{});
+      pingBrain('REGISTRATION_REQUEST', { company: regData.companyLegal, email: regData.contactEmail });
+      try { window.dispatchEvent(new CustomEvent('auditdna:grower-registered', { detail: { company: regData.companyLegal, email: regData.contactEmail, entityType: regData.entityType } })); } catch {}
+      setRegSuccess(true);
+    }
+    catch { setRegSuccess(true); }
+    setRegLoading(false);
+  };
+
   const handleLogout = async () => {
     try { await fetch(`${API_BASE}/api/auth/logout`, { method: 'POST' }); } catch {}
     localStorage.removeItem('mfg_token');
@@ -544,9 +669,10 @@ const App = () => {
     setAuthUser(null);
   };
 
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
   const [expandedCategories, setExpandedCategories] = useState({});
   const [activeModule, setActiveModule] = useState('Dashboard');
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(window.innerWidth <= 768);
   const [language, setLanguage] = useState('en');
   const [currentTime, setCurrentTime] = useState(new Date());
   const [tickerOffset, setTickerOffset] = useState(0);
@@ -561,124 +687,215 @@ const App = () => {
   const [commandSphereOpen, setCommandSphereOpen] = useState(false);
   const [serverStatus, setServerStatus] = useState({ backend: 'checking', database: 'checking' });
 
-  useEffect(() => {
-    const timer = setInterval(() => setCurrentTime(new Date()), 1000);
-    return () => clearInterval(timer);
-  }, []);
-
-  useEffect(() => {
-    let animationFrameId;
-    let offset = 0;
-    const animate = () => {
-      offset -= 0.8;
-      if (offset < -8000) offset = 0;
-      setTickerOffset(offset);
-      animationFrameId = requestAnimationFrame(animate);
-    };
-    animationFrameId = requestAnimationFrame(animate);
-    return () => cancelAnimationFrame(animationFrameId);
-  }, []);
-
-  useEffect(() => {
-    const checkServers = async () => {
-      try {
-        const response = await fetch('http://process.env.DB_HOST:5050/health', {
-          method: 'GET',
-          signal: AbortSignal.timeout(3000)
-        });
-        if (response.ok) {
-          setServerStatus({ backend: 'online', database: 'online' });
-        } else {
-          setServerStatus({ backend: 'offline', database: 'offline' });
-        }
-      } catch (e) {
-        setServerStatus({ backend: 'offline', database: 'offline' });
-      }
-    };
-    checkServers();
-    const interval = setInterval(checkServers, 30000);
-    return () => clearInterval(interval);
-  }, []);
-
-  useEffect(() => {
-    if (learningData && learningData.summary.totalQuestions > 0 && learningData.summary.totalQuestions % 10 === 0) {
-      sendLearningDataEmail(learningData);
-    }
-  }, [learningData]);
-
-  if (authLoading) {
-    return (
-      <div style={{ minHeight: '100vh', backgroundImage: "url('/Salinas-Sign.png')", backgroundSize: 'cover', backgroundPosition: 'center', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <div style={{ textAlign: 'center' }}>
-          <div style={{ width: 40, height: 40, border: '3px solid #334155', borderTop: '3px solid #cba658', borderRadius: '50%', animation: 'spin 1s linear infinite', margin: '0 auto 16px' }} />
-          <div style={{ color: '#94a3b8', fontSize: 11, letterSpacing: '3px' }}>AUTHENTICATING...</div>
-          <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
-        </div>
-      </div>
-    );
-  }
-
   if (!isAuthenticated) {
     return (
-      <div style={{ minHeight: '100vh', backgroundImage: "url('/Salinas-Sign.png')", backgroundSize: 'cover', backgroundPosition: 'center', backgroundAttachment: 'fixed', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: "'Segoe UI', -apple-system, sans-serif", position: 'relative' }}>
-        <div style={{ width: 400, padding: 0 }}>
-          <div style={{ textAlign: 'center', marginBottom: 32 }}>
-            <img src="/seabass2.jpg" alt="MexaUSA Food Group" style={{ width: 120, height: 120, borderRadius: '50%', objectFit: 'cover', border: '2px solid rgba(203,166,88,0.4)', marginBottom: 16 }} />
-            <div style={{ fontSize: 15, letterSpacing: '6px', color: '#cba658', fontWeight: 800, marginBottom: 4 }}>MEXAUSA FOOD GROUP, INC.</div>
-            <div style={{ width: 60, height: 1, background: 'linear-gradient(90deg, transparent, #cba658, transparent)', margin: '10px auto' }} />
-            <div style={{ fontSize: 9, letterSpacing: '2px', color: '#e2e8f0' }}>Proprietary Software Designed by Saul Garcia</div>
-            <div style={{ fontSize: 9, letterSpacing: '1px', color: '#cbd5e1', marginTop: 6, fontStyle: 'italic' }}>For my beautiful Son, Diego Sebastian, for your patience and belief in me.</div>
+      <div style={{ minHeight:'100vh', backgroundImage:"url('/Salinas-Sign.png')", backgroundSize:'cover', backgroundPosition:'center', backgroundAttachment:'fixed', display:'flex', alignItems:'center', justifyContent:'center', gap:28, flexWrap:'wrap', fontFamily:"'Segoe UI',-apple-system,sans-serif", position:'relative', overflowY:'auto', paddingTop:24, paddingBottom:24 }}>
+        <div style={{ width: isMobile ? '92vw' : showInfoCard ? 540 : 420, padding:0, transition:'width 0.3s ease' }}>
+
+          <div style={{ textAlign:'center', marginBottom:22 }}>
+            <img src="/saul-garcia.jpg" alt="Saul Garcia — AuditDNA" style={{ width:88, height:88, borderRadius:'50%', objectFit:'cover', objectPosition:'center top', border:'2px solid rgba(203,166,88,0.5)', marginBottom:10, boxShadow:'0 4px 20px rgba(0,0,0,0.6)' }} />
+            <div style={{ fontSize:13, letterSpacing:'4px', color:'#cba658', fontWeight:800, marginBottom:2, textShadow:'0 2px 8px rgba(0,0,0,1)' }}>AUDITDNA AGRICULTURE</div>
+            <div style={{ fontSize:9, letterSpacing:'1.5px', color:'rgba(203,166,88,0.7)', textShadow:'0 1px 4px rgba(0,0,0,0.9)', fontWeight:600 }}>Intelligence Platform — US·Mexico Corridor</div>
+            <div style={{ fontSize:9, letterSpacing:'1px', color:'rgba(255,255,255,0.55)', marginTop:5, fontStyle:'italic', textShadow:'0 1px 4px rgba(0,0,0,0.8)' }}>For Diego Sebastian — with patience and belief in me.</div>
           </div>
 
-          <div style={{ background: 'rgba(10,15,26,0.82)', backdropFilter: 'blur(18px)', WebkitBackdropFilter: 'blur(18px)', border: '1px solid rgba(203,166,88,0.25)', borderRadius: 8, padding: 32, boxShadow: '0 20px 60px rgba(0,0,0,0.7)' }}>
-            <div style={{ fontSize: 10, letterSpacing: '2px', color: '#cba658', fontWeight: 700, marginBottom: 20, textAlign: 'center' }}>SAUL GARCIA -- ACCESS ONLY</div>
+          <div style={{ background:'rgba(8,12,22,0.38)', backdropFilter:'blur(28px) saturate(180%)', WebkitBackdropFilter:'blur(28px) saturate(180%)', border:'1px solid rgba(203,166,88,0.22)', borderRadius:10, boxShadow:'0 8px 40px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.06)', overflow:'hidden', position:'relative' }}>
 
-            <div style={{ marginBottom: 16 }}>
-              <label style={{ display: 'block', fontSize: 9, letterSpacing: '1.5px', color: '#e2e8f0', fontWeight: 700, marginBottom: 6 }}>PASSWORD</label>
-              <input type="password" value={loginPass} onChange={e => { setLoginPass(e.target.value); setLoginError(''); }}
-                onKeyDown={e => e.key === 'Enter' && handleLogin()}
-                placeholder="Enter password"
-                disabled={loginLoading}
-                style={{ width: '100%', padding: '12px 14px', background: 'rgba(15,23,42,0.9)', border: '1px solid rgba(203,166,88,0.3)', color: '#ffffff', fontSize: 14, borderRadius: 6, outline: 'none', boxSizing: 'border-box', letterSpacing: '2px' }} />
-            </div>
-
-            <div style={{ marginBottom: 16 }}>
-              <label style={{ display: 'block', fontSize: 9, letterSpacing: '1.5px', color: '#e2e8f0', fontWeight: 700, marginBottom: 6 }}>ACCESS CODE</label>
-              <input type="password" value={loginCode} onChange={e => { setLoginCode(e.target.value); setLoginError(''); }}
-                onKeyDown={e => e.key === 'Enter' && handleLogin()}
-                placeholder="Access code"
-                disabled={loginLoading}
-                style={{ width: '100%', padding: '12px 14px', background: 'rgba(15,23,42,0.9)', border: '1px solid rgba(203,166,88,0.3)', color: '#ffffff', fontSize: 14, borderRadius: 6, outline: 'none', boxSizing: 'border-box', letterSpacing: '2px', textAlign: 'center' }} />
-            </div>
-
-            <div style={{ marginBottom: 16 }}>
-              <label style={{ display: 'block', fontSize: 9, letterSpacing: '1.5px', color: '#e2e8f0', fontWeight: 700, marginBottom: 6 }}>PIN</label>
-              <input type="password" value={loginPin} onChange={e => { setLoginPin(e.target.value); setLoginError(''); }}
-                onKeyDown={e => e.key === 'Enter' && handleLogin()}
-                placeholder="PIN"
-                maxLength={10}
-                disabled={loginLoading}
-                style={{ width: '100%', padding: '12px 14px', background: 'rgba(15,23,42,0.9)', border: '1px solid rgba(203,166,88,0.3)', color: '#ffffff', fontSize: 14, borderRadius: 6, outline: 'none', boxSizing: 'border-box', letterSpacing: '8px', textAlign: 'center' }} />
-            </div>
-
-            {loginError && (
-              <div style={{ padding: '10px 14px', background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)', borderRadius: 6, color: '#ef4444', fontSize: 11, marginBottom: 16, textAlign: 'center', fontWeight: 600 }}>{loginError}</div>
-            )}
-
-            <button onClick={handleLogin} disabled={loginLoading}
-              style={{ width: '100%', padding: '14px', background: loginLoading ? '#64748b' : 'linear-gradient(135deg, #cba658, #b8944d)', border: 'none', borderRadius: 6, color: '#0f172a', fontSize: 12, fontWeight: 800, letterSpacing: '3px', cursor: loginLoading ? 'wait' : 'pointer' }}>
-              {loginLoading ? 'AUTHENTICATING...' : 'AUTHENTICATE'}
+            <button onClick={()=>setShowInfoCard(!showInfoCard)}
+              style={{ position:'absolute', top:14, right:14, background: showInfoCard ? 'linear-gradient(135deg,#cba658,#b8944d)' : 'rgba(203,166,88,0.12)', border:'1px solid rgba(203,166,88,0.45)', borderRadius:4, padding:'5px 13px', cursor:'pointer', color: showInfoCard ? '#0f172a' : '#cba658', fontSize:9, fontWeight:800, letterSpacing:'2px', zIndex:2 }}>
+              {showInfoCard ? 'SIGN IN' : 'LEARN MORE'}
             </button>
 
-            <div style={{ marginTop: 16, padding: '8px 12px', background: 'rgba(34,197,94,0.06)', border: '1px solid rgba(34,197,94,0.15)', borderRadius: 4, textAlign: 'center' }}>
-              <div style={{ color: '#22c55e', fontSize: 8, letterSpacing: '1px', fontWeight: 600 }}>SECURED WITH JWT + BCRYPT ENCRYPTION</div>
-            </div>
+            {showInfoCard ? (
+              <div style={{ padding:'28px 26px 26px' }}>
+
+                {/* TOP ROW — ES/EN + SIGN IN toggle */}
+                <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:20 }}>
+                  <button onClick={()=>setLanguage(language==='en'?'es':'en')}
+                    style={{ padding:'5px 14px', background:'rgba(203,166,88,0.12)', border:'1px solid rgba(203,166,88,0.4)', borderRadius:4, color:'#cba658', fontSize:9, fontWeight:800, cursor:'pointer', letterSpacing:'2px' }}>
+                    {language==='en' ? 'EN ESPAÑOL' : 'IN ENGLISH'}
+                  </button>
+                  <div style={{ fontSize:9, color:'rgba(203,166,88,0.6)', letterSpacing:'2px', fontWeight:700 }}>AUDITDNA AGRICULTURE</div>
+                </div>
+
+                {/* FOUNDER SECTION */}
+                <div style={{ display:'flex', gap:14, alignItems:'flex-start', marginBottom:18, padding:'14px', background:'rgba(0,0,0,0.2)', borderRadius:8, border:'1px solid rgba(203,166,88,0.12)' }}>
+                  <img src="/saul-garcia.jpg" alt="Saul Garcia" style={{ width:62, height:62, borderRadius:'50%', objectFit:'cover', objectPosition:'center top', border:'2px solid rgba(203,166,88,0.5)', flexShrink:0 }} />
+                  <div>
+                    <div style={{ fontSize:13, color:'#f1f5f9', fontWeight:800, marginBottom:2 }}>Saul Garcia</div>
+                    <div style={{ fontSize:9, color:'#cba658', fontWeight:700, letterSpacing:'1px', marginBottom:8 }}>FOUNDER · MEXAUSA FOOD GROUP, INC. · ENSENADA, B.C.</div>
+                    <div style={{ fontSize:10, color:'#94a3b8', lineHeight:1.7 }}>
+                      {language==='en'
+                        ? "Twenty years moving produce through the US-Mexico corridor taught me one thing: the industry runs on relationships, but it loses money on information gaps. I've structured factoring deals, negotiated FOB contracts at origin, and watched good growers lose US market access over paperwork. I built AuditDNA to fix all of it - in one platform."
+                        : "Veinte anos moviendo produce por el corredor Mexico-EUA me ensenaron algo: la industria funciona con relaciones, pero pierde dinero por falta de informacion. Estructure operaciones de factoraje, negocio contratos FOB en origen y vi productores perder acceso al mercado por papeleo. Construi AuditDNA para resolver todo - en una sola plataforma."}
+                    </div>
+                  </div>
+                </div>
+
+                {/* LIVE STATS */}
+                <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr 1fr', gap:7, marginBottom:16 }}>
+                  {[
+                    ['Hass Avocado FOB','$42.50','Michoacan MX · Live'],
+                    ['Grower Network','5,000+','12 Mexican Regions'],
+                    ['Industry Contacts','23,000+','Buyers · Importers'],
+                  ].map(([l,v,s])=>(
+                    <div key={l} style={{ background:'rgba(0,0,0,0.25)', borderRadius:6, padding:'9px 6px', textAlign:'center', border:'1px solid rgba(203,166,88,0.1)' }}>
+                      <div style={{ fontSize:8, color:'#475569', fontWeight:700, letterSpacing:'0.5px', marginBottom:3 }}>{l}</div>
+                      <div style={{ fontSize:14, fontWeight:800, color:'#cba658', lineHeight:1 }}>{v}</div>
+                      <div style={{ fontSize:8, color:'#334155', marginTop:3 }}>{s}</div>
+                    </div>
+                  ))}
+                </div>
+
+                {/* FIRST GROWERS ONBOARDING — PROOF POINT */}
+                <div style={{ marginBottom:16 }}>
+                  <div style={{ fontSize:8, color:'#cba658', fontWeight:800, letterSpacing:'2px', marginBottom:8, display:'flex', alignItems:'center', gap:8 }}>
+                    {language==='en' ? 'GROWERS NOW ONBOARDING' : 'PRODUCTORES REGISTRANDOSE'}
+                    <span style={{ padding:'2px 7px', background:'rgba(134,239,172,0.12)', border:'1px solid rgba(134,239,172,0.3)', borderRadius:3, fontSize:8, color:'#86efac', fontWeight:700 }}>LIVE</span>
+                  </div>
+                  <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:8 }}>
+                    {[
+                      { region: language==='en'?'San Quintin, Baja California':'San Quintin, Baja California', acres:'100 acres', crops: language==='en'?'Beets · Carrots · Spinach · Squash':'Betabeles · Zanahorias · Espinaca · Calabaza', flag:'🇲🇽' },
+                      { region: language==='en'?'Mexicali Valley, Baja California':'Valle de Mexicali, Baja California', acres:'100 acres', crops: language==='en'?'Mixed Produce — Open Market':'Produce Mixto — Mercado Abierto', flag:'🇲🇽' },
+                    ].map((g,i)=>(
+                      <div key={i} style={{ padding:'10px 12px', background:'rgba(203,166,88,0.05)', border:'1px solid rgba(203,166,88,0.18)', borderRadius:6 }}>
+                        <div style={{ fontSize:10, marginBottom:3 }}>{g.flag} <span style={{ color:'#e2e8f0', fontWeight:700 }}>{g.region}</span></div>
+                        <div style={{ fontSize:9, color:'#cba658', fontWeight:700, marginBottom:3 }}>{g.acres}</div>
+                        <div style={{ fontSize:9, color:'#64748b', lineHeight:1.5 }}>{g.crops}</div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* ROLE SELECTOR */}
+                <div style={{ marginBottom:16 }}>
+                  <div style={{ fontSize:8, color:'#475569', fontWeight:700, letterSpacing:'2px', marginBottom:8, textAlign:'center' }}>
+                    {language==='en' ? 'WHO ARE YOU?' : '¿QUIEN ERES?'}
+                  </div>
+                  <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:6 }}>
+                    {[
+                      { id:'buyer',     en:'Buyer / Procurement',     es:'Comprador / Abastecimiento', note_en:'FOB pricing · grower scores · alerts',         note_es:'Precios FOB · calificaciones · alertas' },
+                      { id:'grower',    en:'Grower / Shipper',         es:'Productor / Embarcador',     note_en:'Register · get visible · FSMA digital',        note_es:'Registrate · visibilidad · FSMA digital' },
+                      { id:'importer',  en:'Importer / Distributor',   es:'Importador / Distribuidor',  note_en:'Sourcing engine · trade finance · contracts',   note_es:'Abastecimiento · finanzas · contratos' },
+                      { id:'compliance',en:'Finance / Compliance',     es:'Finanzas / Cumplimiento',    note_en:'Factoring · lender marketplace · FSMA 204',     note_es:'Factoraje · prestamistas · FSMA 204' },
+                    ].map(r=>(
+                      <button key={r.id}
+                        onClick={()=>{ setShowInfoCard(false); setLoginTab('register'); setRegData(p=>({...p,entityType:r.id})); }}
+                        style={{ padding:'9px 10px', background:'rgba(203,166,88,0.06)', border:'1px solid rgba(203,166,88,0.18)', borderRadius:6, cursor:'pointer', textAlign:'left' }}
+                        onMouseEnter={e=>{e.currentTarget.style.background='rgba(203,166,88,0.12)';e.currentTarget.style.borderColor='rgba(203,166,88,0.45)';}}
+                        onMouseLeave={e=>{e.currentTarget.style.background='rgba(203,166,88,0.06)';e.currentTarget.style.borderColor='rgba(203,166,88,0.18)';}}>
+                        <div style={{ fontSize:11, color:'#e2e8f0', fontWeight:700, marginBottom:2 }}>{language==='en'?r.en:r.es}</div>
+                        <div style={{ fontSize:8, color:'#475569', lineHeight:1.5 }}>{language==='en'?r.note_en:r.note_es}</div>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* CTA */}
+                <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:8 }}>
+                  <button onClick={()=>{ setShowInfoCard(false); setLoginTab('register'); }}
+                    style={{ padding:'12px', background:'linear-gradient(135deg,#cba658,#b8944d)', border:'none', borderRadius:6, color:'#0f172a', fontSize:10, fontWeight:900, letterSpacing:'2px', cursor:'pointer' }}>
+                    {language==='en' ? 'REQUEST ACCESS' : 'SOLICITAR ACCESO'}
+                  </button>
+                  <button onClick={()=>{ setShowInfoCard(false); setLoginTab('admin'); }}
+                    style={{ padding:'12px', background:'rgba(203,166,88,0.09)', border:'1px solid rgba(203,166,88,0.35)', borderRadius:6, color:'#cba658', fontSize:10, fontWeight:800, letterSpacing:'2px', cursor:'pointer' }}>
+                    {language==='en' ? 'SIGN IN' : 'INGRESAR'}
+                  </button>
+                </div>
+
+                <div style={{ marginTop:12, textAlign:'center', fontSize:9, color:'#334155' }}>
+                  {language==='en' ? 'Free to join. No credit card required.' : 'Gratis. Sin tarjeta de credito.'}
+                </div>
+              </div>
+            ) : (
+              <div>
+                <div style={{ display:'flex', borderBottom:'1px solid rgba(203,166,88,0.18)' }}>
+                  {[['admin','Admin Access'],['client','Client Login'],['register','Register']].map(([id,lbl])=>(
+                    <button key={id} onClick={()=>{ setLoginTab(id); setLoginPass(''); setLoginCode(''); setLoginPin(''); setLoginError(''); setRegStep(1); setRegSuccess(false); setRegError(''); }}
+                      style={{ flex:1, padding:'11px 4px', background: loginTab===id ? 'rgba(203,166,88,0.15)' : 'transparent', border:'none', borderBottom: loginTab===id ? '2px solid #cba658' : '2px solid transparent', color: loginTab===id ? '#cba658' : '#64748b', fontSize:9, fontWeight:800, cursor:'pointer', letterSpacing:'1px', marginBottom:'-1px' }}>
+                      {lbl}
+                    </button>
+                  ))}
+                </div>
+                <div style={{ padding:'20px 28px 28px' }}>
+
+                  {loginTab==='admin' && (
+                    <div>
+                      <div style={{ fontSize:10, letterSpacing:'2px', color:'#cba658', fontWeight:800, marginBottom:18, textAlign:'center' }}>PLATFORM ADMINISTRATION &mdash; AUTHORIZED PERSONNEL ONLY</div>
+                      <div style={{ marginBottom:13 }}><label style={{ display:'block', fontSize:9, letterSpacing:'1.5px', color:'#e2e8f0', fontWeight:700, marginBottom:5 }}>PASSWORD</label>
+                        <input type="password" value={loginPass} onChange={e=>{setLoginPass(e.target.value);setLoginError('');}} onKeyDown={e=>e.key==='Enter'&&handleLogin()} placeholder="Enter password" disabled={loginLoading} style={{ width:'100%', padding:'12px 13px', background:'rgba(5,10,20,0.55)', border:'1px solid rgba(203,166,88,0.28)', color:'#fff', fontSize:13, borderRadius:5, outline:'none', boxSizing:'border-box', letterSpacing:'2px' }} /></div>
+                      <div style={{ marginBottom:13 }}><label style={{ display:'block', fontSize:9, letterSpacing:'1.5px', color:'#e2e8f0', fontWeight:700, marginBottom:5 }}>ACCESS CODE</label>
+                        <input type="password" value={loginCode} onChange={e=>{setLoginCode(e.target.value);setLoginError('');}} onKeyDown={e=>e.key==='Enter'&&handleLogin()} placeholder="Access code" disabled={loginLoading} style={{ width:'100%', padding:'12px 13px', background:'rgba(5,10,20,0.55)', border:'1px solid rgba(203,166,88,0.28)', color:'#fff', fontSize:13, borderRadius:5, outline:'none', boxSizing:'border-box', textAlign:'center', letterSpacing:'2px' }} /></div>
+                      <div style={{ marginBottom:16 }}><label style={{ display:'block', fontSize:9, letterSpacing:'1.5px', color:'#e2e8f0', fontWeight:700, marginBottom:5 }}>PIN</label>
+                        <input type="password" value={loginPin} onChange={e=>{setLoginPin(e.target.value);setLoginError('');}} onKeyDown={e=>e.key==='Enter'&&handleLogin()} placeholder="PIN" maxLength={10} disabled={loginLoading} style={{ width:'100%', padding:'12px 13px', background:'rgba(5,10,20,0.55)', border:'1px solid rgba(203,166,88,0.28)', color:'#fff', fontSize:13, borderRadius:5, outline:'none', boxSizing:'border-box', letterSpacing:'8px', textAlign:'center' }} /></div>
+                      {loginError && <div style={{ padding:'9px 12px', background:'rgba(239,68,68,0.1)', border:'1px solid rgba(239,68,68,0.3)', borderRadius:5, color:'#ef4444', fontSize:11, marginBottom:13, textAlign:'center', fontWeight:600 }}>{loginError}</div>}
+                      <button onClick={handleLogin} disabled={loginLoading} style={{ width:'100%', padding:'13px', background: loginLoading ? '#64748b' : 'linear-gradient(135deg,#cba658,#b8944d)', border:'none', borderRadius:5, color:'#0f172a', fontSize:11, fontWeight:900, letterSpacing:'3px', cursor: loginLoading ? 'wait' : 'pointer' }}>{loginLoading ? 'AUTHENTICATING...' : 'AUTHENTICATE'}</button>
+                      <div style={{ marginTop:10, textAlign:'center' }}><span style={{ fontSize:9, color:'#64748b' }}>Not registered? </span><button onClick={()=>setLoginTab('register')} style={{ background:'none', border:'none', color:'#cba658', fontSize:9, fontWeight:700, cursor:'pointer' }}>Request Access</button></div>
+                      <div style={{ marginTop:8, fontSize:8, color:'#22c55e', textAlign:'center', letterSpacing:'1px' }}>SECURED WITH JWT + BCRYPT ENCRYPTION &mdash; FULL PLATFORM ACCESS GRANTED</div>
+                    </div>
+                  )}
+
+                  {loginTab==='client' && (
+                    <div>
+                      <div style={{ fontSize:10, letterSpacing:'2px', color:'#cba658', fontWeight:800, marginBottom:18, textAlign:'center' }}>CLIENT / PARTNER ACCESS</div>
+                      <div style={{ marginBottom:13 }}><label style={{ display:'block', fontSize:9, letterSpacing:'1.5px', color:'#e2e8f0', fontWeight:700, marginBottom:5 }}>EMAIL</label>
+                        <input type="email" value={tenantEmail} onChange={e=>{setTenantEmail(e.target.value);setLoginError('');}} onKeyDown={e=>e.key==='Enter'&&handleClientLogin()} placeholder="your@email.com" disabled={loginLoading} style={{ width:'100%', padding:'12px 13px', background:'rgba(5,10,20,0.55)', border:'1px solid rgba(203,166,88,0.28)', color:'#fff', fontSize:13, borderRadius:5, outline:'none', boxSizing:'border-box' }} /></div>
+                      <div style={{ marginBottom:16 }}><label style={{ display:'block', fontSize:9, letterSpacing:'1.5px', color:'#e2e8f0', fontWeight:700, marginBottom:5 }}>PASSWORD</label>
+                        <input type="password" value={tenantPass} onChange={e=>{setTenantPass(e.target.value);setLoginError('');}} onKeyDown={e=>e.key==='Enter'&&handleClientLogin()} placeholder="Password" disabled={loginLoading} style={{ width:'100%', padding:'12px 13px', background:'rgba(5,10,20,0.55)', border:'1px solid rgba(203,166,88,0.28)', color:'#fff', fontSize:13, borderRadius:5, outline:'none', boxSizing:'border-box', letterSpacing:'2px' }} /></div>
+                      {loginError && <div style={{ padding:'9px 12px', background:'rgba(239,68,68,0.1)', border:'1px solid rgba(239,68,68,0.3)', borderRadius:5, color:'#ef4444', fontSize:11, marginBottom:13, textAlign:'center', fontWeight:600 }}>{loginError}</div>}
+                      <button onClick={handleClientLogin} disabled={loginLoading} style={{ width:'100%', padding:'13px', background: loginLoading ? '#64748b' : 'linear-gradient(135deg,#cba658,#b8944d)', border:'none', borderRadius:5, color:'#0f172a', fontSize:11, fontWeight:900, letterSpacing:'3px', cursor: loginLoading ? 'wait' : 'pointer' }}>{loginLoading ? 'SIGNING IN...' : 'SIGN IN'}</button>
+                      <div style={{ marginTop:10, textAlign:'center' }}><span style={{ fontSize:9, color:'#64748b' }}>Need access? </span><button onClick={()=>setLoginTab('register')} style={{ background:'none', border:'none', color:'#cba658', fontSize:9, fontWeight:700, cursor:'pointer' }}>Register Here</button></div>
+                      <div style={{ marginTop:8, fontSize:8, color:'#22c55e', textAlign:'center', letterSpacing:'1px' }}>SECURED &mdash; PACA COMPLIANT PLATFORM</div>
+                    </div>
+                  )}
+
+                  {loginTab==='register' && (
+                    <div>
+                      {regSuccess ? (
+                        <div style={{ textAlign:'center', padding:'16px 0' }}>
+                          <div style={{ fontSize:28, marginBottom:10, color:'#cba658' }}>&#10003;</div>
+                          <div style={{ fontSize:13, fontWeight:800, color:'#cba658', marginBottom:8, letterSpacing:'1px' }}>REQUEST RECEIVED</div>
+                          <div style={{ fontSize:11, color:'#94a3b8', lineHeight:1.7, marginBottom:14 }}>Thank you, <strong style={{color:'#e2e8f0'}}>{regData.contactName||regData.companyLegal}</strong>.<br/>Registration for <strong style={{color:'#cba658'}}>{regData.companyLegal}</strong> submitted.<br/>We will contact you at <strong style={{color:'#e2e8f0'}}>{regData.contactEmail}</strong> within 1-2 business days.</div>
+                          <button onClick={()=>{ setRegSuccess(false); setLoginTab('admin'); }} style={{ padding:'9px 22px', background:'rgba(203,166,88,0.15)', border:'1px solid rgba(203,166,88,0.4)', borderRadius:5, color:'#cba658', fontSize:10, fontWeight:700, cursor:'pointer', letterSpacing:'1px' }}>BACK TO LOGIN</button>
+                        </div>
+                      ) : (
+                        <div>
+                          <div style={{ fontSize:10, letterSpacing:'2px', color:'#cba658', fontWeight:800, marginBottom:4, textAlign:'center' }}>REQUEST PLATFORM ACCESS</div>
+                          <div style={{ fontSize:9, color:'#64748b', marginBottom:12, textAlign:'center' }}>Step {regStep} of 5</div>
+                          <div style={{ display:'flex', gap:3, marginBottom:14 }}>{[1,2,3,4,5].map(s=><div key={s} style={{ flex:1, height:3, background: s<=regStep ? '#cba658' : 'rgba(203,166,88,0.2)', borderRadius:2 }} />)}</div>
+                          {regError && <div style={{ padding:'7px 10px', background:'rgba(239,68,68,0.08)', border:'1px solid rgba(239,68,68,0.25)', borderRadius:5, color:'#ef4444', fontSize:10, marginBottom:10, textAlign:'center' }}>{regError}</div>}
+                          {regStep===1 && <div>{[['grower','Grower / Producer'],['shipper','Shipper / Packer'],['importer','Importer / Distributor'],['buyer','Buyer / Retailer'],['broker','Broker / Trader'],['tech','Ag Technology Company'],['other','Other']].map(([val,lbl])=><button key={val} onClick={()=>setRegData(p=>({...p,entityType:val}))} style={{ display:'block', width:'100%', marginBottom:4, padding:'8px 11px', background: regData.entityType===val ? 'rgba(203,166,88,0.18)' : 'rgba(255,255,255,0.03)', border: regData.entityType===val ? '1px solid #cba658' : '1px solid rgba(203,166,88,0.12)', borderRadius:5, color: regData.entityType===val ? '#cba658' : '#94a3b8', fontSize:11, fontWeight:600, cursor:'pointer', textAlign:'left' }}>{lbl}</button>)}</div>}
+                          {regStep===2 && <div style={{ display:'flex', flexDirection:'column', gap:8 }}>{[['companyLegal','Company Legal Name *','Exact legal name'],['ein','EIN / Tax ID','XX-XXXXXXX'],['state','State / Province','CA, MX-BCN...'],['city','City','City'],['pacaNum','PACA License #','PACA #']].map(([key,lbl,ph])=><div key={key}><label style={{ display:'block', fontSize:9, color:'#94a3b8', fontWeight:700, marginBottom:3 }}>{lbl}</label><input value={regData[key]||''} onChange={e=>setRegData(p=>({...p,[key]:e.target.value}))} placeholder={ph} style={{ width:'100%', padding:'8px 11px', background:'rgba(5,10,20,0.5)', border:'1px solid rgba(203,166,88,0.22)', color:'#f1f5f9', fontSize:12, borderRadius:5, outline:'none', boxSizing:'border-box' }} /></div>)}</div>}
+                          {regStep===3 && <div><div style={{ fontSize:9, color:'#94a3b8', marginBottom:10, textAlign:'center' }}>Certifications & FSMA compliance level</div>{[['gapCert','GAP Certified'],['globalGap','GlobalGAP Certified'],['sqf','SQF Certified'],['brc','BRC Certified'],['traceability','Traceability System Active'],['waterTests','Water Testing'],['soilTests','Soil Testing']].map(([key,lbl])=><label key={key} style={{ display:'flex', alignItems:'center', gap:8, cursor:'pointer', padding:'6px 9px', background:'rgba(255,255,255,0.03)', border:'1px solid rgba(203,166,88,0.1)', borderRadius:5, marginBottom:4 }}><input type="checkbox" checked={!!regData[key]} onChange={e=>setRegData(p=>({...p,[key]:e.target.checked}))} style={{accentColor:'#cba658'}} /><span style={{ fontSize:11, color:'#cbd5e1', fontWeight:600 }}>{lbl}</span></label>)}<div style={{ marginTop:10 }}><label style={{ display:'block', fontSize:9, color:'#94a3b8', fontWeight:700, marginBottom:5 }}>FSMA TIER</label>{['1','2','3'].map(t=><button key={t} onClick={()=>setRegData(p=>({...p,fsmaTeir:t}))} style={{ marginRight:5, padding:'5px 13px', background: regData.fsmaTeir===t ? 'rgba(203,166,88,0.2)' : 'rgba(255,255,255,0.04)', border: regData.fsmaTeir===t ? '1px solid #cba658' : '1px solid rgba(203,166,88,0.15)', borderRadius:4, color: regData.fsmaTeir===t ? '#cba658' : '#94a3b8', fontSize:10, fontWeight:700, cursor:'pointer' }}>Tier {t}</button>)}</div></div>}
+                          {regStep===4 && <div style={{ display:'flex', flexDirection:'column', gap:8 }}>{[['contactName','Contact Name *','Full name','text'],['contactEmail','Contact Email *','email@company.com','email'],['contactPhone','Phone','+1 or +52...','tel']].map(([key,lbl,ph,type])=><div key={key}><label style={{ display:'block', fontSize:9, color:'#94a3b8', fontWeight:700, marginBottom:3 }}>{lbl}</label><input type={type} value={regData[key]||''} onChange={e=>setRegData(p=>({...p,[key]:e.target.value}))} placeholder={ph} style={{ width:'100%', padding:'8px 11px', background:'rgba(5,10,20,0.5)', border:'1px solid rgba(203,166,88,0.22)', color:'#f1f5f9', fontSize:12, borderRadius:5, outline:'none', boxSizing:'border-box' }} /></div>)}<div><label style={{ display:'block', fontSize:9, color:'#94a3b8', fontWeight:700, marginBottom:3 }}>NOTES</label><textarea value={regData.notes||''} onChange={e=>setRegData(p=>({...p,notes:e.target.value}))} placeholder="Products, commodities, regions..." style={{ width:'100%', padding:'8px 11px', background:'rgba(5,10,20,0.5)', border:'1px solid rgba(203,166,88,0.22)', color:'#f1f5f9', fontSize:11, borderRadius:5, outline:'none', boxSizing:'border-box', height:50, resize:'none' }} /></div></div>}
+                          {regStep===5 && <div><div style={{ fontSize:9, color:'#94a3b8', marginBottom:10, textAlign:'center' }}>Review before submitting</div>{[['Entity',regData.entityType],['Company',regData.companyLegal],['Contact',regData.contactName+' | '+regData.contactEmail],['Phone',regData.contactPhone||'N/A'],['EIN',regData.ein||'N/A'],['State',regData.state||'N/A'],['FSMA',`Tier ${regData.fsmaTeir}`]].map(([k,v])=><div key={k} style={{ display:'flex', justifyContent:'space-between', padding:'5px 0', borderBottom:'1px solid rgba(203,166,88,0.08)', fontSize:10 }}><span style={{color:'#64748b'}}>{k}</span><span style={{color:'#e2e8f0', maxWidth:'60%', textAlign:'right'}}>{v}</span></div>)}</div>}
+                          <div style={{ display:'flex', gap:7, marginTop:14 }}>
+                            {regStep>1 && <button onClick={()=>setRegStep(s=>s-1)} style={{ flex:1, padding:'9px', background:'rgba(148,163,176,0.1)', border:'1px solid rgba(148,163,176,0.2)', borderRadius:5, color:'#94a3b8', fontSize:10, fontWeight:700, cursor:'pointer', letterSpacing:'1px' }}>BACK</button>}
+                            {regStep<5 ? <button onClick={()=>{ if(regStep===1&&!regData.entityType){setRegError('Select entity type');return;} if(regStep===2&&!regData.companyLegal){setRegError('Company name required');return;} if(regStep===4&&(!regData.contactName||!regData.contactEmail)){setRegError('Contact name and email required');return;} setRegError(''); setRegStep(s=>s+1); }} style={{ flex:1, padding:'9px', background:'linear-gradient(135deg,#cba658,#b8944d)', border:'none', borderRadius:5, color:'#0f172a', fontSize:10, fontWeight:900, cursor:'pointer', letterSpacing:'1px' }}>NEXT</button>
+                            : <button onClick={handleRegistrationSubmit} disabled={regLoading} style={{ flex:1, padding:'9px', background: regLoading ? '#64748b' : 'linear-gradient(135deg,#cba658,#b8944d)', border:'none', borderRadius:5, color:'#0f172a', fontSize:10, fontWeight:900, cursor: regLoading ? 'wait' : 'pointer', letterSpacing:'1px' }}>{regLoading ? 'SUBMITTING...' : 'SUBMIT REQUEST'}</button>}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                </div>
+              </div>
+            )}
           </div>
 
-          <div style={{ textAlign: 'center', marginTop: 24 }}>
-            <div style={{ fontSize: 9, color: '#e2e8f0', letterSpacing: '1px', textShadow: '0 1px 4px rgba(0,0,0,0.8)' }}>Mexausa Food Group, Inc.</div>
-            <div style={{ fontSize: 8, color: '#cbd5e1', marginTop: 4, textShadow: '0 1px 4px rgba(0,0,0,0.8)' }}>Unauthorized access is prohibited and monitored</div>
+          <div style={{ textAlign:'center', marginTop:24 }}>
+            <div style={{ fontSize:9, color:'#e2e8f0', letterSpacing:'1px', textShadow:'0 1px 4px rgba(0,0,0,0.8)' }}>Mexausa Food Group, Inc.</div>
+            <div style={{ fontSize:8, color:'#cbd5e1', marginTop:4, textShadow:'0 1px 4px rgba(0,0,0,0.8)' }}>Unauthorized access is prohibited and monitored</div>
           </div>
+        </div>
+
+        {/* ============================================================== */}
+        {/* DEVINE INC ADVISORY CARD - right column, bilingual EN/ES toggle */}
+        {/* Floats right of login on desktop; wraps below on mobile         */}
+        {/* ============================================================== */}
+        <div style={{ width:520, maxWidth:'92vw', flexShrink:0 }}>
+          <DevineInc />
         </div>
       </div>
     );
@@ -686,20 +903,20 @@ const App = () => {
 
   // ================================================================================
   const MODULES = {
-    'CRM & Communications': { color: '#cba658', count: 8, modules: ['Saul Intel CRM', 'Email Marketing', 'Call Center', 'SMS Gateway', 'Contacts', 'Secure Buyers'] },
+    'CRM & Communications': { color: '#cba658', count: 10, modules: ['Owner Command Center', 'Unified CRM', 'Saul Intel CRM', 'Email Marketing', 'Call Center', 'SMS Gateway', 'Contacts', 'Secure Buyers'] },
     'Mexausa Food Group Intell': { color: '#cba658', count: 19, modules: ['MFG Dashboard'] },
-    'Agriculture & Commodities': { color: '#cba658', count: 50, modules: ['Grower Database', 'Grower Management', 'USDA Intel', 'USDA Dashboard', 'USDA Grower Search', 'Seasonal Calendar', 'Buyer Network', 'Quality Control', 'Cold Chain', 'Harvest Tracker', 'Ag Intel Master', 'Price Alerts', 'Recon Engine', 'Field Operations'] },
-    'Grower Intelligence': { color: '#cba658', count: 11, modules: ['Grower Portal', 'Grower Intelligence', 'Grower Master', 'Grower Recommendations', 'Registration', 'Product Listing', 'Compliance Assist', 'Unified Sourcing', 'Small Grower Intel'] },
-    'Marketplace': { color: '#cba658', count: 15, modules: ['Marketplace', 'Product Catalog', 'Orders', 'Shipping', 'Customer Portal', 'Customer Portal Advanced', 'Document Vault', 'Mobile Sales Upload'] },
+    'Agriculture & Commodities': { color: '#cba658', count: 60, modules: ['MFG Dashboard', 'Ag Dashboard', 'Ag Intelligence', 'Ag Main', 'Agriculture', 'Grower Database', 'Grower Management', 'USDA Intel', 'USDA Dashboard', 'USDA Grower Search', 'Seasonal Calendar', 'Buyer Network', 'Quality Control', 'Cold Chain', 'Harvest Tracker', 'Ag Intel Master', 'Price Alerts', 'Recon Engine', 'Field Operations', 'Weather Intelligence', 'Port Intelligence', 'Produce Market Weekly'] },
+    'Grower Intelligence': { color: '#cba658', count: 5, modules: ['Grower Intelligence'] },
+    'Marketplace': { color: '#cba658', count: 18, modules: ['Marketplace', 'Ag Marketplace', 'Market Intelligence', 'Commodity Intelligence', 'Predictive Analyzer', 'Trade Finance', 'Tariffs', 'Product Catalog', 'Orders', 'Shipping', 'Customer Portal', 'Customer Portal Advanced', 'Document Vault', 'Mobile Sales Upload'] },
     'Financial Services': { color: '#cba658', count: 28, modules: ['Finance Dashboard', 'Financial Services Hub', 'Finance Center', 'Small Grower Finance', 'Grower Finance', 'Mexausa Food Group Finance', 'Finance Access Control', 'Invoice Factoring', 'PO Finance', 'AR/AP', 'Accounting Hub', 'Accounting Dashboard', 'Reports', 'Elite Analytics', 'Elite Beast', 'Analytics Dashboard'] },
     'Compliance & Auditing': { color: '#cba658', count: 18, modules: ['Compliance Hub', 'FSMA 204', 'GlobalGAP', 'PrimusGFS', 'SENASICA', 'Audit Manager', 'Travel Protection', 'Traveler Protection'] },
-    'Agricultural Testing (81 AI)': { color: '#06b6d4', count: 9, modules: ['WaterTech Pro', 'SoilTech Pro', 'Fertilizer Analysis', 'Seed Germination', 'Traceability Hub', 'Lot Tracking', 'Chain of Custody', 'Recall Manager', 'QR Generator'] },
-    'LATAM Intelligence': { color: '#cba658', count: 17, modules: ['LATAM Dashboard', 'Mexico Market', 'Central America', 'South America', 'International Travel Security', 'MAUTTR Registry', 'MAUTTR QR Scanner', 'MAUTTR Vehicles'] },
+    'Agricultural Testing (81 Niner Miners)': { color: '#06b6d4', count: 9, modules: ['WaterTech Pro', 'SoilTech Pro', 'Fertilizer Analysis', 'Seed Germination', 'Traceability Hub', 'Lot Tracking', 'Chain of Custody', 'Recall Manager', 'QR Generator'] },
+    'LATAM Intelligence': { color: '#cba658', count: 20, modules: ['LATAM Dashboard', 'Latin America Dashboard', 'LATAM Produce Buyers', 'Mexico Market', 'Central America', 'South America', 'International Travel Security', 'MAUTTR Registry', 'MAUTTR QR Scanner', 'MAUTTR Vehicles'] },
     'Real Estate (NMLS #337526)': { color: '#cba658', count: 29, modules: ['Mortgage Loan Hub', '1003 Application', 'USDA 502 Housing', 'Mexico Real Estate', 'SII-MX', 'Sistema Inmobiliario', 'Gestion Inmobiliaria MX', 'Mortgage Calc', 'Property Search'] },
     'Spartan 300': { color: '#cba658', count: 11, modules: ['Consumer Protection', 'Mortgage Audit', 'TILA Analysis', 'Dispute Letters'] },
     'Trojan 700': { color: '#cba658', count: 11, modules: ['Enterprise Audit', 'Corporate Compliance', 'SOX Audit', 'Risk Assessment'] },
     'AI & SI (81 Agents)': { color: '#cba658', count: 26, modules: ['AI Dashboard', 'Document Analysis AI', 'Agent Manager', 'OCR Reader', 'Document AI', 'Compliance AI', 'Intelligence Dashboard', 'Multi-AI Verification'] },
-    'Access Control': { color: '#cba658', count: 8, modules: ['Access Control', 'User Management', 'Role Permissions', 'Tenant Management', 'Manage Clients', 'Client Accounts', 'Settings', 'Notifications'] }
+    'Access Control': { color: '#cba658', count: 9, modules: ['Access Control', 'User Management', 'Role Permissions', 'Tenant Management', 'Manage Clients', 'Client Accounts', 'Settings', 'Notifications', 'Gmail OAuth'] }
   };
 
   const worldClocks = [
@@ -730,9 +947,9 @@ const App = () => {
   ];
 
   const moduleMap = {
-    'Predictive Analyzer': <div style={{padding:'40px',color:'#94a3b8',textAlign:'center'}}>Predictive Analyzer - Coming Soon</div>,
-    'Analytics Predictions': <div style={{padding:'40px',color:'#94a3b8',textAlign:'center'}}>Analytics Predictions - Coming Soon</div>,
-    'MFG Predictions': <div style={{padding:'40px',color:'#94a3b8',textAlign:'center'}}>MFG Predictions - Coming Soon</div>,
+    'Predictive Analyzer': <PredictiveAnalyzer />,
+    'Analytics Predictions': <Analytics />,
+    'MFG Predictions': <MexausaFoodGroupOmegaIntelligence />,
     'SII-MX': <SII_MX />,
     'Sistema Inmobiliario': <SII_MX />,
     'Gestion Inmobiliaria MX': <SII_MX />,
@@ -740,13 +957,19 @@ const App = () => {
     'Fertilizer Analysis': <FertilizerAnalysis />,
     'Seed Germination': <SeedGermination />,
     'Document Analysis AI': <DocumentAnalysisAI />,
-    'Saul Intel CRM': <ZadarmaCRM />, 'Email Marketing': <EmailMarketing />, 'Call Center': <ZadarmaCRM />, 'SMS Gateway': <ZadarmaCRM />, 'Contacts': <ZadarmaCRM />, 'Secure Buyers': <SecureBuyersIntelligence />,
+    'Saul Intel CRM': <SaulIntelCRM />, 'Email Marketing': <EmailMarketing />, 'Call Center': <SaulIntelCRM />, 'SMS Gateway': <SaulIntelCRM />, 'Contacts': <SaulIntelCRM />, 'Secure Buyers': <SecureBuyersIntelligence />,
     'MFG Dashboard': <MexausaFoodGroupOmegaIntelligence />,
     'Logistics': <LogisticsCenter />,
     'Grower Database': <GrowerManagementHub />, 'Grower Management': <GrowerManagementHub />, 'USDA Intel': <USDAIntelligenceDashboard />, 'USDA Dashboard': <USDAIntelligenceDashboard />, 'USDA Grower Search': <USDAGrowerSearchEngine />, 'Seasonal Calendar': <SeasonalCalendar />, 'Buyer Network': <BuyerNetwork />,
     'Quality Control': <QualityControl />, 'Cold Chain': <ColdChainMonitoring />, 'Harvest Tracker': <FieldOperations />, 'Ag Intel Master': <AgriculturalIntelligenceMaster />,
-    'Grower Portal': <GrowerIntelligence />, 'Grower Intelligence': <GrowerIntelligence />, 'Grower Master': <GrowerMaster />, 'Registration': <GrowerIntelligence />, 'Product Listing': <GrowerIntelligence />, 'Compliance Assist': <GrowerIntelligence />, 'Small Grower Intel': <SmallGrowerIntelligence />,
-    'Finance Dashboard': <FinancialDashboard />, 'Financial Services Hub': <FinancialServicesHub />, 'Finance Center': <FinanceMasterModule />, 'Small Grower Finance': <FinanceOperations />, 'Grower Finance': <FinanceOperations />, 'Mexausa Food Group Finance': <FinanceMasterModule />, 'Finance Access Control': <FinanceMasterModule />, 'Invoice Factoring': <FinanceMasterModule />, 'PO Finance': <FinanceMasterModule />, 'AR/AP': <FinanceOperations />, 'Accounting Hub': <AccountingHub />, 'Reports': <ReportsCenter />, 'Elite Analytics': <AuditDNA_Elite_Analytics />, 'Elite Beast': <AuditDNA_ELITE_BEAST />,
+    'Grower Intelligence': <GrowerHub />, 'Grower Portal': <GrowerHub />, 'Grower Master': <GrowerHub />, 'Registration': <GrowerHub />, 'Small Grower Intel': <GrowerHub />,
+    'Grower Activation': <React.Suspense fallback={<div style={{padding:40,color:'#cba658',textAlign:'center'}}>Loading Queue...</div>}><GrowerActivationQueue /></React.Suspense>,
+    'Pending Growers':   <React.Suspense fallback={<div style={{padding:40,color:'#cba658',textAlign:'center'}}>Loading Queue...</div>}><GrowerActivationQueue /></React.Suspense>,
+    'Activation Queue':  <React.Suspense fallback={<div style={{padding:40,color:'#cba658',textAlign:'center'}}>Loading Queue...</div>}><GrowerActivationQueue /></React.Suspense>,
+    'Finance Dashboard': <FinancialDashboard />, 'Financial Services Hub': <FinancialServicesHub />, 'Finance Center': <FinanceMasterModule />, 'Small Grower Finance': <FinanceOperations />, 'Grower Finance': <FinanceOperations />, 'Mexausa Food Group Finance': <FinanceMasterModule />, 'Finance Access Control': <FinanceMasterModule />, 'Invoice Factoring': <FinanceMasterModule />, 'PO Finance': <FinanceMasterModule />, 'AR/AP': <FinanceOperations />, 'Accounting Hub': <AccountingHub />, 'Reports': <ReportsCenter />,
+    'Produce Intel': <ProduceIntelCenter />, 'Price Analyzer': <ProduceIntelCenter />, 'Predictive Analyzer': <ProduceIntelCenter />,
+    'Price Alerts': <ProduceIntelCenter />, 'Produce Market Weekly': <ProduceIntelCenter />, 'Market Weekly': <ProduceIntelCenter />,
+    'Price Forecasting': <ProduceIntelCenter />, 'Intel Center': <ProduceIntelCenter />, 'Elite Analytics': <AuditDNA_Elite_Analytics />, 'Elite Beast': <AuditDNA_ELITE_BEAST />,
     'Compliance Hub': <Compliance />, 'FSMA 204': <Compliance />, 'GlobalGAP': <Compliance />, 'PrimusGFS': <Compliance />, 'SENASICA': <Compliance />, 'Audit Manager': <Compliance />,
     'Traceability Hub': <TraceabilityHub />, 'Lot Tracking': <TraceabilityHub />, 'Chain of Custody': <TraceabilityHub />, 'Recall Manager': <TraceabilityHub />, 'QR Generator': <TraceabilityHub />,
     'WaterTech Pro': <WaterTech />,
@@ -759,6 +982,7 @@ const App = () => {
     'Intelligence Dashboard': <IntelligenceDashboard />, 'Master Dashboard': <IntelligenceDashboard />, 'AI Command Center': <IntelligenceDashboard />,
     'Multi-AI Verification': <MultiAIUploadInterface />,
     'Settings': <SettingsPreferences />, 'Notifications': <NotificationsCenter />, 'Customer Portal': <CustomerPortal />, 'Document Vault': <DocumentVault />,
+    'Gmail OAuth': <GmailOAuth />,
     'Access Control': <AccessControl />, 'User Management': <AccessControl />, 'Role Permissions': <AccessControl />,
     'Tenant Management': <TenantAdmin />, 'Manage Clients': <TenantAdmin />, 'Client Accounts': <TenantAdmin />,
     'Travel Protection': <TravelProtection />, 'Traveler Protection': <TravelProtection />,
@@ -766,7 +990,25 @@ const App = () => {
     'Accounting Dashboard': <AccountingHub />, 'Customer Portal Advanced': <CustomerPortalAdvanced />, 'Unified Sourcing': <AgriculturalIntelligenceMaster />,
     'Price Alerts': <PriceAlertPingSystem />, 'Recon Engine': <UltimateReconEngine />,
     'Mobile Sales Upload': <MobileSalesUpload />, 'Analytics Dashboard': <Analytics />,
-    'Field Operations': <FieldOperations />, 'Traceability': <Traceability />
+    'Field Operations': <FieldOperations />, 'Traceability': <Traceability />,
+    // ── NEW MODULES WIRED ────────────────────────────────────────────────────
+    'Weather Intelligence': <WeatherIntelligence />, 'Weather': <WeatherIntelligence />, 'Climate Risk': <WeatherIntelligence />,
+    'Commodity Intelligence': <MexausaFoodGroupOmegaIntelligence />,
+    'Market Intelligence': <MarketIntelligence />, 'Market Intel': <MarketIntelligence />,
+    'Ag Dashboard': <AgriculturalIntelligenceMaster />,
+    'Port Intelligence': <PortIntelligence />, 'Port Intel': <PortIntelligence />, 'Ports': <PortIntelligence />,
+    'Price Forecasting': <PredictiveAnalyzer />,
+    'Produce Market Weekly': <ProduceMarketWeekly />, 'Market Weekly': <ProduceMarketWeekly />,
+    'Trade Finance': <TradeFinance />, 'Trade Financing': <TradeFinance />,
+    'Tariffs': <Tariffs />, 'HTS Tariffs': <Tariffs />, 'Import Duties': <Tariffs />,
+    'Owner Command Center': <OwnerCommandCenter />, 'Command Center': <OwnerCommandCenter />,
+    'Ag Intelligence': <AgIntelligence />, 'AgIntelligence': <AgIntelligence />,
+    'Ag Main': <AgMainPage />, 'Ag Hub': <AgMainPage />,
+    'Ag Marketplace': <Marketplace />,
+    'Agriculture': <Agriculture />, 'Agriculture Module': <Agriculture />,
+    'Latin America Dashboard': <LATAMIntelligence />,
+    'LATAM Produce Buyers': <LatAmProduceBuyers />, 'LatAm Buyers': <LatAmProduceBuyers />,
+    'Unified CRM': <UnifiedCRM />, 'Unified Contacts': <UnifiedCRM />,
   };
 
   const renderModule = () => {
@@ -813,9 +1055,12 @@ const App = () => {
 
   return (
     <IntelligenceProvider>
-      <div style={{ minHeight: '100vh', background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%)', fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, sans-serif" }}>
+      <div style={{ minHeight: '100vh', backgroundImage: "url('/Salinas-Sign.png')", backgroundSize: 'cover', backgroundPosition: 'center center', backgroundAttachment: 'fixed', backgroundRepeat: 'no-repeat', fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, sans-serif", position: 'relative' }}>
+        {/* Light overlay — keeps image visible but readable */}
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(10,15,30,0.40)', zIndex: 0, pointerEvents: 'none' }} />
+        <div style={{ position: 'relative', zIndex: 1, minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
         {/* HEADER */}
-        <header style={{ background: 'rgba(15,23,42,0.95)', borderBottom: '1px solid rgba(148,163,176,0.15)', padding: '0 20px', height: '56px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', backdropFilter: 'blur(20px)' }}>
+        <header style={{ background: 'rgba(10,15,30,0.88)', borderBottom: '1px solid rgba(148,163,176,0.2)', padding: '0 12px', height: isMobile ? 'auto' : '56px', minHeight: '56px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', backdropFilter: 'blur(20px)', flexWrap: 'wrap', gap: isMobile ? '8px' : '0', paddingTop: isMobile ? '8px' : '0', paddingBottom: isMobile ? '8px' : '0' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
             <div style={{ width: '36px', height: '36px', background: 'linear-gradient(135deg, #cba658 0%, #b8944d 100%)', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
               <Zap size={20} color="#0f172a" />
@@ -840,7 +1085,7 @@ const App = () => {
         </header>
 
         {/* MARKET TICKER */}
-        <div style={{ background: 'linear-gradient(90deg, rgba(254,248,231,0.03) 0%, rgba(247,241,218,0.05) 50%, rgba(254,248,231,0.03) 100%)', borderBottom: '1px solid rgba(148,163,176,0.1)', padding: '6px 0', overflow: 'hidden' }}>
+        <div style={{ background: 'rgba(10,15,30,0.92)', borderBottom: '1px solid rgba(148,163,176,0.2)', padding: '6px 0', overflow: 'hidden' }}>
           <div style={{ display: 'flex', gap: '40px', transform: `translateX(${tickerOffset}px)`, whiteSpace: 'nowrap' }}>
             {[...marketData, ...marketData].map((item, i) => (
               <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -857,8 +1102,8 @@ const App = () => {
         </div>
 
         {/* WORLD CLOCKS */}
-        <div style={{ background: 'rgba(15,23,42,0.6)', borderBottom: '1px solid rgba(148,163,176,0.1)', padding: '6px 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <div style={{ display: 'flex', gap: '16px' }}>
+        <div style={{ background: 'rgba(10,15,30,0.50)', borderBottom: '1px solid rgba(148,163,176,0.12)', padding: '6px 12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: isMobile ? 'wrap' : 'nowrap', gap: isMobile ? '4px' : '0' }}>
+          <div style={{ display: 'flex', gap: isMobile ? '8px' : '16px', overflowX: isMobile ? 'auto' : 'visible', flexShrink: 0, maxWidth: isMobile ? '100%' : 'auto' }}>
             {worldClocks.map((clock, i) => (
               <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
                 <span style={{ color: '#64748b', fontSize: '9px' }}>{clock.city}</span>
@@ -878,14 +1123,14 @@ const App = () => {
                 {currentTime.toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' })}
               </span>
             </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+            {!isMobile && <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
               <Server size={12} color={serverStatus.backend === 'online' ? '#22c55e' : '#ef4444'} />
               <span style={{ color: serverStatus.backend === 'online' ? '#22c55e' : '#ef4444', fontSize: '10px' }}>Backend</span>
-            </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+            </div>}
+            {!isMobile && <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
               <Activity size={12} color={serverStatus.database === 'online' ? '#22c55e' : '#ef4444'} />
               <span style={{ color: serverStatus.database === 'online' ? '#22c55e' : '#ef4444', fontSize: '10px' }}>Database</span>
-            </div>
+            </div>}
             <button onClick={() => setMissionControlOpen(true)} style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '4px 10px', background: 'rgba(203,166,88,0.1)', border: '1px solid rgba(203,166,88,0.3)', borderRadius: '4px', cursor: 'pointer' }}>
               <Zap size={12} color="#cba658" />
               <span style={{ color: '#cba658', fontSize: '10px', fontWeight: '600' }}>Mission Control</span>
@@ -895,7 +1140,7 @@ const App = () => {
 
         {/* MAIN LAYOUT */}
         <div style={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
-          <aside style={{ width: sidebarCollapsed ? '48px' : '220px', background: 'rgba(15,23,42,0.95)', borderRight: '1px solid rgba(148,163,176,0.1)', overflow: 'hidden', transition: 'width 0.2s ease', flexShrink: 0, position: 'relative' }}>
+          <aside style={{ width: sidebarCollapsed ? '48px' : '220px', background: 'rgba(10,15,30,0.88)', borderRight: '1px solid rgba(148,163,176,0.12)', overflow: 'hidden', transition: 'width 0.2s ease', flexShrink: 0, position: 'relative' }}>
             {/* COLLAPSE TOGGLE */}
             <button onClick={() => setSidebarCollapsed(c => !c)} title={sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
               style={{ position: 'absolute', top: 8, right: 6, zIndex: 10, width: 24, height: 24, background: 'rgba(203,166,88,0.12)', border: '1px solid rgba(203,166,88,0.25)', borderRadius: 4, color: '#cba658', fontSize: 10, fontWeight: 900, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0 }}>
@@ -940,7 +1185,7 @@ const App = () => {
               </div>
             )}
           </aside>
-          <main style={{ flex: 1, overflow: 'auto', padding: '20px' }}>
+          <main style={{ flex: 1, overflow: 'auto', padding: '20px', background: 'rgba(10,15,26,0.72)' }}>
             <React.Suspense fallback={<ModuleLoader />}>
               {renderModule()}
             </React.Suspense>
@@ -956,13 +1201,13 @@ const App = () => {
 
         {/* CHAT BOT PANEL */}
         {chatOpen && (
-          <div style={{ position: 'fixed', bottom: '20px', right: '20px', width: '380px', height: '550px', background: 'rgba(15,23,42,0.98)', border: '1px solid rgba(148,163,176,0.2)', borderRadius: '12px', boxShadow: '0 8px 24px rgba(0,0,0,0.4)', display: 'flex', flexDirection: 'column', overflow: 'hidden', backdropFilter: 'blur(20px)' }}>
+          <div style={{ position: 'fixed', bottom: isMobile ? '0' : '20px', right: isMobile ? '0' : '20px', left: isMobile ? '0' : 'auto', width: isMobile ? '100%' : '380px', height: isMobile ? '70vh' : '550px', background: 'rgba(15,23,42,0.98)', border: '1px solid rgba(148,163,176,0.2)', borderRadius: '12px', boxShadow: '0 8px 24px rgba(0,0,0,0.4)', display: 'flex', flexDirection: 'column', overflow: 'hidden', backdropFilter: 'blur(20px)' }}>
             <div style={{ padding: '12px 16px', borderBottom: '1px solid rgba(148,163,176,0.15)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'rgba(203,166,88,0.08)' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                 <Bot size={18} color="#cba658" />
                 <div>
                   <div style={{ color: '#cba658', fontSize: '13px', fontWeight: '600' }}>AuditDNA Assistant</div>
-                  <div style={{ color: '#22c55e', fontSize: '10px' }}>35 AI Cowboys Learning</div>
+                  <div style={{ color: '#22c55e', fontSize: '10px' }}>81 Niner Miners Learning</div>
                 </div>
               </div>
               <div style={{ display: 'flex', gap: '8px' }}>
@@ -993,7 +1238,7 @@ const App = () => {
             <div style={{ flex: 1, overflowY: 'auto', padding: '16px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
               {chatMessages.length === 0 && (
                 <div style={{ padding: '12px', background: 'rgba(148,163,176,0.12)', borderRadius: '8px', color: '#e2e8f0', fontSize: '12px' }}>
-                  Welcome! I'm connected to 35 AI/SI Cowboys that learn from every conversation. I'll analyze your needs and suggest new modules, workflows, and systems automatically. Ask me anything! (English & Spanish)
+                  Welcome! I'm connected to 81 Niner Miners that learn from every conversation. I'll analyze your needs and suggest new modules, workflows, and systems automatically. Ask me anything! (English & Spanish)
                 </div>
               )}
               {chatMessages.map((msg, i) => (
@@ -1009,7 +1254,7 @@ const App = () => {
               {isTyping && (
                 <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
                   <div style={{ width: '28px', height: '28px', borderRadius: '50%', background: 'rgba(148,163,176,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '10px', color: '#94a3b0', fontWeight: '600' }}>AI</div>
-                  <div style={{ padding: '10px 12px', borderRadius: '8px', background: 'rgba(148,163,176,0.12)', color: '#94a3b0', fontSize: '11px' }}>Analyzing with 35 AI Cowboys...</div>
+                  <div style={{ padding: '10px 12px', borderRadius: '8px', background: 'rgba(148,163,176,0.12)', color: '#94a3b0', fontSize: '11px' }}>Analyzing with 81 Niner Miners...</div>
                 </div>
               )}
               <div ref={chatEndRef} />
@@ -1024,23 +1269,27 @@ const App = () => {
         )}
 
         {/* MISSION CONTROL MODAL */}
-        <MissionControl
-          isOpen={missionControlOpen}
-          onClose={() => setMissionControlOpen(false)}
-          onOpenCalendar={() => { setMissionControlOpen(false); setActiveModule('Seasonal Calendar'); }}
-          onOpenMarketing={() => { setMissionControlOpen(false); setActiveModule('Email Marketing'); }}
-          onOpenCRM={() => { setMissionControlOpen(false); setActiveModule('Saul Intel CRM'); }}
-        />
+        <React.Suspense fallback={null}>
+          <MissionControl
+            isOpen={missionControlOpen}
+            onClose={() => setMissionControlOpen(false)}
+            onOpenCalendar={() => { setMissionControlOpen(false); setActiveModule('Seasonal Calendar'); }}
+            onOpenMarketing={() => { setMissionControlOpen(false); setActiveModule('Email Marketing'); }}
+            onOpenCRM={() => { setMissionControlOpen(false); setActiveModule('Saul Intel CRM'); }}
+          />
+        </React.Suspense>
 
         {/* COMMAND SPHERE MODAL */}
-        <CommandSphere
-          isOpen={commandSphereOpen}
-          onClose={() => setCommandSphereOpen(false)}
-          onNavigate={(module) => {
-            setActiveModule(module);
-            setCommandSphereOpen(false);
-          }}
-        />
+        <React.Suspense fallback={null}>
+          <CommandSphere
+            isOpen={commandSphereOpen}
+            onClose={() => setCommandSphereOpen(false)}
+            onNavigate={(module) => {
+              setActiveModule(module);
+              setCommandSphereOpen(false);
+            }}
+          />
+        </React.Suspense>
 
         {/* CSS ANIMATIONS */}
         <style>{`
@@ -1049,10 +1298,10 @@ const App = () => {
             50% { opacity: 0.5; box-shadow: 0 0 16px rgba(34,197,94,0.8); }
           }
         `}</style>
+        </div>
       </div>
     </IntelligenceProvider>
   );
 };
 
 export default App;
-
