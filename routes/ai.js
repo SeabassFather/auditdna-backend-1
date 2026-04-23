@@ -1,151 +1,113 @@
-// C:\AuditDNA\backend\routes\ai.js
-// Anthropic AI proxy â€” routes all Claude API calls from frontend through backend
-// Auto-loaded by server.js via: app.use('/api/ai', require('./routes/ai'));
-//
-// FIX LOG:
-//  1. node-fetch resolved once at module load (not per-request) â€” prevents Windows/CJS latency spikes
-//  2. anthropic-beta web-search header is now CONDITIONAL â€” only sent when tools include web_search
-//  3. Default max_tokens raised to 4000 for document generation (was 1200 â€” cut letters mid-sentence)
-//  4. Added /generate-doc endpoint (8000 token ceiling) for Factoring / PO Finance / LOC / SBA apps
+﻿// C:\AuditDNA\backend\routes\ai.js
+// Anthropic AI proxy — ALL Claude API calls go through here
+// Auto-mounted by server.js at /api/ai
+// Endpoints:
+//   POST /api/ai/generate      — general email/content generation
+//   POST /api/ai/generate-doc  — long-form docs (8000 tokens)
+//   GET  /api/ai/health        — route health check
 
 const express = require('express');
-const router = express.Router();
+const router  = express.Router();
 
-// Resolve node-fetch ONCE at startup â€” avoids dynamic import overhead on every request
-let _fetch;
-(async () => { _fetch = (await import('node-fetch')).default; })();
-const getFetch = () => _fetch;
-
-const ANTHROPIC_API = 'https://api.anthropic.com/v1/messages';
+const ANTHROPIC_URL     = 'https://api.anthropic.com/v1/messages';
 const ANTHROPIC_VERSION = '2023-06-01';
-const WEB_SEARCH_BETA   = 'web-search-2025-03-05';
-const DEFAULT_MODEL     = 'claude-sonnet-4-20250514';
+const DEFAULT_MODEL     = process.env.ANTHROPIC_MODEL || 'claude-sonnet-4-20250514';
 
-// â”€â”€â”€ Shared call helper â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-async function callAnthropic({ model, max_tokens, messages, tools, system }) {
-  const ANTHROPIC_KEY = process.env.ANTHROPIC_API_KEY;
-  if (!ANTHROPIC_KEY) throw new Error('ANTHROPIC_API_KEY not set in .env');
+// Lazy node-fetch (Node 18+ has global fetch; fall back if needed)
+const doFetch = async (url, opts) => {
+  if (typeof fetch === 'function') return fetch(url, opts);
+  const nf = (await import('node-fetch')).default;
+  return nf(url, opts);
+};
 
-  const payload = {
-    model:      model      || DEFAULT_MODEL,
-    max_tokens: max_tokens || 4000,           // FIX #3: was 1200
-    messages,
-  };
-  if (tools  && Array.isArray(tools))  payload.tools  = tools;
-  if (system)                           payload.system = system;
-
-  // FIX #1: use pre-resolved fetch
-  const fetch = getFetch();
-  if (!fetch) throw new Error('node-fetch not yet initialized â€” retry in 1 second');
-
-  // FIX #2: only send web-search beta header when tools actually include a web_search tool
-  const hasWebSearch = Array.isArray(tools) &&
-    tools.some(t => t.type === 'web_search_20250305' || t.name === 'web_search');
-
-  const headers = {
-    'Content-Type':      'application/json',
-    'x-api-key':         ANTHROPIC_KEY,
-    'anthropic-version': ANTHROPIC_VERSION,
-  };
-  if (hasWebSearch) headers['anthropic-beta'] = WEB_SEARCH_BETA;
-
-  const response = await fetch(ANTHROPIC_API, {
-    method: 'POST',
-    headers,
-    body: JSON.stringify(payload),
-  });
-
-  const data = await response.json();
-
-  if (!response.ok) {
-    const msg = data?.error?.message || 'Anthropic API error';
-    console.error('[AI proxy] Anthropic error:', data);
-    const err = new Error(msg);
-    err.status = response.status;
-    err.detail = data;
+async function callClaude({ prompt, system, max_tokens, model, messages }) {
+  const key = process.env.ANTHROPIC_API_KEY;
+  if (!key || !key.startsWith('sk-ant-')) {
+    const err = new Error('ANTHROPIC_API_KEY missing or malformed in process env');
+    err.status = 500;
     throw err;
   }
 
-  return data;
+  const body = {
+    model:      model      || DEFAULT_MODEL,
+    max_tokens: max_tokens || 1500,
+    system:     system || 'You are AuditDNA AI for Mexausa Food Group (US-Mexico produce corridor) and EnjoyBaja (real estate/mortgage). Professional, bilingual EN/ES when relevant. NMLS #337526.',
+    messages:   messages || [{ role: 'user', content: prompt }],
+  };
+
+  const resp = await doFetch(ANTHROPIC_URL, {
+    method: 'POST',
+    headers: {
+      'content-type':     'application/json',
+      'x-api-key':        key,
+      'anthropic-version': ANTHROPIC_VERSION,
+    },
+    body: JSON.stringify(body),
+  });
+
+  const raw = await resp.text();
+  if (!resp.ok) {
+    const err = new Error(`Anthropic ${resp.status}: ${raw.substring(0, 400)}`);
+    err.status = resp.status;
+    throw err;
+  }
+
+  let data;
+  try { data = JSON.parse(raw); }
+  catch { throw new Error('Anthropic returned non-JSON: ' + raw.substring(0, 200)); }
+
+  const text = (data.content || []).map(c => c.text || '').join('');
+  return { text, raw: data };
 }
 
-// â”€â”€â”€ POST /api/ai/generate â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-// General-purpose AI call (Brain events, email generation, CRM tasks)
-// Body: { model?, max_tokens?, messages, system?, tools? }
+// Parse "Subject: X\n\nBody..." pattern
+function splitSubjectBody(text) {
+  const m = text.match(/^\s*Subject:\s*(.+)\r?\n+/i);
+  if (m) return { subject: m[1].trim(), body: text.slice(m[0].length).trim() };
+  return { subject: null, body: text };
+}
+
+// ─── POST /generate ───────────────────────────────────────────────
 router.post('/generate', async (req, res) => {
   try {
-    const { model, max_tokens, messages, tools, system } = req.body;
-
-    if (!messages || !Array.isArray(messages)) {
-      return res.status(400).json({ error: 'messages array required' });
+    const { prompt, system, max_tokens, model } = req.body || {};
+    if (!prompt || !String(prompt).trim()) {
+      return res.status(400).json({ success: false, error: 'prompt required' });
     }
-
-    const data = await callAnthropic({ model, max_tokens, messages, tools, system });
-    res.json(data);
-
+    const { text, raw } = await callClaude({ prompt, system, max_tokens, model });
+    const { subject, body } = splitSubjectBody(text);
+    res.json({ success: true, subject, body, content: body, text, raw_model: raw.model, usage: raw.usage });
   } catch (err) {
-    console.error('[AI proxy /generate] error:', err.message);
-    res.status(err.status || 500).json({
-      error:  err.message,
-      detail: err.detail || null,
-    });
+    console.error('[AI] /generate error:', err.message);
+    res.status(err.status || 500).json({ success: false, error: err.message });
   }
 });
 
-// â”€â”€â”€ POST /api/ai/generate-doc â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-// FIX #4: High-token endpoint for long-form document generation
-// Used by: SaulIntelCRM FILES tab â†’ Factoring / PO Finance / LOC / SBA app generators
-// Body: { docType, clientData, messages?, system? }
+// ─── POST /generate-doc (long-form) ───────────────────────────────
 router.post('/generate-doc', async (req, res) => {
   try {
-    const { docType, clientData, messages, system } = req.body;
-
-    // Build messages from clientData if raw messages not provided
-    const finalMessages = messages || [
-      {
-        role: 'user',
-        content: `Generate a complete, professional ${docType} application letter for the following client:\n\n${JSON.stringify(clientData, null, 2)}\n\nWrite the full letter â€” no placeholders, no summaries. Include all sections: executive overview, business description, financing purpose, repayment plan, and supporting details. Sign as Saul Garcia, CEO, Mexausa Food Group, Inc..`,
-      },
-    ];
-
-    const finalSystem = system ||
-      `You are a senior commercial finance writer for Mexausa Food Group, Inc., a PACA-licensed fresh produce wholesale import/export company based in Ensenada, Baja California. You write complete, professional ${docType} application documents in English. Be direct, specific, and compelling. Output the full letter only â€” no preamble, no markdown fences.`;
-
-    const data = await callAnthropic({
-      model:      'claude-sonnet-4-20250514',
-      max_tokens: 8000,   // Full application letters need room
-      messages:   finalMessages,
-      system:     finalSystem,
-    });
-
-    // Extract text content for easy consumption by the frontend
-    const text = (data.content || [])
-      .filter(b => b.type === 'text')
-      .map(b => b.text)
-      .join('\n');
-
-    res.json({ content: text, raw: data });
-
+    const { prompt, system, max_tokens, model } = req.body || {};
+    if (!prompt || !String(prompt).trim()) {
+      return res.status(400).json({ success: false, error: 'prompt required' });
+    }
+    const cap = Math.min(parseInt(max_tokens) || 8000, 8000);
+    const { text, raw } = await callClaude({ prompt, system, max_tokens: cap, model });
+    res.json({ success: true, content: text, text, usage: raw.usage });
   } catch (err) {
-    console.error('[AI proxy /generate-doc] error:', err.message);
-    res.status(err.status || 500).json({
-      error:  err.message,
-      detail: err.detail || null,
-    });
+    console.error('[AI] /generate-doc error:', err.message);
+    res.status(err.status || 500).json({ success: false, error: err.message });
   }
 });
 
-// â”€â”€â”€ GET /api/ai/health â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── GET /health ──────────────────────────────────────────────────
 router.get('/health', (req, res) => {
-  const key = process.env.ANTHROPIC_API_KEY;
+  const k = process.env.ANTHROPIC_API_KEY || '';
   res.json({
-    ok:       !!key,
-    keySet:   !!key,
-    keyHint:  key ? `...${key.slice(-6)}` : 'NOT SET',
-    fetchReady: !!_fetch,
-    model:    DEFAULT_MODEL,
+    success:   true,
+    hasKey:    !!k,
+    keyPrefix: k ? k.substring(0, 12) + '...' : null,
+    model:     DEFAULT_MODEL,
   });
 });
 
 module.exports = router;
-
