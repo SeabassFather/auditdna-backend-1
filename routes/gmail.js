@@ -1,4 +1,4 @@
-﻿// ============================================================
+// ============================================================
 // AuditDNA Gmail Integration Route - DUAL PERSISTENCE
 // Backend: C:\AuditDNA\backend\routes\gmail.js
 // Tokens: AES-256 encrypted file + PostgreSQL backup
@@ -62,9 +62,9 @@ function createTransport() {
 // ============================================================
 // OAUTH2 ΓÇö used ONLY for contacts, labels, reading messages
 // ============================================================
-const CLIENT_ID     = '694423905775-v24ckb7b7gr5qj8kh78m0svmisi3a4i9.apps.googleusercontent.com';
-const CLIENT_SECRET = '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';
-const REDIRECT_URI  = 'http://localhost:5050/api/gmail/callback';
+const CLIENT_ID     = process.env.GOOGLE_CLIENT_ID || '694423905775-v24ckb7b7gr5qj8kh78m0svmisi3a4i9.apps.googleusercontent.com';
+const CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET || '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';
+const REDIRECT_URI  = process.env.GMAIL_REDIRECT_URI || 'http://localhost:5050/api/gmail/callback';
 
 const ENCRYPTION_KEY = process.env.VAULT_KEY || process.env.SESSION_SECRET || 'auditdna_gmail_vault_2026';
 const TOKEN_FILE     = path.join(__dirname, '..', '.gmail-tokens.enc');
