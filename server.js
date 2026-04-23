@@ -1335,4 +1335,7 @@ console.log('[DB] global.db assigned -> pool accessible to all routes');
 module.exports.pool = pool; module.exports.app = app;
 
 // COMMODITY SEARCH ENGINE
+try { const gm = require('./routes/gmail'); app.use('/api/gmail', gm); console.log('[OK] gmail routes loaded'); } catch(e) { console.error('[FAIL] gmail routes:', e.message); }
+try { const be = require('./routes/brainevents'); app.use('/api/brain/events', be); console.log('[OK] brain/events routes loaded'); } catch(e) { console.error('[FAIL] brain/events:', e.message); }
+
 try { const cs = require('./routes/commodity-search'); app.use('/api/commodity', cs); console.log('[OK] commodity-search mounted at /api/commodity'); } catch(e) { console.warn('[WARN] commodity:', e.message); }
