@@ -2,9 +2,10 @@
 
 // ============================================
 // AUTH ROUTES — 3-FIELD OWNER PORTAL
-// POST  /api/auth/login    { password, accessCode, pin } → JWT
-// GET   /api/auth/verify   Bearer <token> → { valid, user }
-// GET   /api/auth/health   → { ok, db }
+// POST  /api/auth/login       { password, accessCode, pin } → JWT
+// POST  /api/auth/verify-pin  Bearer + { pin } → { valid }
+// GET   /api/auth/verify      Bearer <token> → { valid, user }
+// GET   /api/auth/health      → { ok, db }
 // ============================================
 
 const express = require('express');
@@ -130,6 +131,78 @@ router.post('/login', async (req, res) => {
   } catch (err) {
     console.error('[AUTH/LOGIN]', err);
     return res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// ============================================
+// POST /verify-pin
+// Verifies user-submitted PIN against the pin stored in auth_users for the
+// currently-authenticated JWT user. Used by ModuleGate.jsx to lock
+// sensitive modules (CRM, Email Marketing, etc.).
+// Body: { pin: "0609051974" }
+// Header: Authorization: Bearer <jwt>
+// Returns: { valid: true } or { valid: false, error: "..." }
+// ============================================
+router.post('/verify-pin', async (req, res) => {
+  try {
+    const { pin } = req.body || {};
+    if (!pin || typeof pin !== 'string') {
+      return res.status(400).json({ valid: false, error: 'PIN required' });
+    }
+
+    // Decode JWT ourselves so this route works regardless of whether the
+    // global JWT middleware populates req.user for /api/auth/* paths.
+    const authHeader = req.headers.authorization || '';
+    const token = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : null;
+    if (!token) {
+      return res.status(401).json({ valid: false, error: 'No token' });
+    }
+
+    const secret = process.env.JWT_SECRET;
+    if (!secret) {
+      return res.status(500).json({ valid: false, error: 'Server auth not configured' });
+    }
+
+    let payload;
+    try {
+      payload = jwt.verify(token, secret);
+    } catch (e) {
+      return res.status(401).json({ valid: false, error: 'Invalid or expired token' });
+    }
+
+    const userId = payload.userId || payload.id || payload.user_id || payload.uid;
+    if (!userId) {
+      return res.status(401).json({ valid: false, error: 'Token missing user id' });
+    }
+
+    const pool = resolvePool();
+    if (!pool) {
+      return res.status(500).json({ valid: false, error: 'Database unavailable' });
+    }
+
+    const q = await pool.query(
+      'SELECT pin FROM auth_users WHERE id = $1 AND COALESCE(is_active, true) = true LIMIT 1',
+      [userId]
+    );
+    if (!q.rows.length) {
+      return res.status(404).json({ valid: false, error: 'User not found' });
+    }
+
+    const stored = q.rows[0].pin;
+    if (!stored) {
+      return res.status(404).json({ valid: false, error: 'PIN not set for this user' });
+    }
+
+    const ok = await verifySecret(pin, stored);
+    if (!ok) {
+      return res.status(401).json({ valid: false, error: 'Incorrect PIN' });
+    }
+
+    return res.json({ valid: true });
+
+  } catch (err) {
+    console.error('[AUTH/VERIFY-PIN]', err);
+    return res.status(500).json({ valid: false, error: err.message });
   }
 });
 

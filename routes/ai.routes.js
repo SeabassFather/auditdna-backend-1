@@ -22,7 +22,7 @@ const COMPANY_CONTEXT = `
 You are an AI assistant for Mexausa Food Group, Inc. and MexaUSA Food Group, Inc.
 
 COMPANY INFO:
-- CEO/COO: Saul Garcia (NMLS #337526)
+- CEO/COO: Saul Garcia 
 - Industry: Cross-border agricultural trading (Mexico/USA)
 - Headquarters: Royal Oaks, CA
 - Products: Avocados, berries, tomatoes, lettuce, citrus, peppers
@@ -36,7 +36,7 @@ SPECIALTIES:
 - Competitive financing options
 
 TONE: Professional, knowledgeable, friendly, results-oriented.
-Always sign letters as: Saul Garcia, CEO/COO, Mexausa Food Group, Inc., NMLS #337526
+Always sign letters as: Saul Garcia, CEO/COO, Mexausa Food Group, Inc., 
 `;
 
 // ===================================================================
@@ -389,7 +389,7 @@ REQUIREMENTS:
 - Be specific about products/services mentioned
 - Include relevant details (sizes, volumes, certifications if applicable)
 - End with a clear call-to-action
-- Sign as Saul Garcia, CEO/COO, Mexausa Food Group, Inc., NMLS #337526
+- Sign as Saul Garcia, CEO/COO, Mexausa Food Group, Inc., 
 
 Write the letter now:`;
 }
@@ -446,7 +446,7 @@ Would you be available for a brief call this week?
 Best regards,
 Saul Garcia
 CEO/COO, Mexausa Food Group, Inc.
-NMLS #337526
+
 ðŸ“ž (831) 555-0123
 ðŸ“§ saul@cmproducts.com`;
 }
@@ -469,7 +469,7 @@ Contact us today to learn more!
 Best regards,
 Saul Garcia
 CEO/COO, Mexausa Food Group, Inc.
-NMLS #337526`;
+`;
 }
 
 module.exports = router;

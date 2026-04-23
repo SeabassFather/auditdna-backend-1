@@ -147,7 +147,7 @@ ${note ? 'Note from administrator: ' + note + '\n' : ''}
 If you have any questions, contact us at:
 saul@mexausafg.com | +1 (831) 251-3116 | WhatsApp: +52-646-340-2686
 
-Mexausa Food Group, Inc. | Mexausa Food Group, Inc. | PACA #20241168
+Mexausa Food Group, Inc. | Mexausa Food Group, Inc.
         `.trim(),
       }).catch(e => console.error('[approval] email error:', e.message));
     }
@@ -212,7 +212,7 @@ Reason: ${reason}
 You are welcome to reapply or contact us directly to discuss your access needs:
 saul@mexausafg.com | +1 (831) 251-3116 | WhatsApp: +52-646-340-2686
 
-Mexausa Food Group, Inc. | Mexausa Food Group, Inc. | PACA #20241168
+Mexausa Food Group, Inc. | Mexausa Food Group, Inc.
         `.trim(),
       }).catch(e => console.error('[approval] deny email error:', e.message));
     }
@@ -240,7 +240,7 @@ router.post('/update-tier', ownerOnly, async (req, res) => {
       from: '"AuditDNA â€” Mexausa Food Group" <saul@mexausafg.com>',
       to: email,
       subject: 'Your AuditDNA Access Tier Has Been Updated',
-      text: `Your AuditDNA platform access tier has been updated to: ${TIER_LABELS[tier] || tier}.\n\nLog in at https://mexausafg.com to access your new modules.\n\nMexausa Food Group, Inc. | PACA #20241168`,
+      text: `Your AuditDNA platform access tier has been updated to: ${TIER_LABELS[tier] || tier}.\n\nLog in at https://mexausafg.com to access your new modules.\n\nMexausa Food Group, Inc.`,
     }).catch(() => {});
 
     res.json({ success: true, email, tier });
