@@ -1,6 +1,3 @@
-// C:\AuditDNA\backend\services\predict-service.js
-// Sprint C - Grower Predictive Engine service layer
-
 const Anthropic = require('@anthropic-ai/sdk');
 const prompts = require('../prompts/grower-predict-prompts');
 
@@ -16,13 +13,7 @@ async function predictCrop({ pool, grower, commodity, acres, planting_date, expe
   if (!acres || acres <= 0) throw new Error('acres must be positive');
 
   const userPayload = {
-    grower: {
-      id: grower.id,
-      name: grower.name || grower.company_name || 'Unknown',
-      grs_score: grower.grs_score || null,
-      region: region || grower.region || 'Unknown',
-      prior_harvests: grower.prior_harvests || []
-    },
+    grower: { id: grower.id, name: grower.name || 'Unknown', region: region || grower.region || 'Unknown' },
     crop: { commodity, acres, planting_date, expected_yield_per_acre, variety: variety || null, organic: !!organic },
     context: { current_date: new Date().toISOString().split('T')[0], platform: 'AuditDNA', currency: 'USD', pricing_basis: 'FOB wholesale' }
   };
@@ -31,7 +22,7 @@ async function predictCrop({ pool, grower, commodity, acres, planting_date, expe
     model: MODEL_PREDICT,
     max_tokens: 2000,
     system: prompts.predictSystem,
-    messages: [{ role: 'user', content: 'Predict the harvest outcome. Return ONLY JSON:\n\n' + JSON.stringify(userPayload, null, 2) }]
+    messages: [{ role: 'user', content: 'Predict harvest. Return ONLY JSON:\n\n' + JSON.stringify(userPayload, null, 2) }]
   });
 
   let raw = '';
@@ -63,14 +54,12 @@ async function draftCourtesyLetter({ buyer, grower, prediction, commodity, volum
     buyer: { company: buyer.company || 'Unknown', language_preference: buyer.language_preference || 'en', buyer_type: buyer.buyer_type || 'wholesale', prior_purchases: buyer.prior_purchases || [] },
     offer: { commodity, volume_lbs, harvest_window_start, pricing_range_per_case: pricing || null, grower_region: grower.region || null, organic: grower.organic || false }
   };
-
   const response = await anthropic.messages.create({
     model: MODEL_LETTER,
     max_tokens: 2000,
     system: prompts.courtesyLetterSystem,
     messages: [{ role: 'user', content: 'Draft a courtesy letter. Return ONLY JSON:\n\n' + JSON.stringify(payload, null, 2) }]
   });
-
   let raw = '';
   for (const block of response.content) { if (block.type === 'text') raw += block.text; }
   raw = raw.trim().replace(/^```json\s*/i, '').replace(/```\s*$/, '').trim();
