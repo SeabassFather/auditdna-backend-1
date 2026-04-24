@@ -316,7 +316,7 @@ To place an order or request samples, reply to this email or contact us directly
 Best regards,
 Saul Garcia
 CM Products Group, LLC. | Mexausa Food Group, Inc.
-NMLS #337526
+
 Saul@mexausafg.com | +1-831-251-3116`;
 
       // Insert draft offer

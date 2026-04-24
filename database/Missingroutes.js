@@ -268,7 +268,7 @@ I would welcome the opportunity to discuss how we can support your needs.
 Best regards,
 Saul Garcia
 CEO/COO, Mexausa Food Group, Inc.
-NMLS #337526`,
+`,
       mode: 'demo',
       message: 'Add ANTHROPIC_API_KEY to .env for real AI generation'
     });
@@ -294,7 +294,7 @@ NMLS #337526`,
                     Tone: ${tone || 'professional'}. 
                     For: ${contact?.name || 'Valued Partner'}.
                     Category: ${category || 'general produce'}.
-                    Sign as: Saul Garcia, CEO/COO, Mexausa Food Group, Inc., NMLS #337526`
+                    Sign as: Saul Garcia, CEO/COO, Mexausa Food Group, Inc., `
         }]
       })
     });

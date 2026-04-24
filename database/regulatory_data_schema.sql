@@ -32,7 +32,7 @@
 --
 -- COPYRIGHT & PATENT NOTICE:
 --   This data architecture is a component of the AuditDNA Platform.
---   Patent Pending. Saul Garcia, MFG Inc., NMLS #337526.
+--   Patent Pending. Saul Garcia, MFG Inc., .
 --   Unauthorized reproduction or commercial use is prohibited.
 -- ============================================================
 

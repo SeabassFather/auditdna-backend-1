@@ -212,7 +212,7 @@ class Brain extends EventEmitter {
       'latam_fx': { module: 'LATAM Intelligence', role: 'FX Monitoring', type: 'AI', status: 'ACTIVE', accuracy: 0.92, ops: 0, description: 'MXN/USD tracking, hedging recommendations, cost impact analysis' },
       'latam_travel': { module: 'LATAM Intelligence', role: 'Travel Risk Assessment', type: 'AI', status: 'ACTIVE', accuracy: 0.90, ops: 0, description: 'Real-time travel advisories, route safety scoring' },
 
-      // --- REAL ESTATE (NMLS #337526) ---
+      // --- REAL ESTATE  ---
       're_mortgage': { module: 'Real Estate', role: 'Mortgage Pre-Qualification', type: 'SI', status: 'ACTIVE', accuracy: 0.95, ops: 0, description: 'Automated 1003 analysis, USDA 502 eligibility, DTI calculation' },
       're_valuation': { module: 'Real Estate', role: 'Property Valuation', type: 'AI', status: 'ACTIVE', accuracy: 0.88, ops: 0, description: 'Comparable analysis, market trend valuation for Baja properties' },
 

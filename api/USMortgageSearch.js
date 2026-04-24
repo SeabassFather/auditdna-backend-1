@@ -452,7 +452,7 @@ export default function USMortgageSearch() {
         <div className="text-center space-y-3">
           <h3 className="text-2xl font-bold text-gray-800">Licensed Mortgage Professional</h3>
           <p className="text-xl font-bold text-gray-800">Saul Garcia</p>
-          <p className="text-lg font-semibold text-gray-700">NMLS License #337526</p>
+          <p className="text-lg font-semibold text-gray-700"> #337526</p>
           <p className="text-lg font-bold text-blue-700">Everwise Home Loans & Realty</p>
           <p className="text-base font-semibold text-gray-700">Company NMLS #1739012 | DRE #02067255</p>
           <p className="text-sm text-gray-600">15615 Alton Pkwy, Suite 450, Irvine, CA 92618</p>

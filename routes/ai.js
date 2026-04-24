@@ -31,7 +31,7 @@ async function callClaude({ prompt, system, max_tokens, model, messages }) {
   const body = {
     model:      model      || DEFAULT_MODEL,
     max_tokens: max_tokens || 1500,
-    system:     system || 'You are AuditDNA AI for Mexausa Food Group (US-Mexico produce corridor) and EnjoyBaja (real estate/mortgage). Professional, bilingual EN/ES when relevant. NMLS #337526.',
+    system:     system || 'You are AuditDNA AI for Mexausa Food Group (US-Mexico produce corridor) and EnjoyBaja (real estate/mortgage). Professional, bilingual EN/ES when relevant. .',
     messages:   messages || [{ role: 'user', content: prompt }],
   };
 

@@ -695,7 +695,7 @@ const App = () => {
     'Compliance & Auditing': { color: '#cba658', count: 18, modules: ['Compliance Hub', 'FSMA 204', 'GlobalGAP', 'PrimusGFS', 'SENASICA', 'Audit Manager', 'Travel Protection', 'Traveler Protection'] },
     'Agricultural Testing (81 AI)': { color: '#06b6d4', count: 9, modules: ['WaterTech Pro', 'SoilTech Pro', 'Fertilizer Analysis', 'Seed Germination', 'Traceability Hub', 'Lot Tracking', 'Chain of Custody', 'Recall Manager', 'QR Generator'] },
     'LATAM Intelligence': { color: '#cba658', count: 17, modules: ['LATAM Dashboard', 'Mexico Market', 'Central America', 'South America', 'International Travel Security', 'MAUTTR Registry', 'MAUTTR QR Scanner', 'MAUTTR Vehicles'] },
-    'Real Estate (NMLS #337526)': { color: '#cba658', count: 29, modules: ['Mortgage Loan Hub', '1003 Application', 'USDA 502 Housing', 'Mexico Real Estate', 'SII-MX', 'Sistema Inmobiliario', 'Gestion Inmobiliaria MX', 'Mortgage Calc', 'Property Search'] },
+    'Real Estate ': { color: '#cba658', count: 29, modules: ['Mortgage Loan Hub', '1003 Application', 'USDA 502 Housing', 'Mexico Real Estate', 'SII-MX', 'Sistema Inmobiliario', 'Gestion Inmobiliaria MX', 'Mortgage Calc', 'Property Search'] },
     'Spartan 300': { color: '#cba658', count: 11, modules: ['Consumer Protection', 'Mortgage Audit', 'TILA Analysis', 'Dispute Letters'] },
     'Trojan 700': { color: '#cba658', count: 11, modules: ['Enterprise Audit', 'Corporate Compliance', 'SOX Audit', 'Risk Assessment'] },
     'AI & SI (81 Agents)': { color: '#cba658', count: 26, modules: ['AI Dashboard', 'Document Analysis AI', 'Agent Manager', 'OCR Reader', 'Document AI', 'Compliance AI', 'Intelligence Dashboard', 'Multi-AI Verification'] },

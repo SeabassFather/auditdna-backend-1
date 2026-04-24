@@ -1,5 +1,5 @@
 -- =====================================================
--- AuditDNA Buyers Seed Data - PACA Licensed
+-- AuditDNA Buyers Seed Data - d
 -- 3000+ Brokers, Wholesalers, Distributors
 -- Generated: 2026-01-16
 -- =====================================================
