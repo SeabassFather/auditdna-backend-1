@@ -1,8 +1,6 @@
 const Anthropic = require('@anthropic-ai/sdk');
 const prompts = require('../prompts/grower-predict-prompts');
-
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
-
 const MODEL_PREDICT = process.env.PREDICT_MODEL || 'claude-opus-4-7';
 const MODEL_LETTER  = process.env.LETTER_MODEL  || 'claude-haiku-4-5-20251001';
 
@@ -19,9 +17,7 @@ async function predictCrop({ pool, grower, commodity, acres, planting_date, expe
   };
 
   const response = await anthropic.messages.create({
-    model: MODEL_PREDICT,
-    max_tokens: 2000,
-    system: prompts.predictSystem,
+    model: MODEL_PREDICT, max_tokens: 2000, system: prompts.predictSystem,
     messages: [{ role: 'user', content: 'Predict harvest. Return ONLY JSON:\n\n' + JSON.stringify(userPayload, null, 2) }]
   });
 
@@ -33,9 +29,11 @@ async function predictCrop({ pool, grower, commodity, acres, planting_date, expe
   try { prediction = JSON.parse(raw); }
   catch (e) { throw new Error('Claude returned invalid JSON: ' + raw.substring(0, 200)); }
 
+  const year = planting_date ? new Date(planting_date).getFullYear() : new Date().getFullYear();
+
   const yieldInsert = await pool.query(
-    'INSERT INTO grower_intel_yields (grower_id, commodity, acres, planting_date, expected_yield_per_acre, predicted_cases, predicted_margin, predicted_margin_pct, harvest_window_start, harvest_window_end, confidence_score, claude_reasoning, generated_at, claude_model) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,NOW(),$13) RETURNING id',
-    [grower.id, commodity, acres, planting_date, expected_yield_per_acre, prediction.predicted_cases, prediction.predicted_margin, prediction.predicted_margin_pct, prediction.harvest_window_start, prediction.harvest_window_end, prediction.confidence_score, prediction.reasoning, MODEL_PREDICT]
+    'INSERT INTO grower_intel_yields (grower_id, product, year, acres_harvested, yield_per_acre, predicted_cases, predicted_margin, predicted_margin_pct, harvest_window_start, harvest_window_end, confidence_score, claude_reasoning, generated_at, claude_model, source) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,NOW(),$13,$14) RETURNING id',
+    [grower.id, commodity, year, acres, expected_yield_per_acre, prediction.predicted_cases, prediction.predicted_margin, prediction.predicted_margin_pct, prediction.harvest_window_start, prediction.harvest_window_end, prediction.confidence_score, prediction.reasoning, MODEL_PREDICT, 'claude_predict']
   );
   const yield_id = yieldInsert.rows[0].id;
 
@@ -55,9 +53,7 @@ async function draftCourtesyLetter({ buyer, grower, prediction, commodity, volum
     offer: { commodity, volume_lbs, harvest_window_start, pricing_range_per_case: pricing || null, grower_region: grower.region || null, organic: grower.organic || false }
   };
   const response = await anthropic.messages.create({
-    model: MODEL_LETTER,
-    max_tokens: 2000,
-    system: prompts.courtesyLetterSystem,
+    model: MODEL_LETTER, max_tokens: 2000, system: prompts.courtesyLetterSystem,
     messages: [{ role: 'user', content: 'Draft a courtesy letter. Return ONLY JSON:\n\n' + JSON.stringify(payload, null, 2) }]
   });
   let raw = '';

@@ -735,7 +735,7 @@ router.post('/predict', authRequired, async (req, res) => {
     if (!expected_yield_per_acre || expected_yield_per_acre <= 0) return res.status(400).json({ success: false, error: 'expected_yield_per_acre must be > 0' });
 
     // Load grower record
-    const growerQ = await pool.query('SELECT id, company_name, contact_name, state_province, country FROM growers WHERE id=$1', [grower_id]);
+    const growerQ = await pool.query('SELECT id, COALESCE(NULLIF(legal_name,''''), NULLIF(trade_name,''''), NULLIF(company_name,''''), contact_name, primary_contact, ''Grower #'' || id) AS name, COALESCE(state_province, state_region, region) AS region, country FROM growers WHERE id=$1', [grower_id]);
     if (growerQ.rows.length === 0) return res.status(404).json({ success: false, error: 'grower not found' });
     const grower = growerQ.rows[0];
     grower.name = grower.company_name || grower.contact_name;
