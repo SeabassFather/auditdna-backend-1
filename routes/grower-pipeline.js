@@ -715,11 +715,7 @@ router.post('/:grower_id/reset-password', async (req, res) => {
   }
 });
 
-// ============================================================
 // SPRINT C - GROWER PREDICTIVE ENGINE
-// POST /api/grower/predict - Claude-powered yield + margin forecast
-// Auto-creates financing_deals row on success (source_type='predict')
-// ============================================================
 const predictService = require('../services/predict-service');
 
 router.post('/predict', authRequired, async (req, res) => {
@@ -727,30 +723,26 @@ router.post('/predict', authRequired, async (req, res) => {
   try {
     const { grower_id, commodity, acres, planting_date, expected_yield_per_acre, variety, region, organic } = req.body || {};
 
-    // Validate required fields
     if (!grower_id) return res.status(400).json({ success: false, error: 'grower_id required' });
     if (!commodity) return res.status(400).json({ success: false, error: 'commodity required' });
     if (!acres || acres <= 0) return res.status(400).json({ success: false, error: 'acres must be > 0' });
-    if (!planting_date) return res.status(400).json({ success: false, error: 'planting_date required (YYYY-MM-DD)' });
+    if (!planting_date) return res.status(400).json({ success: false, error: 'planting_date required' });
     if (!expected_yield_per_acre || expected_yield_per_acre <= 0) return res.status(400).json({ success: false, error: 'expected_yield_per_acre must be > 0' });
 
-    // Load grower record
-    const growerQ = await pool.query('SELECT id, COALESCE(NULLIF(legal_name,''''), NULLIF(trade_name,''''), NULLIF(company_name,''''), contact_name, primary_contact, ''Grower #'' || id) AS name, COALESCE(state_province, state_region, region) AS region, country FROM growers WHERE id=$1', [grower_id]);
+    const lookupSQL = "SELECT id, COALESCE(NULLIF(legal_name,''), NULLIF(trade_name,''), NULLIF(company_name,''), contact_name, primary_contact, 'Grower #' || id) AS name, COALESCE(state_province, state_region, region) AS region, country FROM growers WHERE id=$1";
+    const growerQ = await pool.query(lookupSQL, [grower_id]);
     if (growerQ.rows.length === 0) return res.status(404).json({ success: false, error: 'grower not found' });
     const grower = growerQ.rows[0];
-    grower.name = grower.company_name || grower.contact_name;
-    grower.region = region || grower.state_province;
+    grower.region = region || grower.region;
 
-    console.log('[PREDICT] Starting for grower=' + grower_id + ' commodity=' + commodity + ' acres=' + acres);
+    console.log('[PREDICT] grower=' + grower_id + ' commodity=' + commodity + ' acres=' + acres);
 
-    // Call Claude predict service
     const result = await predictService.predictCrop({
       pool, grower, commodity, acres, planting_date, expected_yield_per_acre, region, variety, organic
     });
 
-    console.log('[PREDICT] Success yield_id=' + result.yield_id + ' deal_id=' + result.deal_id + ' confidence=' + result.prediction.confidence_score);
+    console.log('[PREDICT] yield_id=' + result.yield_id + ' deal_id=' + result.deal_id);
 
-    // Broadcast SSE event if broadcaster available
     try {
       const sse = require('../autonomy/sse-broadcaster');
       if (sse && sse.broadcast) {
@@ -759,22 +751,15 @@ router.post('/predict', authRequired, async (req, res) => {
           confidence: result.prediction.confidence_score
         });
       }
-    } catch (e) { /* broadcaster optional */ }
+    } catch (e) { /* SSE optional */ }
 
-    res.json({
-      success: true,
-      yield_id: result.yield_id,
-      deal_id: result.deal_id,
-      prediction: result.prediction
-    });
-
+    res.json({ success: true, yield_id: result.yield_id, deal_id: result.deal_id, prediction: result.prediction });
   } catch (err) {
     console.error('[PREDICT] Error:', err.message);
     res.status(500).json({ success: false, error: err.message });
   }
 });
 
-// POST /api/grower/predict/:yieldId/match-buyers - find candidate buyers
 router.post('/predict/:yieldId/match-buyers', authRequired, async (req, res) => {
   const pool = getPool(req);
   try {
@@ -782,14 +767,11 @@ router.post('/predict/:yieldId/match-buyers', authRequired, async (req, res) => 
     const yldQ = await pool.query('SELECT * FROM grower_intel_yields WHERE id=$1', [yieldId]);
     if (yldQ.rows.length === 0) return res.status(404).json({ success: false, error: 'yield not found' });
     const yld = yldQ.rows[0];
-
     const volumeLbs = Math.round((yld.predicted_cases || 0) * 40);
-    const minScore = parseFloat(req.body?.min_score ?? 0.25); // Q2 decision: 25% threshold
-
+    const minScore = parseFloat(req.body?.min_score ?? 0.25);
     const buyers = await predictService.findMatchedBuyers({
-      pool, commodity: yld.commodity, volume_lbs: volumeLbs, min_score: minScore
+      pool, commodity: yld.product, volume_lbs: volumeLbs, min_score: minScore
     });
-
     res.json({ success: true, yield_id: yieldId, buyer_count: buyers.length, buyers });
   } catch (err) {
     console.error('[MATCH-BUYERS] Error:', err.message);
