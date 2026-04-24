@@ -1,4 +1,4 @@
-﻿// ===============================================================
+// ===============================================================
 // AUDITDNA BACKEND SERVER v4.1 Ã¢â‚¬â€ SECURED
 // ===============================================================
 // CHANGES FROM v4.0:
@@ -389,6 +389,8 @@ try {
 try {
   const financingRoutes = require('./routes/financing');
   app.use('/api/financing', financingRoutes);
+  // SPRINT C - Explicit mount of grower-pipeline.js (overrides any dynamic loader version)
+  try { app.use('/api/grower', require('./routes/grower-pipeline')); console.log('[OK] grower-pipeline.js: mounted at /api/grower (Sprint C)'); } catch(e) { console.error('[FAIL] grower-pipeline mount:', e.message); }
   console.log('[OK] /api/financing mounted');
 } catch (err) {
   console.error('[WARN] /api/financing mount failed:', err.message);
