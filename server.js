@@ -1398,3 +1398,4 @@ try {
   autonomy.boot(_autonomyPool);
   console.log('[OK] Autonomy Phase 2A booted - 15 agents loaded');
 } catch (e) { console.warn('[WARN] Autonomy boot failed:', e.message); }
+app.use('/api/auth', require('./routes/pin-verify'));
