@@ -106,6 +106,10 @@ app.use(require('./routes/dealIntelligence'));
 // Sprint C P15: Brain Events + HARVEST
 app.use(require('./routes/brainEvents'));
 
+
+// P17: Lender Marketplace
+app.use(require('./routes/lenderMarketplace'));
+
 app.listen(PORT, () => {
         console.log(`Ã°Å¸Å¡â‚¬ AuditDNA Backend running on port ${PORT}`);
         console.log(`Ã°Å¸â€œÅ  API URL: http://process.env.DB_HOST:${PORT}`);
