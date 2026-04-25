@@ -78,6 +78,10 @@ if (MONGO_URI) {
 // Sprint C P6: Deal Documents
 app.use(require('./routes/dealDocuments'));
 
+
+// Sprint C P7: Lender Responses
+app.use(require('./routes/lenderResponses'));
+
 app.listen(PORT, () => {
         console.log(`Ã°Å¸Å¡â‚¬ AuditDNA Backend running on port ${PORT}`);
         console.log(`Ã°Å¸â€œÅ  API URL: http://process.env.DB_HOST:${PORT}`);
