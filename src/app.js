@@ -82,6 +82,10 @@ app.use(require('./routes/dealDocuments'));
 // Sprint C P7: Lender Responses
 app.use(require('./routes/lenderResponses'));
 
+
+// Sprint C P9: Borrowers
+app.use(require('./routes/borrowers'));
+
 app.listen(PORT, () => {
         console.log(`Ã°Å¸Å¡â‚¬ AuditDNA Backend running on port ${PORT}`);
         console.log(`Ã°Å¸â€œÅ  API URL: http://process.env.DB_HOST:${PORT}`);
