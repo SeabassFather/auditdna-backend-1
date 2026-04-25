@@ -1,4 +1,3 @@
-// routes/factor-intake.js  --  Sprint C P4 Deal Floor intake
 const express = require('express');
 const router = express.Router();
 const jwt = require('jsonwebtoken');
