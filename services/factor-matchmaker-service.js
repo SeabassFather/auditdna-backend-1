@@ -1,4 +1,4 @@
-﻿// C:\AuditDNA\backend\services\factor-matchmaker-service.js
+// C:\AuditDNA\backend\services\factor-matchmaker-service.js
 // Sprint C Phase 3 - Factor Matchmaker brain wired to Claude Opus 4.7
 // HARDENED: harvest window from yields, server-side bucket math, PII stripping
 
