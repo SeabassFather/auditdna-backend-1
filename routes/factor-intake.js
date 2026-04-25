@@ -1,8 +1,4 @@
 // routes/factor-intake.js  --  Sprint C P4 Deal Floor intake
-// POST /api/factor/intake/manual   (auth required)
-// POST /api/factor/intake/parse    (auth, multipart, Vision parse stub)
-// GET  /api/factor/intake/deals    (auth, list)
-
 const express = require('express');
 const router = express.Router();
 const jwt = require('jsonwebtoken');
@@ -24,38 +20,68 @@ function getDb() {
   return null;
 }
 
-const COLS = [
-  'grower_name','buyer_name','commodity','variety',
-  'quantity','quantity_unit','unit_price','total_value',
-  'invoice_number','po_number','ship_date','payment_terms',
-  'origin_country','origin_state','dest_country','dest_state',
-  'deal_type','source_channel','notes'
-];
-
 router.post('/manual', authRequired, async (req, res) => {
   const db = getDb();
   if (!db) return res.status(500).json({ error: 'db_unavailable' });
-
   try {
     const b = req.body || {};
-    const vals = COLS.map(c => (b[c] === undefined ? null : b[c]));
     const userId = (req.user && (req.user.id || req.user.user_id)) || null;
 
-    const placeholders = COLS.map((_, i) => '$' + (i + 1)).join(',');
-    const colList = COLS.join(',');
-    const sql =
-      'INSERT INTO financing_deals (' + colList + ', created_by, status, created_at) ' +
-      'VALUES (' + placeholders + ', $' + (COLS.length + 1) + ", 'INTAKE', NOW()) " +
-      'RETURNING id, invoice_number, po_number, total_value, created_at';
+    const grower_name    = b.grower_name || null;
+    const buyer_name     = b.buyer_name || null;
+    const commodity      = b.commodity || null;
+    const quantity       = b.quantity != null ? Number(b.quantity) : null;
+    const unit           = b.unit || b.quantity_unit || null;
+    const unit_price     = b.unit_price != null ? Number(b.unit_price) : null;
+    const invoice_amount = b.invoice_amount != null ? Number(b.invoice_amount)
+                         : (b.total_value != null ? Number(b.total_value) : null);
+    const volume_lbs     = b.volume_lbs != null ? Number(b.volume_lbs) : null;
+    const invoice_number = b.invoice_number || null;
+    const po_number      = b.po_number || null;
+    const invoice_date   = b.invoice_date || b.ship_date || null;
+    const due_date       = b.due_date || null;
+    const payment_terms  = b.payment_terms || null;
+    const origin_region  = b.origin_region
+                         || [b.origin_state, b.origin_country].filter(Boolean).join(', ') || null;
+    const destination_region = b.destination_region
+                         || [b.dest_state, b.dest_country].filter(Boolean).join(', ') || null;
+    const harvest_window = b.harvest_window || null;
+    const notes          = b.notes || null;
+    const source_lang    = b.source_lang || 'en';
+    const source_type    = b.source_type || b.source_channel || 'manual';
 
-    const r = await db.query(sql, [...vals, userId]);
+    const sql = `
+      INSERT INTO financing_deals
+        (grower_name, buyer_name, commodity,
+         quantity, unit, unit_price, invoice_amount, volume_lbs,
+         invoice_number, po_number, invoice_date, due_date, payment_terms,
+         origin_region, destination_region, harvest_window,
+         notes, source_lang, source_type,
+         status, stage, created_by, created_at, updated_at)
+      VALUES
+        ($1,$2,$3,
+         $4,$5,$6,$7,$8,
+         $9,$10,$11,$12,$13,
+         $14,$15,$16,
+         $17,$18,$19,
+         'ELIGIBLE','PROPOSAL',$20, NOW(), NOW())
+      RETURNING id, invoice_number, po_number, invoice_amount, created_at`;
+
+    const r = await db.query(sql, [
+      grower_name, buyer_name, commodity,
+      quantity, unit, unit_price, invoice_amount, volume_lbs,
+      invoice_number, po_number, invoice_date, due_date, payment_terms,
+      origin_region, destination_region, harvest_window,
+      notes, source_lang, source_type,
+      userId
+    ]);
     const row = r.rows[0];
     return res.json({
       ok: true,
       deal_id: row.id,
       invoice_number: row.invoice_number,
       po_number: row.po_number,
-      total_value: row.total_value,
+      invoice_amount: row.invoice_amount,
       created_at: row.created_at
     });
   } catch (e) {
@@ -73,8 +99,8 @@ router.get('/deals', authRequired, async (req, res) => {
   if (!db) return res.status(500).json({ error: 'db_unavailable' });
   try {
     const r = await db.query(
-      'SELECT id, grower_name, buyer_name, commodity, total_value, status, created_at ' +
-      'FROM financing_deals ORDER BY created_at DESC LIMIT 50'
+      `SELECT id, grower_name, buyer_name, commodity, invoice_amount, status, stage, created_at
+       FROM financing_deals ORDER BY created_at DESC LIMIT 50`
     );
     return res.json({ ok: true, deals: r.rows });
   } catch (e) {
