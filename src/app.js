@@ -1,4 +1,4 @@
-import express from 'express';
+﻿import express from 'express';
 import mongoose from 'mongoose';
 import dotenv from 'dotenv';
 import cors from 'cors';
@@ -73,22 +73,26 @@ if (MONGO_URI) {
       useUnifiedTopology: true 
     })
     .then(() => {
-      console.log('âœ… MongoDB Connected');
-      app.listen(PORT, () => {
-        console.log(`ðŸš€ AuditDNA Backend running on port ${PORT}`);
-        console.log(`ðŸ“Š API URL: http://process.env.DB_HOST:${PORT}`);
+      console.log('Ã¢Å“â€¦ MongoDB Connected');
+      
+// Sprint C P6: Deal Documents
+app.use(require('./routes/dealDocuments'));
+
+app.listen(PORT, () => {
+        console.log(`Ã°Å¸Å¡â‚¬ AuditDNA Backend running on port ${PORT}`);
+        console.log(`Ã°Å¸â€œÅ  API URL: http://process.env.DB_HOST:${PORT}`);
       });
     })
     .catch(err => {
-      console.error('âŒ MongoDB Connection Error:', err);
+      console.error('Ã¢ÂÅ’ MongoDB Connection Error:', err);
       process.exit(1);
     });
 } else {
   // Start without MongoDB if not configured
-  console.log('âš ï¸  MongoDB URI not found - starting without database');
+  console.log('Ã¢Å¡Â Ã¯Â¸Â  MongoDB URI not found - starting without database');
   app.listen(PORT, () => {
-    console.log(`ðŸš€ AuditDNA Backend running on port ${PORT}`);
-    console.log(`ðŸ“Š API URL: http://process.env.DB_HOST:${PORT}`);
+    console.log(`Ã°Å¸Å¡â‚¬ AuditDNA Backend running on port ${PORT}`);
+    console.log(`Ã°Å¸â€œÅ  API URL: http://process.env.DB_HOST:${PORT}`);
   });
 }
 
