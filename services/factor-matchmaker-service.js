@@ -157,6 +157,7 @@ async function scoreDeals({ pool, deal_id }) {
   try { scoring = JSON.parse(raw); }
   catch (e) { throw new Error('Claude returned invalid JSON: ' + raw.substring(0, 300)); }
 
+  try { _emitFactorEvent('DEAL_SCORED', { deal_id: deal_id, primary: scoring && scoring.primary_recommendation && scoring.primary_recommendation.partner_id, pool_size: (scoring && scoring.auction_pool || []).length }); } catch(e){}
   return { scoring, deal_id, model: MODEL_SCORE };
 }
 
@@ -250,6 +251,7 @@ async function draftPartnerOutreach({ pool, deal_id, partner_id, outreach_type }
   draft.deal_id = deal_id;
   draft.harvest_window_used = harvest_window || 'TBD';
   draft.invoice_bucket_used = bucketInvoice(deal.invoice_amount);
+  try { _emitFactorEvent('DEAL_DRAFTED', { deal_id: deal_id, partner_id: partner_id, outreach_type: outreach_type, harvest_window: draft.harvest_window_used }); } catch(e){}
   return draft;
 }
 
@@ -308,6 +310,7 @@ async function executeOutreach({ pool, deal_id, partner_id, draft, dryRun = fals
 
   await ntfyPush('Factor Outreach Sent: ' + partner.name, 'Deal #' + deal_id + ' - ' + draft.outreach_type + ' - ' + partner.email, 'default');
 
+  try { _emitFactorEvent('DEAL_SENT', { deal_id: deal_id, partner_id: partner_id, message_id: sendResult.messageId, outreach_type: draft.outreach_type, document_id: insertResult.rows[0].id }); } catch(e){}
   return {
     success: true,
     deal_id,
