@@ -391,9 +391,9 @@ try {
   app.use('/api/financing', financingRoutes);
   // SPRINT C - Explicit mount of grower-pipeline.js (overrides any dynamic loader version)
   // SPRINT C Phase 3 - Factor Matchmaker
-  try { app.use('/api/factor', require('./routes/factor-matchmaker'));
-app.use('/api/factor', require('./routes/factor-intake'));
-app.use('/api/brain', require('./routes/brain-stream')); console.log('[OK] factor-matchmaker.js mounted at /api/factor (Sprint C P3)'); } catch(e) { console.error('[FAIL] factor-matchmaker mount:', e.message); }
+  try { app.use('/api/factor', require('./routes/factor-matchmaker')); console.log('[OK] factor-matchmaker mounted'); } catch(e) { console.error('[FAIL] factor-matchmaker mount:', e.message); }
+  try { app.use('/api/factor/intake', require('./routes/factor-intake')); console.log('[OK] factor-intake mounted at /api/factor/intake'); } catch(e) { console.error('[FAIL] factor-intake mount:', e.message); }
+  try { app.use('/api/brain', require('./routes/brain-stream')); console.log('[OK] brain-stream mounted at /api/brain'); } catch(e) { console.error('[FAIL] brain-stream mount:', e.message); }
   try { app.use('/api/grower', require('./routes/grower-pipeline')); console.log('[OK] grower-pipeline.js: mounted at /api/grower (Sprint C)'); } catch(e) { console.error('[FAIL] grower-pipeline mount:', e.message); }
   console.log('[OK] /api/financing mounted');
 } catch (err) {
