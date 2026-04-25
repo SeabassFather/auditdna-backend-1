@@ -94,6 +94,10 @@ app.use(require('./routes/dealRiskScoring'));
 // Sprint C P12: Borrower Portal
 app.use(require('./routes/borrowerPortal'));
 
+
+// Sprint C P13: Notifications
+app.use(require('./routes/notificationEngine'));
+
 app.listen(PORT, () => {
         console.log(`Ã°Å¸Å¡â‚¬ AuditDNA Backend running on port ${PORT}`);
         console.log(`Ã°Å¸â€œÅ  API URL: http://process.env.DB_HOST:${PORT}`);
