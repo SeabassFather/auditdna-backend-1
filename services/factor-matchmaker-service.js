@@ -1,4 +1,4 @@
-// C:\AuditDNA\backend\services\factor-matchmaker-service.js
+﻿// C:\AuditDNA\backend\services\factor-matchmaker-service.js
 // Sprint C Phase 3 - Factor Matchmaker brain wired to Claude Opus 4.7
 // HARDENED: harvest window from yields, server-side bucket math, PII stripping
 
@@ -67,7 +67,7 @@ async function getHarvestWindow(pool, deal) {
   if (deal.source_type !== 'predict' || !deal.grower_id) return null;
   try {
     const q = await pool.query(
-      "SELECT prediction_data, harvest_window_start, harvest_window_end, planting_date, year, product " +
+      "SELECT harvest_window_start, harvest_window_end, year, product " +
       "FROM grower_intel_yields " +
       "WHERE grower_id=$1 AND product=$2 " +
       "ORDER BY id DESC LIMIT 1",
@@ -81,7 +81,7 @@ async function getHarvestWindow(pool, deal) {
       const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
       return months[start.getMonth()] + ' ' + start.getDate() + ' - ' + months[end.getMonth()] + ' ' + end.getDate() + ', ' + start.getFullYear();
     }
-    if (row.prediction_data && row.prediction_data.harvest_window) return row.prediction_data.harvest_window;
+    // prediction_data column removed - branch dead code retained for clarity
     return null;
   } catch (e) { console.warn('[HARVEST_WINDOW]', e.message); return null; }
 }
