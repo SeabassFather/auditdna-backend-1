@@ -8,15 +8,6 @@ const fs = require('fs');
 const path = require('path');
 const fetch = (...args) => import('node-fetch').then(({default: f}) => f(...args));
 const prompts = require('../prompts/factor-matchmaker-prompts');
-// === FM: brain emitter helper for live SSE to DealFloor cockpit ===
-function _emitFactorEvent(type, payload) {
-  try {
-    if (global.brainEmitter && typeof global.brainEmitter.emit === 'function') {
-      global.brainEmitter.emit('factor_event', { type, ...payload, ts: Date.now() });
-    }
-  } catch (e) { /* never block factor flow on emitter failure */ }
-}
-
 
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
@@ -95,7 +86,7 @@ async function getHarvestWindow(pool, deal) {
   } catch (e) { console.warn('[HARVEST_WINDOW]', e.message); return null; }
 }
 
-async function _emitFactorEvent("DEAL_SCORED", { deal_id: deal && deal.id, partner_count: (auctionPool || []).length, primary: primary && primary.partner_id }); scoreDeals({ pool, deal_id }) {
+async function scoreDeals({ pool, deal_id }) {
   if (!pool) throw new Error('pool required');
   if (!deal_id) throw new Error('deal_id required');
 
@@ -257,7 +248,7 @@ async function draftPartnerOutreach({ pool, deal_id, partner_id, outreach_type }
   return draft;
 }
 
-async function _emitFactorEvent("DEAL_SENT", { deal_id: dealId, partner_id: partnerId, message_id: result && result.messageId }); executeOutreach({ pool, deal_id, partner_id, draft, dryRun = false }) {
+async function executeOutreach({ pool, deal_id, partner_id, draft, dryRun = false }) {
   const partnerQ = await pool.query('SELECT * FROM factoring_partners WHERE partner_id=$1', [partner_id]);
   if (partnerQ.rows.length === 0) throw new Error('partner not found');
   const partner = partnerQ.rows[0];
