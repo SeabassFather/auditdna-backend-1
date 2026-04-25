@@ -1,3 +1,15 @@
+
+// === A6.2 JWT minting for tappable Actions ===
+const _jwt = require('jsonwebtoken');
+const _JWT_SECRET = process.env.JWT_SECRET || 'auditdna-grower-jwt-dev';
+function mintWatchJwt(scope) {
+  // 24h watch-action token, scoped to factor approve/skip/view only
+  return _jwt.sign(
+    { userId: 1, username: 'saul', role: 'owner', name: 'Saul', module: 'watch', scope: scope || ['factor:approve','factor:skip','factor:view','*'] },
+    _JWT_SECRET,
+    { expiresIn: '24h' }
+  );
+}
 // ============================================================
 // watch-notify.js â€” SmartWatch Notification Bridge
 // AuditDNA Backend | C:\AuditDNA\backend\services\watch-notify.js
@@ -42,7 +54,7 @@ async function sendWatch({ title, message, priority = P.DEFAULT, tags = [], acti
   };
 
   if (NTFY_TOKEN) headers['Authorization'] = `Bearer ${NTFY_TOKEN}`;
-  if (actions.length) headers['Actions'] = actions.join('; ');
+  if (actions.length) const _watchTok = mintWatchJwt(); const _authedActions = actions.map(a => a + (a.toLowerCase().startsWith('http,') && a.indexOf('headers.Authorization=') < 0 ? , headers.Authorization=Bearer +_watchTok : '')); headers['Actions'] = _authedActions.join('; ');
 
   try {
     const res = await fetch(`${NTFY_BASE}/${CHANNEL}`, {
