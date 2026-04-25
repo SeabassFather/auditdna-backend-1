@@ -8,6 +8,11 @@ const fs = require('fs');
 const path = require('path');
 const fetch = (...args) => import('node-fetch').then(({default: f}) => f(...args));
 const prompts = require('../prompts/factor-matchmaker-prompts');
+// FM brain emitter
+function _emitFactorEvent(type, payload) {
+  try { if (global.brainEmitter && typeof global.brainEmitter.emit === 'function') { global.brainEmitter.emit('factor_event', Object.assign({ type, ts: Date.now() }, payload)); } } catch(e){}
+}
+
 
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
