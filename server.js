@@ -415,6 +415,21 @@ try {
 } catch(e) { console.warn('[WARN] crm.routes not found:', e.message); }
 
 // ===============================================================
+// SPRINT D - COMPLIANCE CENTER (Sprint D Run 1, 2026-04-26)
+// 6-tab module: dashboard, PACA counterparty lookup, cert tracker,
+// production declarations, document vault, mobile field uploads.
+// Backed by 6 tables (compliance_certs, compliance_documents,
+// paca_registry_seed, production_declarations, compliance_alerts,
+// field_uploads) + 3 views. Migration: compliance_center.sql
+// ===============================================================
+try {
+  app.use('/api/compliance-center', require('./routes/compliance-center'));
+  explicitMounts.push({ file: 'compliance-center.js', path: '/api/compliance-center' });
+  console.log('[OK] compliance-center: mounted at /api/compliance-center');
+} catch(e) { console.error('[FAIL] compliance-center mount:', e.message); }
+
+
+// ===============================================================
 // CREDENTIAL RECOVERY ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â /api/auth/recover-credentials
 // Rate limited: 3 per hour per IP
 // ===============================================================
@@ -1248,6 +1263,7 @@ const SKIP_AUTO = new Set([
   'letterEngine.js',
   'emailScraper.js',   // explicitly mounted at /api/scraper (requireAdmin)
   'crm.routes.js',     // explicitly mounted at /api/crm (frontend expects /api/crm/*)
+  'compliance-center.js', // explicitly mounted at /api/compliance-center (Sprint D)
   'Crm.js',            // hardcoded bad DB config (host literal string 'process.env.DB_HOST')
 ]);
 
