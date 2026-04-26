@@ -1349,7 +1349,11 @@ app.get('/api/routes', requireOwner, (req, res) => {
 // START SERVER
 // ===============================================================
 
-const server = app.listen(PORT, () => {
+const server = 
+// SPRINT D - Price Prediction Engine
+app.use('/api/ai/predict-price', require('./routes/ai-price-predict'));
+
+app.listen(PORT, () => {
   const totalRoutes = explicitMounts.length + loadedRoutes.length;
   console.log(`
 ================================================================
