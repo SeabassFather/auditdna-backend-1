@@ -301,7 +301,8 @@ try {
 
 // Sprint C Run 13B: OpenClaw + Cohesive Tree Bus
 try {
-  const openClawRoutes = require('./src/routes/openClawAgent');
+  const openClawFactory = require('./src/routes/openClawAgent');
+  const openClawRoutes = (typeof openClawFactory === 'function' && openClawFactory.length <= 1) ? openClawFactory(global.db) : openClawFactory;
   app.use('/api/openclaw', openClawRoutes);
   if (typeof explicitMounts !== 'undefined') explicitMounts.push({ file: 'openClawAgent.js', path: '/api/openclaw' });
   console.log('[OK] openClawAgent.js mounted at /api/openclaw');
