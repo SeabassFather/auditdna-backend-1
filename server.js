@@ -1,24 +1,24 @@
-// ===============================================================
-// AUDITDNA BACKEND SERVER v4.1 Ã¢â‚¬â€ SECURED
+﻿// ===============================================================
+// AUDITDNA BACKEND SERVER v4.1 ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â SECURED
 // ===============================================================
 // CHANGES FROM v4.0:
-//   Ã¢Å“â€œ EBEM Email Marketing Command Center routes added
-//   Ã¢Å“â€œ /api/scraper         Ã¢â‚¬â€ internal DB scraper (requireAdmin)
-//   Ã¢Å“â€œ /api/email/send-campaign  Ã¢â‚¬â€ GoDaddy SMTP bulk send w/ batching
-//   Ã¢Å“â€œ /api/email/analytics      Ã¢â‚¬â€ open/click/sent stats from DB
-//   Ã¢Å“â€œ /api/claude/generate-email Ã¢â‚¬â€ AI Niner Miner content generation
-//   Ã¢Å“â€œ emailScraper.js added to SKIP_AUTO (explicit mount)
-//   Ã¢Å“â€œ multer memory storage for attachment uploads
+//   ÃƒÂ¢Ã…â€œÃ¢â‚¬Å“ EBEM Email Marketing Command Center routes added
+//   ÃƒÂ¢Ã…â€œÃ¢â‚¬Å“ /api/scraper         ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â internal DB scraper (requireAdmin)
+//   ÃƒÂ¢Ã…â€œÃ¢â‚¬Å“ /api/email/send-campaign  ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â GoDaddy SMTP bulk send w/ batching
+//   ÃƒÂ¢Ã…â€œÃ¢â‚¬Å“ /api/email/analytics      ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â open/click/sent stats from DB
+//   ÃƒÂ¢Ã…â€œÃ¢â‚¬Å“ /api/claude/generate-email ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â AI Niner Miner content generation
+//   ÃƒÂ¢Ã…â€œÃ¢â‚¬Å“ emailScraper.js added to SKIP_AUTO (explicit mount)
+//   ÃƒÂ¢Ã…â€œÃ¢â‚¬Å“ multer memory storage for attachment uploads
 // CHANGES FROM v3.3 (v4.0):
-//   Ã¢Å“â€œ CORS restricted to known origins (not '*')
-//   Ã¢Å“â€œ /metrics, /api/routes Ã¢â€ â€™ owner-only (JWT required)
-//   Ã¢Å“â€œ /health sanitized (no AI model name, no internal details)
-//   Ã¢Å“â€œ Brain endpoints require auth (except /api/brain/status)
-//   Ã¢Å“â€œ express.json limit reduced to 12mb (was 50mb)
-//   Ã¢Å“â€œ Helmet CSP enabled with sensible defaults
-//   Ã¢Å“â€œ Rate limiter on credential recovery
-//   Ã¢Å“â€œ Auth middleware loaded globally
-//   Ã¢Å“â€œ JWT_SECRET enforced (fatal in production if default)
+//   ÃƒÂ¢Ã…â€œÃ¢â‚¬Å“ CORS restricted to known origins (not '*')
+//   ÃƒÂ¢Ã…â€œÃ¢â‚¬Å“ /metrics, /api/routes ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢ owner-only (JWT required)
+//   ÃƒÂ¢Ã…â€œÃ¢â‚¬Å“ /health sanitized (no AI model name, no internal details)
+//   ÃƒÂ¢Ã…â€œÃ¢â‚¬Å“ Brain endpoints require auth (except /api/brain/status)
+//   ÃƒÂ¢Ã…â€œÃ¢â‚¬Å“ express.json limit reduced to 12mb (was 50mb)
+//   ÃƒÂ¢Ã…â€œÃ¢â‚¬Å“ Helmet CSP enabled with sensible defaults
+//   ÃƒÂ¢Ã…â€œÃ¢â‚¬Å“ Rate limiter on credential recovery
+//   ÃƒÂ¢Ã…â€œÃ¢â‚¬Å“ Auth middleware loaded globally
+//   ÃƒÂ¢Ã…â€œÃ¢â‚¬Å“ JWT_SECRET enforced (fatal in production if default)
 // ===============================================================
 
 const express = require('express');
@@ -134,7 +134,7 @@ module.exports.brain = brain;
 
 const app = express();
 
-// === CORS preflight Ã¢â‚¬â€ MUST be first, before helmet/other middleware ===
+// === CORS preflight ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â MUST be first, before helmet/other middleware ===
 app.use((req, res, next) => {
   const origin = req.headers.origin;
   const isDev = (process.env.NODE_ENV || 'development') === 'development';
@@ -169,10 +169,10 @@ if (typeof brain?.setAI   === 'function') brain.setAI(aiHelper);
 if (typeof brain?.setPool === 'function') brain.setPool(pool);
 
 // ===============================================================
-// CORE MIDDLEWARE Ã¢â‚¬â€ SECURED
+// CORE MIDDLEWARE ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â SECURED
 // ===============================================================
 
-// Helmet with CSP Ã¢â‚¬â€ no longer disabled
+// Helmet with CSP ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â no longer disabled
 app.use(helmet({
   contentSecurityPolicy: {
     directives: {
@@ -190,7 +190,7 @@ app.use(helmet({
 app.use(compression());
 
 
-// RAW CORS PREFLIGHT Ã¢â‚¬â€ must be first, before all middleware
+// RAW CORS PREFLIGHT ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â must be first, before all middleware
 app.use((req, res, next) => {
   const origin = req.headers.origin;
   const allowed = [
@@ -214,7 +214,7 @@ app.use((req, res, next) => {
   next();
 });
 
-// CORS Ã¢â‚¬â€ restricted to known origins
+// CORS ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â restricted to known origins
 const ALLOWED_ORIGINS = [
   'http://localhost:3000',
   'http://localhost:3001',
@@ -246,14 +246,14 @@ app.use(cors({
 
 app.use(morgan(NODE_ENV === 'development' ? 'dev' : 'combined'));
 
-// Body limits Ã¢â‚¬â€ 12MB for property photo uploads, 1MB for everything else
+// Body limits ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â 12MB for property photo uploads, 1MB for everything else
 app.use('/api/properties', express.json({ limit: '12mb' }));
 app.use('/api/properties', require('./routes/properties'));
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 
 // ===============================================================
-// REQUEST METRICS (internal only Ã¢â‚¬â€ not exposed publicly)
+// REQUEST METRICS (internal only ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â not exposed publicly)
 // ===============================================================
 
 const requestStats = { total: 0, success: 0, errors: 0, startedAt: new Date() };
@@ -267,7 +267,7 @@ app.use((req, res, next) => {
 });
 
 // ===============================================================
-// AUTH MIDDLEWARE Ã¢â‚¬â€ load shared JWT verifier
+// AUTH MIDDLEWARE ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â load shared JWT verifier
 // ===============================================================
 
 const { requireOwner, requireAdmin, requireAuth, attachUser } = require('./middleware/auth-middleware');
@@ -283,7 +283,7 @@ try {
   const authRoutes = require('./routes/auth');
   app.use('/api/auth', authRoutes);
 
-// â”€â”€ AUTONOMOUS INVENTORY NOTIFICATION PIPELINE â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// Ã¢â€â‚¬Ã¢â€â‚¬ AUTONOMOUS INVENTORY NOTIFICATION PIPELINE Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
 try {
   const inventoryRoutes = require('./routes/inventory');
   app.use('/api/inventory', inventoryRoutes);
@@ -292,12 +292,22 @@ try {
   console.warn('[WARN] inventory route failed to mount:', e.message);
 }
 
-// â”€â”€ UNIFIED CRM DEAL FLOOR â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// Ã¢â€â‚¬Ã¢â€â‚¬ UNIFIED CRM DEAL FLOOR Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
 // Anonymous deal rooms, DD vault, PO + factoring cascade, compliance,
 // commodity channels. Phase 1 backbone for the full deal floor.
 try {
   const dealFloorRoutes = require('./routes/deal-floor');
   app.use('/api/deals', dealFloorRoutes);
+
+// Sprint C Run 13B: OpenClaw + Cohesive Tree Bus
+try {
+  const openClawRoutes = require('./src/routes/openClawAgent');
+  app.use('/api/openclaw', openClawRoutes);
+  if (typeof explicitMounts !== 'undefined') explicitMounts.push({ file: 'openClawAgent.js', path: '/api/openclaw' });
+  console.log('[OK] openClawAgent.js mounted at /api/openclaw');
+} catch(e) {
+  console.warn('[WARN] openClawAgent not loaded:', e.message);
+}
   try { const dealStream = require('./routes/deal-stream'); app.use('/api/stream', dealStream); console.log('[OK] deal-stream.js mounted at /api/stream'); } catch(e) { console.warn('[WARN] deal-stream mount failed:', e.message); }
   explicitMounts.push({ file: 'deal-floor.js', path: '/api/deals' });
   console.log('[OK] deal-floor.js mounted at /api/deals');
@@ -378,7 +388,7 @@ try {
   explicitMounts.push({ file: 'admin-notifications.js', path: '/api/admin/notifications' });
 } catch(e) { console.warn('[WARN] admin-notifications not found:', e.message); }
 
-// -- CRM --> /api/crm  (growers + buyers + shippers Ã¢â‚¬â€ frontend expects this exact path)
+// -- CRM --> /api/crm  (growers + buyers + shippers ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â frontend expects this exact path)
 try {
   const crmRoutes = require('./routes/crm.routes');
   app.use('/api/crm', crmRoutes);
@@ -404,7 +414,7 @@ try {
 } catch(e) { console.warn('[WARN] crm.routes not found:', e.message); }
 
 // ===============================================================
-// CREDENTIAL RECOVERY Ã¢â‚¬â€ /api/auth/recover-credentials
+// CREDENTIAL RECOVERY ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â /api/auth/recover-credentials
 // Rate limited: 3 per hour per IP
 // ===============================================================
 const recoveryBuckets = new Map();
@@ -473,7 +483,7 @@ app.post('/api/auth/recover-credentials', async (req, res) => {
         from: `"EnjoyBaja Platform" <${process.env.SMTP_USER}>`,
         to: 'sg01@eb.com',
         subject: `[EnjoyBaja] Credential Recovery: ${lookupEmail}`,
-        text: `CREDENTIAL RECOVERY REQUEST\n\nEmail: ${lookupEmail}\nFound: ${found ? 'YES Ã¢â‚¬â€ ' + (found.name || found.email) : 'NOT IN DB'}\nSource: ${found?.source || 'N/A'}\nTime: ${requestedAt || new Date().toISOString()}\nIP: ${req.ip}\n\n-- EnjoyBaja Platform`,
+        text: `CREDENTIAL RECOVERY REQUEST\n\nEmail: ${lookupEmail}\nFound: ${found ? 'YES ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â ' + (found.name || found.email) : 'NOT IN DB'}\nSource: ${found?.source || 'N/A'}\nTime: ${requestedAt || new Date().toISOString()}\nIP: ${req.ip}\n\n-- EnjoyBaja Platform`,
       });
     }
   } catch (err) {
@@ -491,10 +501,10 @@ app.post('/api/auth/recover-credentials', async (req, res) => {
 explicitMounts.push({ file: 'server.js (inline)', path: '/api/auth/recover-credentials' });
 
 // ===============================================================
-// EBEM Ã¢â‚¬â€ EMAIL MARKETING COMMAND CENTER
-// /api/email/send-campaign  Ã¢â‚¬â€ bulk send via GoDaddy SMTP
-// /api/email/analytics       Ã¢â‚¬â€ open/click/sent stats from DB
-// /api/claude/generate-email Ã¢â‚¬â€ AI Niner Miner content generation
+// EBEM ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â EMAIL MARKETING COMMAND CENTER
+// /api/email/send-campaign  ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â bulk send via GoDaddy SMTP
+// /api/email/analytics       ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â open/click/sent stats from DB
+// /api/claude/generate-email ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â AI Niner Miner content generation
 // ===============================================================
 
 // Multer for multipart (attachments + blobs from EBEM)
@@ -523,7 +533,7 @@ app.post('/api/email/send-campaign', requireAdmin, ebemUpload.any(), async (req,
       return res.status(400).json({ success: false, error: 'No recipients provided' });
     }
 
-    // Ã¢â€â‚¬Ã¢â€â‚¬ Check suppression list (unsubscribes + bounces) Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
+    // ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ Check suppression list (unsubscribes + bounces) ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬
     let suppressedEmails = new Set();
     try {
       const [unsub, bounce] = await Promise.all([
@@ -532,7 +542,7 @@ app.post('/api/email/send-campaign', requireAdmin, ebemUpload.any(), async (req,
       ]);
       unsub.rows.forEach(r  => suppressedEmails.add(r.email.toLowerCase()));
       bounce.rows.forEach(r => suppressedEmails.add(r.email.toLowerCase()));
-    } catch { /* tables may not exist yet Ã¢â‚¬â€ continue */ }
+    } catch { /* tables may not exist yet ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â continue */ }
 
     const filteredRecipients = recipients.filter(r => r.email && !suppressedEmails.has(r.email.toLowerCase()));
     const suppressedCount    = recipients.length - filteredRecipients.length;
@@ -540,14 +550,14 @@ app.post('/api/email/send-campaign', requireAdmin, ebemUpload.any(), async (req,
       console.log(`[EBEM] Suppressed ${suppressedCount} unsubscribed/bounced addresses`);
     }
 
-    // Ã¢â€â‚¬Ã¢â€â‚¬ Attachments from multer Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
+    // ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ Attachments from multer ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬
     const attachments = (req.files || []).map(f => ({
       filename:    f.originalname,
       content:     f.buffer,
       contentType: f.mimetype,
     }));
 
-    // Ã¢â€â‚¬Ã¢â€â‚¬ SMTP transporter Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
+    // ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ SMTP transporter ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬
     const transporter = nodemailer.createTransport({
       host:   process.env.SMTP_HOST || 'smtpout.secureserver.net',
       port:   parseInt(process.env.SMTP_PORT || '465'),
@@ -564,7 +574,7 @@ app.post('/api/email/send-campaign', requireAdmin, ebemUpload.any(), async (req,
     const BATCH_SIZE   = parseInt(process.env.EMAIL_BATCH_SIZE  || '10');
     const BATCH_DELAY  = parseInt(process.env.EMAIL_BATCH_DELAY || '1200');
 
-    // Ã¢â€â‚¬Ã¢â€â‚¬ HTML email builder v2.0 Ã¢â‚¬â€ Bilingual styled templates Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
+    // ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ HTML email builder v2.0 ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â Bilingual styled templates ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬
     const buildHtml = (personalBody, personalSubject, recipientEmail, trackingId, campaignType) => {
       // Wrap links with click tracking
       const wrappedBody = personalBody.replace(
@@ -585,8 +595,8 @@ app.post('/api/email/send-campaign', requireAdmin, ebemUpload.any(), async (req,
             return `<div style="font-size:11px;font-weight:700;color:#cba658;letter-spacing:1.5px;text-transform:uppercase;margin:20px 0 8px 0;padding-bottom:4px;border-bottom:1px solid #e2e8f0;">${lines[0]}</div>`;
           }
           // Bullet points
-          if (lines[0].startsWith('Ã¢â‚¬Â¢') || lines[0].startsWith('-')) {
-            const items = lines.map(l => `<li style="margin-bottom:6px;color:#1e293b;">${l.replace(/^[Ã¢â‚¬Â¢\-]\s*/, '')}</li>`).join('');
+          if (lines[0].startsWith('ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢') || lines[0].startsWith('-')) {
+            const items = lines.map(l => `<li style="margin-bottom:6px;color:#1e293b;">${l.replace(/^[ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢\-]\s*/, '')}</li>`).join('');
             return `<ul style="margin:0 0 16px 0;padding-left:20px;line-height:1.7;">${items}</ul>`;
           }
           const html = lines.join('<br>');
@@ -599,7 +609,7 @@ app.post('/api/email/send-campaign', requireAdmin, ebemUpload.any(), async (req,
       // Tracking pixel
       const pixel = `<img src="${BASE_URL}/api/track/open?tid=${trackingId}" width="1" height="1" style="display:none" alt="" />`;
 
-      // Unsubscribe URL Ã¢â‚¬â€ CAN-SPAM + LFPDPPP compliant
+      // Unsubscribe URL ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â CAN-SPAM + LFPDPPP compliant
       const unsubUrl = `${BASE_URL}/api/unsubscribe?email=${encodeURIComponent(recipientEmail)}&tid=${trackingId}`;
 
       // Campaign-type accent colors and badges
@@ -612,8 +622,8 @@ app.post('/api/email/send-campaign', requireAdmin, ebemUpload.any(), async (req,
         market_update:{ accent: '#3b82f6', badge: 'MARKET UPDATE / ACTUALIZACION',    badgeBg: '#1e3a5f' },
         mortgage_intro:{ accent: '#cba658', badge: 'MORTGAGE INFO / HIPOTECA',        badgeBg: '#1a1200' },
         follow_up:    { accent: '#94a3b8', badge: 'FOLLOW-UP / SEGUIMIENTO',          badgeBg: '#0f172a' },
-        loi_pipeline: { accent: '#f59e0b', badge: 'LOI PIPELINE / CARTA DE INTENCIÃƒâ€œN', badgeBg: '#451a03' },
-        drip:         { accent: '#cba658', badge: 'CAMPAIGN / CAMPAÃƒâ€˜A',               badgeBg: '#1a1200' },
+        loi_pipeline: { accent: '#f59e0b', badge: 'LOI PIPELINE / CARTA DE INTENCIÃƒÆ’Ã¢â‚¬Å“N', badgeBg: '#451a03' },
+        drip:         { accent: '#cba658', badge: 'CAMPAIGN / CAMPAÃƒÆ’Ã¢â‚¬ËœA',               badgeBg: '#1a1200' },
       };
       const style = CAMPAIGN_STYLES[campaignType] || CAMPAIGN_STYLES['drip'];
 
@@ -633,7 +643,7 @@ app.post('/api/email/send-campaign', requireAdmin, ebemUpload.any(), async (req,
 <tr><td align="center">
 <table width="600" cellpadding="0" cellspacing="0" border="0" role="presentation" style="max-width:600px;width:100%;">
 
-  <!-- Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â HEADER Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â -->
+  <!-- ÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚Â HEADER ÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚Â -->
   <tr>
     <td style="background:#0f172a;padding:0;">
       <table width="100%" cellpadding="0" cellspacing="0" border="0">
@@ -665,14 +675,14 @@ app.post('/api/email/send-campaign', requireAdmin, ebemUpload.any(), async (req,
     </td>
   </tr>
 
-  <!-- Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â SUBJECT BAR Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â -->
+  <!-- ÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚Â SUBJECT BAR ÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚Â -->
   <tr>
     <td style="background:#1e293b;padding:16px 32px;border-left:4px solid ${style.accent};">
       <div style="font-size:16px;color:#f1f5f9;font-weight:600;line-height:1.4;">${personalSubject}</div>
     </td>
   </tr>
 
-  <!-- Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â BODY Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â -->
+  <!-- ÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚Â BODY ÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚Â -->
   <tr>
     <td style="background:#ffffff;padding:32px 32px 24px;">
       <div style="font-size:14px;color:#1e293b;line-height:1.8;font-family:'Helvetica Neue',Arial,sans-serif;">
@@ -681,14 +691,14 @@ app.post('/api/email/send-campaign', requireAdmin, ebemUpload.any(), async (req,
     </td>
   </tr>
 
-  <!-- Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â DIVIDER Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â -->
+  <!-- ÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚Â DIVIDER ÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚Â -->
   <tr>
     <td style="background:#ffffff;padding:0 32px;">
       <div style="height:2px;background:linear-gradient(90deg,${style.accent},transparent);"></div>
     </td>
   </tr>
 
-  <!-- Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â CONTACT CARD Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â -->
+  <!-- ÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚Â CONTACT CARD ÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚Â -->
   <tr>
     <td style="background:#f8fafc;padding:20px 32px;border-top:1px solid #e2e8f0;">
       <table cellpadding="0" cellspacing="0" border="0" width="100%">
@@ -713,7 +723,7 @@ app.post('/api/email/send-campaign', requireAdmin, ebemUpload.any(), async (req,
     </td>
   </tr>
 
-  <!-- Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â LEGAL DISCLAIMER Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â -->
+  <!-- ÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚Â LEGAL DISCLAIMER ÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚Â -->
   <tr>
     <td style="background:#f1f5f9;padding:12px 32px;border-top:1px solid #e2e8f0;">
       <div style="font-size:9px;color:#94a3b8;line-height:1.6;text-align:center;">
@@ -726,7 +736,7 @@ app.post('/api/email/send-campaign', requireAdmin, ebemUpload.any(), async (req,
     </td>
   </tr>
 
-  <!-- Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â FOOTER Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â -->
+  <!-- ÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚Â FOOTER ÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚Â -->
   <tr>
     <td style="background:#0f172a;padding:14px 32px;text-align:center;">
       <table cellpadding="0" cellspacing="0" border="0" width="100%">
@@ -761,7 +771,7 @@ ${pixel}
 </html>`;
     };
 
-    // Ã¢â€â‚¬Ã¢â€â‚¬ Send loop Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
+    // ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ Send loop ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬
     let sent = 0, failed = 0;
 
     // Insert campaign record first to get campaign_id
@@ -895,7 +905,7 @@ app.get('/api/email/analytics', requireAdmin, async (req, res) => {
       opened    = parseInt(logRes.rows[0].opened      || 0);
       clicked   = parseInt(logRes.rows[0].clicked     || 0);
       campaigns = parseInt(campRes.rows[0].campaigns  || 0);
-    } catch { /* tables not yet created Ã¢â‚¬â€ return zeros */ }
+    } catch { /* tables not yet created ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â return zeros */ }
 
     res.json({
       totalSent,
@@ -913,7 +923,7 @@ app.get('/api/email/analytics', requireAdmin, async (req, res) => {
 
 explicitMounts.push({ file: 'server.js (inline)', path: '/api/email/analytics' });
 
-// Ã¢â€â‚¬Ã¢â€â‚¬ Init email_tracking table Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
+// ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ Init email_tracking table ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬
 pool.query(`
   CREATE TABLE IF NOT EXISTS email_tracking (
     id             SERIAL PRIMARY KEY,
@@ -928,7 +938,7 @@ pool.query(`
   )
 `).catch(() => {});
 
-// GET /api/track/open?tid=xxx Ã¢â‚¬â€ 1x1 transparent pixel, records open
+// GET /api/track/open?tid=xxx ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â 1x1 transparent pixel, records open
 app.get('/api/track/open', async (req, res) => {
   const { tid } = req.query;
   // Respond immediately with transparent pixel
@@ -965,7 +975,7 @@ app.get('/api/track/open', async (req, res) => {
   }
 });
 
-// GET /api/track/click?tid=xxx&url=xxx Ã¢â‚¬â€ redirect + record click
+// GET /api/track/click?tid=xxx&url=xxx ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â redirect + record click
 app.get('/api/track/click', async (req, res) => {
   const { tid, url } = req.query;
   const dest = url ? decodeURIComponent(url) : 'https://enjoybaja.com';
@@ -992,7 +1002,7 @@ app.get('/api/track/click', async (req, res) => {
   }
 });
 
-// GET /api/unsubscribe?email=xxx Ã¢â‚¬â€ one-click unsubscribe (CAN-SPAM + LFPDPPP)
+// GET /api/unsubscribe?email=xxx ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â one-click unsubscribe (CAN-SPAM + LFPDPPP)
 app.get('/api/unsubscribe', async (req, res) => {
   const { email } = req.query;
   if (!email || !email.includes('@')) {
@@ -1033,7 +1043,7 @@ app.get('/api/unsubscribe', async (req, res) => {
   }
 });
 
-// POST /api/unsubscribe Ã¢â‚¬â€ one-click unsubscribe header support (RFC 8058)
+// POST /api/unsubscribe ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â one-click unsubscribe header support (RFC 8058)
 app.post('/api/unsubscribe', async (req, res) => {
   const email = req.body.email || req.query.email;
   if (!email) return res.status(400).json({ error: 'Email required' });
@@ -1052,7 +1062,7 @@ app.post('/api/unsubscribe', async (req, res) => {
 explicitMounts.push({ file: 'server.js (inline)', path: '/api/track/open + /api/track/click + /api/unsubscribe' });
 
 // POST /api/claude/generate-email
-// AI Niner Miner Ã¢â‚¬â€ content generation for EBEM compose + AI Brain panel
+// AI Niner Miner ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â content generation for EBEM compose + AI Brain panel
 app.post('/api/claude/generate-email', attachUser, async (req, res) => {
   try {
     const { prompt, miner, context = {} } = req.body;
@@ -1069,7 +1079,7 @@ app.post('/api/claude/generate-email', attachUser, async (req, res) => {
       calendar:   'You are a scheduling assistant for a cross-border real estate firm. Write professional meeting invitations and scheduling emails for property showings, mortgage consultations, and LOI reviews.',
       si_letter:  'You are AuditDNA SI (Synthetic Intelligence), a compliance letter specialist for CM Products International (NMLS #337526). Write formal, legally precise letters including: Letters of Intent (LOI), Letters of Commitment (LOC), Term Sheets, CFPB complaint letters, RESPA violation notices, and mortgage dispute correspondence. Always include proper legal headings, NMLS #337526, and Saul Garcia as signatory. Bilingual EN/ES when requested.',
       bilingual:  'You are a bilingual EN/ES email template specialist for EnjoyBaja and USAMortgage. Create full dual-language email templates with English and Spanish side by side or clearly separated. Format: English paragraph, then Spanish translation of the same paragraph. Professional, luxury real estate tone. Always include NMLS #337526 in mortgage content.',
-      loi:        'You are an LOI (Letter of Intent) drafter for EnjoyBaja cross-border real estate transactions. Write formal, professional Letters of Intent for property purchases in Baja California. Include: buyer/seller info placeholders, property description, offer price, financing type (cash/USA mortgage/developer terms), fideicomiso note for restricted zones, LOIÃ¢â€ â€™LOCÃ¢â€ â€™Term Sheet sequence, escrow-first workflow, lender identity confidentiality clause. Signatory: Saul Garcia | CM Products International | NMLS #337526.',
+      loi:        'You are an LOI (Letter of Intent) drafter for EnjoyBaja cross-border real estate transactions. Write formal, professional Letters of Intent for property purchases in Baja California. Include: buyer/seller info placeholders, property description, offer price, financing type (cash/USA mortgage/developer terms), fideicomiso note for restricted zones, LOIÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢LOCÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢Term Sheet sequence, escrow-first workflow, lender identity confidentiality clause. Signatory: Saul Garcia | CM Products International | NMLS #337526.',
       compliance: 'You are a compliance copywriter for CM Products International (NMLS #337526). Write RESPA-compliant, CFPB-compliant, and Mexican LFPDPPP-compliant email content. For US mortgage content: include required disclosures, equal housing language, NMLS number. For Mexican content: include privacy notice references and proper Spanish-language disclosures. Never make specific rate promises. Always include: "This is not a commitment to lend."',
     };
 
@@ -1083,7 +1093,7 @@ app.post('/api/claude/generate-email', attachUser, async (req, res) => {
 
     const text = await aiHelper.ask(fullPrompt, systemPrompt);
 
-    // Subject Sniper Ã¢â‚¬â€ return all 3 options as JSON
+    // Subject Sniper ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â return all 3 options as JSON
     if (miner === 'subject') {
       try {
         const parsed = JSON.parse(text.replace(/```json|```/g, '').trim());
@@ -1091,19 +1101,19 @@ app.post('/api/claude/generate-email', attachUser, async (req, res) => {
       } catch { /* fall through */ }
     }
 
-    // SMS Ã¢â‚¬â€ trim to 160
+    // SMS ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â trim to 160
     if (miner === 'sms') {
       return res.json({ success: true, content: text.substring(0, 160) });
     }
 
-    // SI Letter / LOI / Compliance / Bilingual Ã¢â‚¬â€ return full letter as content
+    // SI Letter / LOI / Compliance / Bilingual ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â return full letter as content
     if (['si_letter', 'loi', 'compliance', 'bilingual'].includes(miner)) {
       const subjectMatch = text.match(/^(?:Subject|RE|SUBJECT):\s*(.+)/im);
       const subject = subjectMatch ? subjectMatch[1].trim() : null;
       return res.json({ success: true, subject, content: text, text, isLetter: true });
     }
 
-    // Standard Ã¢â‚¬â€ split subject from body
+    // Standard ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â split subject from body
     const subjectMatch = text.match(/^Subject:\s*(.+)/im);
     const subject      = subjectMatch ? subjectMatch[1].trim() : null;
     const body         = subject ? text.replace(/^Subject:\s*.+\n?/im, '').trim() : text;
@@ -1118,13 +1128,13 @@ app.post('/api/claude/generate-email', attachUser, async (req, res) => {
 
 explicitMounts.push({ file: 'server.js (inline)', path: '/api/claude/generate-email' });
 
-// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-// POST /api/ai/generate  â€”  Anthropic-SDK-compatible passthrough
+// Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â
+// POST /api/ai/generate  Ã¢â‚¬â€  Anthropic-SDK-compatible passthrough
 // Accepts native Anthropic messages format from EmailMarketing.jsx and
 // SaulIntelCRM.jsx AI Subject/Body/Full Email generators.
 // Body: { model, max_tokens, messages: [{role, content}], system? }
 // Returns: native Anthropic response { content: [{type:'text', text:'...'}], ... }
-// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+// Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â
 app.post('/api/ai/generate', attachUser, async (req, res) => {
   try {
     const { model, max_tokens, messages, system } = req.body || {};
@@ -1147,10 +1157,10 @@ app.post('/api/ai/generate', attachUser, async (req, res) => {
 explicitMounts.push({ file: 'server.js (inline)', path: '/api/ai/generate' });
 
 // ===============================================================
-// BRAIN API Ã¢â‚¬â€ status is public (moved above Ownermetrics), everything else requires auth
+// BRAIN API ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â status is public (moved above Ownermetrics), everything else requires auth
 // ===============================================================
 
-// Auth required Ã¢â‚¬â€ event ingestion
+// Auth required ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â event ingestion
 app.post('/api/brain/events', attachUser, async (req, res) => {
   try {
     const { events } = req.body;
@@ -1163,7 +1173,7 @@ app.post('/api/brain/events', attachUser, async (req, res) => {
   }
 });
 
-// Auth required Ã¢â‚¬â€ logging
+// Auth required ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â logging
 app.post('/api/brain/log', attachUser, async (req, res) => {
   try {
     const { module: mod = 'frontend', event, data = {}, source = 'frontend', timestamp } = req.body;
@@ -1178,7 +1188,7 @@ app.post('/api/brain/log', attachUser, async (req, res) => {
   }
 });
 
-// Owner only Ã¢â‚¬â€ workflow trigger
+// Owner only ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â workflow trigger
 app.post('/api/brain/workflow', requireAdmin, async (req, res) => {
   try {
     const { type, payload } = req.body;
@@ -1191,7 +1201,7 @@ app.post('/api/brain/workflow', requireAdmin, async (req, res) => {
   }
 });
 
-// Owner only Ã¢â‚¬â€ full brain status with metrics
+// Owner only ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â full brain status with metrics
 app.get('/api/brain/full-status', requireOwner, (req, res) => {
   const status = typeof brain?.getStatus === 'function'
     ? brain.getStatus()
@@ -1259,7 +1269,7 @@ function loadRoutes(dir, base = '/api') {
 }
 
 // ===============================================================
-// INTERNAL MESSENGER Ã¢â‚¬â€ soft auth on presence/channels (stops 401 flood)
+// INTERNAL MESSENGER ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â soft auth on presence/channels (stops 401 flood)
 // ===============================================================
 try {
   const messengerRoutes = require('./routes/Internal-messenger');
@@ -1281,7 +1291,7 @@ console.log('\n[SCAN] Discovering routes...\n');
 loadRoutes(routesDir);
 
 // ===============================================================
-// HEALTH Ã¢â‚¬â€ sanitized (no internal details)
+// HEALTH ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â sanitized (no internal details)
 // ===============================================================
 
 app.get('/health', (req, res) => {
@@ -1293,7 +1303,7 @@ app.get('/health', (req, res) => {
 });
 
 // ===============================================================
-// METRICS & ROUTES Ã¢â‚¬â€ OWNER ONLY (JWT required)
+// METRICS & ROUTES ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â OWNER ONLY (JWT required)
 // ===============================================================
 
 app.get('/metrics', requireOwner, (req, res) => {
@@ -1371,7 +1381,7 @@ try { require('./complianceCleaner')(pool); }
 catch (e) { console.warn('[WARN] complianceCleaner not loaded:', e.message); }
 
 // ===============================================================
-// SCHEDULER Ã¢â‚¬â€ cron jobs for cooling-off, aging alerts, daily digest
+// SCHEDULER ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â cron jobs for cooling-off, aging alerts, daily digest
 // ===============================================================
 try {
   require('./scheduler');
