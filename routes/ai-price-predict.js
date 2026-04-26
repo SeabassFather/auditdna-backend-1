@@ -83,6 +83,24 @@ function clamp(n, lo, hi) {
   return Math.max(lo, Math.min(hi, n));
 }
 
+// Strip Claude web-search citation tags and any other AI-source markers.
+// Output is presented as AuditDNA Platform Reasoning - not Anthropic's.
+function sanitizeReasoning(raw) {
+  if (!raw) return '';
+  let s = String(raw);
+  // Remove <cite index='...'>...</cite> tags but keep inner text
+  s = s.replace(/<cite[^>]*>([\s\S]*?)<\/cite>/gi, '$1');
+  // Remove any leftover orphan cite tags
+  s = s.replace(/<\/?cite[^>]*>/gi, '');
+  // Remove "according to Claude" / "Anthropic" / "AI says" style references
+  s = s.replace(/\b(?:according to|per|via)\s+(?:claude|anthropic|the ai|the model|the assistant)\b[^.,;]*[.,;]?/gi, '');
+  s = s.replace(/\b(?:claude|anthropic)(?:'s)?\s+(?:web\s+search|reasoning|analysis|model)\b/gi, 'AuditDNA Platform analysis');
+  s = s.replace(/\bthe AI\b/gi, 'AuditDNA Platform');
+  // Collapse double spaces from removals
+  s = s.replace(/\s{2,}/g, ' ').replace(/\s+([.,;])/g, '$1').trim();
+  return s;
+}
+
 function fallbackPrediction(input, baseline) {
   const current = baseline?.latest?.value || 40;
   const fiveAvg = baseline?.five_yr_avg || current;
@@ -99,14 +117,15 @@ function fallbackPrediction(input, baseline) {
     current_price: Math.round(current * 100) / 100,
     vs_current_pct: Math.round(((predicted - current) / Math.max(current, 1)) * 1000) / 10,
     five_yr_avg: Math.round(fiveAvg * 100) / 100,
-    reasoning: 'Fallback model. AI live prediction unavailable. Estimate based on USDA NASS five-year average and linear trend extension. Confidence reduced.',
+    reasoning: 'AuditDNA Platform fallback heuristic. Live engine unavailable; estimate derived from USDA NASS five-year baseline plus linear trend extension. Confidence reduced.',
+    reasoning_engine: 'AuditDNA Platform Reasoning (Fallback Mode)',
     factors: [
       { label: 'USDA baseline', value: '$' + (current.toFixed(2)), direction: 'flat', note: 'Latest USDA NASS print' },
       { label: '5-yr trend', value: (trend > 0 ? '+' : '') + (trend * 100).toFixed(1) + '%', direction: trend > 0 ? 'up' : trend < 0 ? 'down' : 'flat', note: 'vs 5-year average' },
       { label: 'Horizon', value: horizon + ' days', direction: 'flat', note: 'Forecast window' },
-      { label: 'Confidence model', value: 'Linear', direction: 'flat', note: 'Heuristic fallback (no AI)' }
+      { label: 'Confidence model', value: 'Linear', direction: 'flat', note: 'AuditDNA fallback heuristic' }
     ],
-    data_sources: ['USDA NASS QuickStats', 'Linear trend extrapolation']
+    data_sources: ['USDA NASS QuickStats', 'AuditDNA trend extrapolation']
   };
 }
 
@@ -144,8 +163,13 @@ router.post('/', async (req, res) => {
   }
 
   const sysContext = [
-    'You are a produce-market price forecaster for Mexausa Food Group, Inc. (cross-border US-Mexico produce trade).',
+    'You are the AuditDNA Platform price-forecasting engine for Mexausa Food Group, Inc. (cross-border US-Mexico produce trade).',
     'Output STRICT JSON only. No prose outside JSON. No markdown fences.',
+    'CRITICAL OUTPUT RULES:',
+    '- Do NOT use <cite> tags, citation markers, or web-search annotations of any kind in the reasoning field.',
+    '- Do NOT mention "Claude", "Anthropic", "AI", "the model", "the assistant", or any source attribution in the reasoning text.',
+    '- Write the reasoning as if it were AuditDNA Platform analysis. Crisp, professional, market-intel voice.',
+    '- Cite sources only inside the data_sources array (short names like "USDA AMS", "Produce News" - no URLs, no inline cites).',
     'Schema:',
     '{',
     '  "predicted_price": <number, USD>,',
@@ -155,11 +179,11 @@ router.post('/', async (req, res) => {
     '  "current_price": <number>,',
     '  "vs_current_pct": <number, signed>,',
     '  "five_yr_avg": <number>,',
-    '  "reasoning": "<2-4 sentences explaining drivers>",',
+    '  "reasoning": "<2-4 sentences, plain prose, no tags, no source markers>",',
     '  "factors": [',
     '    { "label": "<short>", "value": "<short>", "direction": "up"|"down"|"flat", "note": "<phrase>" }',
     '  ],',
-    '  "data_sources": ["<name>", ...]',
+    '  "data_sources": ["<short source name>", ...]',
     '}',
     'Return 4-6 factors. Use real numbers. Round all prices to 2 decimals.'
   ].join('\n');
@@ -194,7 +218,8 @@ router.post('/', async (req, res) => {
 
     if (!parsed || typeof parsed.predicted_price !== 'number') {
       result = fallbackPrediction({ commodity, horizon_days: horizon }, baseline);
-      result.reasoning = 'AI returned non-parsable response. Fell back to baseline model. ' + (result.reasoning || '');
+      result.reasoning = sanitizeReasoning('AuditDNA Platform engine returned non-parsable response. Fell back to baseline model. ' + (result.reasoning || ''));
+      result.reasoning_engine = 'AuditDNA Platform Reasoning (Fallback Mode)';
     } else {
       result = {
         predicted_price: Math.round(Number(parsed.predicted_price) * 100) / 100,
@@ -204,14 +229,16 @@ router.post('/', async (req, res) => {
         current_price: Math.round(Number(parsed.current_price || baseline?.latest?.value || parsed.predicted_price) * 100) / 100,
         vs_current_pct: Math.round(Number(parsed.vs_current_pct || 0) * 10) / 10,
         five_yr_avg: Math.round(Number(parsed.five_yr_avg || baseline?.five_yr_avg || parsed.predicted_price) * 100) / 100,
-        reasoning: String(parsed.reasoning || '').slice(0, 800),
+        reasoning: sanitizeReasoning(String(parsed.reasoning || '')).slice(0, 800),
+        reasoning_engine: 'AuditDNA Platform Reasoning',
         factors: Array.isArray(parsed.factors) ? parsed.factors.slice(0, 6) : [],
         data_sources: Array.isArray(parsed.data_sources) ? parsed.data_sources : []
       };
     }
   } catch (e) {
     result = fallbackPrediction({ commodity, horizon_days: horizon }, baseline);
-    result.reasoning = 'AI service error: ' + (e.message || 'unknown') + '. ' + (result.reasoning || '');
+    result.reasoning = sanitizeReasoning('AuditDNA Platform engine error: ' + (e.message || 'unknown') + '. ' + (result.reasoning || ''));
+    result.reasoning_engine = 'AuditDNA Platform Reasoning (Fallback Mode)';
   }
 
   result.commodity = commodity;
