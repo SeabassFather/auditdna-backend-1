@@ -1,4 +1,4 @@
-﻿// ===============================================================
+// ===============================================================
 // AUDITDNA BACKEND SERVER v4.1 ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â SECURED
 // ===============================================================
 // CHANGES FROM v4.0:
@@ -1400,6 +1400,9 @@ try { const gm = require('./routes/gmail'); app.use('/api/gmail', gm); console.l
 try { const be = require('./routes/brainevents'); app.use('/api/brain/events', be); console.log('[OK] brain/events routes loaded'); } catch(e) { console.error('[FAIL] brain/events:', e.message); }
 
 try { const cs = require('./routes/commodity-search'); app.use('/api/commodity', cs); console.log('[OK] commodity-search mounted at /api/commodity'); } catch(e) { console.warn('[WARN] commodity:', e.message); }
+
+// MOBILE WORKSPACE v2 - Run 13e
+try { const mw = require('./routes/mobileWorkspace'); app.use('/api/mobile', mw); console.log('[OK] mobileWorkspace mounted at /api/mobile'); } catch(e) { console.error('[FAIL] mobileWorkspace mount:', e.message); }
 
 // AuditDNA Autonomy Phase 2A boot
 try {
