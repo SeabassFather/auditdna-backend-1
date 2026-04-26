@@ -1,4 +1,4 @@
-﻿-- AuditDNA Autonomy Phase 2A
+-- AuditDNA Autonomy Phase 2A
 DO $$ BEGIN CREATE TYPE autonomy_confidence AS ENUM ('HIGH','BALANCED','LOW'); EXCEPTION WHEN duplicate_object THEN NULL; END $$;
 DO $$ BEGIN CREATE TYPE autonomy_queue_status AS ENUM ('PENDING','EXECUTED','REJECTED','EXPIRED','REVIEWING'); EXCEPTION WHEN duplicate_object THEN NULL; END $$;
 
