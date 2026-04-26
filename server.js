@@ -1404,9 +1404,8 @@ try { const cs = require('./routes/commodity-search'); app.use('/api/commodity',
 // AuditDNA Autonomy Phase 2A boot
 try {
   const autonomy = require('./autonomy');
-  const { Pool } = require('pg');
-  const _autonomyPool = new Pool({ connectionString: process.env.DATABASE_URL || process.env.LOCAL_DATABASE_URL || 'postgres://postgres:auditdna2026@localhost:5432/auditdna' });
-  autonomy.boot(_autonomyPool);
+  // Use already-connected global.db pool (Railway-aware) instead of creating a new one
+  autonomy.boot(global.db);
   console.log('[OK] Autonomy Phase 2A booted - 15 agents loaded');
 } catch (e) { console.warn('[WARN] Autonomy boot failed:', e.message); }
 app.use('/api/auth', require('./routes/pin-verify'));
