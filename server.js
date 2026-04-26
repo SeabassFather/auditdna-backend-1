@@ -1353,6 +1353,10 @@ const server =
 // SPRINT D - Price Prediction Engine
 app.use('/api/ai/predict-price', require('./routes/ai-price-predict'));
 
+
+// SPRINT D WAVE 2 - Niner Bridge
+app.use('/api/niner', require('./routes/niner-bridge'));
+
 app.listen(PORT, () => {
   const totalRoutes = explicitMounts.length + loadedRoutes.length;
   console.log(`
