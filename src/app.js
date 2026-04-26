@@ -110,6 +110,13 @@ app.use(require('./routes/brainEvents'));
 // P17: Lender Marketplace
 app.use(require('./routes/lenderMarketplace'));
 
+
+// SPRINT C RUN 13B - OpenClaw + Tree Bus
+try {
+  const openClawAgent = require('./routes/openClawAgent');
+  app.use('/api/openclaw', openClawAgent(pool));
+  console.log('[boot] /api/openclaw mounted');
+} catch (e) { console.error('[boot] openClawAgent mount failed:', e.message); }
 app.listen(PORT, () => {
         console.log(`Ã°Å¸Å¡â‚¬ AuditDNA Backend running on port ${PORT}`);
         console.log(`Ã°Å¸â€œÅ  API URL: http://process.env.DB_HOST:${PORT}`);
