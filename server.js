@@ -1357,6 +1357,10 @@ app.use('/api/ai/predict-price', require('./routes/ai-price-predict'));
 // SPRINT D WAVE 2 - Niner Bridge
 app.use('/api/niner', require('./routes/niner-bridge'));
 
+
+// SPRINT D WAVE 3D - Autonomy Loop
+try { app.use('/api/autonomy', require('./routes/autonomy-loop')); console.log('[OK] autonomy-loop mounted at /api/autonomy'); } catch(e) { console.error('[FAIL] autonomy-loop:', e.message); }
+
 app.listen(PORT, () => {
   const totalRoutes = explicitMounts.length + loadedRoutes.length;
   console.log(`
