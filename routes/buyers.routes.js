@@ -35,7 +35,7 @@ function requireAuth(req, res, next) {
   if (!token) return res.status(401).json({ success: false, error: 'No auth token' });
   try {
     const jwt = require('jsonwebtoken');
-    req.user = jwt.verify(token, process.env.JWT_SECRET || 'auditdna2026secret');
+    req.user = jwt.verify(token, process.env.JWT_SECRET);
     next();
   } catch (e) {
     return res.status(401).json({ success: false, error: 'Invalid token' });

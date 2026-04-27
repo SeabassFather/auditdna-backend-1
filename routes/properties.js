@@ -44,7 +44,7 @@ const COMMISSION_SCHEDULE = {
 // RBAC MIDDLEWARE â€” Same pattern as Developments.js
 // ================================================================
 const jwt = require('jsonwebtoken');
-const JWT_SECRET = process.env.JWT_SECRET || 'Dsg060905#321';
+const JWT_SECRET = process.env.JWT_SECRET;
 
 const OWNER_EMAILS = new Set(['sg01@eb.com']);
 const ADMIN_EMAILS = new Set([
