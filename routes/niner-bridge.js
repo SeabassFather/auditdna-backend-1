@@ -27,6 +27,18 @@ const NTFY_TOPIC = process.env.NTFY_NINER_TOPIC || 'mfg-niner-alerts';
 const NTFY_BASE  = process.env.NTFY_BASE || 'https://ntfy.sh';
 const NTFY_TOKEN = process.env.NTFY_TOKEN || '';
 
+// Wave 3A.5 - Mexausa-as-brand sender (was "Mexausa Food Group sourcing partner")
+// Per Saul Apr 26 2026 - "Mexausa Food Group, Inc. That is the brand."
+const BRAND_NAME = process.env.NINER_BRAND_NAME || 'Mexausa Food Group, Inc.';
+
+// Wave 3A.5 - Mexausa First-Right-of-Refusal window (minutes)
+// Saul chose 15 min. Override: NINER_MEXAUSA_OFFER_MIN=10
+const MEXAUSA_OFFER_MIN = parseInt(process.env.NINER_MEXAUSA_OFFER_MIN, 10) || 15;
+
+// Wave 3A.5 - Tiered cascade timings (minutes from upload received)
+const TIER2_DELAY_MIN = parseInt(process.env.NINER_TIER2_DELAY_MIN, 10) || 5;
+const TIER3_DELAY_MIN = parseInt(process.env.NINER_TIER3_DELAY_MIN, 10) || 15;
+
 // Recipients per Wave 2 spec: Pablo + Saul + Osvaldo only.
 // Luis + Hector (admin_sales) get blast results, not pre-send approvals.
 const ADMIN_RECIPIENTS = [
@@ -469,8 +481,8 @@ router.get('/health', (_req, res) => {
 // "Mexausa Food Group sourcing partner" until LOI signed.
 // =============================================================================
 
-// Sender identity used in grower-facing letters (per Wave 3A policy default)
-const BUYER_PULL_SENDER_NAME = process.env.NINER_BUYER_PULL_SENDER || 'Mexausa Food Group sourcing partner';
+// Sender identity used in grower-facing letters (Wave 3A.5 - flat Mexausa brand)
+const BUYER_PULL_SENDER_NAME = process.env.NINER_BUYER_PULL_SENDER || BRAND_NAME;
 
 async function generateGrowerOutreachLetter({ commodity, variety, pack_spec, grade, volume_lbs, volume_unit, price_target, origin_pref, needed_by, needed_for, recurring, language }) {
   const lang = (language || 'EN').toUpperCase();
@@ -781,6 +793,97 @@ async function generateDistressLetter({ commodity, variety, volume_lbs, unit, pr
   } catch (e) { return fallback; }
 }
 
+// =============================================================================
+// COMMODITY NORMALIZER (Wave 3A.5)
+// "Iceberg Lettuce" -> "leafy_greens" via commodity_aliases lookup
+// =============================================================================
+async function normalizeCommodity(rawName) {
+  const pool = db();
+  if (!pool) return { category: null, raw: rawName };
+  const lc = String(rawName || '').toLowerCase().trim();
+  if (!lc) return { category: null, raw: rawName };
+  try {
+    // Try exact alias match
+    const r = await pool.query(`SELECT category FROM commodity_aliases WHERE LOWER(alias) = $1 LIMIT 1`, [lc]);
+    if (r.rows.length > 0) return { category: r.rows[0].category, raw: rawName };
+    // Try LIKE match (e.g. "premium iceberg lettuce field pack" -> "iceberg lettuce")
+    const r2 = await pool.query(
+      `SELECT category, alias FROM commodity_aliases WHERE $1 LIKE '%' || LOWER(alias) || '%' ORDER BY LENGTH(alias) DESC LIMIT 1`,
+      [lc]
+    );
+    if (r2.rows.length > 0) return { category: r2.rows[0].category, raw: rawName, matched_alias: r2.rows[0].alias };
+    // Fallback: snake_case the raw input as a guess
+    return { category: lc.replace(/\s+/g, '_'), raw: rawName, fallback: true };
+  } catch (e) {
+    return { category: lc.replace(/\s+/g, '_'), raw: rawName, error: e.message };
+  }
+}
+
+// =============================================================================
+// TIERED MATCH - returns { tier1: [], tier2: [], tier3: [] }
+// =============================================================================
+async function matchDistressBuyersTiered(commodity) {
+  const pool = db();
+  if (!pool) return { tier1: [], tier2: [], tier3: [], category: null };
+  const norm = await normalizeCommodity(commodity);
+  const cat = norm.category;
+  const tiers = { tier1: [], tier2: [], tier3: [], category: cat, normalizer: norm };
+  if (!cat) return tiers;
+  try {
+    const r = await pool.query(
+      `SELECT id, email, buyer_name, contact_name, region, tier, priority_rank
+       FROM distress_buyers_top25
+       WHERE is_active = TRUE AND unsubscribed_at IS NULL
+         AND ( $1 = ANY(commodities_accepted)
+            OR EXISTS (SELECT 1 FROM unnest(commodities_accepted) c WHERE LOWER(c) = $1)
+            OR EXISTS (SELECT 1 FROM unnest(commodities_accepted) c WHERE LOWER(c) LIKE '%' || $1 || '%') )
+       ORDER BY tier ASC, priority_rank ASC, closes_count DESC
+       LIMIT 50`,
+      [cat]
+    );
+    for (const row of r.rows) {
+      const t = row.tier || 2;
+      if (t === 1) tiers.tier1.push(row);
+      else if (t === 2) tiers.tier2.push(row);
+      else tiers.tier3.push(row);
+    }
+  } catch (e) { tiers.error = e.message; }
+  return tiers;
+}
+
+// =============================================================================
+// SCHEDULED CASCADE FIRER (used by setTimeout)
+// =============================================================================
+async function fireCascadeTier(uploadId, tierNum, recipients) {
+  const pool = db();
+  if (!pool || !recipients || recipients.length === 0) return;
+  const t0 = Date.now();
+  const emails = recipients.map(r => r.email).filter(Boolean);
+  if (emails.length === 0) return;
+  const colTime = `tier${tierNum}_fired_at`;
+  const colRecips = `tier${tierNum}_recipients`;
+  try {
+    // Check upload still active (not sold/cancelled by Mexausa accept)
+    const cur = await pool.query(`SELECT status FROM distress_uploads WHERE id = $1`, [uploadId]);
+    if (cur.rows.length === 0) return;
+    if (cur.rows[0].status === 'sold' || cur.rows[0].status === 'cancelled') return; // Mexausa took it OR cancelled
+    await pool.query(
+      `UPDATE distress_uploads SET ${colTime} = NOW(), ${colRecips} = $1, updated_at = NOW() WHERE id = $2`,
+      [emails, uploadId]
+    );
+    // ntfy push: tier fired
+    try {
+      const headers = { 'Content-Type': 'text/plain', 'Title': `[DISTRESS TIER ${tierNum}] fired to ${emails.length}`, 'Priority': '4', 'Tags': 'truck' };
+      if (NTFY_TOKEN) headers['Authorization'] = 'Bearer ' + NTFY_TOKEN;
+      await fetch(`${NTFY_BASE}/${NTFY_TOPIC}`, { method: 'POST', headers, body: `Tier ${tierNum} fired:\n${emails.join('\n')}` }).catch(() => {});
+    } catch (e) {}
+    await logEvent(uploadId, 'sent', 'success', { lane: 'distress', tier: tierNum, recipients: emails.length, ms: Date.now() - t0 }, Date.now() - t0);
+  } catch (e) { /* swallow */ }
+}
+
+// =============================================================================
+// LANE 3 - DISTRESS UPLOAD (Wave 3A.5 with first-offer + tiered cascade)
+// =============================================================================
 router.post('/distress-upload', async (req, res) => {
   const t0 = Date.now();
   const pool = db();
@@ -790,10 +893,11 @@ router.post('/distress-upload', async (req, res) => {
     commodity, variety, volume_lbs, unit, price_fob, fob_location,
     photo_urls, gps_lat, gps_lng, gps_accuracy_m,
     q_temp_ok, q_pack_ok, q_consumable, q_no_recall, q_chain_ready,
-    available_until, language
+    available_until, language,
+    mexausa_first_offer  // boolean - default true
   } = req.body || {};
 
-  // ----- Quality gate (Lane 3 light gate) -----
+  // ----- Quality gate -----
   if (!commodity) return res.status(400).json({ error: 'commodity is required' });
   if (!price_fob) return res.status(400).json({ error: 'price_fob is required (FINAL price)' });
   if (!fob_location) return res.status(400).json({ error: 'fob_location is required' });
@@ -803,7 +907,6 @@ router.post('/distress-upload', async (req, res) => {
   if (gps_lat == null || gps_lng == null) return res.status(400).json({ error: 'gps_lat and gps_lng are required' });
   const allChecks = !!q_temp_ok && !!q_pack_ok && !!q_consumable && !!q_no_recall && !!q_chain_ready;
   if (!allChecks) {
-    // Record the failure but don't blast
     try {
       await pool.query(
         `INSERT INTO distress_uploads (grower_id, grower_name, grower_email, commodity, variety, volume_lbs, unit, price_fob, fob_location,
@@ -822,42 +925,22 @@ router.post('/distress-upload', async (req, res) => {
   await logEvent(null, 'uploaded', 'success', { lane: 'distress', commodity }, Date.now() - t0);
 
   try {
-    // Generate letter (in parallel with buyer match for speed)
+    const useFirstOffer = mexausa_first_offer !== false; // default TRUE
+    const totalValueUSD = (volume_lbs || 0) * (price_fob || 0);
+
+    // Generate letter + tier matches in parallel
     const tTpl = Date.now();
-    const [letter, matched] = await Promise.all([
+    const [letter, tiered] = await Promise.all([
       generateDistressLetter({ commodity, variety, volume_lbs, unit, price_fob, fob_location, available_until, photo_urls, gps_lat, gps_lng, language }),
-      (async () => {
-        try {
-          const rr = await pool.query(
-            `SELECT id, email, buyer_name, contact_name, region FROM distress_buyers_top25
-             WHERE is_active = TRUE AND unsubscribed_at IS NULL
-               AND $1 = ANY(commodities_accepted)
-             ORDER BY closes_count DESC, is_seed DESC, added_at ASC
-             LIMIT $2`,
-            [String(commodity).toLowerCase().replace(/\s+/g, '_'), LANE3_BLAST_LIMIT]
-          );
-          // Fallback: any commodity match (LIKE)
-          if (rr.rows.length === 0) {
-            const rr2 = await pool.query(
-              `SELECT id, email, buyer_name, contact_name, region FROM distress_buyers_top25
-               WHERE is_active = TRUE AND unsubscribed_at IS NULL
-                 AND EXISTS (SELECT 1 FROM unnest(commodities_accepted) c WHERE LOWER(c) LIKE $1)
-               ORDER BY closes_count DESC, is_seed DESC, added_at ASC LIMIT $2`,
-              ['%' + String(commodity).toLowerCase() + '%', LANE3_BLAST_LIMIT]
-            );
-            return rr2.rows;
-          }
-          return rr.rows;
-        } catch (e) { return []; }
-      })()
+      matchDistressBuyersTiered(commodity)
     ]);
+    const tier1 = tiered.tier1 || []; const tier2 = tiered.tier2 || []; const tier3 = tiered.tier3 || [];
+    const allMatched = [...tier1, ...tier2, ...tier3];
     await logEvent(null, 'templated', 'success', { lane: 'distress', commodity, ai_model: letter.ai_model }, Date.now() - tTpl);
-    await logEvent(null, 'matched', 'success', { lane: 'distress', commodity, matched_count: matched.length }, 0);
+    await logEvent(null, 'matched', 'success', { lane: 'distress', commodity, normalizer: tiered.normalizer, t1: tier1.length, t2: tier2.length, t3: tier3.length }, 0);
 
-    const matchedIds = matched.map(m => m.id);
-    const matchedEmails = matched.map(m => m.email);
-
-    // Insert upload row
+    // Insert upload row (status depends on first-offer flag)
+    const initialStatus = useFirstOffer ? 'received' : 'blasted';
     const ins = await pool.query(
       `INSERT INTO distress_uploads
         (grower_id, grower_name, grower_email, grower_phone,
@@ -865,49 +948,215 @@ router.post('/distress-upload', async (req, res) => {
          photo_urls, gps_lat, gps_lng, gps_accuracy_m,
          q_temp_ok, q_pack_ok, q_consumable, q_no_recall, q_chain_ready,
          available_until, language, ai_model, reasoning_engine, subject_line, body_html, body_text,
-         matched_buyer_count, matched_buyer_ids, status, blast_fired_at, blast_fired_to)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,TRUE,TRUE,TRUE,TRUE,TRUE,$15,$16,$17,$18,$19,$20,$21,$22,$23,'blasted',NOW(),$24)
+         matched_buyer_count, matched_buyer_ids, status, mexausa_first_offer)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,TRUE,TRUE,TRUE,TRUE,TRUE,$15,$16,$17,$18,$19,$20,$21,$22,$23,$24,$25)
        RETURNING *`,
       [grower_id || null, grower_name || null, grower_email || null, grower_phone || null,
        commodity, variety || null, volume_lbs || null, unit || 'lb', price_fob, fob_location,
        photo_urls, gps_lat, gps_lng, gps_accuracy_m || null,
        available_until || null, (language || 'EN').toUpperCase(), letter.ai_model, letter.reasoning_engine,
        letter.subject_line, letter.body_html, letter.body_text,
-       matched.length, matchedIds, matchedEmails]
+       allMatched.length, allMatched.map(m => m.id), initialStatus, !!useFirstOffer]
     );
     const upload = ins.rows[0];
 
-    // ntfy push to admins (notification only - not approval gate)
-    try {
-      const headers = { 'Content-Type': 'text/plain', 'Title': `[DISTRESS BLASTED] ${commodity} ${volume_lbs} ${unit || 'lb'} - ${fob_location} - blasted to ${matched.length}`, 'Priority': '5', 'Tags': 'rotating_light,truck' };
-      if (NTFY_TOKEN) headers['Authorization'] = 'Bearer ' + NTFY_TOKEN;
-      const msg = `Grower: ${grower_name || grower_email || 'unknown'}\nCommodity: ${commodity}\nVolume: ${volume_lbs} ${unit || 'lb'}\nFOB: $${price_fob} ${fob_location}\nBlasted to ${matched.length} top-25 buyers.\nFirst-confirmed-wins.`;
-      await fetch(`${NTFY_BASE}/${NTFY_TOPIC}`, { method: 'POST', headers, body: msg }).catch(() => {});
-    } catch (e) {}
-    await logEvent(upload.id, 'sent', 'success', { lane: 'distress', recipients: matched.length }, Date.now() - t0);
-
-    // match_history row
+    // Persist match history
     try {
       await pool.query(
-        `INSERT INTO match_history (lane, source_id, matched_count, matched_ids, matched_emails, blast_at, meta)
-         VALUES ('distress', $1, $2, $3, $4, NOW(), $5)`,
-        [upload.id, matched.length, matchedIds, matchedEmails, { commodity, volume_lbs, price_fob, fob_location }]
+        `INSERT INTO match_history (lane, source_id, matched_count, matched_ids, matched_emails, meta)
+         VALUES ('distress', $1, $2, $3, $4, $5)`,
+        [upload.id, allMatched.length, allMatched.map(m => m.id), allMatched.map(m => m.email),
+         { commodity, normalizer: tiered.normalizer, tier1_count: tier1.length, tier2_count: tier2.length, tier3_count: tier3.length, total_value_usd: totalValueUSD }]
       );
     } catch (e) {}
 
-    return res.json({
-      ok: true, lane: 'distress',
-      upload_id: upload.id, status: upload.status,
-      matched_buyer_count: matched.length,
-      blasted_to: matchedEmails,
-      reasoning_engine: letter.reasoning_engine,
-      elapsed_ms: Date.now() - t0,
-      next_step: 'Live - first-confirmed-wins. Watch upload status for sold/expired.'
-    });
+    if (useFirstOffer) {
+      // ===== MEXAUSA FIRST OFFER FLOW =====
+      const expires = new Date(Date.now() + MEXAUSA_OFFER_MIN * 60 * 1000);
+      const offerIns = await pool.query(
+        `INSERT INTO mexausa_internal_offers
+          (upload_id, commodity, variety, volume_lbs, unit, price_fob, fob_location, total_value_usd,
+           grower_id, grower_name, grower_phone, grower_email,
+           expires_at, window_minutes, notified_admins, notified_at)
+         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,NOW())
+         RETURNING *`,
+        [upload.id, commodity, variety || null, volume_lbs || null, unit || 'lb', price_fob, fob_location, totalValueUSD,
+         grower_id || null, grower_name || null, grower_phone || null, grower_email || null,
+         expires, MEXAUSA_OFFER_MIN, ADMIN_RECIPIENTS.map(r => r.email)]
+      );
+      const offer = offerIns.rows[0];
+      await pool.query(`UPDATE distress_uploads SET mexausa_offer_id = $1 WHERE id = $2`, [offer.id, upload.id]);
+
+      // ntfy push - URGENT decision required
+      try {
+        const headers = { 'Content-Type': 'text/plain', 'Title': `[BUY DIRECT? ${MEXAUSA_OFFER_MIN}MIN] ${commodity} ${volume_lbs} ${unit || 'lb'} $${(totalValueUSD).toFixed(0)}`, 'Priority': '5', 'Tags': 'rotating_light,handshake,clock' };
+        if (NTFY_TOKEN) headers['Authorization'] = 'Bearer ' + NTFY_TOKEN;
+        const msg = [
+          `MEXAUSA FIRST OFFER - ${MEXAUSA_OFFER_MIN} MIN TO DECIDE`,
+          ``,
+          `${commodity}${variety ? ' (' + variety + ')' : ''}`,
+          `Volume: ${volume_lbs} ${unit || 'lb'}`,
+          `FOB: $${price_fob} ${fob_location}`,
+          `TOTAL VALUE: $${totalValueUSD.toFixed(2)}`,
+          `Grower: ${grower_name || grower_email || 'unknown'}`,
+          `Expires: ${expires.toISOString()}`,
+          ``,
+          `Open MexausaInternalOfferDesk to ACCEPT or DECLINE.`,
+          `If no decision: cascade fires automatically.`,
+          ``,
+          `Tier 1 ready: ${tier1.length} | Tier 2: ${tier2.length} | Tier 3: ${tier3.length}`
+        ].join('\n');
+        await fetch(`${NTFY_BASE}/${NTFY_TOPIC}`, { method: 'POST', headers, body: msg }).catch(() => {});
+      } catch (e) {}
+
+      // Schedule the cascade timers (will check status before firing)
+      // T+15min (window_minutes): if still pending, expire offer + fire Tier 1
+      setTimeout(async () => {
+        try {
+          const cur = await pool.query(`SELECT status FROM mexausa_internal_offers WHERE id = $1`, [offer.id]);
+          if (cur.rows.length === 0 || cur.rows[0].status !== 'pending') return; // already decided
+          await pool.query(`UPDATE mexausa_internal_offers SET status = 'expired', updated_at = NOW() WHERE id = $1`, [offer.id]);
+          await pool.query(`UPDATE distress_uploads SET status = 'blasted', blast_fired_at = NOW(), blast_fired_to = $1 WHERE id = $2`, [allMatched.map(m => m.email), upload.id]);
+          await fireCascadeTier(upload.id, 1, tier1);
+        } catch (e) {}
+      }, MEXAUSA_OFFER_MIN * 60 * 1000);
+
+      // Tier 2 (T+15+5)
+      setTimeout(() => fireCascadeTier(upload.id, 2, tier2), (MEXAUSA_OFFER_MIN + TIER2_DELAY_MIN) * 60 * 1000);
+      // Tier 3 (T+15+15)
+      setTimeout(() => fireCascadeTier(upload.id, 3, tier3), (MEXAUSA_OFFER_MIN + TIER3_DELAY_MIN) * 60 * 1000);
+
+      return res.json({
+        ok: true, lane: 'distress',
+        upload_id: upload.id, status: 'received_mexausa_offer',
+        mexausa_offer: { id: offer.id, expires_at: expires.toISOString(), window_minutes: MEXAUSA_OFFER_MIN, total_value_usd: totalValueUSD },
+        tier_preview: { tier1: tier1.length, tier2: tier2.length, tier3: tier3.length },
+        commodity_normalizer: tiered.normalizer,
+        reasoning_engine: letter.reasoning_engine,
+        elapsed_ms: Date.now() - t0,
+        next_step: `Mexausa Food Group has ${MEXAUSA_OFFER_MIN} min to BUY DIRECT. If declined or expired, cascade fires Tier 1 -> Tier 2 (+${TIER2_DELAY_MIN}min) -> Tier 3 (+${TIER3_DELAY_MIN}min).`
+      });
+    } else {
+      // ===== NO FIRST OFFER - CASCADE FIRES IMMEDIATELY =====
+      await pool.query(`UPDATE distress_uploads SET status = 'blasted', blast_fired_at = NOW(), blast_fired_to = $1 WHERE id = $2`, [allMatched.map(m => m.email), upload.id]);
+      await fireCascadeTier(upload.id, 1, tier1);
+      setTimeout(() => fireCascadeTier(upload.id, 2, tier2), TIER2_DELAY_MIN * 60 * 1000);
+      setTimeout(() => fireCascadeTier(upload.id, 3, tier3), TIER3_DELAY_MIN * 60 * 1000);
+
+      try {
+        const headers = { 'Content-Type': 'text/plain', 'Title': `[DISTRESS BLASTED] ${commodity} ${volume_lbs} ${unit || 'lb'} - tier 1 (${tier1.length}) firing now`, 'Priority': '4', 'Tags': 'truck' };
+        if (NTFY_TOKEN) headers['Authorization'] = 'Bearer ' + NTFY_TOKEN;
+        await fetch(`${NTFY_BASE}/${NTFY_TOPIC}`, { method: 'POST', headers, body: `Cascade firing.\nT1: ${tier1.length}\nT2: ${tier2.length} (T+${TIER2_DELAY_MIN}m)\nT3: ${tier3.length} (T+${TIER3_DELAY_MIN}m)` }).catch(() => {});
+      } catch (e) {}
+
+      return res.json({
+        ok: true, lane: 'distress',
+        upload_id: upload.id, status: 'blasted',
+        tier_preview: { tier1: tier1.length, tier2: tier2.length, tier3: tier3.length },
+        commodity_normalizer: tiered.normalizer,
+        matched_buyer_count: allMatched.length,
+        reasoning_engine: letter.reasoning_engine,
+        elapsed_ms: Date.now() - t0,
+        next_step: `Cascade firing: Tier 1 immediate, Tier 2 +${TIER2_DELAY_MIN}min, Tier 3 +${TIER3_DELAY_MIN}min`
+      });
+    }
   } catch (e) {
     await logEvent(null, 'failed', 'failure', { lane: 'distress', error: e.message }, Date.now() - t0);
     return res.status(500).json({ error: 'Pipeline error', detail: e.message });
   }
+});
+
+// =============================================================================
+// MEXAUSA INTERNAL OFFER - admin decision endpoints (Wave 3A.5)
+// =============================================================================
+router.get('/internal-offers', async (req, res) => {
+  const pool = db();
+  if (!pool) return res.status(503).json({ error: 'Database unavailable' });
+  try {
+    const r = await pool.query(`SELECT * FROM v_internal_offer_queue LIMIT 50`);
+    res.json({ ok: true, count: r.rows.length, rows: r.rows });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+router.get('/internal-offer/:id', async (req, res) => {
+  const pool = db();
+  if (!pool) return res.status(503).json({ error: 'Database unavailable' });
+  try {
+    const r = await pool.query(
+      `SELECT mio.*, du.photo_urls, du.gps_lat, du.gps_lng, du.subject_line, du.body_html
+       FROM mexausa_internal_offers mio
+       LEFT JOIN distress_uploads du ON du.id = mio.upload_id
+       WHERE mio.id = $1`, [req.params.id]
+    );
+    if (r.rows.length === 0) return res.status(404).json({ error: 'Not found' });
+    res.json({ ok: true, offer: r.rows[0] });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+router.post('/internal-offer/:id/accept', async (req, res) => {
+  const pool = db();
+  if (!pool) return res.status(503).json({ error: 'Database unavailable' });
+  const { decided_by, decided_by_name, internal_truck_id, internal_route, internal_target_buyer, decision_notes } = req.body || {};
+  try {
+    const r = await pool.query(
+      `UPDATE mexausa_internal_offers
+        SET status='accepted', decided_at=NOW(), decided_by=$1, decided_by_name=$2,
+            internal_truck_id=$3, internal_route=$4, internal_target_buyer=$5, decision_notes=$6, updated_at=NOW()
+        WHERE id=$7 AND status='pending' RETURNING *`,
+      [decided_by || null, decided_by_name || null, internal_truck_id || null, internal_route || null, internal_target_buyer || null, decision_notes || null, req.params.id]
+    );
+    if (r.rows.length === 0) return res.status(409).json({ error: 'Already decided or expired' });
+    const offer = r.rows[0];
+    // Mark distress_upload as sold (cancels all queued cascade tiers)
+    await pool.query(
+      `UPDATE distress_uploads
+        SET status='sold', closed_at=NOW(), closed_buyer_id=NULL,
+            closed_volume_lbs=$1, closed_price_fob=$2, updated_at=NOW()
+        WHERE id=$3`,
+      [offer.volume_lbs, offer.price_fob, offer.upload_id]
+    );
+    await logEvent(offer.upload_id, 'sold', 'success', { lane: 'distress', via: 'mexausa_first_offer', value_usd: offer.total_value_usd, decided_by_name }, 0);
+    // ntfy: deal closed
+    try {
+      const headers = { 'Content-Type': 'text/plain', 'Title': `[MEXAUSA BOUGHT] ${offer.commodity} ${offer.volume_lbs} ${offer.unit || 'lb'} = $${Number(offer.total_value_usd).toFixed(0)}`, 'Priority': '4', 'Tags': 'handshake,money' };
+      if (NTFY_TOKEN) headers['Authorization'] = 'Bearer ' + NTFY_TOKEN;
+      await fetch(`${NTFY_BASE}/${NTFY_TOPIC}`, { method: 'POST', headers, body: `Mexausa bought direct.\nDecided by: ${decided_by_name || 'admin'}\nTruck: ${internal_truck_id || 'TBD'}\nRoute: ${internal_route || 'TBD'}\nCascade cancelled.` }).catch(() => {});
+    } catch (e) {}
+    res.json({ ok: true, offer, message: 'Accepted - cascade cancelled, internal logistics ticket opened' });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+router.post('/internal-offer/:id/decline', async (req, res) => {
+  const pool = db();
+  if (!pool) return res.status(503).json({ error: 'Database unavailable' });
+  const { decided_by, decided_by_name, decision_notes } = req.body || {};
+  try {
+    const r = await pool.query(
+      `UPDATE mexausa_internal_offers
+        SET status='declined', decided_at=NOW(), decided_by=$1, decided_by_name=$2, decision_notes=$3, updated_at=NOW()
+        WHERE id=$4 AND status='pending' RETURNING *`,
+      [decided_by || null, decided_by_name || null, decision_notes || null, req.params.id]
+    );
+    if (r.rows.length === 0) return res.status(409).json({ error: 'Already decided or expired' });
+    const offer = r.rows[0];
+    // Fire Tier 1 immediately (Tier 2 + Tier 3 timers were already scheduled at upload time)
+    await pool.query(`UPDATE distress_uploads SET status = 'blasted', blast_fired_at = NOW() WHERE id = $1`, [offer.upload_id]);
+    // Look up tier 1 buyers and fire
+    const tieredNow = await matchDistressBuyersTiered(offer.commodity);
+    await fireCascadeTier(offer.upload_id, 1, tieredNow.tier1 || []);
+    res.json({ ok: true, offer, message: 'Declined - cascade Tier 1 fired immediately, Tier 2/3 will follow on schedule' });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+// Cascade status (admin debug + UI)
+router.get('/cascade/:uploadId', async (req, res) => {
+  const pool = db();
+  if (!pool) return res.status(503).json({ error: 'Database unavailable' });
+  try {
+    const r = await pool.query(`SELECT * FROM v_distress_cascade_status WHERE upload_id = $1`, [req.params.uploadId]);
+    if (r.rows.length === 0) return res.status(404).json({ error: 'Not found' });
+    res.json({ ok: true, cascade: r.rows[0] });
+  } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
 // Top-25 registry CRUD
