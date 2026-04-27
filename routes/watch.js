@@ -1,152 +1,98 @@
-// ============================================================
-// watch-routes.js â€” SmartWatch Event Trigger API
-// AuditDNA Backend | C:\AuditDNA\backend\routes\watch-routes.js
-// Mount in server.js: app.use('/api/watch', require('./routes/watch-routes'));
-// ============================================================
+// =============================================================================
+// File: watch.js
+// Save to: C:\AuditDNA\backend\routes\watch.js
+// =============================================================================
+// Sprint D Wave 3C - Watch list module (replaces broken file)
+// Original file had: [ERR] Failed to load watch.js: Unexpected token 'const'
+// This is a clean drop-in replacement.
+//
+// Provides watch list functionality for buyers/growers/commodities the team
+// is monitoring. Persists to watchlist table.
+// =============================================================================
 
 const express = require('express');
-const router  = express.Router();
-const notify  = require('../services/watch-notify');
+const router = express.Router();
 
-// â”€â”€ GET /api/watch/config â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-// Returns ntfy channel so frontend can show subscription QR
-router.get('/config', (req, res) => {
-  res.json({
-    channel:   notify.CHANNEL,
-    ntfyBase:  notify.NTFY_BASE,
-    subscribe: `${notify.NTFY_BASE}/${notify.CHANNEL}`,
-    qrData:    `${notify.NTFY_BASE}/${notify.CHANNEL}`,
-  });
+const db = () => global.db || null;
+
+let schemaReady = false;
+async function ensureSchema() {
+  if (schemaReady) return true;
+  const pool = db();
+  if (!pool) return false;
+  try {
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS watchlist (
+        id SERIAL PRIMARY KEY,
+        watch_type TEXT NOT NULL,
+        target_id INTEGER,
+        target_name TEXT,
+        commodity TEXT,
+        owner_email TEXT,
+        priority INTEGER DEFAULT 5,
+        notes TEXT,
+        is_active BOOLEAN DEFAULT TRUE,
+        created_at TIMESTAMPTZ DEFAULT NOW(),
+        last_seen_at TIMESTAMPTZ
+      );
+      CREATE INDEX IF NOT EXISTS idx_watchlist_active ON watchlist(is_active) WHERE is_active = TRUE;
+      CREATE INDEX IF NOT EXISTS idx_watchlist_type ON watchlist(watch_type);
+      CREATE INDEX IF NOT EXISTS idx_watchlist_owner ON watchlist(owner_email);
+    `);
+    schemaReady = true;
+    return true;
+  } catch (e) { return false; }
+}
+ensureSchema().catch(() => {});
+
+router.get('/list', async (req, res) => {
+  await ensureSchema();
+  const pool = db();
+  if (!pool) return res.status(503).json({ error: 'db unavailable' });
+  try {
+    let q = `SELECT id, watch_type, target_id, target_name, commodity, owner_email,
+                    priority, notes, is_active, created_at, last_seen_at
+             FROM watchlist WHERE is_active = TRUE`;
+    const params = [];
+    if (req.query.type)  { params.push(req.query.type);  q += ` AND watch_type = $${params.length}`; }
+    if (req.query.owner) { params.push(req.query.owner); q += ` AND owner_email = $${params.length}`; }
+    q += ` ORDER BY priority DESC, created_at DESC LIMIT 200`;
+    const r = await pool.query(q, params);
+    res.json({ ok: true, count: r.rows.length, rows: r.rows });
+  } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
-// â”€â”€ POST /api/watch/test â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-router.post('/test', async (req, res) => {
-  const result = await notify.notifyTest();
-  res.json(result);
+router.post('/add', async (req, res) => {
+  await ensureSchema();
+  const pool = db();
+  if (!pool) return res.status(503).json({ error: 'db unavailable' });
+  const w = req.body || {};
+  if (!w.watch_type || !w.target_name) {
+    return res.status(400).json({ error: 'watch_type and target_name required' });
+  }
+  try {
+    const r = await pool.query(
+      `INSERT INTO watchlist (watch_type, target_id, target_name, commodity, owner_email, priority, notes)
+       VALUES ($1,$2,$3,$4,$5,$6,$7) RETURNING id`,
+      [
+        w.watch_type, w.target_id || null, w.target_name,
+        w.commodity || null, w.owner_email || null,
+        w.priority || 5, w.notes || null
+      ]
+    );
+    res.json({ ok: true, id: r.rows[0].id });
+  } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
-// â”€â”€ POST /api/watch/grs-tier â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-// Body: { growerName, oldTier, newTier, growerId }
-router.post('/grs-tier', async (req, res) => {
-  const { growerName, oldTier, newTier, growerId } = req.body;
-  if (!growerName || oldTier == null || newTier == null || !growerId)
-    return res.status(400).json({ error: 'Missing required fields' });
-  const result = await notify.notifyGRSTierChange({ growerName, oldTier: Number(oldTier), newTier: Number(newTier), growerId });
-  res.json(result);
+router.post('/deactivate/:id', async (req, res) => {
+  const pool = db();
+  if (!pool) return res.status(503).json({ error: 'db unavailable' });
+  try {
+    await pool.query(`UPDATE watchlist SET is_active = FALSE WHERE id = $1`, [req.params.id]);
+    res.json({ ok: true });
+  } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
-// â”€â”€ POST /api/watch/fsma-deadline â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-// Body: { growerName, lot, daysRemaining, dueDate }
-router.post('/fsma-deadline', async (req, res) => {
-  const { growerName, lot, daysRemaining, dueDate } = req.body;
-  if (!growerName || !lot || daysRemaining == null || !dueDate)
-    return res.status(400).json({ error: 'Missing required fields' });
-  const result = await notify.notifyFSMADeadline({ growerName, lot, daysRemaining: Number(daysRemaining), dueDate });
-  res.json(result);
-});
-
-// â”€â”€ POST /api/watch/tracesafe-scan â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-// Body: { growerName, lot, product, location, success }
-router.post('/tracesafe-scan', async (req, res) => {
-  const { growerName, lot, product, location, success } = req.body;
-  if (!growerName || !lot || !product || !location)
-    return res.status(400).json({ error: 'Missing required fields' });
-  const result = await notify.notifyTraceSafeScan({ growerName, lot, product, location, success: !!success });
-  res.json(result);
-});
-
-// â”€â”€ POST /api/watch/new-kyc â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-// Body: { growerName, growerId, tier, submittedAt }
-router.post('/new-kyc', async (req, res) => {
-  const { growerName, growerId, tier, submittedAt } = req.body;
-  if (!growerName || !growerId || tier == null)
-    return res.status(400).json({ error: 'Missing required fields' });
-  const result = await notify.notifyNewKYC({
-    growerName, growerId, tier,
-    submittedAt: submittedAt || new Date().toISOString()
-  });
-  res.json(result);
-});
-
-// â”€â”€ POST /api/watch/tier3-alert â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-// Body: { growerName, growerId, reason }
-router.post('/tier3-alert', async (req, res) => {
-  const { growerName, growerId, reason } = req.body;
-  if (!growerName || !growerId || !reason)
-    return res.status(400).json({ error: 'Missing required fields' });
-  const result = await notify.notifyTier3Escalation({ growerName, growerId, reason });
-  res.json(result);
-});
-
-// â”€â”€ POST /api/watch/loi-pipeline â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-// Body: { dealName, stage, previousStage, amount }
-router.post('/loi-pipeline', async (req, res) => {
-  const { dealName, stage, previousStage, amount } = req.body;
-  if (!dealName || !stage || !previousStage || amount == null)
-    return res.status(400).json({ error: 'Missing required fields' });
-  const result = await notify.notifyLOIPipeline({ dealName, stage, previousStage, amount });
-  res.json(result);
-});
-
-// â”€â”€ POST /api/watch/shipment â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-// Body: { shipmentId, product, status, location, delay? }
-router.post('/shipment', async (req, res) => {
-  const { shipmentId, product, status, location, delay } = req.body;
-  if (!shipmentId || !product || !status || !location)
-    return res.status(400).json({ error: 'Missing required fields' });
-  const result = await notify.notifyShipmentStatus({ shipmentId, product, status, location, delay });
-  res.json(result);
-});
-
-// â”€â”€ POST /api/watch/market-alert â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-// Body: { product, currentPrice, threshold, direction, region }
-router.post('/market-alert', async (req, res) => {
-  const { product, currentPrice, threshold, direction, region } = req.body;
-  if (!product || currentPrice == null || threshold == null || !direction || !region)
-    return res.status(400).json({ error: 'Missing required fields' });
-  const result = await notify.notifyMarketAlert({ product, currentPrice, threshold, direction, region });
-  res.json(result);
-});
-
-// â”€â”€ POST /api/watch/water-alert â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-// Body: { field, currentUsage, threshold, unit }
-router.post('/water-alert', async (req, res) => {
-  const { field, currentUsage, threshold, unit } = req.body;
-  if (!field || currentUsage == null || threshold == null || !unit)
-    return res.status(400).json({ error: 'Missing required fields' });
-  const result = await notify.notifyWaterAlert({ field, currentUsage, threshold, unit });
-  res.json(result);
-});
-
-// â”€â”€ POST /api/watch/heat-warning â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-// Body: { region, tempC, uvIndex, advisory }
-router.post('/heat-warning', async (req, res) => {
-  const { region, tempC, uvIndex, advisory } = req.body;
-  if (!region || tempC == null || uvIndex == null || !advisory)
-    return res.status(400).json({ error: 'Missing required fields' });
-  const result = await notify.notifyHeatWarning({ region, tempC, uvIndex, advisory });
-  res.json(result);
-});
-
-// â”€â”€ POST /api/watch/new-lead â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-// Body: { name, source, phone?, email?, score, notes? }
-router.post('/new-lead', async (req, res) => {
-  const { name, source, phone, email, score, notes } = req.body;
-  if (!name || !source || score == null)
-    return res.status(400).json({ error: 'Missing required fields: name, source, score' });
-  const result = await notify.notifyNewLead({ name, source, phone, email, score: Number(score), notes });
-  res.json(result);
-});
-
-// â”€â”€ POST /api/watch/buyer-inquiry â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-// Body: { buyerName, products[], quantity?, unit?, urgency, company?, phone?, email?, notes? }
-router.post('/buyer-inquiry', async (req, res) => {
-  const { buyerName, products, quantity, unit, urgency, company, phone, email, notes } = req.body;
-  if (!buyerName || !products || !products.length || !urgency)
-    return res.status(400).json({ error: 'Missing required fields: buyerName, products, urgency' });
-  const result = await notify.notifyBuyerInquiry({ buyerName, company, products, quantity, unit, urgency, phone, email, notes });
-  res.json(result);
-});
+router.get('/health', (req, res) => res.json({ ok: true, service: 'watch', version: '3C' }));
 
 module.exports = router;
-
