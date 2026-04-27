@@ -1,330 +1,155 @@
-// ============================================================================
-// loaf-routes.js — LOAF Mobile Office Backend Routes
-// Launch · Origin · Altruistic · Factor
-// MexaUSA Food Group, Inc. — AuditDNA Agriculture Intelligence Platform
-// Save to: C:\AuditDNA\backend\routes\loaf-routes.js
-// Mount in server.js: app.use('/api/loaf', require('./routes/loaf-routes'));
-// ============================================================================
-
+// loaf-routes.js — FULL REBUILD — Save to: C:\AuditDNA\backend\routes\loaf-routes.js
 const express  = require('express');
 const router   = express.Router();
 const nodemailer = require('nodemailer');
 
-// ── SMTP transporter (shared) ─────────────────────────────────────────────────
-const getTransporter = () => nodemailer.createTransport({
-  host:   process.env.SMTP_HOST || 'smtpout.secureserver.net',
-  port:   parseInt(process.env.SMTP_PORT || '465'),
-  secure: parseInt(process.env.SMTP_PORT || '465') === 465,
-  auth: {
-    user: process.env.SMTP_USER || process.env.EMAIL_FROM,
-    pass: process.env.SMTP_PASS || process.env.EMAIL_PASS,
-  },
-});
+let intelligence, dataEngine;
+try { intelligence = require('../services/loaf-intelligence'); console.log('[loaf-routes] intelligence loaded'); }
+catch (e) { console.warn('[loaf-routes] intelligence not found:', e.message); intelligence = { runLOAFIntelligence: async () => ({ sent:0, chainStores:0 }) }; }
+try { dataEngine = require('../services/loaf-data-engine'); console.log('[loaf-routes] data engine loaded'); }
+catch (e) { console.warn('[loaf-routes] data engine not found:', e.message); dataEngine = { saveSubmission: async()=>null, updateDailyAnalytics: async()=>{}, ensureDataTables: async()=>{}, generateUSDAReport: async()=>({error:'not loaded'}), generateFDAReport: async()=>({error:'not loaded'}), generateSustainabilityReport: async()=>({error:'not loaded'}), generateCorridorIntelligence: async()=>({error:'not loaded'}) }; }
 
-// ── Admin emails that always get pinged ───────────────────────────────────────
-const ADMIN_EMAILS = [
-  process.env.OWNER_EMAIL      || 'saul@mexausafg.com',
-  process.env.ADMIN_PABLO      || 'palt@mfginc.com',
-  process.env.ADMIN_OSVALDO    || 'ogut@mfginc.com',
-];
+const getDb = () => global.db || require('../db');
+const getTransport = () => nodemailer.createTransport({ host: process.env.SMTP_HOST||'smtp.gmail.com', port: parseInt(process.env.SMTP_PORT||'587'), secure:false, auth:{ user:process.env.SMTP_USER, pass:process.env.SMTP_PASS } });
+const FROM = `"MexaUSA Food Group — LOAF" <${process.env.SMTP_USER||'sgarcia1911@gmail.com'}>`;
+const ADMIN_EMAILS = ['saul@mexausafg.com','sgarcia1911@gmail.com','palt@mfginc.com'];
 
-// ── DB auto-create LOAF tables (runs once on first request) ──────────────────
-let tablesReady = false;
-const ensureTables = async (db) => {
-  if (tablesReady) return;
-  await db.query(`
-    CREATE TABLE IF NOT EXISTS loaf_submissions (
-      id            SERIAL PRIMARY KEY,
-      action        VARCHAR(20) NOT NULL,
-      commodity     VARCHAR(100),
-      quantity      NUMERIC,
-      unit          VARCHAR(20),
-      price         VARCHAR(50),
-      negotiable    BOOLEAN DEFAULT false,
-      markets       JSONB,
-      region        TEXT,
-      notes         TEXT,
-      lot_number    VARCHAR(100),
-      harvest_date  DATE,
-      docs          JSONB,
-      grade         JSONB,
-      buyer_name    VARCHAR(200),
-      invoice_amount NUMERIC,
-      invoice_date  DATE,
-      broadcast     BOOLEAN DEFAULT false,
-      submitter     VARCHAR(200),
-      gps_lat       NUMERIC(10,6),
-      gps_lng       NUMERIC(10,6),
-      submitted_at  TIMESTAMPTZ DEFAULT NOW()
-    )
-  `).catch(() => {});
-  tablesReady = true;
-};
-
-// ── Shared DB insert ──────────────────────────────────────────────────────────
-const insertSubmission = async (db, action, data) => {
-  await ensureTables(db);
-  const {
-    commodity, quantity, unit, price, negotiable, markets, region,
-    notes, lot, harvestDate, docs, grade, buyer, invoiceAmount,
-    invoiceDate, broadcast, user, gps
-  } = data;
-  return db.query(`
-    INSERT INTO loaf_submissions
-      (action, commodity, quantity, unit, price, negotiable, markets, region, notes,
-       lot_number, harvest_date, docs, grade, buyer_name, invoice_amount, invoice_date,
-       broadcast, submitter, gps_lat, gps_lng)
-    VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20)
-    RETURNING id
-  `, [
-    action,
-    commodity    || null,
-    quantity     || null,
-    unit         || null,
-    price        || null,
-    negotiable   || false,
-    JSON.stringify(markets || []),
-    region       || null,
-    notes        || null,
-    lot          || null,
-    harvestDate  || null,
-    JSON.stringify(docs  || {}),
-    JSON.stringify(grade || {}),
-    buyer        || null,
-    invoiceAmount|| null,
-    invoiceDate  || null,
-    broadcast    || false,
-    user         || 'field',
-    gps?.lat     || null,
-    gps?.lng     || null,
-  ]).catch(e => { console.warn('[LOAF] DB insert failed:', e.message); return { rows: [{ id: null }] }; });
-};
-
-// ── Admin email blast ─────────────────────────────────────────────────────────
-const blastAdmins = async (action, payload, user) => {
-  if (!process.env.SMTP_USER) return;
+async function notifyAdmins(action, data, intel) {
+  const { commodity, quantity, unit, user, gps } = data;
+  const ir = intel || {};
   try {
-    const transport = getTransporter();
-    const actionColors = { LAUNCH: '#185FA5', ORIGIN: '#0F7B41', ALTRUISTIC: '#3B6D11', FACTOR: '#C9A55C' };
-    const color = actionColors[action] || '#0F7B41';
-    const rows = Object.entries(payload)
-      .filter(([k]) => !['gps','docs','grade'].includes(k))
-      .map(([k, v]) => `<tr><td style="padding:6px 12px;font-size:12px;color:#64748b;text-transform:uppercase;letter-spacing:1px;border-bottom:1px solid #1e293b;">${k}</td><td style="padding:6px 12px;font-size:13px;color:#f1f5f9;border-bottom:1px solid #1e293b;">${v || '--'}</td></tr>`)
-      .join('');
-
-    const html = `<!DOCTYPE html><html><head><meta charset="UTF-8"></head>
-<body style="margin:0;padding:0;background:#0a0f1a;font-family:'Helvetica Neue',Arial,sans-serif;">
-<table width="100%" cellpadding="0" cellspacing="0"><tr><td align="center" style="padding:24px 16px;">
-<table width="520" cellpadding="0" cellspacing="0" style="max-width:520px;width:100%;">
-<tr><td style="background:#0F1419;padding:16px 20px;border-left:4px solid ${color};">
-  <div style="font-size:10px;letter-spacing:3px;color:#475569;text-transform:uppercase;">AuditDNA LOAF Mobile Office</div>
-  <div style="font-size:18px;font-weight:700;color:${color};letter-spacing:2px;margin-top:4px;">${action} — NEW SUBMISSION</div>
-  <div style="font-size:11px;color:#64748b;margin-top:2px;">Submitted by: ${user || 'field'} — ${new Date().toLocaleString()}</div>
-  ${payload.gps ? `<div style="font-size:10px;color:#334155;margin-top:4px;">GPS: ${payload.gps.lat}, ${payload.gps.lng}</div>` : ''}
-</td></tr>
-<tr><td style="background:#111827;padding:0;">
-  <table width="100%" cellpadding="0" cellspacing="0">${rows}</table>
-</td></tr>
-<tr><td style="background:#0F1419;padding:12px 20px;text-align:center;">
-  <div style="font-size:9px;color:#334155;letter-spacing:1px;">MexaUSA Food Group, Inc. — mexausafg.com — LOAF Mobile Field Office</div>
-</td></tr>
-</table></td></tr></table>
-</body></html>`;
-
-    await transport.sendMail({
-      from:    `"AuditDNA LOAF Alert" <${process.env.SMTP_USER}>`,
-      to:      ADMIN_EMAILS.join(','),
-      subject: `[LOAF] ${action} — ${payload.commodity || payload.buyer || 'Field Submission'} — ${new Date().toLocaleTimeString()}`,
-      html,
+    const transport = getTransport();
+    await transport.sendMail({ from:FROM, to:ADMIN_EMAILS.join(','),
+      subject:`[LOAF ${action}] ${commodity} — ${quantity} ${unit} — ${user?.name||'Unknown'}`,
+      text:[`Action: ${action}`,`Commodity: ${commodity}`,`Quantity: ${quantity} ${unit}`,`Grower: ${user?.name||'--'} / ${user?.company||'--'} / ${user?.phone||'--'}`,`Region: ${user?.region||'--'}`,`GPS: ${gps?`${gps.lat}, ${gps.lng}`:'Not captured'}`,`Buyers notified: ${ir.sent||0} regular + ${ir.chainStores||0} chain stores`,`Time: ${new Date().toLocaleString()}`].join('\n')
     });
-    console.log(`[LOAF] Admin blast sent: ${action} to ${ADMIN_EMAILS.length} admins`);
-  } catch (e) {
-    console.warn('[LOAF] Admin email blast failed (non-critical):', e.message);
-  }
-};
+  } catch(e) { console.warn('[loaf-routes] admin notify failed:', e.message); }
+}
 
-// ── OpenClaw WhatsApp broadcast for ALTRUISTIC ────────────────────────────────
-const broadcastOpenClaw = async (data) => {
+router.post('/register', async (req, res) => {
+  const { name, company, phone, commodity, region, gps } = req.body;
+  const db = getDb();
   try {
-    const db = global.db;
-    if (!db) return;
-    const msg = `[ALTRUISTIC ALERT] ${data.quantity} ${data.unit} of ${data.commodity} available from grower network. Region: ${data.region || 'unspecified'}. Offered to growers short on contracts. Reply YES to claim — AuditDNA LOAF`;
-    await db.query(
-      `INSERT INTO openclaw_messages (direction, phone, body, source, status, created_at) VALUES ('out', $1, $2, 'loaf_altruistic', 'pending', NOW())`,
-      [process.env.OPENCLAW_PHONE || '+526463402686', msg]
-    ).catch(() => {});
-    console.log('[LOAF] OpenClaw broadcast queued for ALTRUISTIC');
-  } catch (e) {
-    console.warn('[LOAF] OpenClaw broadcast failed (non-critical):', e.message);
-  }
-};
-
-// ──────────────────────────────────────────────────────────────────────────────
-// POST /api/loaf/admin-ping — fired from frontend after every submission
-// ──────────────────────────────────────────────────────────────────────────────
-router.post('/admin-ping', async (req, res) => {
-  const { action, payload, user, gps, timestamp } = req.body || {};
-  console.log(`[LOAF PING] ${action} — ${user} — ${timestamp}`);
-
-  // Post to admin-notifications table (non-blocking)
-  const db = global.db;
-  if (db) {
-    db.query(
-      `INSERT INTO admin_notifications (type, title, message, data, created_at) VALUES ($1,$2,$3,$4,NOW())`,
-      [
-        'loaf_ping',
-        `LOAF ${action}: ${payload?.commodity || payload?.buyer || 'Field submission'}`,
-        `Submitted by ${user || 'field'} at ${timestamp || new Date().toISOString()}${gps ? ` — GPS: ${gps.lat}, ${gps.lng}` : ''}`,
-        JSON.stringify({ action, payload, user, gps })
-      ]
-    ).catch(() => {});
-  }
-
-  // Email blast (async, non-blocking)
-  blastAdmins(action, { ...(payload || {}), gps }, user).catch(() => {});
-
-  res.json({ success: true, message: `Admin team pinged for ${action}` });
+    await db.query(`CREATE TABLE IF NOT EXISTS loaf_grower_registrations (id SERIAL PRIMARY KEY, name VARCHAR(200), company VARCHAR(200), phone VARCHAR(50), commodity VARCHAR(100), region VARCHAR(200), gps_lat NUMERIC(10,7), gps_lng NUMERIC(10,7), created_at TIMESTAMPTZ DEFAULT NOW())`).catch(()=>{});
+    await db.query(`INSERT INTO loaf_grower_registrations (name,company,phone,commodity,region,gps_lat,gps_lng) VALUES ($1,$2,$3,$4,$5,$6,$7)`, [name,company,phone,commodity,region,gps?.lat||null,gps?.lng||null]);
+  } catch(e) { console.warn('[LOAF REGISTER]', e.message); }
+  res.json({ success:true });
 });
 
-// ──────────────────────────────────────────────────────────────────────────────
-// POST /api/loaf/launch — open market product listing
-// ──────────────────────────────────────────────────────────────────────────────
 router.post('/launch', async (req, res) => {
-  try {
-    const { commodity, quantity, unit, price, negotiable, markets, region, notes, gps } = req.body || {};
-    if (!commodity || !quantity) return res.status(400).json({ success: false, error: 'commodity and quantity required' });
-
-    const db = global.db;
-    const dbRes = await insertSubmission(db, 'LAUNCH', req.body);
-    const id = dbRes?.rows?.[0]?.id;
-
-    // Post to DealFloor inventory pipeline (non-blocking)
-    if (db) {
-      db.query(
-        `INSERT INTO inventory (commodity, quantity, unit, price_per_unit, negotiable, region, notes, source, gps_lat, gps_lng, created_at)
-         VALUES ($1,$2,$3,$4,$5,$6,$7,'loaf_launch',$8,$9,NOW())`,
-        [commodity, quantity, unit, price || null, negotiable || false, region || null, notes || null, gps?.lat || null, gps?.lng || null]
-      ).catch(() => {});
-    }
-
-    console.log(`[LOAF LAUNCH] ${quantity} ${unit} ${commodity} — ID: ${id}`);
-    res.json({ success: true, id, action: 'LAUNCH', message: `${quantity} ${unit} of ${commodity} launched to open market` });
-  } catch (e) {
-    console.error('[LOAF LAUNCH] error:', e.message);
-    res.status(500).json({ success: false, error: e.message });
-  }
+  const data = req.body;
+  if (!data.commodity || !data.quantity) return res.status(400).json({ success:false, error:'Commodity and quantity required' });
+  console.log(`[LOAF LAUNCH] ${data.commodity} ${data.quantity} ${data.unit} — ${data.user?.name}`);
+  const db = getDb();
+  const submissionId = await dataEngine.saveSubmission(db, 'LAUNCH', data, null);
+  intelligence.runLOAFIntelligence(db, 'LAUNCH', submissionId, data).then(async r => {
+    await dataEngine.updateDailyAnalytics(db, 'LAUNCH', data, r);
+    await notifyAdmins('LAUNCH', data, r);
+    if (submissionId) db.query('UPDATE loaf_submissions SET intelligence_sent=true,buyers_notified=$1,chains_notified=$2 WHERE id=$3',[r.sent||0,r.chainStores||0,submissionId]).catch(()=>{});
+  }).catch(e => console.error('[LOAF LAUNCH] intel error:', e.message));
+  res.json({ success:true, submission_id:submissionId, message:`${data.commodity} launched. Matched buyers will be notified automatically.`, action:'LAUNCH' });
 });
 
-// ──────────────────────────────────────────────────────────────────────────────
-// POST /api/loaf/origin — traceability chain + quality grading
-// ──────────────────────────────────────────────────────────────────────────────
 router.post('/origin', async (req, res) => {
-  try {
-    const { commodity, lot, harvestDate, docs, grade, gps } = req.body || {};
-    if (!commodity || !lot) return res.status(400).json({ success: false, error: 'commodity and lot number required' });
-
-    const db = global.db;
-    const dbRes = await insertSubmission(db, 'ORIGIN', { ...req.body, quantity: null });
-    const id = dbRes?.rows?.[0]?.id;
-
-    // Post to traceability table (non-blocking)
-    if (db) {
-      db.query(
-        `INSERT INTO compliance_documents
-           (title, doc_type, lot_number, commodity, harvest_date, quality_grade, quality_data, gps_lat, gps_lng, source, created_at)
-         VALUES ($1,'origin_trace',$2,$3,$4,$5,$6,$7,$8,'loaf_origin',NOW())`,
-        [
-          `ORIGIN-${lot}-${commodity}`,
-          lot,
-          commodity,
-          harvestDate || null,
-          grade?.usGrade || null,
-          JSON.stringify(grade || {}),
-          gps?.lat || null,
-          gps?.lng || null,
-        ]
-      ).catch(() => {});
-    }
-
-    console.log(`[LOAF ORIGIN] ${commodity} Lot ${lot} — Grade: ${grade?.usGrade || 'pending'} — ID: ${id}`);
-    res.json({ success: true, id, action: 'ORIGIN', usGrade: grade?.usGrade, message: `Origin record created for ${commodity} Lot ${lot}` });
-  } catch (e) {
-    console.error('[LOAF ORIGIN] error:', e.message);
-    res.status(500).json({ success: false, error: e.message });
-  }
+  const data = req.body;
+  if (!data.commodity || !data.lot) return res.status(400).json({ success:false, error:'Commodity and lot number required' });
+  console.log(`[LOAF ORIGIN] ${data.commodity} Lot:${data.lot} — ${data.user?.name}`);
+  const db = getDb();
+  const submissionId = await dataEngine.saveSubmission(db, 'ORIGIN', data, null);
+  await dataEngine.updateDailyAnalytics(db, 'ORIGIN', data, null);
+  await notifyAdmins('ORIGIN', data, null);
+  res.json({ success:true, submission_id:submissionId, message:`Origin record created. Traceability logged for USDA/FDA reporting.`, action:'ORIGIN', grade_saved:!!data.grade });
 });
 
-// ──────────────────────────────────────────────────────────────────────────────
-// POST /api/loaf/altruistic — surplus broadcast to grower network
-// ──────────────────────────────────────────────────────────────────────────────
 router.post('/altruistic', async (req, res) => {
-  try {
-    const { commodity, quantity, unit, region, notes, broadcastOpenClaw: doBroadcast, gps } = req.body || {};
-    if (!commodity || !quantity) return res.status(400).json({ success: false, error: 'commodity and quantity required' });
-
-    const db = global.db;
-    const dbRes = await insertSubmission(db, 'ALTRUISTIC', { ...req.body, broadcast: doBroadcast });
-    const id = dbRes?.rows?.[0]?.id;
-
-    // OpenClaw WhatsApp broadcast if requested (non-blocking)
-    if (doBroadcast) {
-      broadcastOpenClaw({ commodity, quantity, unit, region, notes }).catch(() => {});
+  const data = req.body;
+  if (!data.commodity || !data.quantity) return res.status(400).json({ success:false, error:'Commodity and quantity required' });
+  console.log(`[LOAF ALTRUISTIC] ${data.commodity} ${data.quantity} ${data.unit} — ${data.user?.name}`);
+  const db = getDb();
+  const submissionId = await dataEngine.saveSubmission(db, 'ALTRUISTIC', data, null);
+  intelligence.runLOAFIntelligence(db, 'ALTRUISTIC', submissionId, data).then(async r => {
+    await dataEngine.updateDailyAnalytics(db, 'ALTRUISTIC', data, r);
+    await notifyAdmins('ALTRUISTIC', data, r);
+    if (data.broadcastOpenClaw) {
+      try {
+        const http = require('http');
+        const body = JSON.stringify({ to:'all', message:`[LOAF ALTRUISTIC] ${data.commodity} surplus available — ${data.quantity} ${data.unit} — ${data.user?.region||'corridor'}. Contact MexaUSA Food Group: +1-831-251-3116` });
+        const opts = { hostname:'localhost', port:3001, path:'/api/openclaw/broadcast', method:'POST', headers:{'Content-Type':'application/json','Content-Length':Buffer.byteLength(body)} };
+        http.request(opts, ()=>{}).write(body);
+      } catch(e) { console.warn('[LOAF ALTRUISTIC] OpenClaw error:', e.message); }
     }
-
-    console.log(`[LOAF ALTRUISTIC] ${quantity} ${unit} ${commodity} — Broadcast: ${doBroadcast} — ID: ${id}`);
-    res.json({ success: true, id, action: 'ALTRUISTIC', broadcast: doBroadcast, message: `${quantity} ${unit} of ${commodity} offered to grower network` });
-  } catch (e) {
-    console.error('[LOAF ALTRUISTIC] error:', e.message);
-    res.status(500).json({ success: false, error: e.message });
-  }
+    if (submissionId) db.query('UPDATE loaf_submissions SET intelligence_sent=true,buyers_notified=$1,chains_notified=$2 WHERE id=$3',[r.sent||0,r.chainStores||0,submissionId]).catch(()=>{});
+  }).catch(e => console.error('[LOAF ALTRUISTIC] intel error:', e.message));
+  res.json({ success:true, submission_id:submissionId, message:`${data.commodity} surplus posted. Matched buyers, chain stores, and grower network being notified.`, action:'ALTRUISTIC', openclaw_broadcast:!!data.broadcastOpenClaw });
 });
 
-// ──────────────────────────────────────────────────────────────────────────────
-// POST /api/loaf/factor — invoice advance routing
-// ──────────────────────────────────────────────────────────────────────────────
 router.post('/factor', async (req, res) => {
-  try {
-    const { buyer, invoiceAmount, invoiceDate, commodity, gps } = req.body || {};
-    if (!buyer || !invoiceAmount) return res.status(400).json({ success: false, error: 'buyer and invoice amount required' });
-
-    const db = global.db;
-    const dbRes = await insertSubmission(db, 'FACTOR', req.body);
-    const id = dbRes?.rows?.[0]?.id;
-
-    // Route to factor intake pipeline (non-blocking)
-    if (db) {
-      db.query(
-        `INSERT INTO financing_deals
-           (deal_type, buyer_name, invoice_amount, invoice_date, commodity, source, status, created_at)
-         VALUES ('invoice_factoring',$1,$2,$3,$4,'loaf_factor','pending_review',NOW())`,
-        [buyer, invoiceAmount, invoiceDate || null, commodity || null]
-      ).catch(() => {});
-    }
-
-    const estimatedAdvance = (parseFloat(invoiceAmount) * 0.85).toFixed(2);
-    console.log(`[LOAF FACTOR] $${invoiceAmount} — ${buyer} — Est advance: $${estimatedAdvance} — ID: ${id}`);
-    res.json({ success: true, id, action: 'FACTOR', estimatedAdvance, message: `Invoice for $${invoiceAmount} routed to factoring partners` });
-  } catch (e) {
-    console.error('[LOAF FACTOR] error:', e.message);
-    res.status(500).json({ success: false, error: e.message });
-  }
+  const data = req.body;
+  if (!data.buyer || !data.invoiceAmount) return res.status(400).json({ success:false, error:'Buyer name and invoice amount required' });
+  console.log(`[LOAF FACTOR] $${data.invoiceAmount} Buyer:${data.buyer} — ${data.user?.name}`);
+  const db = getDb();
+  const submissionId = await dataEngine.saveSubmission(db, 'FACTOR', data, null);
+  await dataEngine.updateDailyAnalytics(db, 'FACTOR', data, null);
+  await notifyAdmins('FACTOR', data, null);
+  const advance = Math.round(parseFloat(data.invoiceAmount)*0.85*100)/100;
+  res.json({ success:true, submission_id:submissionId, message:`Invoice submitted for factoring. Capital partners will be notified. Estimated advance: $${advance.toFixed(2)}.`, estimated_advance:advance, action:'FACTOR' });
 });
 
-// ──────────────────────────────────────────────────────────────────────────────
-// GET /api/loaf/history — recent LOAF submissions
-// ──────────────────────────────────────────────────────────────────────────────
+router.post('/admin-ping', async (req, res) => {
+  const { action, user, timestamp } = req.body;
+  console.log(`[LOAF ADMIN-PING] ${action} — ${user||'unknown'} — ${timestamp}`);
+  res.json({ success:true });
+});
+
 router.get('/history', async (req, res) => {
+  const { phone, company } = req.query;
+  const db = getDb();
   try {
-    const db = global.db;
-    if (!db) return res.json({ success: true, submissions: [] });
-    const result = await db.query(
-      `SELECT id, action, commodity, quantity, unit, buyer_name, submitter, submitted_at, gps_lat, gps_lng
-       FROM loaf_submissions ORDER BY submitted_at DESC LIMIT 50`
-    ).catch(() => ({ rows: [] }));
-    res.json({ success: true, submissions: result.rows });
-  } catch (e) {
-    res.status(500).json({ success: false, error: e.message });
-  }
+    const r = await db.query(`SELECT id,action,commodity,quantity,unit,price,buyers_notified,chains_notified,submitted_at FROM loaf_submissions WHERE ($1::text IS NULL OR grower_phone=$1) AND ($2::text IS NULL OR LOWER(grower_company) LIKE LOWER($2)) ORDER BY submitted_at DESC LIMIT 50`, [phone||null, company?`%${company}%`:null]);
+    res.json({ success:true, submissions:r.rows });
+  } catch(e) { res.json({ success:false, error:e.message, submissions:[] }); }
+});
+
+router.get('/analytics', async (req, res) => {
+  const db = getDb();
+  const days = parseInt(req.query.days||'30');
+  const start = new Date(Date.now()-days*86400000).toISOString().slice(0,10);
+  try {
+    await dataEngine.ensureDataTables(db);
+    const [s, a] = await Promise.all([
+      db.query(`SELECT action, COUNT(*) as count FROM loaf_submissions WHERE submitted_at >= NOW() - INTERVAL '${days} days' GROUP BY action`),
+      db.query(`SELECT SUM(waste_prevented_lbs) as waste, SUM(water_use_gallons) as water, SUM(carbon_miles_saved) as carbon, SUM(buyers_notified) as buyers FROM loaf_analytics_daily WHERE report_date >= $1`,[start])
+    ]);
+    const stats = a.rows[0]||{};
+    const breakdown = {};
+    s.rows.forEach(r => { breakdown[r.action]=parseInt(r.count); });
+    res.json({ success:true, period_days:days, transactions:breakdown, total:Object.values(breakdown).reduce((a,b)=>a+b,0), impact:{ waste_prevented_lbs:Math.round(parseFloat(stats.waste)||0), water_tracked_gallons:Math.round(parseFloat(stats.water)||0), carbon_mt_saved:Math.round((parseFloat(stats.carbon)||0)*1000)/1000, buyers_contacted:parseInt(stats.buyers)||0 } });
+  } catch(e) { res.json({ success:false, error:e.message }); }
+});
+
+const jwt = require('jsonwebtoken');
+function requireAuth(req, res, next) {
+  const token = req.headers.authorization?.replace('Bearer ','');
+  if (!token) return res.status(401).json({ error:'Unauthorized' });
+  try { jwt.verify(token, process.env.JWT_SECRET||'auditdna_jwt_2026'); next(); }
+  catch(e) { res.status(401).json({ error:'Invalid token' }); }
+}
+
+router.get('/reports/usda', requireAuth, async (req,res) => {
+  const db=getDb(), start=req.query.start||new Date(Date.now()-30*86400000).toISOString().slice(0,10), end=req.query.end||new Date().toISOString().slice(0,10);
+  res.json(await dataEngine.generateUSDAReport(db,start,end));
+});
+router.get('/reports/fda', requireAuth, async (req,res) => {
+  const db=getDb(), start=req.query.start||new Date(Date.now()-30*86400000).toISOString().slice(0,10), end=req.query.end||new Date().toISOString().slice(0,10);
+  res.json(await dataEngine.generateFDAReport(db,start,end));
+});
+router.get('/reports/sustainability', requireAuth, async (req,res) => {
+  const db=getDb(), start=req.query.start||new Date(Date.now()-30*86400000).toISOString().slice(0,10), end=req.query.end||new Date().toISOString().slice(0,10);
+  res.json(await dataEngine.generateSustainabilityReport(db,start,end));
+});
+router.get('/reports/corridor', requireAuth, async (req,res) => {
+  const db=getDb(), start=req.query.start||new Date(Date.now()-30*86400000).toISOString().slice(0,10), end=req.query.end||new Date().toISOString().slice(0,10);
+  res.json(await dataEngine.generateCorridorIntelligence(db,start,end));
 });
 
 module.exports = router;
