@@ -2,20 +2,20 @@
 // File: Brainlog.js
 // Save to: C:\AuditDNA\backend\routes\Brainlog.js
 // =============================================================================
-// Sprint D Wave 3C - Brain Event Logger
+// Sprint D Wave 3C.1 - Brain Event Logger (PATH FIX)
 //
-// Lightweight brain event capture endpoint. Used by:
-//   - factor-intake.js (Wave 3B) when emitting factor.intake.scored events
-//   - niner-bridge.js when emitting niner.* events
-//   - autonomy modules (A1-A15) when reporting actions
+// IMPORTANT: This module is mounted at /api/brainlog (NOT /api/brain).
+// /api/brain is occupied by the existing brain-stream module from earlier sprints.
+// Path collision caused empty responses on health/events endpoints.
 //
-// Endpoints:
-//   POST /api/brain/events      - log a brain event
-//   GET  /api/brain/events      - list recent events (admin)
-//   GET  /api/brain/events/:id  - retrieve one event
-//   GET  /api/brain/stats       - rolled-up event counts
+// Endpoints (note path):
+//   POST /api/brainlog/events
+//   GET  /api/brainlog/events
+//   GET  /api/brainlog/events/:id
+//   GET  /api/brainlog/stats
+//   GET  /api/brainlog/health
 //
-// Persists to brain_events table (created on first call if missing).
+// global.brainEmit() still works the same - it's an in-process function call.
 // =============================================================================
 
 const express = require('express');
@@ -24,10 +24,17 @@ const router = express.Router();
 const db = () => global.db || null;
 
 let schemaReady = false;
+let schemaInitInProgress = false;
 async function ensureSchema() {
   if (schemaReady) return true;
+  if (schemaInitInProgress) {
+    // Another caller is initializing - wait briefly
+    await new Promise(r => setTimeout(r, 200));
+    return schemaReady;
+  }
+  schemaInitInProgress = true;
   const pool = db();
-  if (!pool) return false;
+  if (!pool) { schemaInitInProgress = false; return false; }
   try {
     await pool.query(`
       CREATE TABLE IF NOT EXISTS brain_events (
@@ -45,19 +52,25 @@ async function ensureSchema() {
       CREATE INDEX IF NOT EXISTS idx_brain_events_deal ON brain_events(deal_id) WHERE deal_id IS NOT NULL;
     `);
     schemaReady = true;
+    schemaInitInProgress = false;
     return true;
   } catch (e) {
-    console.error('[BRAINLOG] schema init failed:', e.message);
+    schemaInitInProgress = false;
+    // Don't log the timeout error - it's expected during boot avalanche
+    if (!String(e.message).includes('Connection terminated')) {
+      console.error('[BRAINLOG] schema init failed:', e.message);
+    }
     return false;
   }
 }
 
-// Wire global emitter so factor-intake.js + niner-bridge.js can fire events without HTTP
+// Wire global emitter
 if (!global.brainEmit) {
   global.brainEmit = async function (evt) {
     const pool = db();
     if (!pool) return;
     if (!schemaReady) await ensureSchema();
+    if (!schemaReady) return; // still failed - skip silently
     try {
       await pool.query(
         `INSERT INTO brain_events (event_type, source_module, deal_id, upload_id, commodity, payload)
@@ -75,13 +88,14 @@ if (!global.brainEmit) {
   };
 }
 
-// Auto-init on first import (don't block boot)
-ensureSchema().catch(() => {});
+// Defer schema init to 5s after import - avoids boot avalanche timeout
+setTimeout(() => { ensureSchema().catch(() => {}); }, 5000);
 
 router.post('/events', async (req, res) => {
   const pool = db();
   if (!pool) return res.status(503).json({ error: 'db unavailable' });
   await ensureSchema();
+  if (!schemaReady) return res.status(503).json({ error: 'schema not ready' });
   const evt = req.body || {};
   if (!evt.event && !evt.event_type) {
     return res.status(400).json({ error: 'event or event_type required' });
@@ -107,6 +121,7 @@ router.get('/events', async (req, res) => {
   const pool = db();
   if (!pool) return res.status(503).json({ error: 'db unavailable' });
   await ensureSchema();
+  if (!schemaReady) return res.status(503).json({ error: 'schema not ready' });
   const limit = Math.min(parseInt(req.query.limit) || 50, 500);
   const since = req.query.since || null;
   const eventType = req.query.event_type || null;
@@ -137,6 +152,7 @@ router.get('/stats', async (req, res) => {
   const pool = db();
   if (!pool) return res.status(503).json({ error: 'db unavailable' });
   await ensureSchema();
+  if (!schemaReady) return res.status(503).json({ error: 'schema not ready' });
   try {
     const r1 = await pool.query(`SELECT COUNT(*)::int AS total FROM brain_events`);
     const r2 = await pool.query(
@@ -159,7 +175,7 @@ router.get('/stats', async (req, res) => {
 });
 
 router.get('/health', (req, res) => {
-  res.json({ ok: true, service: 'brainlog', version: '3C', schema_ready: schemaReady });
+  res.json({ ok: true, service: 'brainlog', version: '3C.1', schema_ready: schemaReady });
 });
 
 module.exports = router;
