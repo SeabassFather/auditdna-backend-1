@@ -1,4 +1,4 @@
-// ===============================================================
+﻿// ===============================================================
 // AUDITDNA BACKEND SERVER v4.1 ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â SECURED
 // ===============================================================
 // CHANGES FROM v4.0:
@@ -1218,6 +1218,50 @@ app.post('/api/brain/workflow', requireAdmin, async (req, res) => {
 });
 
 // Owner only ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â full brain status with metrics
+// /api/brain/query -- called by SaulIntelCRM.jsx for AI-assisted contact/deal enrichment
+app.post('/api/brain/query', attachUser, async (req, res) => {
+  try {
+    const { query, context = {}, module: mod = 'crm' } = req.body || {};
+    if (!query?.trim()) return res.status(400).json({ success: false, error: 'query required' });
+    const sysPrompt = 'You are AuditDNA SI. Module: ' + mod + '. Be concise. JSON response: { "answer": "...", "action": "...", "data": {} }';
+    const fullPrompt = context.contactData ? 'Contact: ' + JSON.stringify(context.contactData) + '\n\nQuery: ' + query : query;
+    let answer = '';
+    try {
+      const r = await anthropic.messages.create({ model: process.env.ANTHROPIC_MODEL || 'claude-sonnet-4-6', max_tokens: 512, system: sysPrompt, messages: [{ role: 'user', content: fullPrompt }] });
+      answer = r.content[0]?.text || '';
+    } catch (e) { console.warn('[brain/query] AI fail:', e.message); answer = JSON.stringify({ answer: 'Temporarily unavailable.', action: null, data: {} }); }
+    let parsed = { answer, action: null, data: {} };
+    try { parsed = JSON.parse(answer.replace(/```json|```/g, '').trim()); } catch {}
+    if (typeof brain?.logEvent === 'function') brain.logEvent(mod, 'brain_query', { query });
+    res.json({ success: true, ...parsed });
+  } catch (err) { res.status(500).json({ success: false, error: err.message }); }
+});
+explicitMounts.push({ file: 'server.js (inline)', path: '/api/brain/query' });
+
+// /api/zadarma-sync/* + /api/Zadarma-sync/* -- called fire-and-forget by SaulIntelCRM and EmailMarketing after campaign sends
+const _zadarmaSync = async (req, res) => {
+  try {
+    const { campaignId, subject = '', recipients = [] } = req.body || {};
+    const cid = campaignId || ('CAMP-' + Date.now());
+    pool.query(
+      `INSERT INTO zadarma_campaign_log (campaign_id, subject, recipient_count, synced_at) VALUES ($1,$2,$3,NOW()) ON CONFLICT (campaign_id) DO UPDATE SET synced_at=NOW()`,
+      [cid, subject, recipients.length]
+    ).catch(() => pool.query(`CREATE TABLE IF NOT EXISTS zadarma_campaign_log (id SERIAL PRIMARY KEY, campaign_id VARCHAR(100) UNIQUE, subject TEXT, recipient_count INT DEFAULT 0, synced_at TIMESTAMPTZ DEFAULT NOW())`).catch(() => {}));
+    res.json({ success: true, campaignId: cid, message: 'Campaign synced', synced: recipients.length });
+  } catch { res.json({ success: true, message: 'Sync queued' }); }
+};
+const _zadarmaStats = async (req, res) => {
+  try {
+    const r = await pool.query('SELECT COUNT(*) AS c, COALESCE(SUM(recipient_count),0) AS t FROM zadarma_campaign_log').catch(() => ({ rows: [{ c: 0, t: 0 }] }));
+    res.json({ success: true, campaigns: parseInt(r.rows[0]?.c || 0), totalRecipients: parseInt(r.rows[0]?.t || 0) });
+  } catch { res.json({ success: true, campaigns: 0, totalRecipients: 0 }); }
+};
+app.post('/api/zadarma-sync/campaign',  attachUser, _zadarmaSync);
+app.post('/api/Zadarma-sync/campaign',  attachUser, _zadarmaSync);
+app.get('/api/zadarma-sync/stats',      attachUser, _zadarmaStats);
+app.get('/api/Zadarma-sync/stats',      attachUser, _zadarmaStats);
+explicitMounts.push({ file: 'server.js (inline)', path: '/api/zadarma-sync/* + /api/Zadarma-sync/*' });
+
 app.get('/api/brain/full-status', requireOwner, (req, res) => {
   const status = typeof brain?.getStatus === 'function'
     ? brain.getStatus()
