@@ -27,6 +27,7 @@
     "compression": "^1.8.1",
     "connect-pg-simple": "^10.0.0",
     "cors": "^2.8.5",
+    "csv-parse": "^6.2.1",
     "dotenv": "^16.6.1",
     "express": "^4.18.2",
     "express-session": "^1.19.0",
@@ -43,7 +44,8 @@
     "pg": "^8.11.3",
     "stripe": "^20.4.1",
     "twilio": "^5.13.1",
-    "uuid": "^13.0.0"
+    "uuid": "^13.0.0",
+    "xmlbuilder2": "^4.0.3"
   },
   "devDependencies": {
     "nodemon": "^3.0.2"
