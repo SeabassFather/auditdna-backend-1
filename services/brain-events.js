@@ -1,28 +1,12 @@
 /**
- * C:\AuditDNA\backend\services\brain-events.js
+ * C:\AuditDNA\backend\services\brain-events.js (v2)
  *
- * Phase 1 Day 5 - Brain event bus integration.
+ * Phase 1 Day 5 - Brain event bus, schema-corrected.
  *
- * Listens for events written to rfq_brain_events table and fans them out to:
- *   1. ntfy.sh (admin alert channel)
- *   2. Web Push (specific users via webpush-server.sendPushToUser)
- *   3. WhatsApp (via whatsapp-rfq-bridge.notifyGrower) - optional, lazy-loaded
+ * Real rfq_brain_events schema has NO `processed` column. Tracks state via
+ * a sibling tracking table rfq_brain_events_state(event_id, processed, processed_at).
  *
- * Event types handled:
- *   rfq.created           → admin ntfy + cascade to growers (handled in match-engine)
- *   rfq.bid_placed        → admin ntfy + push to buyer
- *   rfq.locked            → admin ntfy + push to grower (winner)
- *   rfq.expired           → admin ntfy
- *   shipment.distress     → admin ntfy URGENT + push to buyer
- *   grower.activated      → admin ntfy
- *   buyer.vetted          → admin ntfy
- *
- * Polling loop runs every 10s. Marks events processed=TRUE after fan-out.
- *
- * Mount in server.js:
- *   const brainEvents = require('./services/brain-events');
- *   brainEvents.startPolling();
- *   app.use('/api/brain', brainEvents.router);
+ * On startup we ensureSchema() to create the state table if missing.
  */
 
 const express = require('express');
@@ -37,28 +21,41 @@ const NTFY_URL = `https://ntfy.sh/${NTFY_TOPIC}`;
 let pollTimer = null;
 let pushHelper = null;
 let whatsappHelper = null;
+let schemaReady = false;
 
 // ----------------------------------------------------------------------------
-// Lazy-load push helper (avoid circular deps)
+// Schema bootstrap - sibling state table
+// ----------------------------------------------------------------------------
+async function ensureSchema() {
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS rfq_brain_events_state (
+      event_id      BIGINT PRIMARY KEY REFERENCES rfq_brain_events(id) ON DELETE CASCADE,
+      processed     BOOLEAN NOT NULL DEFAULT FALSE,
+      processed_at  TIMESTAMPTZ,
+      attempts      INT NOT NULL DEFAULT 0,
+      last_error    TEXT
+    );
+    CREATE INDEX IF NOT EXISTS ix_rfq_brain_state_unprocessed
+      ON rfq_brain_events_state(event_id) WHERE processed = FALSE;
+  `);
+  schemaReady = true;
+  console.log('[brain] state table ready');
+}
+
+// ----------------------------------------------------------------------------
+// Lazy helpers
 // ----------------------------------------------------------------------------
 function getPushHelper() {
   if (!pushHelper) {
-    try {
-      pushHelper = require('./webpush-server');
-    } catch (e) {
-      console.warn('[brain] webpush-server not available, push disabled');
-    }
+    try { pushHelper = require('./webpush-server'); }
+    catch (e) { console.warn('[brain] webpush-server not available'); }
   }
   return pushHelper;
 }
 
 function getWhatsappHelper() {
   if (!whatsappHelper) {
-    try {
-      whatsappHelper = require('./whatsapp-rfq-bridge');
-    } catch (e) {
-      // optional - WhatsApp bridge may not exist yet
-    }
+    try { whatsappHelper = require('./whatsapp-rfq-bridge'); } catch (e) {}
   }
   return whatsappHelper;
 }
@@ -89,48 +86,32 @@ const handlers = {
   'rfq.created': async (event) => {
     const { rfq_code, commodity, buyer_anonymous, gmv } = event.payload || {};
     await pushNtfy(
-      `New RFQ: ${rfq_code}`,
-      `${buyer_anonymous} wants ${commodity} (~$${gmv})`,
-      'default',
-      ['rfq', 'new']
+      `New RFQ: ${rfq_code || 'unknown'}`,
+      `${buyer_anonymous || 'Buyer'} wants ${commodity || 'commodity'} (~$${gmv || '?'})`,
+      'default', ['rfq', 'new']
     );
   },
-
   'rfq.bid_placed': async (event) => {
     const { rfq_code, grower_anonymous, price, buyer_id } = event.payload || {};
-    await pushNtfy(
-      `Bid on ${rfq_code}`,
-      `${grower_anonymous} offered $${price}`,
-      'default',
-      ['rfq', 'bid']
-    );
+    await pushNtfy(`Bid on ${rfq_code}`, `${grower_anonymous} offered $${price}`, 'default', ['rfq','bid']);
     const ph = getPushHelper();
     if (ph && buyer_id) {
       await ph.sendPushToUser(buyer_id, 'buyer', {
         title: `New offer on ${rfq_code}`,
         body: `${grower_anonymous} offered $${price}/unit. Tap to review.`,
-        url: `/rfq/${event.rfq_id}`,
-        tag: `rfq-${event.rfq_id}`,
+        url: `/rfq/${event.rfq_id}`, tag: `rfq-${event.rfq_id}`,
       });
     }
   },
-
   'rfq.locked': async (event) => {
     const { rfq_code, finance_mode, gmv, grower_id, margin } = event.payload || {};
-    await pushNtfy(
-      `LOCKED: ${rfq_code} ($${gmv})`,
-      `Mode ${finance_mode} | margin $${margin}`,
-      'high',
-      ['rfq', 'locked', 'money']
-    );
+    await pushNtfy(`LOCKED: ${rfq_code} ($${gmv})`, `Mode ${finance_mode} | margin $${margin}`, 'high', ['rfq','locked','money']);
     const ph = getPushHelper();
     if (ph && grower_id) {
       await ph.sendPushToUser(grower_id, 'grower', {
         title: `You won ${rfq_code}`,
-        body: `Deal locked. Check your inbox for shipping details.`,
-        url: `/grower/inbox`,
-        tag: `rfq-locked-${event.rfq_id}`,
-        requireInteraction: true,
+        body: 'Deal locked. Check inbox for shipping.',
+        url: '/grower/inbox', tag: `rfq-locked-${event.rfq_id}`, requireInteraction: true,
       });
     }
     const wa = getWhatsappHelper();
@@ -138,75 +119,61 @@ const handlers = {
       try { await wa.notifyGrower(grower_id, `Won ${rfq_code}. Check the app.`); } catch (e) {}
     }
   },
-
   'rfq.expired': async (event) => {
     const { rfq_code } = event.payload || {};
-    await pushNtfy(`Expired: ${rfq_code}`, 'No grower locked in time', 'low', ['rfq', 'expired']);
+    await pushNtfy(`Expired: ${rfq_code}`, 'No grower locked in time', 'low', ['rfq','expired']);
   },
-
   'shipment.distress': async (event) => {
     const { rfq_code, reason, buyer_id } = event.payload || {};
-    await pushNtfy(
-      `DISTRESS: ${rfq_code}`,
-      `${reason}`,
-      'urgent',
-      ['rotating_light', 'distress']
-    );
+    await pushNtfy(`DISTRESS: ${rfq_code}`, reason || 'shipment in distress', 'urgent', ['rotating_light','distress']);
     const ph = getPushHelper();
     if (ph && buyer_id) {
       await ph.sendPushToUser(buyer_id, 'buyer', {
-        title: `URGENT: ${rfq_code}`,
-        body: reason || 'Shipment in distress',
-        url: `/rfq/${event.rfq_id}`,
-        requireInteraction: true,
+        title: `URGENT: ${rfq_code}`, body: reason || 'Shipment in distress',
+        url: `/rfq/${event.rfq_id}`, requireInteraction: true,
       });
     }
   },
-
   'grower.activated': async (event) => {
     const { grower_name, grs_score, region } = event.payload || {};
-    await pushNtfy(
-      `Grower activated: ${grower_name}`,
-      `GRS ${grs_score} | ${region}`,
-      'default',
-      ['grower', 'new']
-    );
+    await pushNtfy(`Grower activated: ${grower_name}`, `GRS ${grs_score} | ${region}`, 'default', ['grower','new']);
   },
-
   'buyer.vetted': async (event) => {
     const { buyer_name, paca_status } = event.payload || {};
-    await pushNtfy(
-      `Buyer vetted: ${buyer_name}`,
-      `PACA: ${paca_status}`,
-      'default',
-      ['buyer', 'vetted']
-    );
+    await pushNtfy(`Buyer vetted: ${buyer_name}`, `PACA: ${paca_status}`, 'default', ['buyer','vetted']);
   },
 };
 
 // ----------------------------------------------------------------------------
-// Polling loop
+// Polling - join brain events with state to find unprocessed
 // ----------------------------------------------------------------------------
 async function processEvents() {
+  if (!schemaReady) return;
   try {
     const r = await pool.query(`
-      SELECT id, event_type, rfq_id, payload, created_at
-        FROM rfq_brain_events
-       WHERE processed = FALSE
-       ORDER BY id ASC
+      SELECT e.id, e.event_type, e.rfq_id, e.actor_id, e.actor_role, e.payload, e.created_at
+        FROM rfq_brain_events e
+        LEFT JOIN rfq_brain_events_state s ON s.event_id = e.id
+       WHERE s.event_id IS NULL OR s.processed = FALSE
+       ORDER BY e.id ASC
        LIMIT 50
     `);
     if (r.rows.length === 0) return;
     for (const event of r.rows) {
       const handler = handlers[event.event_type];
+      let ok = true; let err = null;
       if (handler) {
-        try {
-          await handler(event);
-        } catch (e) {
-          console.error(`[brain] handler ${event.event_type} failed:`, e.message);
-        }
+        try { await handler(event); }
+        catch (e) { ok = false; err = e.message; console.error(`[brain] handler ${event.event_type} failed:`, err); }
       }
-      await pool.query(`UPDATE rfq_brain_events SET processed = TRUE, processed_at = NOW() WHERE id = $1`, [event.id]);
+      await pool.query(`
+        INSERT INTO rfq_brain_events_state (event_id, processed, processed_at, attempts, last_error)
+        VALUES ($1, $2, NOW(), 1, $3)
+        ON CONFLICT (event_id) DO UPDATE SET
+          processed = $2, processed_at = NOW(),
+          attempts = rfq_brain_events_state.attempts + 1,
+          last_error = $3
+      `, [event.id, ok, err]);
     }
     console.log(`[brain] processed ${r.rows.length} events`);
   } catch (e) {
@@ -216,24 +183,24 @@ async function processEvents() {
 
 function startPolling() {
   if (pollTimer) return;
-  pollTimer = setInterval(processEvents, POLL_INTERVAL_MS);
-  console.log(`[brain] event polling started (${POLL_INTERVAL_MS}ms interval, ntfy=${NTFY_TOPIC})`);
-  // Run once immediately
-  setImmediate(processEvents);
+  ensureSchema()
+    .then(() => {
+      pollTimer = setInterval(processEvents, POLL_INTERVAL_MS);
+      console.log(`[brain] event polling started (${POLL_INTERVAL_MS}ms, ntfy=${NTFY_TOPIC})`);
+      setImmediate(processEvents);
+    })
+    .catch(e => console.error('[brain] schema bootstrap failed:', e.message));
 }
 
 function stopPolling() {
   if (pollTimer) { clearInterval(pollTimer); pollTimer = null; }
 }
 
-// ----------------------------------------------------------------------------
-// Helper for other services to emit events
-// ----------------------------------------------------------------------------
-async function emitEvent(eventType, rfqId, payload) {
+async function emitEvent(eventType, rfqId, payload, actorId = null, actorRole = null) {
   await pool.query(`
-    INSERT INTO rfq_brain_events (event_type, rfq_id, payload, processed, created_at)
-    VALUES ($1, $2, $3, FALSE, NOW())
-  `, [eventType, rfqId || null, JSON.stringify(payload || {})]);
+    INSERT INTO rfq_brain_events (event_type, rfq_id, actor_id, actor_role, payload, created_at)
+    VALUES ($1, $2, $3, $4, $5, NOW())
+  `, [eventType, rfqId || null, actorId, actorRole, JSON.stringify(payload || {})]);
 }
 
 // ----------------------------------------------------------------------------
@@ -243,9 +210,12 @@ router.get('/events/recent', async (req, res) => {
   try {
     const limit = parseInt(req.query.limit || '20', 10);
     const r = await pool.query(`
-      SELECT id, event_type, rfq_id, payload, processed, created_at, processed_at
-        FROM rfq_brain_events
-       ORDER BY id DESC
+      SELECT e.id, e.event_type, e.rfq_id, e.actor_id, e.actor_role, e.payload, e.created_at,
+             COALESCE(s.processed, FALSE) AS processed,
+             s.processed_at, s.attempts, s.last_error
+        FROM rfq_brain_events e
+        LEFT JOIN rfq_brain_events_state s ON s.event_id = e.id
+       ORDER BY e.id DESC
        LIMIT $1
     `, [limit]);
     res.json({ events: r.rows });
@@ -257,13 +227,14 @@ router.get('/events/recent', async (req, res) => {
 router.get('/events/stats', async (req, res) => {
   try {
     const r = await pool.query(`
-      SELECT event_type,
+      SELECT e.event_type,
              COUNT(*) AS total,
-             COUNT(*) FILTER (WHERE processed = TRUE) AS processed,
-             COUNT(*) FILTER (WHERE processed = FALSE) AS pending
-        FROM rfq_brain_events
-       GROUP BY event_type
-       ORDER BY event_type
+             COUNT(*) FILTER (WHERE COALESCE(s.processed, FALSE) = TRUE) AS processed,
+             COUNT(*) FILTER (WHERE COALESCE(s.processed, FALSE) = FALSE) AS pending
+        FROM rfq_brain_events e
+        LEFT JOIN rfq_brain_events_state s ON s.event_id = e.id
+       GROUP BY e.event_type
+       ORDER BY e.event_type
     `);
     res.json({ by_type: r.rows });
   } catch (e) {
