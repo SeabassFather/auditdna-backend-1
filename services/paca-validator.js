@@ -23,12 +23,8 @@ const { parse } = require('csv-parse');
 // ----------------------------------------------------------------------------
 // PostgreSQL pool
 // ----------------------------------------------------------------------------
-const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
-  ssl: process.env.DATABASE_URL && process.env.DATABASE_URL.includes('railway')
-    ? { rejectUnauthorized: false }
-    : false,
-});
+const getPool = require('../db');
+const pool = getPool();
 
 // ----------------------------------------------------------------------------
 // USDA PACA CSV source
