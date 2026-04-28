@@ -92,16 +92,21 @@ async function findMatchedGrowers(client, rfq) {
   //
   // Schema-tolerant: check what columns exist in growers table
   const growers = await client.query(`
-    SELECT g.id, g.contact_name, g.legal_name, g.trade_name,
-           g.email, g.phone, g.state_province, g.country,
+    SELECT g.id AS grower_id, g.contact_name, g.legal_name, g.trade_name, g.company_name,
+           g.email, g.phone, g.whatsapp, g.state_province, g.country, g.region,
            COALESCE(g.grs_score, 50) AS grs_score,
-           COALESCE(g.commodities_grown, '[]'::jsonb) AS commodities,
-           g.organic_certified
+           COALESCE(g.crops_grown, ARRAY[]::text[]) AS commodities,
+           COALESCE(g.organic, FALSE) AS organic_certified
       FROM growers g
      WHERE g.email IS NOT NULL
+       AND COALESCE(g.status,'active') = 'active'
        AND (
-            g.commodities_grown::text ILIKE '%' || $1 || '%'
-         OR g.commodities_grown::text ILIKE '%' || $2 || '%'
+            $1 = ANY(g.crops_grown)
+         OR $2 = ANY(g.crops_grown)
+         OR $1 = ANY(g.primary_products)
+         OR $2 = ANY(g.primary_products)
+         OR g.primary_product = $1
+         OR g.primary_product = $2
        )
      ORDER BY COALESCE(g.grs_score, 50) DESC
      LIMIT 50
