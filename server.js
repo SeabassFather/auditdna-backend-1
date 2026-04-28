@@ -411,6 +411,8 @@ try { app.use('/api/brain', require('./routes/brain-stream')); console.log('[OK]
   try { const pacaValidator = require('./services/paca-validator'); pacaValidator.startNightlyCron(); app.use('/api/paca', pacaValidator.router); console.log('[OK] paca-validator mounted at /api/paca + nightly cron 03:00 UTC'); } catch(e) { console.error('[FAIL] paca-validator mount:', e.message); }
   try { const cfdiGen = require('./services/cfdi-generator'); app.use('/api/cfdi', cfdiGen.router); console.log('[OK] cfdi-generator mounted at /api/cfdi (test mode=' + (process.env.CFDI_TEST_MODE||'true') + ')'); } catch(e) { console.error('[FAIL] cfdi-generator mount:', e.message); }
   try { const webpush = require('./services/webpush-server'); webpush.init(); app.use('/api/push', webpush.router); console.log('[OK] webpush-server mounted at /api/push'); } catch(e) { console.error('[FAIL] webpush-server mount:', e.message); }
+  try { const brainEvents = require('./services/brain-events'); brainEvents.startPolling(); app.use('/api/brain', brainEvents.router); console.log('[OK] brain-events mounted at /api/brain + polling started'); } catch(e) { console.error('[FAIL] brain-events mount:', e.message); }
+  try { const wa = require('./services/whatsapp-rfq-bridge'); app.use('/api/whatsapp', wa.router); console.log('[OK] whatsapp-rfq-bridge mounted at /api/whatsapp'); } catch(e) { console.error('[FAIL] whatsapp-rfq-bridge mount:', e.message); }
   console.log('[OK] /api/financing mounted');
 } catch (err) {
   console.error('[WARN] /api/financing mount failed:', err.message);

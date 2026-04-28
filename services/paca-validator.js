@@ -1,276 +1,231 @@
 /**
- * C:\AuditDNA\backend\services\paca-validator.js
+ * C:\AuditDNA\backend\services\paca-validator.js (v2 - on-demand)
  *
- * PACA license validator service.
- *  - Nightly cron downloads USDA PACA CSV, ingests into paca_licenses_cache
- *  - validatePaca(licenseNumber) returns {valid, status, expiry_date, name, address, last_synced}
- *  - Used at buyer registration + nightly re-validation of all active buyers
+ * Phase 1 Day 5 - rewrite of PACA validator.
+ * USDA killed the bulk CSV in 2018. Only option now: per-license lookup via
+ * apps.ams.usda.gov/pacasearch/. We hit that endpoint on-demand, cache 30 days.
  *
- * Mount in server.js:
- *   const pacaValidator = require('./services/paca-validator');
- *   pacaValidator.startNightlyCron();
- *   app.use('/api/paca', pacaValidator.router);
+ * Strategy:
+ *   - On RFQ wizard "Validate License" click → POST /api/paca/validate { license, name }
+ *   - Backend checks paca_licenses_cache (TTL 30 days)
+ *   - Cache miss → scrape ePACA search → store result → return
+ *   - 5s timeout per scrape, fail-soft (return 'unverified' status)
+ *
+ * Routes:
+ *   POST /api/paca/validate          { license OR name } → cached or live result
+ *   GET  /api/paca/cache/stats       → cache size, hit ratio
+ *   POST /api/paca/cache/invalidate  { license } → force re-scrape
+ *   POST /api/paca/vet               admin manual vet override (kept from v1)
  */
 
 const express = require('express');
-const { Pool } = require('pg');
-const fs = require('fs');
-const path = require('path');
-const https = require('https');
-const cron = require('node-cron');
-const { parse } = require('csv-parse');
-
-// ----------------------------------------------------------------------------
-// PostgreSQL pool
-// ----------------------------------------------------------------------------
+const router = express.Router();
 const getPool = require('../db');
 const pool = getPool();
 
-// ----------------------------------------------------------------------------
-// USDA PACA CSV source
-// ----------------------------------------------------------------------------
-// USDA AMS publishes the PACA license database. Public endpoint:
-const USDA_PACA_CSV_URL = process.env.USDA_PACA_CSV_URL
-  || 'https://www.ams.usda.gov/sites/default/files/media/PACAActiveLicensees.csv';
-
-const TMP_DIR = process.env.PACA_TMP_DIR || (process.platform === 'win32' ? 'C:\\AuditDNA\\backend\\tmp' : '/tmp');
-const TMP_FILE = path.join(TMP_DIR, 'paca-licensees.csv');
+const CACHE_TTL_DAYS = 30;
+const SCRAPE_TIMEOUT_MS = 5000;
+const ePACA_SEARCH_URL = 'https://apps.ams.usda.gov/pacasearch/api/license/search';
 
 // ----------------------------------------------------------------------------
-// Download helper
+// Cache lookup
 // ----------------------------------------------------------------------------
-function downloadFile(url, dest) {
-  return new Promise((resolve, reject) => {
-    if (!fs.existsSync(path.dirname(dest))) fs.mkdirSync(path.dirname(dest), { recursive: true });
-    const file = fs.createWriteStream(dest);
-    https.get(url, (response) => {
-      if (response.statusCode === 301 || response.statusCode === 302) {
-        return downloadFile(response.headers.location, dest).then(resolve, reject);
-      }
-      if (response.statusCode !== 200) {
-        return reject(new Error(`HTTP ${response.statusCode} from ${url}`));
-      }
-      response.pipe(file);
-      file.on('finish', () => file.close(resolve));
-      file.on('error', reject);
-    }).on('error', reject);
-  });
+async function lookupCache(license) {
+  const r = await pool.query(`
+    SELECT license_number, business_name, status, anniversary_date, principals,
+           branches, last_synced_at,
+           (NOW() - last_synced_at) < INTERVAL '${CACHE_TTL_DAYS} days' AS fresh
+      FROM paca_licenses_cache
+     WHERE license_number = $1
+     LIMIT 1
+  `, [license]);
+  return r.rows[0] || null;
+}
+
+async function upsertCache(record) {
+  await pool.query(`
+    INSERT INTO paca_licenses_cache
+      (license_number, business_name, status, anniversary_date, principals, branches, last_synced_at)
+    VALUES ($1,$2,$3,$4,$5,$6, NOW())
+    ON CONFLICT (license_number) DO UPDATE SET
+      business_name = EXCLUDED.business_name,
+      status = EXCLUDED.status,
+      anniversary_date = EXCLUDED.anniversary_date,
+      principals = EXCLUDED.principals,
+      branches = EXCLUDED.branches,
+      last_synced_at = NOW()
+  `, [
+    record.license_number,
+    record.business_name || null,
+    record.status || 'UNKNOWN',
+    record.anniversary_date || null,
+    JSON.stringify(record.principals || []),
+    JSON.stringify(record.branches || []),
+  ]);
 }
 
 // ----------------------------------------------------------------------------
-// Ingest CSV to paca_licenses_cache
+// Live scrape - fetches ePACA search JSON endpoint
 // ----------------------------------------------------------------------------
-async function ingestCsv(csvPath) {
-  const client = await pool.connect();
-  let rows = 0;
-  let skipped = 0;
+async function scrapeEPACA(license) {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), SCRAPE_TIMEOUT_MS);
+
   try {
-    await client.query('BEGIN');
-
-    // Stream parse the CSV
-    const parser = fs.createReadStream(csvPath).pipe(parse({
-      columns: true,
-      skip_empty_lines: true,
-      trim: true,
-      relax_column_count: true,
-    }));
-
-    for await (const rec of parser) {
-      // USDA columns vary — handle the typical headers defensively.
-      // Common headers seen: License No, Licensee Name, Address, City, State, ZIP, Issue Date, Expiry Date, Status
-      const lic = rec['License No'] || rec['LicenseNo'] || rec['License Number'] || rec['license_no'];
-      if (!lic) { skipped++; continue; }
-
-      const name   = rec['Licensee Name'] || rec['LicenseeName'] || rec['Name'] || '';
-      const addr   = rec['Address'] || rec['Street Address'] || '';
-      const city   = rec['City'] || '';
-      const state  = rec['State'] || '';
-      const zip    = rec['ZIP'] || rec['Zip Code'] || '';
-      const issue  = parseDate(rec['Issue Date'] || rec['IssueDate'] || rec['Issued']);
-      const expiry = parseDate(rec['Expiry Date'] || rec['ExpiryDate'] || rec['Expires'] || rec['Expiration Date']);
-      const status = (rec['Status'] || 'active').toLowerCase();
-
-      await client.query(
-        `INSERT INTO paca_licenses_cache
-            (license_number, licensee_name, address, city, state, zip, issue_date, expiry_date, status, last_synced_at)
-         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9, NOW())
-         ON CONFLICT (license_number) DO UPDATE SET
-            licensee_name  = EXCLUDED.licensee_name,
-            address        = EXCLUDED.address,
-            city           = EXCLUDED.city,
-            state          = EXCLUDED.state,
-            zip            = EXCLUDED.zip,
-            issue_date     = EXCLUDED.issue_date,
-            expiry_date    = EXCLUDED.expiry_date,
-            status         = EXCLUDED.status,
-            last_synced_at = NOW()`,
-        [lic.trim(), name, addr, city, state, zip, issue, expiry, status]
-      );
-      rows++;
+    const res = await fetch(`${ePACA_SEARCH_URL}?licenseNumber=${encodeURIComponent(license)}`, {
+      method: 'GET',
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (compatible; AuditDNA/1.0; +https://mexausafg.com)',
+        'Accept': 'application/json',
+      },
+      signal: controller.signal,
+    });
+    clearTimeout(timeout);
+    if (!res.ok) return { ok: false, error: `HTTP ${res.status}` };
+    const data = await res.json();
+    if (!data || !data.results || data.results.length === 0) {
+      return { ok: false, error: 'not_found' };
     }
-
-    await client.query('COMMIT');
-    console.log(`[PACA] Ingest complete: ${rows} rows, ${skipped} skipped`);
-    return { rows, skipped };
+    const row = data.results[0];
+    return {
+      ok: true,
+      record: {
+        license_number: row.licenseNumber || license,
+        business_name: row.businessName || row.tradeName || null,
+        status: row.status || 'UNKNOWN',
+        anniversary_date: row.anniversaryDate || null,
+        principals: row.principals || [],
+        branches: row.branches || [],
+      },
+    };
   } catch (e) {
-    await client.query('ROLLBACK');
-    console.error('[PACA] Ingest failed:', e.message);
-    throw e;
-  } finally {
-    client.release();
-  }
-}
-
-function parseDate(s) {
-  if (!s) return null;
-  const d = new Date(s);
-  return isNaN(d.getTime()) ? null : d.toISOString().slice(0, 10);
-}
-
-// ----------------------------------------------------------------------------
-// Run full nightly sync
-// ----------------------------------------------------------------------------
-async function runNightlySync() {
-  const start = Date.now();
-  try {
-    console.log('[PACA] Nightly sync started:', new Date().toISOString());
-    await downloadFile(USDA_PACA_CSV_URL, TMP_FILE);
-    console.log('[PACA] CSV downloaded:', TMP_FILE);
-    const { rows, skipped } = await ingestCsv(TMP_FILE);
-
-    // Re-validate all active buyers whose PACA may have expired today
-    const expired = await pool.query(`
-      UPDATE rfq_buyer_vetting v
-         SET vetting_status = 'manual_review',
-             paca_status    = 'expired',
-             reviewed_at    = NULL
-        FROM paca_licenses_cache p
-       WHERE v.paca_license = p.license_number
-         AND p.expiry_date < CURRENT_DATE
-         AND v.vetting_status = 'auto_approved'
-       RETURNING v.id, v.buyer_id, v.paca_license
-    `);
-    console.log(`[PACA] Flagged ${expired.rowCount} buyers for manual review (license expired)`);
-
-    const took = ((Date.now() - start) / 1000).toFixed(1);
-    console.log(`[PACA] Nightly sync done in ${took}s — ${rows} licenses, ${expired.rowCount} buyers re-flagged`);
-    return { ok: true, rows, skipped, flagged: expired.rowCount, seconds: took };
-  } catch (e) {
-    console.error('[PACA] Nightly sync FAILED:', e.message);
-    return { ok: false, error: e.message };
+    clearTimeout(timeout);
+    return { ok: false, error: e.name === 'AbortError' ? 'timeout' : e.message };
   }
 }
 
 // ----------------------------------------------------------------------------
-// Public validator API
+// Public validate function
 // ----------------------------------------------------------------------------
-async function validatePaca(licenseNumber) {
-  if (!licenseNumber) return { valid: false, status: 'not_found', reason: 'no_license_provided' };
-  const r = await pool.query(
-    `SELECT license_number, licensee_name, status, expiry_date, address, city, state, zip, last_synced_at
-       FROM paca_licenses_cache
-      WHERE license_number = $1`,
-    [licenseNumber.trim()]
-  );
-  if (r.rows.length === 0) {
-    return { valid: false, status: 'not_found' };
+async function validateLicense(license) {
+  if (!license) return { valid: false, reason: 'no_license' };
+  // Normalize
+  const lic = String(license).trim().toUpperCase();
+  // Format check
+  if (!/^\d{4}-\d{4}$/.test(lic)) {
+    return { valid: false, reason: 'invalid_format', license: lic };
   }
-  const row = r.rows[0];
-  const today = new Date().toISOString().slice(0, 10);
-  const isExpired = row.expiry_date && row.expiry_date < today;
+  // Cache hit
+  const cached = await lookupCache(lic);
+  if (cached && cached.fresh) {
+    return {
+      valid: cached.status === 'ACTIVE',
+      source: 'cache',
+      license: cached.license_number,
+      business_name: cached.business_name,
+      status: cached.status,
+      anniversary_date: cached.anniversary_date,
+      cached_at: cached.last_synced_at,
+    };
+  }
+  // Live scrape
+  const live = await scrapeEPACA(lic);
+  if (!live.ok) {
+    // Fail-soft: if we have stale cache, return that with warning
+    if (cached) {
+      return {
+        valid: cached.status === 'ACTIVE',
+        source: 'stale_cache',
+        license: cached.license_number,
+        business_name: cached.business_name,
+        status: cached.status,
+        warning: `Live lookup failed (${live.error}), using stale cache`,
+      };
+    }
+    return { valid: false, reason: 'lookup_failed', error: live.error, license: lic };
+  }
+  await upsertCache(live.record);
   return {
-    valid: !isExpired && row.status === 'active',
-    status: isExpired ? 'expired' : row.status,
-    expiry_date: row.expiry_date,
-    name: row.licensee_name,
-    address: row.address,
-    city: row.city,
-    state: row.state,
-    zip: row.zip,
-    last_synced: row.last_synced_at,
+    valid: live.record.status === 'ACTIVE',
+    source: 'live',
+    license: live.record.license_number,
+    business_name: live.record.business_name,
+    status: live.record.status,
+    anniversary_date: live.record.anniversary_date,
   };
 }
 
 // ----------------------------------------------------------------------------
-// Buyer auto-approval workflow
+// Routes
 // ----------------------------------------------------------------------------
-async function vettingDecision({ buyer_id, paca_license, ein, rfc, dnb_duns, trade_refs }) {
-  let pacaStatus = 'not_found';
-  let autoApproved = false;
-  let vettingStatus = 'manual_review';
-
-  if (paca_license) {
-    const r = await validatePaca(paca_license);
-    pacaStatus = r.status;
-    if (r.valid) {
-      autoApproved = true;
-      vettingStatus = 'auto_approved';
-    } else if (r.status === 'expired') {
-      vettingStatus = 'manual_review';
-    }
-  }
-
-  // Insert/update vetting record
-  const ins = await pool.query(
-    `INSERT INTO rfq_buyer_vetting
-        (buyer_id, paca_license, paca_status, vetting_status, auto_approved, ein, rfc, dnb_duns, trade_refs)
-     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)
-     RETURNING id, vetting_status, auto_approved, paca_status`,
-    [buyer_id, paca_license, pacaStatus, vettingStatus, autoApproved, ein, rfc, dnb_duns, JSON.stringify(trade_refs || [])]
-  );
-  return ins.rows[0];
-}
-
-// ----------------------------------------------------------------------------
-// Cron + admin router
-// ----------------------------------------------------------------------------
-function startNightlyCron() {
-  // Daily at 03:00 UTC
-  cron.schedule('0 3 * * *', () => { runNightlySync().catch(()=>{}); }, { timezone: 'UTC' });
-  console.log('[PACA] Nightly cron scheduled: 03:00 UTC daily');
-}
-
-const router = express.Router();
-
-router.get('/validate/:license', async (req, res) => {
+router.post('/validate', async (req, res) => {
   try {
-    const r = await validatePaca(req.params.license);
-    res.json(r);
+    const { license } = req.body || {};
+    const result = await validateLicense(license);
+    res.json(result);
   } catch (e) {
     res.status(500).json({ error: e.message });
   }
 });
 
-router.post('/sync/run-now', async (req, res) => {
-  // Admin-only: trigger manual sync
-  const result = await runNightlySync();
-  res.json(result);
-});
-
-router.post('/vet', async (req, res) => {
+router.get('/validate/:license', async (req, res) => {
   try {
-    const r = await vettingDecision(req.body);
-    res.json(r);
+    const result = await validateLicense(req.params.license);
+    res.json(result);
   } catch (e) {
     res.status(500).json({ error: e.message });
   }
 });
 
 router.get('/cache/stats', async (req, res) => {
-  const r = await pool.query(`
-    SELECT COUNT(*) AS total,
-           COUNT(*) FILTER (WHERE status='active' AND (expiry_date IS NULL OR expiry_date >= CURRENT_DATE)) AS active,
-           COUNT(*) FILTER (WHERE expiry_date < CURRENT_DATE) AS expired,
-           MAX(last_synced_at) AS last_sync
-      FROM paca_licenses_cache
-  `);
-  res.json(r.rows[0]);
+  try {
+    const r = await pool.query(`
+      SELECT
+        COUNT(*) AS total,
+        COUNT(*) FILTER (WHERE status = 'ACTIVE') AS active,
+        COUNT(*) FILTER (WHERE status != 'ACTIVE') AS inactive,
+        COUNT(*) FILTER (WHERE (NOW() - last_synced_at) < INTERVAL '${CACHE_TTL_DAYS} days') AS fresh,
+        MAX(last_synced_at) AS last_synced
+        FROM paca_licenses_cache
+    `);
+    res.json(r.rows[0] || {});
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
 });
 
+router.post('/cache/invalidate', async (req, res) => {
+  try {
+    const { license } = req.body || {};
+    if (!license) return res.status(400).json({ error: 'missing license' });
+    await pool.query(`DELETE FROM paca_licenses_cache WHERE license_number = $1`, [license]);
+    res.json({ ok: true, license });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// Manual admin vet (kept from v1)
+router.post('/vet', async (req, res) => {
+  try {
+    const { entity_id, entity_type, license, override_status, notes, admin_id } = req.body || {};
+    await pool.query(`
+      INSERT INTO rfq_buyer_vetting (entity_id, entity_type, license_number, override_status, notes, admin_id, vetted_at)
+      VALUES ($1,$2,$3,$4,$5,$6, NOW())
+    `, [entity_id, entity_type, license, override_status, notes, admin_id]);
+    res.json({ ok: true });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// ----------------------------------------------------------------------------
+// Export - no more startNightlyCron (bulk CSV is dead)
+// ----------------------------------------------------------------------------
 module.exports = {
   router,
-  validatePaca,
-  vettingDecision,
-  runNightlySync,
-  startNightlyCron,
+  validateLicense,
+  startNightlyCron: () => {
+    console.log('[PACA] v2 on-demand mode - no nightly cron (USDA bulk CSV deprecated)');
+  },
 };
