@@ -92,7 +92,7 @@ async function findMatchedGrowers(client, rfq) {
   //
   // Schema-tolerant: check what columns exist in growers table
   const growers = await client.query(`
-    SELECT g.id AS grower_id, g.contact_name, g.legal_name, g.trade_name, g.company_name,
+    SELECT g.id, g.id AS grower_id, g.contact_name, g.legal_name, g.trade_name, g.company_name,
            g.email, g.phone, g.whatsapp, g.state_province, g.country, g.region,
            COALESCE(g.grs_score, 50) AS grs_score,
            COALESCE(g.crops_grown, ARRAY[]::text[]) AS commodities,
@@ -122,7 +122,7 @@ async function findMatchedGrowers(client, rfq) {
         FROM grower_intel_yields
        WHERE grower_id = $1
          AND created_at > NOW() - INTERVAL '7 days'
-    `).catch(() => ({ rows: [{ c: 0 }] }));
+    `, [g.id]).catch(() => ({ rows: [{ c: 0 }] }));
     const inventoryPressure = parseInt(invQ.rows[0]?.c || 0, 10) > 0;
 
     // signal_streak: days since last won deal
@@ -130,7 +130,7 @@ async function findMatchedGrowers(client, rfq) {
       SELECT EXTRACT(DAY FROM NOW() - MAX(locked_at))::INT AS days
         FROM rfq_deal_locks
        WHERE grower_id = $1
-    `).catch(() => ({ rows: [{ days: 999 }] }));
+    `, [g.id]).catch(() => ({ rows: [{ days: 999 }] }));
     const streak = streakQ.rows[0]?.days || 999;
 
     ranked.push({
