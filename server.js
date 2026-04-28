@@ -404,7 +404,8 @@ try {
   // SPRINT C Phase 3 - Factor Matchmaker
   try { app.use('/api/factor', require('./routes/factor-matchmaker')); console.log('[OK] factor-matchmaker mounted'); } catch(e) { console.error('[FAIL] factor-matchmaker mount:', e.message); }
   try { const fi = require('./routes/factor-intake'); app.use('/api/factor/intake', fi); console.log('[OK] factor-intake mounted at /api/factor/intake', typeof fi); } catch(e) { console.error('[FAIL] factor-intake mount:', e.message, e.stack); }
-  try { app.use('/api/brain', require('./routes/brain-stream')); console.log('[OK] brain-stream mounted at /api/brain'); } catch(e) { console.error('[FAIL] brain-stream mount:', e.message); }
+  try { const brainEvents = require('./routes/brain-events'); app.use('/api/brain/events', brainEvents); app.use('/api/brain/emit', (req,res,next)=>{ req.url='/emit'; brainEvents(req,res,next); }); app.use('/api/brain/deploy-webhook', (req,res,next)=>{ req.url='/deploy-webhook'; brainEvents(req,res,next); }); app.use('/api/brain/health', (req,res,next)=>{ req.url='/health'; brainEvents(req,res,next); }); console.log('[OK] brain-events SSE + health + webhook mounted'); } catch(e) { console.error('[FAIL] brain-events:', e.message); }
+try { app.use('/api/brain', require('./routes/brain-stream')); console.log('[OK] brain-stream mounted at /api/brain'); } catch(e) { console.error('[FAIL] brain-stream mount:', e.message); }
   try { app.use('/api/grower', require('./routes/grower-pipeline')); console.log('[OK] grower-pipeline.js: mounted at /api/grower (Sprint C)'); } catch(e) { console.error('[FAIL] grower-pipeline mount:', e.message); }
   console.log('[OK] /api/financing mounted');
 } catch (err) {
@@ -1469,7 +1470,7 @@ module.exports.pool = pool; module.exports.app = app;
 
 // COMMODITY SEARCH ENGINE
 try { const gm = require('./routes/gmail'); app.use('/api/gmail', gm); console.log('[OK] gmail routes loaded'); } catch(e) { console.error('[FAIL] gmail routes:', e.message); }
-try { const brainEvents = require('./routes/brain-events'); app.use('/api/brain/events', brainEvents); app.use('/api/brain/emit', (req,res,next)=>{ req.url='/emit'; brainEvents(req,res,next); }); app.use('/api/brain/deploy-webhook', (req,res,next)=>{ req.url='/deploy-webhook'; brainEvents(req,res,next); }); app.use('/api/brain/health', (req,res,next)=>{ req.url='/health'; brainEvents(req,res,next); }); console.log('[OK] brain-events SSE + health + webhook mounted'); } catch(e) { console.error('[FAIL] brain-events:', e.message); }
+
 
 try { const cs = require('./routes/commodity-search'); app.use('/api/commodity', cs); console.log('[OK] commodity-search mounted at /api/commodity'); } catch(e) { console.warn('[WARN] commodity:', e.message); }
 
