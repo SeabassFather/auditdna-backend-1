@@ -211,7 +211,7 @@ async function findTriggers(alert) {
     const dec = await pool.query(`
       SELECT pd.id, pd.commodity_category, pd.commodity_subcategory,
              pd.ask_price, pd.volume_unit AS unit, pd.estimated_volume, pd.organic
-        FROM production_declarations pd
+        FROM production_declarations_v2 pd
        WHERE pd.commodity_category = $1
          AND ($2::text IS NULL OR pd.commodity_subcategory = $2)
          AND pd.ask_price IS NOT NULL

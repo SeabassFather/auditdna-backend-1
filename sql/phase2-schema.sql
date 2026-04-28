@@ -1,10 +1,15 @@
--- C:\AuditDNA\backend\sql\phase2-schema.sql
--- Phase 2 - Schema additions for production decl, photos, price alerts, disputes.
+-- C:\AuditDNA\backend\sql\phase2-schema.sql (v2)
+-- Existing production_declarations is FSMA-204 traceability table.
+-- Existing rfq_disputes is dispute v1 (different shape).
+-- Phase 2 uses _v2 tables to avoid collision.
+
+DROP TABLE IF EXISTS production_declarations_v2 CASCADE;
+DROP TABLE IF EXISTS rfq_disputes_v2 CASCADE;
 
 -- ============================================================================
--- 1. Production declarations - growers post weekly inventory windows
+-- 1. Production declarations v2 - inventory marketplace (NOT FSMA traceability)
 -- ============================================================================
-CREATE TABLE IF NOT EXISTS production_declarations (
+CREATE TABLE production_declarations_v2 (
   id                  BIGSERIAL PRIMARY KEY,
   grower_id           INTEGER NOT NULL,
   commodity_category  VARCHAR(50) NOT NULL,
@@ -29,11 +34,11 @@ CREATE TABLE IF NOT EXISTS production_declarations (
   updated_at          TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   expires_at          TIMESTAMPTZ
 );
-CREATE INDEX IF NOT EXISTS ix_prod_decl_commodity ON production_declarations(commodity_category, status, available_from);
-CREATE INDEX IF NOT EXISTS ix_prod_decl_grower ON production_declarations(grower_id, status);
+CREATE INDEX ix_prod_decl_v2_commodity ON production_declarations_v2(commodity_category, status, available_from);
+CREATE INDEX ix_prod_decl_v2_grower    ON production_declarations_v2(grower_id, status);
 
 -- ============================================================================
--- 2. Photo evidence storage (bytea inline for MVP, R2 later)
+-- 2. Photos (rfq_photos already created in prior run)
 -- ============================================================================
 CREATE TABLE IF NOT EXISTS rfq_photos (
   id            BIGSERIAL PRIMARY KEY,
@@ -55,7 +60,7 @@ CREATE INDEX IF NOT EXISTS ix_rfq_photos_offer  ON rfq_photos(offer_id) WHERE of
 CREATE INDEX IF NOT EXISTS ix_rfq_photos_decl   ON rfq_photos(declaration_id) WHERE declaration_id IS NOT NULL;
 
 -- ============================================================================
--- 3. Price alerts - buyers subscribe to commodity / target price
+-- 3. Price alerts (already created in prior run)
 -- ============================================================================
 CREATE TABLE IF NOT EXISTS price_alerts (
   id                  BIGSERIAL PRIMARY KEY,
@@ -63,7 +68,7 @@ CREATE TABLE IF NOT EXISTS price_alerts (
   commodity_category  VARCHAR(50) NOT NULL,
   commodity_subcategory VARCHAR(80),
   trigger_price       NUMERIC(12,2) NOT NULL,
-  trigger_direction   VARCHAR(10) NOT NULL DEFAULT 'below',  -- 'below' | 'above'
+  trigger_direction   VARCHAR(10) NOT NULL DEFAULT 'below',
   currency            VARCHAR(3) DEFAULT 'USD',
   origin_country      VARCHAR(2),
   organic_required    BOOLEAN DEFAULT FALSE,
@@ -76,48 +81,35 @@ CREATE INDEX IF NOT EXISTS ix_price_alerts_active ON price_alerts(commodity_cate
 CREATE INDEX IF NOT EXISTS ix_price_alerts_buyer  ON price_alerts(buyer_id, active);
 
 -- ============================================================================
--- 4. Disputes (extends existing rfq_disputes)
+-- 4. Disputes v2 - new RFQ-driven dispute schema
 -- ============================================================================
-DO $$
-BEGIN
-  IF NOT EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'rfq_disputes') THEN
-    CREATE TABLE rfq_disputes (
-      id              BIGSERIAL PRIMARY KEY,
-      rfq_id          BIGINT NOT NULL,
-      offer_id        BIGINT,
-      deal_lock_id    BIGINT,
-      raised_by_id    INTEGER NOT NULL,
-      raised_by_role  VARCHAR(20) NOT NULL,
-      against_id      INTEGER,
-      against_role    VARCHAR(20),
-      category        VARCHAR(40) NOT NULL,
-      description     TEXT NOT NULL,
-      gmv_amount      NUMERIC(14,2),
-      currency        VARCHAR(3) DEFAULT 'USD',
-      forum           VARCHAR(20),
-      status          VARCHAR(30) NOT NULL DEFAULT 'open',
-      resolution      TEXT,
-      photo_ids       BIGINT[] DEFAULT ARRAY[]::BIGINT[],
-      created_at      TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-      resolved_at     TIMESTAMPTZ
-    );
-    CREATE INDEX ix_disputes_rfq    ON rfq_disputes(rfq_id);
-    CREATE INDEX ix_disputes_status ON rfq_disputes(status, created_at DESC);
-  END IF;
-END $$;
-
--- Add forum column if missing
-DO $$
-BEGIN
-  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'rfq_disputes' AND column_name = 'forum') THEN
-    ALTER TABLE rfq_disputes ADD COLUMN forum VARCHAR(20);
-  END IF;
-END $$;
+CREATE TABLE rfq_disputes_v2 (
+  id              BIGSERIAL PRIMARY KEY,
+  rfq_id          BIGINT NOT NULL,
+  offer_id        BIGINT,
+  deal_lock_id    BIGINT,
+  raised_by_id    INTEGER NOT NULL,
+  raised_by_role  VARCHAR(20) NOT NULL,
+  against_id      INTEGER,
+  against_role    VARCHAR(20),
+  category        VARCHAR(40) NOT NULL,
+  description     TEXT NOT NULL,
+  gmv_amount      NUMERIC(14,2),
+  currency        VARCHAR(3) DEFAULT 'USD',
+  forum           VARCHAR(20),
+  status          VARCHAR(30) NOT NULL DEFAULT 'open',
+  resolution      TEXT,
+  photo_ids       BIGINT[] DEFAULT ARRAY[]::BIGINT[],
+  created_at      TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  resolved_at     TIMESTAMPTZ
+);
+CREATE INDEX ix_disputes_v2_rfq    ON rfq_disputes_v2(rfq_id);
+CREATE INDEX ix_disputes_v2_status ON rfq_disputes_v2(status, created_at DESC);
 
 -- ============================================================================
 -- Verify
 -- ============================================================================
-SELECT 'production_declarations' AS table_name, COUNT(*) AS rows FROM production_declarations
-UNION ALL SELECT 'rfq_photos',              COUNT(*) FROM rfq_photos
-UNION ALL SELECT 'price_alerts',            COUNT(*) FROM price_alerts
-UNION ALL SELECT 'rfq_disputes',            COUNT(*) FROM rfq_disputes;
+SELECT 'production_declarations_v2' AS table_name, COUNT(*) AS rows FROM production_declarations_v2
+UNION ALL SELECT 'rfq_photos',                  COUNT(*) FROM rfq_photos
+UNION ALL SELECT 'price_alerts',                COUNT(*) FROM price_alerts
+UNION ALL SELECT 'rfq_disputes_v2',             COUNT(*) FROM rfq_disputes_v2;

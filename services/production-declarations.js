@@ -48,7 +48,7 @@ router.post('/', express.json(), async (req, res) => {
     }
 
     const r = await pool.query(`
-      INSERT INTO production_declarations (
+      INSERT INTO production_declarations_v2 (
         grower_id, commodity_category, commodity_subcategory,
         estimated_volume, volume_unit, available_from, available_to,
         ask_price, ask_price_currency, pack_size, quality_grade,
@@ -71,7 +71,7 @@ router.post('/', express.json(), async (req, res) => {
     // Auto-match against open RFQs
     const matchedIds = await autoMatchToOpenRFQs(decl);
     if (matchedIds.length > 0) {
-      await pool.query(`UPDATE production_declarations SET matched_rfqs = $1 WHERE id = $2`, [matchedIds, decl.id]);
+      await pool.query(`UPDATE production_declarations_v2 SET matched_rfqs = $1 WHERE id = $2`, [matchedIds, decl.id]);
       decl.matched_rfqs = matchedIds;
     }
 
@@ -123,7 +123,7 @@ async function autoMatchToOpenRFQs(decl) {
 router.get('/grower/:id', async (req, res) => {
   try {
     const r = await pool.query(`
-      SELECT * FROM production_declarations
+      SELECT * FROM production_declarations_v2
        WHERE grower_id = $1
        ORDER BY created_at DESC
        LIMIT 100
@@ -143,7 +143,7 @@ router.get('/open', async (req, res) => {
     if (country)   { params.push(country);   where += ` AND origin_country = $${params.length}`; }
     const r = await pool.query(`
       SELECT pd.*, g.company_name, g.country AS grower_country, g.grs_score
-        FROM production_declarations pd
+        FROM production_declarations_v2 pd
         JOIN growers g ON g.id = pd.grower_id
        WHERE ${where}
        ORDER BY pd.created_at DESC
@@ -161,7 +161,7 @@ router.get('/match/:rfqId', async (req, res) => {
     if (!rfq) return res.status(404).json({ error: 'rfq not found' });
     const r = await pool.query(`
       SELECT pd.*, g.company_name, g.grs_score, g.country AS grower_country
-        FROM production_declarations pd
+        FROM production_declarations_v2 pd
         JOIN growers g ON g.id = pd.grower_id
        WHERE pd.status = 'open'
          AND pd.commodity_category = $1
@@ -195,7 +195,7 @@ router.patch('/:id', express.json(), async (req, res) => {
     if (sets.length === 0) return res.status(400).json({ error: 'no updatable fields provided' });
     sets.push(`updated_at = NOW()`);
     const r = await pool.query(`
-      UPDATE production_declarations SET ${sets.join(', ')}
+      UPDATE production_declarations_v2 SET ${sets.join(', ')}
        WHERE id = $2 AND grower_id = $1
        RETURNING *
     `, params);
@@ -211,7 +211,7 @@ router.delete('/:id', express.json(), async (req, res) => {
     const { grower_id } = req.body || {};
     if (!grower_id) return res.status(400).json({ error: 'grower_id required' });
     const r = await pool.query(`
-      UPDATE production_declarations SET status = 'closed', updated_at = NOW()
+      UPDATE production_declarations_v2 SET status = 'closed', updated_at = NOW()
        WHERE id = $1 AND grower_id = $2 RETURNING id
     `, [req.params.id, parseInt(grower_id, 10)]);
     if (r.rows.length === 0) return res.status(403).json({ error: 'not authorized or not found' });

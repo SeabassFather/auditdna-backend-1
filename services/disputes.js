@@ -68,7 +68,7 @@ router.post('/', express.json(), async (req, res) => {
     const forum = determineForum(gmv_amount || 0, category);
 
     const r = await pool.query(`
-      INSERT INTO rfq_disputes (
+      INSERT INTO rfq_disputes_v2 (
         rfq_id, offer_id, deal_lock_id,
         raised_by_id, raised_by_role, against_id, against_role,
         category, description, gmv_amount, currency, forum, photo_ids
@@ -120,7 +120,7 @@ router.post('/', express.json(), async (req, res) => {
 router.get('/rfq/:rfqId', async (req, res) => {
   try {
     const r = await pool.query(`
-      SELECT * FROM rfq_disputes WHERE rfq_id = $1 ORDER BY created_at DESC
+      SELECT * FROM rfq_disputes_v2 WHERE rfq_id = $1 ORDER BY created_at DESC
     `, [req.params.rfqId]);
     res.json({ disputes: r.rows });
   } catch (e) {
@@ -147,7 +147,7 @@ router.get('/admin/queue', async (req, res) => {
   try {
     const r = await pool.query(`
       SELECT d.*, rn.rfq_code, rn.commodity_category
-        FROM rfq_disputes d
+        FROM rfq_disputes_v2 d
         JOIN rfq_needs rn ON rn.id = d.rfq_id
        WHERE d.status IN ('open','investigating')
        ORDER BY
@@ -163,7 +163,7 @@ router.get('/admin/queue', async (req, res) => {
 
 router.get('/:id', async (req, res) => {
   try {
-    const r = await pool.query(`SELECT * FROM rfq_disputes WHERE id = $1`, [req.params.id]);
+    const r = await pool.query(`SELECT * FROM rfq_disputes_v2 WHERE id = $1`, [req.params.id]);
     if (r.rows.length === 0) return res.status(404).json({ error: 'not found' });
     const dispute = r.rows[0];
     let photos = [];
@@ -190,7 +190,7 @@ router.patch('/:id/status', express.json(), async (req, res) => {
     const allowed = ['open', 'investigating', 'awaiting_response', 'mediation', 'arbitration', 'closed'];
     if (!allowed.includes(status)) return res.status(400).json({ error: 'invalid status' });
     const r = await pool.query(`
-      UPDATE rfq_disputes SET status = $1
+      UPDATE rfq_disputes_v2 SET status = $1
        WHERE id = $2 RETURNING *
     `, [status, req.params.id]);
     if (r.rows.length === 0) return res.status(404).json({ error: 'not found' });
@@ -212,7 +212,7 @@ router.post('/:id/resolve', express.json(), async (req, res) => {
     const { resolution, admin_id } = req.body || {};
     if (!resolution) return res.status(400).json({ error: 'resolution required' });
     const r = await pool.query(`
-      UPDATE rfq_disputes SET status = 'closed', resolution = $1, resolved_at = NOW()
+      UPDATE rfq_disputes_v2 SET status = 'closed', resolution = $1, resolved_at = NOW()
        WHERE id = $2 RETURNING *
     `, [resolution, req.params.id]);
     if (r.rows.length === 0) return res.status(404).json({ error: 'not found' });
