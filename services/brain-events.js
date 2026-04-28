@@ -1,12 +1,14 @@
 /**
- * C:\AuditDNA\backend\services\brain-events.js (v2)
+ * C:\AuditDNA\backend\services\brain-events.js (v3)
  *
- * Phase 1 Day 5 - Brain event bus, schema-corrected.
+ * Phase 2 - Adds handlers for:
+ *   CASCADE_NOTIFY_FIRED       cascade ntfy + admin push
+ *   production.declared        notify buyers with matching open RFQs
+ *   price_alert.fired          (logged - the price-alerts service handles delivery)
+ *   dispute.opened / resolved  admin escalation
+ *   RFQ_POSTED                 legacy alias for rfq.created (back-compat)
  *
- * Real rfq_brain_events schema has NO `processed` column. Tracks state via
- * a sibling tracking table rfq_brain_events_state(event_id, processed, processed_at).
- *
- * On startup we ensureSchema() to create the state table if missing.
+ * State table mechanism (v2) preserved.
  */
 
 const express = require('express');
@@ -23,9 +25,6 @@ let pushHelper = null;
 let whatsappHelper = null;
 let schemaReady = false;
 
-// ----------------------------------------------------------------------------
-// Schema bootstrap - sibling state table
-// ----------------------------------------------------------------------------
 async function ensureSchema() {
   await pool.query(`
     CREATE TABLE IF NOT EXISTS rfq_brain_events_state (
@@ -42,36 +41,20 @@ async function ensureSchema() {
   console.log('[brain] state table ready');
 }
 
-// ----------------------------------------------------------------------------
-// Lazy helpers
-// ----------------------------------------------------------------------------
 function getPushHelper() {
-  if (!pushHelper) {
-    try { pushHelper = require('./webpush-server'); }
-    catch (e) { console.warn('[brain] webpush-server not available'); }
-  }
+  if (!pushHelper) { try { pushHelper = require('./webpush-server'); } catch (e) {} }
   return pushHelper;
 }
-
 function getWhatsappHelper() {
-  if (!whatsappHelper) {
-    try { whatsappHelper = require('./whatsapp-rfq-bridge'); } catch (e) {}
-  }
+  if (!whatsappHelper) { try { whatsappHelper = require('./whatsapp-rfq-bridge'); } catch (e) {} }
   return whatsappHelper;
 }
 
-// ----------------------------------------------------------------------------
-// ntfy push
-// ----------------------------------------------------------------------------
 async function pushNtfy(title, body, priority = 'default', tags = []) {
   try {
     await fetch(NTFY_URL, {
       method: 'POST',
-      headers: {
-        'Title': title,
-        'Priority': priority,
-        'Tags': tags.join(','),
-      },
+      headers: { 'Title': title, 'Priority': priority, 'Tags': tags.join(',') },
       body,
     });
   } catch (e) {
@@ -80,7 +63,7 @@ async function pushNtfy(title, body, priority = 'default', tags = []) {
 }
 
 // ----------------------------------------------------------------------------
-// Event handlers
+// Handlers
 // ----------------------------------------------------------------------------
 const handlers = {
   'rfq.created': async (event) => {
@@ -91,6 +74,8 @@ const handlers = {
       'default', ['rfq', 'new']
     );
   },
+  'RFQ_POSTED': async (event) => handlers['rfq.created'](event),
+
   'rfq.bid_placed': async (event) => {
     const { rfq_code, grower_anonymous, price, buyer_id } = event.payload || {};
     await pushNtfy(`Bid on ${rfq_code}`, `${grower_anonymous} offered $${price}`, 'default', ['rfq','bid']);
@@ -103,6 +88,7 @@ const handlers = {
       });
     }
   },
+
   'rfq.locked': async (event) => {
     const { rfq_code, finance_mode, gmv, grower_id, margin } = event.payload || {};
     await pushNtfy(`LOCKED: ${rfq_code} ($${gmv})`, `Mode ${finance_mode} | margin $${margin}`, 'high', ['rfq','locked','money']);
@@ -119,10 +105,12 @@ const handlers = {
       try { await wa.notifyGrower(grower_id, `Won ${rfq_code}. Check the app.`); } catch (e) {}
     }
   },
+
   'rfq.expired': async (event) => {
     const { rfq_code } = event.payload || {};
     await pushNtfy(`Expired: ${rfq_code}`, 'No grower locked in time', 'low', ['rfq','expired']);
   },
+
   'shipment.distress': async (event) => {
     const { rfq_code, reason, buyer_id } = event.payload || {};
     await pushNtfy(`DISTRESS: ${rfq_code}`, reason || 'shipment in distress', 'urgent', ['rotating_light','distress']);
@@ -134,18 +122,86 @@ const handlers = {
       });
     }
   },
+
   'grower.activated': async (event) => {
     const { grower_name, grs_score, region } = event.payload || {};
     await pushNtfy(`Grower activated: ${grower_name}`, `GRS ${grs_score} | ${region}`, 'default', ['grower','new']);
   },
+
   'buyer.vetted': async (event) => {
     const { buyer_name, paca_status } = event.payload || {};
     await pushNtfy(`Buyer vetted: ${buyer_name}`, `PACA: ${paca_status}`, 'default', ['buyer','vetted']);
   },
+
+  // ============================ PHASE 2 ============================
+
+  'CASCADE_NOTIFY_FIRED': async (event) => {
+    const { tier1, tier2, tier3, total } = event.payload || {};
+    await pushNtfy(
+      `Cascade fired RFQ#${event.rfq_id}`,
+      `Tier1=${tier1}, Tier2=${tier2}, Tier3=${tier3}, total=${total}`,
+      'default', ['cascade']
+    );
+  },
+
+  'production.declared': async (event) => {
+    const { commodity, volume, unit, ask_price, matched_rfq_count, matched_rfq_ids, declaration_id } = event.payload || {};
+    await pushNtfy(
+      `New supply: ${commodity}`,
+      `${volume} ${unit} ${ask_price ? `@ $${ask_price}` : '(price on request)'} | matches ${matched_rfq_count} RFQs`,
+      'default', ['supply']
+    );
+    if (Array.isArray(matched_rfq_ids) && matched_rfq_ids.length > 0) {
+      const r = await pool.query(`
+        SELECT id, rfq_code, buyer_id FROM rfq_needs WHERE id = ANY($1::bigint[])
+      `, [matched_rfq_ids]);
+      const ph = getPushHelper();
+      if (ph) {
+        for (const rfq of r.rows) {
+          try {
+            await ph.sendPushToUser(rfq.buyer_id, 'buyer', {
+              title: `New supply matches ${rfq.rfq_code}`,
+              body: `${commodity}: ${volume} ${unit}${ask_price ? ` @ $${ask_price}` : ''}`,
+              url: `/buyer/declarations/${declaration_id}`,
+              tag: `decl-${declaration_id}-rfq-${rfq.id}`,
+            });
+          } catch (e) {}
+        }
+      }
+    }
+  },
+
+  'price_alert.fired': async (event) => {
+    const { commodity, trigger_price, matched_count } = event.payload || {};
+    await pushNtfy(
+      `Price alert: ${commodity}`,
+      `Hit ${trigger_price}, ${matched_count} matches`,
+      'default', ['price','alert']
+    );
+  },
+
+  'dispute.opened': async (event) => {
+    const { category, forum, gmv, dispute_id } = event.payload || {};
+    const priority = forum === 'aaa' ? 'urgent' : (forum === 'paca_aco' ? 'high' : 'default');
+    await pushNtfy(
+      `DISPUTE #${dispute_id} (${forum.toUpperCase()})`,
+      `${category} | RFQ#${event.rfq_id} | GMV $${gmv || '?'}`,
+      priority, ['dispute', forum]
+    );
+  },
+
+  'dispute.resolved': async (event) => {
+    const { dispute_id, forum } = event.payload || {};
+    await pushNtfy(
+      `Resolved #${dispute_id}`,
+      `Forum: ${forum} | RFQ#${event.rfq_id}`,
+      'default', ['dispute','resolved']
+    );
+  },
 };
 
 // ----------------------------------------------------------------------------
-// Polling - join brain events with state to find unprocessed
+// Polling
 // ----------------------------------------------------------------------------
 async function processEvents() {
   if (!schemaReady) return;
@@ -191,7 +247,6 @@ function startPolling() {
     })
     .catch(e => console.error('[brain] schema bootstrap failed:', e.message));
 }
-
 function stopPolling() {
   if (pollTimer) { clearInterval(pollTimer); pollTimer = null; }
 }
@@ -242,7 +297,7 @@ router.get('/events/stats', async (req, res) => {
   }
 });
 
-router.post('/events/test', async (req, res) => {
+router.post('/events/test', express.json(), async (req, res) => {
   try {
     const { event_type = 'rfq.created', payload = {} } = req.body || {};
     await emitEvent(event_type, null, payload);

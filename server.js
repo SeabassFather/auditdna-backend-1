@@ -413,6 +413,11 @@ try { app.use('/api/brain', require('./routes/brain-stream')); console.log('[OK]
   try { const webpush = require('./services/webpush-server'); webpush.init(); app.use('/api/push', webpush.router); console.log('[OK] webpush-server mounted at /api/push'); } catch(e) { console.error('[FAIL] webpush-server mount:', e.message); }
   try { const brainEvents = require('./services/brain-events'); brainEvents.startPolling(); app.use('/api/brain', brainEvents.router); console.log('[OK] brain-events mounted at /api/brain + polling started'); } catch(e) { console.error('[FAIL] brain-events mount:', e.message); }
   try { const wa = require('./services/whatsapp-rfq-bridge'); app.use('/api/whatsapp', wa.router); console.log('[OK] whatsapp-rfq-bridge mounted at /api/whatsapp'); } catch(e) { console.error('[FAIL] whatsapp-rfq-bridge mount:', e.message); }
+  try { const photos = require('./services/photo-upload'); app.use('/api/photos', photos.router); console.log('[OK] photo-upload mounted at /api/photos'); } catch(e) { console.error('[FAIL] photo-upload mount:', e.message); }
+  try { const decls = require('./services/production-declarations'); app.use('/api/declarations', decls.router); console.log('[OK] production-declarations mounted at /api/declarations'); } catch(e) { console.error('[FAIL] production-declarations mount:', e.message); }
+  try { const palerts = require('./services/price-alerts'); app.use('/api/price-alerts', palerts.router); palerts.startCron(); console.log('[OK] price-alerts mounted at /api/price-alerts + cron started'); } catch(e) { console.error('[FAIL] price-alerts mount:', e.message); }
+  try { const disputes = require('./services/disputes'); app.use('/api/disputes', disputes.router); console.log('[OK] disputes mounted at /api/disputes'); } catch(e) { console.error('[FAIL] disputes mount:', e.message); }
+  try { const auctionWs = require('./services/auction-ws'); app.use('/api/auction-ws', auctionWs.router); console.log('[OK] auction-ws router mounted at /api/auction-ws'); global.__auctionWs = auctionWs; } catch(e) { console.error('[FAIL] auction-ws router mount:', e.message); }
   console.log('[OK] /api/financing mounted');
 } catch (err) {
   console.error('[WARN] /api/financing mount failed:', err.message);
@@ -1412,7 +1417,9 @@ app.use('/api/niner', require('./routes/niner-bridge'));
 // SPRINT D WAVE 3D - Autonomy Loop
 try { app.use('/api/autonomy', require('./routes/autonomy-loop')); console.log('[OK] autonomy-loop mounted at /api/autonomy'); } catch(e) { console.error('[FAIL] autonomy-loop:', e.message); }
 
-app.listen(PORT, () => {
+const __server = require('http').createServer(app);
+try { if (global.__auctionWs && typeof global.__auctionWs.attach === 'function') { global.__auctionWs.attach(__server); console.log('[OK] auction-ws attached to http server'); } } catch(e) { console.error('[FAIL] auction-ws attach:', e.message); }
+__server.listen(PORT, () => {
   const totalRoutes = explicitMounts.length + loadedRoutes.length;
   console.log(`
 ================================================================
