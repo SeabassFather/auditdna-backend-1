@@ -1484,6 +1484,10 @@ try {
   console.warn('[WARN] Scheduler not loaded:', e.message);
 }
 
+// CAMPAIGNS ENGINE + INTERNAL INBOX (Phase 1 - mounted BEFORE export so they actually load)
+try { app.use('/api/campaigns', require('./routes/campaigns-engine')); console.log('[OK] campaigns-engine mounted at /api/campaigns'); } catch(e) { console.error('[FAIL] campaigns-engine mount:', e.message); }
+try { app.use('/api/inbox', require('./routes/internal-inbox')); console.log('[OK] internal-inbox mounted at /api/inbox'); } catch(e) { console.error('[FAIL] internal-inbox mount:', e.message); }
+
 module.exports = app; global.db = pool;
 console.log('[DB] global.db assigned -> pool accessible to all routes');
 module.exports.pool = pool; module.exports.app = app;
@@ -1497,9 +1501,6 @@ try { const cs = require('./routes/commodity-search'); app.use('/api/commodity',
 // MOBILE WORKSPACE v2 - Run 13e
 try { const mw = require('./routes/mobileWorkspace'); app.use('/api/mobile', mw); console.log('[OK] mobileWorkspace mounted at /api/mobile'); } catch(e) { console.error('[FAIL] mobileWorkspace mount:', e.message); }
 
-// CAMPAIGNS ENGINE + INTERNAL INBOX (Phase 1 - Multi-vertical email + employee inbox)
-try { app.use('/api/campaigns', require('./routes/campaigns-engine')); console.log('[OK] campaigns-engine mounted at /api/campaigns'); } catch(e) { console.error('[FAIL] campaigns-engine mount:', e.message); }
-try { app.use('/api/inbox', require('./routes/internal-inbox')); console.log('[OK] internal-inbox mounted at /api/inbox'); } catch(e) { console.error('[FAIL] internal-inbox mount:', e.message); }
 
 // AuditDNA Autonomy Phase 2A boot
 try {
