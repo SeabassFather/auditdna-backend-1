@@ -138,9 +138,9 @@ router.get('/open', async (req, res) => {
   try {
     const { commodity, country } = req.query;
     const params = [];
-    let where = `status = 'open' AND (expires_at IS NULL OR expires_at > NOW())`;
-    if (commodity) { params.push(commodity); where += ` AND commodity_category = $${params.length}`; }
-    if (country)   { params.push(country);   where += ` AND origin_country = $${params.length}`; }
+    let where = `pd.status = 'open' AND (pd.expires_at IS NULL OR pd.expires_at > NOW())`;
+    if (commodity) { params.push(commodity); where += ` AND pd.commodity_category = $${params.length}`; }
+    if (country)   { params.push(country);   where += ` AND pd.origin_country = $${params.length}`; }
     const r = await pool.query(`
       SELECT pd.*, g.company_name, g.country AS grower_country, g.grs_score
         FROM production_declarations_v2 pd
