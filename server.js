@@ -418,6 +418,10 @@ try { app.use('/api/brain', require('./routes/brain-stream')); console.log('[OK]
   try { const palerts = require('./services/price-alerts'); app.use('/api/price-alerts', palerts.router); palerts.startCron(); console.log('[OK] price-alerts mounted at /api/price-alerts + cron started'); } catch(e) { console.error('[FAIL] price-alerts mount:', e.message); }
   try { const disputes = require('./services/disputes'); app.use('/api/disputes', disputes.router); console.log('[OK] disputes mounted at /api/disputes'); } catch(e) { console.error('[FAIL] disputes mount:', e.message); }
   try { const auctionWs = require('./services/auction-ws'); app.use('/api/auction-ws', auctionWs.router); console.log('[OK] auction-ws router mounted at /api/auction-ws'); global.__auctionWs = auctionWs; } catch(e) { console.error('[FAIL] auction-ws router mount:', e.message); }
+
+// BRAIN-WIRE-MARKER - Phase 1 universal Brain endpoints
+app.use('/api/brain', require('./services/brain-state'));
+app.use('/api/brain', require('./services/brain-subscribe'));
   console.log('[OK] /api/financing mounted');
 } catch (err) {
   console.error('[WARN] /api/financing mount failed:', err.message);
