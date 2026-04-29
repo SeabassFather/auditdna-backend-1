@@ -420,6 +420,9 @@ try { app.use('/api/brain', require('./routes/brain-stream')); console.log('[OK]
   try { const auctionWs = require('./services/auction-ws'); app.use('/api/auction-ws', auctionWs.router); console.log('[OK] auction-ws router mounted at /api/auction-ws'); global.__auctionWs = auctionWs; } catch(e) { console.error('[FAIL] auction-ws router mount:', e.message); }
 
 // BRAIN-WIRE-MARKER - Phase 1 universal Brain endpoints
+
+// LOAF-WIRE-MARKER
+app.use('/api/loaf', require('./routes/loaf-routes'));
 app.use('/api/brain', require('./services/brain-state'));
 app.use('/api/brain', require('./services/brain-subscribe'));
   console.log('[OK] /api/financing mounted');
