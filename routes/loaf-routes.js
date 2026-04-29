@@ -1,4 +1,4 @@
-// loaf-routes.js — FULL REBUILD — Save to: C:\AuditDNA\backend\routes\loaf-routes.js
+﻿// loaf-routes.js â€” FULL REBUILD â€” Save to: C:\AuditDNA\backend\routes\loaf-routes.js
 const express  = require('express');
 const router   = express.Router();
 const nodemailer = require('nodemailer');
@@ -11,7 +11,7 @@ catch (e) { console.warn('[loaf-routes] data engine not found:', e.message); dat
 
 const getDb = () => global.db || require('../db');
 const getTransport = () => nodemailer.createTransport({ host: process.env.SMTP_HOST||'smtp.gmail.com', port: parseInt(process.env.SMTP_PORT||'587'), secure:false, auth:{ user:process.env.SMTP_USER, pass:process.env.SMTP_PASS } });
-const FROM = `"MexaUSA Food Group — LOAF" <${process.env.SMTP_USER||'sgarcia1911@gmail.com'}>`;
+const FROM = `"MexaUSA Food Group â€” LOAF" <${process.env.SMTP_USER||'sgarcia1911@gmail.com'}>`;
 const ADMIN_EMAILS = ['saul@mexausafg.com','sgarcia1911@gmail.com','palt@mfginc.com'];
 
 async function notifyAdmins(action, data, intel) {
@@ -20,7 +20,7 @@ async function notifyAdmins(action, data, intel) {
   try {
     const transport = getTransport();
     await transport.sendMail({ from:FROM, to:ADMIN_EMAILS.join(','),
-      subject:`[LOAF ${action}] ${commodity} — ${quantity} ${unit} — ${user?.name||'Unknown'}`,
+      subject:`[LOAF ${action}] ${commodity} â€” ${quantity} ${unit} â€” ${user?.name||'Unknown'}`,
       text:[`Action: ${action}`,`Commodity: ${commodity}`,`Quantity: ${quantity} ${unit}`,`Grower: ${user?.name||'--'} / ${user?.company||'--'} / ${user?.phone||'--'}`,`Region: ${user?.region||'--'}`,`GPS: ${gps?`${gps.lat}, ${gps.lng}`:'Not captured'}`,`Buyers notified: ${ir.sent||0} regular + ${ir.chainStores||0} chain stores`,`Time: ${new Date().toLocaleString()}`].join('\n')
     });
   } catch(e) { console.warn('[loaf-routes] admin notify failed:', e.message); }
@@ -39,7 +39,7 @@ router.post('/register', async (req, res) => {
 router.post('/launch', async (req, res) => {
   const data = req.body;
   if (!data.commodity || !data.quantity) return res.status(400).json({ success:false, error:'Commodity and quantity required' });
-  console.log(`[LOAF LAUNCH] ${data.commodity} ${data.quantity} ${data.unit} — ${data.user?.name}`);
+  console.log(`[LOAF LAUNCH] ${data.commodity} ${data.quantity} ${data.unit} â€” ${data.user?.name}`);
   const db = getDb();
   const submissionId = await dataEngine.saveSubmission(db, 'LAUNCH', data, null);
   intelligence.runLOAFIntelligence(db, 'LAUNCH', submissionId, data).then(async r => {
@@ -53,7 +53,7 @@ router.post('/launch', async (req, res) => {
 router.post('/origin', async (req, res) => {
   const data = req.body;
   if (!data.commodity || !data.lot) return res.status(400).json({ success:false, error:'Commodity and lot number required' });
-  console.log(`[LOAF ORIGIN] ${data.commodity} Lot:${data.lot} — ${data.user?.name}`);
+  console.log(`[LOAF ORIGIN] ${data.commodity} Lot:${data.lot} â€” ${data.user?.name}`);
   const db = getDb();
   const submissionId = await dataEngine.saveSubmission(db, 'ORIGIN', data, null);
   await dataEngine.updateDailyAnalytics(db, 'ORIGIN', data, null);
@@ -64,7 +64,7 @@ router.post('/origin', async (req, res) => {
 router.post('/altruistic', async (req, res) => {
   const data = req.body;
   if (!data.commodity || !data.quantity) return res.status(400).json({ success:false, error:'Commodity and quantity required' });
-  console.log(`[LOAF ALTRUISTIC] ${data.commodity} ${data.quantity} ${data.unit} — ${data.user?.name}`);
+  console.log(`[LOAF ALTRUISTIC] ${data.commodity} ${data.quantity} ${data.unit} â€” ${data.user?.name}`);
   const db = getDb();
   const submissionId = await dataEngine.saveSubmission(db, 'ALTRUISTIC', data, null);
   intelligence.runLOAFIntelligence(db, 'ALTRUISTIC', submissionId, data).then(async r => {
@@ -73,7 +73,7 @@ router.post('/altruistic', async (req, res) => {
     if (data.broadcastOpenClaw) {
       try {
         const http = require('http');
-        const body = JSON.stringify({ to:'all', message:`[LOAF ALTRUISTIC] ${data.commodity} surplus available — ${data.quantity} ${data.unit} — ${data.user?.region||'corridor'}. Contact MexaUSA Food Group: +1-831-251-3116` });
+        const body = JSON.stringify({ to:'all', message:`[LOAF ALTRUISTIC] ${data.commodity} surplus available â€” ${data.quantity} ${data.unit} â€” ${data.user?.region||'corridor'}. Contact MexaUSA Food Group: +1-831-251-3116` });
         const opts = { hostname:'localhost', port:3001, path:'/api/openclaw/broadcast', method:'POST', headers:{'Content-Type':'application/json','Content-Length':Buffer.byteLength(body)} };
         http.request(opts, ()=>{}).write(body);
       } catch(e) { console.warn('[LOAF ALTRUISTIC] OpenClaw error:', e.message); }
@@ -86,7 +86,7 @@ router.post('/altruistic', async (req, res) => {
 router.post('/factor', async (req, res) => {
   const data = req.body;
   if (!data.buyer || !data.invoiceAmount) return res.status(400).json({ success:false, error:'Buyer name and invoice amount required' });
-  console.log(`[LOAF FACTOR] $${data.invoiceAmount} Buyer:${data.buyer} — ${data.user?.name}`);
+  console.log(`[LOAF FACTOR] $${data.invoiceAmount} Buyer:${data.buyer} â€” ${data.user?.name}`);
   const db = getDb();
   const submissionId = await dataEngine.saveSubmission(db, 'FACTOR', data, null);
   await dataEngine.updateDailyAnalytics(db, 'FACTOR', data, null);
@@ -95,9 +95,71 @@ router.post('/factor', async (req, res) => {
   res.json({ success:true, submission_id:submissionId, message:`Invoice submitted for factoring. Capital partners will be notified. Estimated advance: $${advance.toFixed(2)}.`, estimated_advance:advance, action:'FACTOR' });
 });
 
+// ============== AUCTION (BID) - grower posts a lot, buyers bid up ==============
+router.post('/auction', async (req, res) => {
+  try {
+    const { commodity, quantity, unit, reservePrice, durationHours, notes, grade } = req.body || {};
+    if (!commodity || !quantity) return res.status(400).json({ ok:false, error:'commodity and quantity required' });
+    const startsAt = new Date();
+    const endsAt = new Date(Date.now() + (parseInt(durationHours||24,10) * 3600 * 1000));
+    let saved = null;
+    try {
+      saved = await dataEngine.saveSubmission({
+        kind: 'auction',
+        payload: { commodity, quantity, unit, reservePrice, durationHours, notes, grade, startsAt, endsAt }
+      });
+    } catch (e) { console.warn('[loaf-routes] auction save warn:', e.message); }
+
+    // Fan-out to brain events so AuditDNA Mission Control sees it
+    try {
+      const { getPool } = require('../db');
+      const pool = getPool();
+      await pool.query(
+        "INSERT INTO rfq_brain_events(event_type, payload, created_at) VALUES ($1, $2, NOW())",
+        ['loaf.auction.opened', JSON.stringify({ commodity, quantity, reservePrice, endsAt })]
+      );
+    } catch (e) { console.warn('[loaf-routes] auction event warn:', e.message); }
+
+    res.json({ ok:true, success:true, kind:'auction', startsAt, endsAt, saved });
+  } catch (e) {
+    console.error('[loaf-routes] /auction error:', e.message);
+    res.status(500).json({ ok:false, error: e.message });
+  }
+});
+
+// ============== REVERSE BUY - buyer posts a need, growers bid down ==============
+router.post('/reverse', async (req, res) => {
+  try {
+    const { commodity, quantity, unit, targetPrice, needByDate, destination, gradeRequired, notes } = req.body || {};
+    if (!commodity || !quantity) return res.status(400).json({ ok:false, error:'commodity and quantity required' });
+    let saved = null;
+    try {
+      saved = await dataEngine.saveSubmission({
+        kind: 'reverse',
+        payload: { commodity, quantity, unit, targetPrice, needByDate, destination, gradeRequired, notes }
+      });
+    } catch (e) { console.warn('[loaf-routes] reverse save warn:', e.message); }
+
+    try {
+      const { getPool } = require('../db');
+      const pool = getPool();
+      await pool.query(
+        "INSERT INTO rfq_brain_events(event_type, payload, created_at) VALUES ($1, $2, NOW())",
+        ['loaf.reverse.posted', JSON.stringify({ commodity, quantity, targetPrice, needByDate, destination })]
+      );
+    } catch (e) { console.warn('[loaf-routes] reverse event warn:', e.message); }
+
+    res.json({ ok:true, success:true, kind:'reverse', saved });
+  } catch (e) {
+    console.error('[loaf-routes] /reverse error:', e.message);
+    res.status(500).json({ ok:false, error: e.message });
+  }
+});
+
+
 router.post('/admin-ping', async (req, res) => {
   const { action, user, timestamp } = req.body;
-  console.log(`[LOAF ADMIN-PING] ${action} — ${user||'unknown'} — ${timestamp}`);
+  console.log(`[LOAF ADMIN-PING] ${action} â€” ${user||'unknown'} â€” ${timestamp}`);
   res.json({ success:true });
 });
 
