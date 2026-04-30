@@ -81,6 +81,7 @@ const pgPool = new Pool({
 const oauth2Client = new google.auth.OAuth2(CLIENT_ID, CLIENT_SECRET, REDIRECT_URI);
 
 const SCOPES = [
+  'https://www.googleapis.com/auth/gmail.send',
   'https://www.googleapis.com/auth/gmail.readonly',
   'https://www.googleapis.com/auth/gmail.labels',
   'https://www.googleapis.com/auth/contacts.readonly',
@@ -356,6 +357,69 @@ router.get('/callback', async (req, res) => {
 // SMTP SEND HELPER ΓÇö builds and sends via nodemailer
 // Supports: to, cc, bcc, subject, html body, attachments
 // ============================================================
+// ============================================================
+// GMAIL API SEND (OAuth) — bypasses SMTP, works on Railway
+// Uses the same oauth2Client + storedTokens already used for /messages
+// ============================================================
+async function gmailApiSend({ to, cc, bcc, subject, html, text, attachments = [] }) {
+  const tokenOk = await ensureFreshTokens();
+  if (!tokenOk || !storedTokens) {
+    throw new Error('Gmail OAuth not authenticated — visit /api/gmail/auth');
+  }
+  oauth2Client.setCredentials(storedTokens);
+  const gmail = google.gmail({ version: 'v1', auth: oauth2Client });
+
+  const boundary = '__BOUND_' + Date.now();
+  const headers = [
+    `From: ${FROM_HEADER}`,
+    `To: ${Array.isArray(to) ? to.join(', ') : to}`,
+    cc ? `Cc: ${cc}` : null,
+    bcc ? `Bcc: ${bcc}` : null,
+    `Subject: =?UTF-8?B?${Buffer.from(subject || '').toString('base64')}?=`,
+    'MIME-Version: 1.0',
+    attachments.length
+      ? `Content-Type: multipart/mixed; boundary="${boundary}"`
+      : 'Content-Type: text/html; charset=UTF-8',
+    'Content-Transfer-Encoding: 7bit'
+  ].filter(Boolean).join('\r\n');
+
+  let body;
+  if (attachments.length) {
+    const parts = [];
+    parts.push(`--${boundary}`);
+    parts.push('Content-Type: text/html; charset=UTF-8');
+    parts.push('Content-Transfer-Encoding: 7bit');
+    parts.push('');
+    parts.push(html || text || '');
+    for (const a of attachments) {
+      const fname = a.name || a.filename || 'attachment';
+      const mime = a.mimeType || a.contentType || 'application/octet-stream';
+      const data = a.content || a.data || a.b64 || '';
+      parts.push(`--${boundary}`);
+      parts.push(`Content-Type: ${mime}; name="${fname}"`);
+      parts.push('Content-Transfer-Encoding: base64');
+      parts.push(`Content-Disposition: attachment; filename="${fname}"`);
+      parts.push('');
+      parts.push(data);
+    }
+    parts.push(`--${boundary}--`);
+    body = parts.join('\r\n');
+  } else {
+    body = html || text || '';
+  }
+
+  const raw = Buffer.from(headers + '\r\n\r\n' + body)
+    .toString('base64')
+    .replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+
+  const result = await gmail.users.messages.send({
+    userId: 'me',
+    requestBody: { raw }
+  });
+
+  return { messageId: result.data.id, threadId: result.data.threadId };
+}
+
 async function smtpSend({ to, cc, bcc, subject, html, text, attachments = [] }) {
   const transport = createTransport();
 
@@ -394,14 +458,25 @@ router.post('/send', async (req, res) => {
       return res.status(500).json({ error: 'SMTP_PASS not configured in .env ΓÇö see setup instructions' });
     }
 
-    const info = await smtpSend({
-      to, cc, bcc, subject,
-      html:        html || body,
-      text:        body,
-      attachments: attachments || [],
-    });
-
-    console.log(`[SMTP] Sent: ${FROM_ADDRESS} -> ${to} | MsgID: ${info.messageId}`);
+    let info;
+    try {
+      info = await gmailApiSend({
+        to, cc, bcc, subject,
+        html:        html || body,
+        text:        body,
+        attachments: attachments || [],
+      });
+      console.log(`[GMAIL-API] Sent: ${FROM_ADDRESS} -> ${to} | MsgID: ${info.messageId}`);
+    } catch (apiErr) {
+      console.warn('[GMAIL-API] failed, falling back to SMTP:', apiErr.message);
+      info = await smtpSend({
+        to, cc, bcc, subject,
+        html:        html || body,
+        text:        body,
+        attachments: attachments || [],
+      });
+      console.log(`[SMTP] Sent: ${FROM_ADDRESS} -> ${to} | MsgID: ${info.messageId}`);
+    }
     res.json({ success: true, messageId: info.messageId, from: FROM_ADDRESS });
 
   } catch (err) {
