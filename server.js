@@ -1489,6 +1489,7 @@ try {
 try { app.use('/api/campaigns', require('./routes/campaigns-engine')); console.log('[OK] campaigns-engine mounted at /api/campaigns'); } catch(e) { console.error('[FAIL] campaigns-engine mount:', e.message); }
 try { app.use('/api/inbox', require('./routes/internal-inbox')); console.log('[OK] internal-inbox mounted at /api/inbox'); } catch(e) { console.error('[FAIL] internal-inbox mount:', e.message); }
 try { app.use('/api/wesource', require('./routes/wesource.routes')); console.log('[OK] wesource routes mounted at /api/wesource'); } catch (e) { console.error('[FAIL] wesource routes:', e.message); }
+try { app.use('/api/campaign-recipes', require('./routes/campaign-recipes.routes')); console.log('[OK] campaign-recipes mounted at /api/campaign-recipes'); } catch (e) { console.error('[FAIL] campaign-recipes:', e.message); }
 
 module.exports = app; global.db = pool;
 console.log('[DB] global.db assigned -> pool accessible to all routes');
