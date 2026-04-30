@@ -35,7 +35,7 @@ router.get('/', async (req, res) => {
     }
 
     const whereSql = where.length ? `WHERE ${where.join(' AND ')}` : '';
-    const lim = Math.min(parseInt(limit, 10) || 500, 5000);
+    const lim = Math.min(parseInt(limit, 10) || 5000, 50000);
     const off = parseInt(offset, 10) || 0;
 
     const dataSql = `
