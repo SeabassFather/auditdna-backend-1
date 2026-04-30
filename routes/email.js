@@ -45,7 +45,7 @@ const sendViaGmail = async (recipients, subject, body) => {
 
   try {
     // Check Gmail connection status
-    const statusRes = await fetch('http://process.env.DB_HOST:5050/api/gmail/status');
+    const statusRes = await fetch(${process.env.SELF_URL || 'http://localhost:5050'}/api/gmail/status);
     const status = await statusRes.json();
 
     if (!status.connected) {
@@ -53,7 +53,7 @@ const sendViaGmail = async (recipients, subject, body) => {
     }
 
     // Send via Gmail bulk endpoint
-    const gmailRes = await fetch('http://process.env.DB_HOST:5050/api/gmail/send-bulk', {
+    const gmailRes = await fetch(${process.env.SELF_URL || 'http://localhost:5050'}/api/gmail/send-bulk, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -253,7 +253,7 @@ router.post('/send-campaign', upload.fields([
 // ===================================================================
 router.get('/gmail-status', async (req, res) => {
   try {
-    const statusRes = await fetch('http://process.env.DB_HOST:5050/api/gmail/status');
+    const statusRes = await fetch(${process.env.SELF_URL || 'http://localhost:5050'}/api/gmail/status);
     const status = await statusRes.json();
     res.json(status);
   } catch (err) {
@@ -378,7 +378,7 @@ router.post('/send', async (req, res) => {
   const { subject, content, recipients } = req.body;
 
   try {
-    const statusRes = await fetch('http://process.env.DB_HOST:5050/api/gmail/status');
+    const statusRes = await fetch(${process.env.SELF_URL || 'http://localhost:5050'}/api/gmail/status);
     const status = await statusRes.json();
 
     if (status.connected) {
