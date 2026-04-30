@@ -365,7 +365,7 @@ try {
 // -- analytics --> /api/analytics
 try {
   app.use('/api/analytics',      require('./routes/analytics'));
-  app.use('/api/mortgage-leads', require('./routes/mortgage-leads'));
+// app.use('/api/mortgage-leads', require('./routes/mortgage-leads'));   // DISABLED: route file never existed, AuditDNA carries ZERO NMLS refs (standing rule)
   explicitMounts.push({ file: 'analytics.js', path: '/api/analytics' });
 } catch(e) { console.warn('[WARN] analytics not found:', e.message); }
 
