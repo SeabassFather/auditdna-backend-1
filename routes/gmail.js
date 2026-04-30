@@ -495,9 +495,6 @@ router.post('/send-bulk', async (req, res) => {
     if (!recipients || !Array.isArray(recipients) || !subject || (!body && !html)) {
       return res.status(400).json({ error: 'Missing: recipients (array), subject, body/html' });
     }
-    if (!SMTP_PASS) {
-      return res.status(500).json({ error: 'SMTP_PASS not configured in .env' });
-    }
 
     const results = [];
 
@@ -506,7 +503,6 @@ router.post('/send-bulk', async (req, res) => {
       const name  = recipient.name || '';
 
       try {
-        // Personalize HTML and text body
         const personalizedHtml = (html || body || '')
           .replace(/\{\{name\}\}/g,    name)
           .replace(/\{\{company\}\}/g, recipient.company || '')
@@ -517,30 +513,37 @@ router.post('/send-bulk', async (req, res) => {
           .replace(/\{\{company\}\}/g, recipient.company || '')
           .replace(/\{\{email\}\}/g,   email);
 
-        const info = await smtpSend({
+        const sendArgs = {
           to:          name ? `${name} <${email}>` : email,
-          cc,
-          bcc,
-          subject,
+          cc, bcc, subject,
           html:        personalizedHtml,
           text:        personalizedText,
           attachments,
-        });
+        };
+
+        let info;
+        try {
+          info = await gmailApiSend(sendArgs);
+          console.log(`[GMAIL-API] Bulk sent -> ${email} | MsgID: ${info.messageId}`);
+        } catch (apiErr) {
+          console.warn(`[GMAIL-API] Bulk failed for ${email}, falling back to SMTP: ${apiErr.message}`);
+          if (!SMTP_PASS) throw new Error(`Gmail API failed and SMTP fallback unavailable: ${apiErr.message}`);
+          info = await smtpSend(sendArgs);
+          console.log(`[SMTP] Bulk sent (fallback) -> ${email} | MsgID: ${info.messageId}`);
+        }
 
         results.push({ email, success: true, messageId: info.messageId });
-        console.log(`[SMTP] Bulk sent -> ${email}`);
-
         if (delayMs > 0) await new Promise(r => setTimeout(r, delayMs));
 
       } catch (err) {
         results.push({ email, success: false, error: err.message });
-        console.error(`[SMTP] Bulk failed -> ${email}: ${err.message}`);
+        console.error(`[BULK] failed -> ${email}: ${err.message}`);
       }
     }
 
     const sent   = results.filter(r => r.success).length;
     const failed = results.filter(r => !r.success).length;
-    console.log(`[SMTP] Bulk complete: ${sent} sent, ${failed} failed, FROM: ${FROM_ADDRESS}`);
+    console.log(`[BULK] complete: ${sent} sent, ${failed} failed, FROM: ${FROM_ADDRESS}`);
 
     res.json({ success: true, from: FROM_ADDRESS, total: recipients.length, sent, failed, results });
 
