@@ -100,12 +100,19 @@ async function query(text, params) {
 // New code should require('./db') directly.
 if (!global.db) global.db = pool;
 
-module.exports = pool;
-module.exports.pool = pool;
-// REMOVED: was overwriting pool.query causing infinite recursion (2026-05-01)
-module.exports.ping = ping;
-
-// 2026-05-01: getPool() helper for callers that expect a function (legacy pattern).
-// Returns the same pool singleton. Both module.exports = pool AND
-// module.exports.getPool = () => pool work side-by-side.
-module.exports.getPool = function getPool() { return pool; };
+// 2026-05-01: Callable function export. Three caller patterns must all work:
+//   (A) const getPool = require('../db'); const pool = getPool();
+//   (B) const { getPool } = require('../db'); const pool = getPool();
+//   (C) const pool = require('../db'); pool.query(...)
+function moduleExport() { return pool; }
+['query','connect','end','on','off','removeListener'].forEach(k => {
+  if (typeof pool[k] === 'function') moduleExport[k] = pool[k].bind(pool);
+});
+['totalCount','idleCount','waitingCount'].forEach(k => {
+  Object.defineProperty(moduleExport, k, { get: () => pool[k], enumerable: true });
+});
+moduleExport.pool    = pool;
+moduleExport.getPool = function getPool() { return pool; };
+moduleExport.ping    = ping;
+if (!global.pool) global.pool = pool;
+module.exports = moduleExport;
