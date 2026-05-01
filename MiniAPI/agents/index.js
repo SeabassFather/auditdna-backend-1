@@ -49,6 +49,7 @@ export function stopAll() {
 export const kikiMiddleware = kiki.middleware;
 
 export const statusRouter = express.Router();
+statusRouter.use(express.json());
 
 statusRouter.get('/status', (req, res) => {
   res.json({
@@ -71,7 +72,7 @@ statusRouter.post('/eliott/scan-now', async (req, res) => {
 // Test the notifier (Saul can curl this to test smartwatch + email)
 statusRouter.post('/test-notify', async (req, res) => {
   if (!notifier) return res.json({ ok: false, error: 'notifier_not_loaded' });
-  const severity = req.body?.severity || 'medium';
+  const severity = (req.body && req.body.severity) || (req.query && req.query.severity) || 'medium';
   const r = await notifier.notify({
     agent: 'ENRIQUE',
     event_type: 'manual.test',
