@@ -104,3 +104,8 @@ module.exports = pool;
 module.exports.pool = pool;
 // REMOVED: was overwriting pool.query causing infinite recursion (2026-05-01)
 module.exports.ping = ping;
+
+// 2026-05-01: getPool() helper for callers that expect a function (legacy pattern).
+// Returns the same pool singleton. Both module.exports = pool AND
+// module.exports.getPool = () => pool work side-by-side.
+module.exports.getPool = function getPool() { return pool; };
