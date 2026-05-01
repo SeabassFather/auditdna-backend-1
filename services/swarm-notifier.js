@@ -21,6 +21,37 @@
 
 const https = require('https');
 const nodemailer = require('nodemailer');
+const { Pool: PgPool } = require('pg');
+
+// brain-events-db-write
+let brainPool = null;
+function getBrainPool() {
+  if (brainPool) return brainPool;
+  try {
+    brainPool = new PgPool({
+      host: process.env.DB_HOST || 'localhost',
+      port: parseInt(process.env.DB_PORT || 5432, 10),
+      database: process.env.DB_NAME || 'auditdna',
+      user: process.env.DB_USER || 'postgres',
+      password: process.env.DB_PASSWORD,
+      max: 2
+    });
+    brainPool.on('error', () => {});
+    return brainPool;
+  } catch { return null; }
+}
+
+async function writeBrainEvent(event_type, source_module, payload) {
+  const p = getBrainPool();
+  if (!p) return false;
+  try {
+    await p.query(
+      'INSERT INTO brain_events (event_type, source_module, payload, created_at) VALUES (, , , NOW())',
+      [event_type, source_module, payload ? JSON.stringify(payload) : null]
+    );
+    return true;
+  } catch { return false; }
+}
 
 const NTFY_TOPIC      = process.env.NTFY_TOPIC || 'auditdna-agro-saul2026';
 const ALERT_EMAIL     = process.env.ALERT_EMAIL || 'sgarcia1911@gmail.com';
@@ -49,22 +80,14 @@ function getMailer() {
 // ----------------------------------------------------------------------------
 // Channel: BRAIN
 // ----------------------------------------------------------------------------
-function sendToBrain({ agent, event_type, severity, summary, context }) {
+async function sendToBrain({ agent, event_type, severity, summary, context }) {
   try {
     if (typeof global.brainEmit === 'function') {
-      global.brainEmit({
-        event: event_type,
-        source_module: agent,
-        severity,
-        summary,
-        ...context
-      });
+      global.brainEmit({ event: event_type, source_module: agent, severity, summary, ...context });
       return true;
     }
-  } catch (err) {
-    console.error('[notifier] brain emit failed:', err.message);
-  }
-  return false;
+  } catch {}
+  return await writeBrainEvent(event_type, agent, { severity, summary, ...context });
 }
 
 // ----------------------------------------------------------------------------
@@ -157,7 +180,7 @@ async function notify({ agent, event_type, severity = 'low', summary, context = 
   console.log(`${tag} [${agent}] ${summary}`);
 
   // Always emit to brain
-  const brainOk = sendToBrain({ agent, event_type: event_type || 'agent.alert', severity, summary, context });
+  const brainOk = await sendToBrain({ agent, event_type: event_type || 'agent.alert', severity, summary, context });
 
   // If throttled, stop here (brain only)
   if (throttled) {

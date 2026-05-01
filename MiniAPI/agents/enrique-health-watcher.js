@@ -34,14 +34,14 @@ const MAIN_BACKEND_PORT = process.env.MAIN_BACKEND_PORT || 5050;
 
 // Agents Enrique watches (besides himself)
 const WATCHED = [
-  // Main backend agents (port 5050)
-  { name: 'GG',      port: MAIN_BACKEND_PORT, path: '/api/gg/status',      kind: 'medic' },
-  { name: 'EMMA',    port: MAIN_BACKEND_PORT, path: '/api/emma/status',    kind: 'medic' },
-  { name: 'EVELYN',  port: MAIN_BACKEND_PORT, path: '/api/evelyn/status',  kind: 'janitor' },
-  { name: 'MARGIE',  port: MAIN_BACKEND_PORT, path: '/api/margie/status',  kind: 'auditor' },
+  // Main backend agents (port 5050) - poll every 60s -> 5 min silent threshold
+  { name: 'GG',      port: MAIN_BACKEND_PORT, path: '/api/gg/status',      kind: 'medic',     silent_threshold_ms: 5  * 60 * 1000 },
+  { name: 'EMMA',    port: MAIN_BACKEND_PORT, path: '/api/emma/status',    kind: 'medic',     silent_threshold_ms: 5  * 60 * 1000 },
+  { name: 'EVELYN',  port: MAIN_BACKEND_PORT, path: '/api/evelyn/status',  kind: 'janitor',   silent_threshold_ms: 35 * 60 * 1000 },  // 30 min scan + 5 min slack
+  { name: 'MARGIE',  port: MAIN_BACKEND_PORT, path: '/api/margie/status',  kind: 'auditor',   silent_threshold_ms: 5  * 60 * 1000 },
   // MiniAPI siblings (port 4000)
-  { name: 'KIKI',    port: MINIAPI_PORT,      path: '/api/agents/kiki/status',   kind: 'sentinel' },
-  { name: 'ELIOTT',  port: MINIAPI_PORT,      path: '/api/agents/eliott/status', kind: 'janitor' }
+  { name: 'KIKI',    port: MINIAPI_PORT,      path: '/api/agents/kiki/status',   kind: 'sentinel', silent_threshold_ms: 5  * 60 * 1000 },
+  { name: 'ELIOTT',  port: MINIAPI_PORT,      path: '/api/agents/eliott/status', kind: 'janitor',  silent_threshold_ms: 35 * 60 * 1000 }
 ];
 
 let pool       = null;
