@@ -1,4 +1,4 @@
-﻿// ===============================================================
+// ===============================================================
 // AUDITDNA BACKEND SERVER v4.1 ???????? SECURED
 // ===============================================================
 // CHANGES FROM v4.0:
@@ -165,6 +165,26 @@ const NODE_ENV = process.env.NODE_ENV || 'development';
 app.set('ai', aiHelper);
 app.set('pool', pool);
 
+// =============================================================================
+// GG SHARED SMTP TRANSPORTER - 2026-05-01
+// Single Gmail-only transporter. Used by ALL inline send sites + GG medic.
+// Standing rule: smtp.gmail.com:587, secure=false, sgarcia1911@gmail.com
+// =============================================================================
+const __ggNodemailer = require('nodemailer');
+const sharedTransporter = __ggNodemailer.createTransport({
+  host:   'smtp.gmail.com',
+  port:   587,
+  secure: false,
+  auth: {
+    user: process.env.SMTP_USER || 'sgarcia1911@gmail.com',
+    pass: process.env.SMTP_PASS,
+  },
+  pool: true,
+  maxConnections: 5,
+  maxMessages: 100,
+});
+app.set('smtp', sharedTransporter);
+
 if (typeof brain?.setAI   === 'function') brain.setAI(aiHelper);
 if (typeof brain?.setPool === 'function') brain.setPool(pool);
 
@@ -283,6 +303,7 @@ try {
   const authRoutes = require('./routes/auth');
   app.use('/api/other-contacts', require('./routes/other-contacts'));
 app.use('/api/swarm', require('./routes/swarm.routes'));
+app.use('/api/gg',    require('./routes/gg.routes'));
 app.use('/api/auth', authRoutes);
 
 // ?????? AUTONOMOUS INVENTORY NOTIFICATION PIPELINE ???????????????????????????????????????????????????????????????????????????
@@ -1443,6 +1464,18 @@ __server.listen(PORT, () => {
   } catch (err) {
     console.error('[SWARM] coordinator load error:', err.message);
   }
+
+  // ============================================================
+  // 2026-05-01: Auto-start GG SMTP Medic agent
+  // ============================================================
+  try {
+    const gg = require('./services/gg-smtp-medic');
+    gg.init({ pool, aiHelper, transporter: sharedTransporter });
+    gg.start().catch(e => console.error('[GG] start error:', e.message));
+    console.log('[GG] SMTP Medic startup invoked');
+  } catch (err) {
+    console.error('[GG] load error:', err.message);
+  }
   const totalRoutes = explicitMounts.length + loadedRoutes.length;
   console.log(`
 ================================================================
@@ -1535,4 +1568,5 @@ try {
 } catch (e) { console.warn('[WARN] Autonomy boot failed:', e.message); }
 app.use('/api/other-contacts', require('./routes/other-contacts'));
 app.use('/api/swarm', require('./routes/swarm.routes'));
+app.use('/api/gg',    require('./routes/gg.routes'));
 app.use('/api/auth', require('./routes/pin-verify'));
