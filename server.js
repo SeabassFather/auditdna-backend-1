@@ -1430,6 +1430,19 @@ try { app.use('/api/autonomy', require('./routes/autonomy-loop')); console.log('
 const __server = require('http').createServer(app);
 try { if (global.__auctionWs && typeof global.__auctionWs.attach === 'function') { global.__auctionWs.attach(__server); console.log('[OK] auction-ws attached to http server'); } } catch(e) { console.error('[FAIL] auction-ws attach:', e.message); }
 __server.listen(PORT, () => {
+  // ============================================================
+  // 2026-05-01: Auto-start swarm Phase 4 coordinator
+  // (start() logs its own status, does not return a Promise)
+  // ============================================================
+  try {
+    const swarmCoord = require('./services/swarm-coordinator');
+    if (swarmCoord && typeof swarmCoord.start === 'function') {
+      swarmCoord.start({ pool });
+      console.log('[SWARM] Phase 4 coordinator startup invoked');
+    }
+  } catch (err) {
+    console.error('[SWARM] coordinator load error:', err.message);
+  }
   const totalRoutes = explicitMounts.length + loadedRoutes.length;
   console.log(`
 ================================================================
