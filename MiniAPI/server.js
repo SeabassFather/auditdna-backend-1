@@ -1,4 +1,4 @@
-require('dotenv').config();
+import 'dotenv/config';
 // ================================================================
 // AUDITDNA BACKEND - EXPRESS SERVER (ES MODULE)
 // ================================================================
@@ -19,6 +19,9 @@ import { fileURLToPath } from 'url';
 // IMPORT USDA REGISTRY ROUTE
 import usdaRegistryRouter from './routes/usdaRegistry.js';
 
+// miniapi-agents-wired
+import miniApiAgents from './agents/index.js';
+
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
@@ -28,6 +31,8 @@ const app = express();
 // MIDDLEWARE
 // ============================================================
 app.use(cors());
+app.use(miniApiAgents.kikiMiddleware);
+app.use('/api/agents', miniApiAgents.statusRouter);
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
@@ -72,7 +77,7 @@ const contactsPath = path.join(__dirname, 'data', 'shipper-contacts.json');
 try {
   if (fs.existsSync(contactsPath)) {
     leads = JSON.parse(fs.readFileSync(contactsPath, 'utf-8'));
-    console.log(`Ã¢Å“â€œ Loaded ${leads.length} contacts from shipper-contacts.json`);
+    console.log(`ÃƒÂ¢Ã…â€œÃ¢â‚¬Å“ Loaded ${leads.length} contacts from shipper-contacts.json`);
   }
 } catch (e) {
   console.log('Note: No contacts file found, starting fresh');
@@ -91,7 +96,7 @@ try {
       const [date, commodity_desc, price, region] = line.split(',');
       return { date, commodity: commodity_desc, price: parseFloat(price), region };
     });
-    console.log(`Ã¢Å“â€œ Loaded ${usdaPrices.length} price records from usda_prices.csv`);
+    console.log(`ÃƒÂ¢Ã…â€œÃ¢â‚¬Å“ Loaded ${usdaPrices.length} price records from usda_prices.csv`);
   }
 } catch (e) {
   console.log('Note: No prices CSV found');
@@ -711,7 +716,7 @@ calendarRouter.post('/invoice', (req, res) => {
   
   const event = {
     id: 'inv_' + Date.now(),
-    title: `Ã°Å¸â€™Â° Invoice #${invoiceNumber} - ${customerName}`,
+    title: `ÃƒÂ°Ã…Â¸Ã¢â‚¬â„¢Ã‚Â° Invoice #${invoiceNumber} - ${customerName}`,
     description: `Amount: $${amount || 'TBD'}\nCustomer: ${customerName}\nItems: ${items || 'See invoice'}`,
     start: dueDate, end: dueDate,
     calendar: assignTo, type: 'invoice',
@@ -737,7 +742,7 @@ calendarRouter.post('/inquiry', (req, res) => {
   
   const event = {
     id: 'inq_' + Date.now(),
-    title: `Ã°Å¸â€œÅ¾ Sales Inquiry: ${customerName}${priority === 'high' ? ' Ã°Å¸â€Â¥' : ''}`,
+    title: `ÃƒÂ°Ã…Â¸Ã¢â‚¬Å“Ã…Â¾ Sales Inquiry: ${customerName}${priority === 'high' ? ' ÃƒÂ°Ã…Â¸Ã¢â‚¬ÂÃ‚Â¥' : ''}`,
     description: `Customer: ${customerName}\nEmail: ${email || 'N/A'}\nPhone: ${phone || 'N/A'}\nProduct: ${product || 'General'}\nQuantity: ${quantity || 'TBD'}\nNotes: ${notes || 'None'}\nPriority: ${priority.toUpperCase()}`,
     start: contactDate, end: contactDate,
     calendar: assignTo, type: 'inquiry', priority,
@@ -825,6 +830,12 @@ const PORT = process.env.PORT || 5051;
 app.listen(PORT, () => {
   console.log(`[MiniAPI] Running on port ${PORT}`);
   console.log(`[MiniAPI] URL: http://process.env.DB_HOST:${PORT}`);
+  try {
+    miniApiAgents.initAll({ pool, aiHelper: global.aiHelper || null });
+    miniApiAgents.startAll();
+  } catch (err) {
+    console.error('[MiniAPI Agents] init error:', err.message);
+  }
 });
 
 export default app;

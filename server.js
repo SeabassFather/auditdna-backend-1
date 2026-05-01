@@ -310,6 +310,9 @@ app.use('/api/emma', emmaRoutes);
 
 const evelynRoutes = require('./routes/evelyn.routes');
 app.use('/api/evelyn', evelynRoutes);
+
+const margieRoutes = require('./routes/margie.routes');
+app.use('/api/margie', margieRoutes);
 app.use('/api/auth', authRoutes);
 
 // ?????? AUTONOMOUS INVENTORY NOTIFICATION PIPELINE ???????????????????????????????????????????????????????????????????????????
@@ -1510,6 +1513,16 @@ ${failedRoutes.length ? ` FAILED: ${failedRoutes.length}\n${failedRoutes.map(r =
     console.log('[EVELYN] Code Janitor startup invoked');
   } catch (err) {
     console.error('[EVELYN] load error:', err.message);
+  }
+
+  // Auto-start MARGIE Audit Keeper
+  try {
+    const margie = require('./services/margie-audit-keeper');
+    margie.init({ pool });
+    margie.start();
+    console.log('[MARGIE] Audit Keeper startup invoked');
+  } catch (err) {
+    console.error('[MARGIE] load error:', err.message);
   }
 });
 
