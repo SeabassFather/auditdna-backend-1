@@ -82,7 +82,7 @@ function httpGet(host, port, p) {
 // Self-checks
 // ----------------------------------------------------------------------------
 async function checkPortBound() {
-  const r = await httpGet('localhost', MINIAPI_PORT, '/');
+  const r = await httpGet('127.0.0.1', MINIAPI_PORT, '/');
   return { ok: r.ok };
 }
 
@@ -118,7 +118,7 @@ async function rollupChildren() {
   const results = [];
 
   for (const w of WATCHED) {
-    const r = await httpGet('localhost', w.port, w.path);
+    const r = await httpGet('127.0.0.1', w.port, w.path);
 
     let issues = [];
     let summary = 'ok';
