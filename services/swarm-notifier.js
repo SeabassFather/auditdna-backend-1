@@ -1,20 +1,11 @@
 // =============================================================================
-// SWARM NOTIFIER - 4-channel alert pipeline
+// SWARM NOTIFIER (schema-correct v2)
 // File: C:\AuditDNA\backend\services\swarm-notifier.js
 //
-// Channels (configurable per call):
-//   1. BRAIN          - posts to brain_events table (visible in COMMAND SPHERE)
-//   2. NTFY           - smartwatch push via ntfy.sh (topic: auditdna-agro-saul2026)
-//   3. EMAIL          - to sgarcia1911@gmail.com via Gmail SMTP (lands on his phone)
-//   4. CONSOLE        - always on
+// 4 channels: BRAIN (DB) + NTFY (smartwatch) + EMAIL (phone) + CONSOLE
 //
-// Severity-based routing:
-//   - low/info     -> brain + console
-//   - medium       -> brain + console + ntfy
-//   - high         -> brain + console + ntfy + email
-//   - critical     -> brain + console + ntfy + email (with [CRITICAL] tag)
-//
-// Throttling: same agent + same event_type within 5 min = brain only (no spam)
+// brain_events schema (verified): (id, event_type, payload, created_at, deal_id, agent_id, severity, actor_id)
+//   severity = smallint 0-4
 // =============================================================================
 
 'use strict';
@@ -23,7 +14,37 @@ const https = require('https');
 const nodemailer = require('nodemailer');
 const { Pool: PgPool } = require('pg');
 
-// brain-events-db-write
+const NTFY_TOPIC      = process.env.NTFY_TOPIC || 'auditdna-agro-saul2026';
+const ALERT_EMAIL     = process.env.ALERT_EMAIL || 'sgarcia1911@gmail.com';
+const SMTP_HOST       = process.env.SMTP_HOST || 'smtp.gmail.com';
+const SMTP_PORT       = parseInt(process.env.SMTP_PORT || '587', 10);
+const SMTP_USER       = process.env.SMTP_USER || 'sgarcia1911@gmail.com';
+const SMTP_PASS       = process.env.SMTP_PASS;
+const THROTTLE_MS     = 5 * 60 * 1000;
+
+// Severity text -> smallint (matches brain_events.severity column)
+const SEVERITY_TEXT_TO_INT = {
+  info: 0, low: 1, medium: 2, high: 3, critical: 4
+};
+
+const throttleMap = new Map();
+
+let mailer = null;
+function getMailer() {
+  if (mailer) return mailer;
+  if (!SMTP_PASS) return null;
+  mailer = nodemailer.createTransport({
+    host: SMTP_HOST,
+    port: SMTP_PORT,
+    secure: false,
+    auth: { user: SMTP_USER, pass: SMTP_PASS }
+  });
+  return mailer;
+}
+
+// ----------------------------------------------------------------------------
+// BRAIN channel - direct DB write (works cross-process from MiniAPI too)
+// ----------------------------------------------------------------------------
 let brainPool = null;
 function getBrainPool() {
   if (brainPool) return brainPool;
@@ -41,75 +62,62 @@ function getBrainPool() {
   } catch { return null; }
 }
 
-async function writeBrainEvent(event_type, source_module, payload) {
+async function writeBrainEvent({ event_type, agent_id, severity_int, payload }) {
   const p = getBrainPool();
   if (!p) return false;
   try {
     await p.query(
-      'INSERT INTO brain_events (event_type, source_module, payload, created_at) VALUES (, , , NOW())',
-      [event_type, source_module, payload ? JSON.stringify(payload) : null]
+      `INSERT INTO brain_events (event_type, payload, agent_id, severity, created_at)
+       VALUES ($1, $2, $3, $4, NOW())`,
+      [
+        (event_type || 'agent.alert').slice(0, 100),
+        payload ? JSON.stringify(payload) : null,
+        (agent_id || 'unknown').toString().slice(0, 64),
+        severity_int
+      ]
     );
     return true;
-  } catch { return false; }
+  } catch (err) {
+    console.error('[notifier] brain DB write failed:', err.message);
+    return false;
+  }
 }
 
-const NTFY_TOPIC      = process.env.NTFY_TOPIC || 'auditdna-agro-saul2026';
-const ALERT_EMAIL     = process.env.ALERT_EMAIL || 'sgarcia1911@gmail.com';
-const SMTP_HOST       = process.env.SMTP_HOST || 'smtp.gmail.com';
-const SMTP_PORT       = parseInt(process.env.SMTP_PORT || '587', 10);
-const SMTP_USER       = process.env.SMTP_USER || 'sgarcia1911@gmail.com';
-const SMTP_PASS       = process.env.SMTP_PASS;       // app password from env
-const THROTTLE_MS     = 5 * 60 * 1000;
-
-// Throttle map: key = agent:event_type, value = last_sent_at
-const throttleMap = new Map();
-
-let mailer = null;
-function getMailer() {
-  if (mailer) return mailer;
-  if (!SMTP_PASS) return null;
-  mailer = nodemailer.createTransport({
-    host: SMTP_HOST,
-    port: SMTP_PORT,
-    secure: false,
-    auth: { user: SMTP_USER, pass: SMTP_PASS }
-  });
-  return mailer;
-}
-
-// ----------------------------------------------------------------------------
-// Channel: BRAIN
-// ----------------------------------------------------------------------------
 async function sendToBrain({ agent, event_type, severity, summary, context }) {
+  const severity_int = SEVERITY_TEXT_TO_INT[severity] ?? 1;
+  const payload = { severity, summary, ...context };
+
+  // Try in-process global.brainEmit first (main backend pattern)
   try {
     if (typeof global.brainEmit === 'function') {
-      global.brainEmit({ event: event_type, source_module: agent, severity, summary, ...context });
+      global.brainEmit({
+        event: event_type,
+        agent_id: agent,
+        severity: severity_int,
+        ...payload
+      });
       return true;
     }
   } catch {}
-  return await writeBrainEvent(event_type, agent, { severity, summary, ...context });
+
+  // Fallback: write directly to brain_events (works from any process)
+  return await writeBrainEvent({ event_type, agent_id: agent, severity_int, payload });
 }
 
 // ----------------------------------------------------------------------------
-// Channel: NTFY (smartwatch push)
+// NTFY channel (smartwatch push)
 // ----------------------------------------------------------------------------
 function sendToNtfy({ agent, severity, summary, context }) {
   return new Promise((resolve) => {
-    const priority = (severity === 'critical') ? '5' : (severity === 'high') ? '4' : (severity === 'medium') ? '3' : '2';
+    const priority = severity === 'critical' ? '5' : severity === 'high' ? '4' : severity === 'medium' ? '3' : '2';
     const tags = severity === 'critical' ? 'rotating_light,red_circle' : severity === 'high' ? 'warning' : 'gear';
     const title = `[${agent}] ${severity.toUpperCase()}`;
-    const body  = summary + (context?.error ? `\n\nError: ${context.error}` : '');
+    const body  = summary + (context && context.error ? `\n\nError: ${context.error}` : '');
 
     const opts = {
-      hostname: 'ntfy.sh',
-      port: 443,
-      path: '/' + NTFY_TOPIC,
-      method: 'POST',
+      hostname: 'ntfy.sh', port: 443, path: '/' + NTFY_TOPIC, method: 'POST',
       headers: {
-        'Title':    title,
-        'Priority': priority,
-        'Tags':     tags,
-        'Content-Type': 'text/plain'
+        'Title': title, 'Priority': priority, 'Tags': tags, 'Content-Type': 'text/plain'
       },
       timeout: 5000
     };
@@ -126,7 +134,7 @@ function sendToNtfy({ agent, severity, summary, context }) {
 }
 
 // ----------------------------------------------------------------------------
-// Channel: EMAIL (to phone)
+// EMAIL channel
 // ----------------------------------------------------------------------------
 async function sendToEmail({ agent, severity, summary, context }) {
   const m = getMailer();
@@ -168,26 +176,22 @@ async function sendToEmail({ agent, severity, summary, context }) {
 async function notify({ agent, event_type, severity = 'low', summary, context = {} }) {
   if (!agent || !summary) return { ok: false, error: 'missing agent or summary' };
 
-  // Throttle key = agent:event_type
   const key = `${agent}:${event_type || 'default'}`;
   const last = throttleMap.get(key) || 0;
   const now  = Date.now();
   const throttled = (now - last) < THROTTLE_MS && severity !== 'critical';
   throttleMap.set(key, now);
 
-  // Always log to console
+  // Console
   const tag = severity === 'critical' ? '[CRITICAL]' : `[${severity.toUpperCase()}]`;
   console.log(`${tag} [${agent}] ${summary}`);
 
-  // Always emit to brain
+  // Brain (always)
   const brainOk = await sendToBrain({ agent, event_type: event_type || 'agent.alert', severity, summary, context });
 
-  // If throttled, stop here (brain only)
-  if (throttled) {
-    return { ok: true, throttled: true, brain: brainOk };
-  }
+  if (throttled) return { ok: true, throttled: true, brain: brainOk };
 
-  // Severity-based escalation
+  // ntfy + email by severity
   let ntfyOk = false, emailOk = false;
   if (severity === 'medium' || severity === 'high' || severity === 'critical') {
     ntfyOk = await sendToNtfy({ agent, severity, summary, context });
@@ -199,7 +203,6 @@ async function notify({ agent, event_type, severity = 'low', summary, context = 
   return { ok: true, throttled: false, brain: brainOk, ntfy: ntfyOk, email: emailOk };
 }
 
-// Convenience helpers
 const info     = (agent, summary, context, event_type) => notify({ agent, severity: 'info',     summary, context, event_type });
 const low      = (agent, summary, context, event_type) => notify({ agent, severity: 'low',      summary, context, event_type });
 const medium   = (agent, summary, context, event_type) => notify({ agent, severity: 'medium',   summary, context, event_type });
