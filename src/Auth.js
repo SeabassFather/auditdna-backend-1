@@ -4,6 +4,7 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 
 const { getPool } = require('../db');
+const pool = require('../db');
 
 const JWT_SECRET = process.env.JWT_SECRET || 'dev_secret';
 const JWT_EXPIRES = process.env.JWT_EXPIRES || '1d';
@@ -21,7 +22,7 @@ router.post('/login', async (req, res) => {
 
     const pool = getPool();
 
-    const result = await global.db.query(
+    const result = await pool.query(
       `
       SELECT id, username, role, password_hash, is_active
       FROM auth_users
@@ -51,13 +52,13 @@ router.post('/login', async (req, res) => {
     }
 
     if (!user.is_active) {
-      await global.db.query(
+      await pool.query(
         `UPDATE auth_users SET is_active = true WHERE id = $1`,
         [user.id]
       );
     }
 
-    await global.db.query(
+    await pool.query(
       `
       UPDATE auth_users
       SET last_login = NOW(),

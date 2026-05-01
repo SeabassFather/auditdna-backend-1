@@ -15,10 +15,11 @@ const router = express.Router();
 
 const waterfall = require('../services/financing-waterfall');
 const mailer    = require('../services/financing-mailer');
+const pool = require('../db');
 
 function getDB() {
-  if (global.db && typeof global.db.query === 'function') return global.db;
-  throw new Error('[financing] global.db not available');
+  if (pool && typeof pool.query === 'function') return pool;
+  throw new Error('[financing] pool not available');
 }
 
 // ------------------------------------------------------------

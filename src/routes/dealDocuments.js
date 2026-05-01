@@ -7,16 +7,17 @@
 // ============================================================================
 
 const express = require('express');
+const pool = require('../../db');
 const router = express.Router();
 
 // ---- Self-migrating schema ------------------------------------------------
 async function ensureSchema() {
-  if (!global.db) {
-    console.warn('[dealDocuments] global.db not available at startup, skipping migration');
+  if (!pool) {
+    console.warn('[dealDocuments] pool not available at startup, skipping migration');
     return;
   }
   try {
-    await global.db.query(`
+    await pool.query(`
       CREATE TABLE IF NOT EXISTS deal_documents (
         id SERIAL PRIMARY KEY,
         deal_id INTEGER NOT NULL,
@@ -31,14 +32,14 @@ async function ensureSchema() {
         notes TEXT
       );
     `);
-    await global.db.query(`CREATE INDEX IF NOT EXISTS idx_deal_documents_deal_id ON deal_documents(deal_id, lane);`);
-    await global.db.query(`CREATE INDEX IF NOT EXISTS idx_deal_documents_doc_type ON deal_documents(doc_type);`);
+    await pool.query(`CREATE INDEX IF NOT EXISTS idx_deal_documents_deal_id ON deal_documents(deal_id, lane);`);
+    await pool.query(`CREATE INDEX IF NOT EXISTS idx_deal_documents_doc_type ON deal_documents(doc_type);`);
     console.log('[dealDocuments] schema OK');
   } catch (e) {
     console.error('[dealDocuments] schema error:', e.message);
   }
 }
-// run at module load - delay slightly so global.db is ready
+// run at module load - delay slightly so pool is ready
 setTimeout(ensureSchema, 1500);
 
 // ---- Brain emit (defensive: brain endpoint may 404) ------------------------
@@ -78,7 +79,7 @@ router.post('/api/deals/:lane/:dealId/documents', heavyJson, async (req, res) =>
       return res.status(413).json({ error: 'file too large (max 25MB)' });
     }
 
-    const r = await global.db.query(
+    const r = await pool.query(
       `INSERT INTO deal_documents
          (deal_id, lane, doc_type, filename, mime_type, size_bytes, file_data, uploaded_by, notes)
        VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)
@@ -125,7 +126,7 @@ router.post('/api/deals/:lane/:dealId/documents', heavyJson, async (req, res) =>
 router.get('/api/deals/:lane/:dealId/documents', async (req, res) => {
   const { lane, dealId } = req.params;
   try {
-    const r = await global.db.query(
+    const r = await pool.query(
       `SELECT id, deal_id, lane, doc_type, filename, mime_type, size_bytes,
               uploaded_by, uploaded_at, notes
        FROM deal_documents
@@ -147,7 +148,7 @@ router.get('/api/deals/:lane/:dealId/documents', async (req, res) => {
 router.get('/api/deals/:lane/:dealId/documents/:docId/download', async (req, res) => {
   const { lane, dealId, docId } = req.params;
   try {
-    const r = await global.db.query(
+    const r = await pool.query(
       `SELECT filename, mime_type, file_data, size_bytes
        FROM deal_documents
        WHERE id = $1 AND deal_id = $2 AND lane = $3`,
@@ -172,7 +173,7 @@ router.get('/api/deals/:lane/:dealId/documents/:docId/download', async (req, res
 router.delete('/api/deals/:lane/:dealId/documents/:docId', async (req, res) => {
   const { lane, dealId, docId } = req.params;
   try {
-    const r = await global.db.query(
+    const r = await pool.query(
       `DELETE FROM deal_documents
        WHERE id = $1 AND deal_id = $2 AND lane = $3
        RETURNING filename, doc_type`,
@@ -201,7 +202,7 @@ router.delete('/api/deals/:lane/:dealId/documents/:docId', async (req, res) => {
 // ============================================================================
 router.get('/api/deal-documents/summary', async (req, res) => {
   try {
-    const r = await global.db.query(
+    const r = await pool.query(
       `SELECT deal_id, lane, COUNT(*) as doc_count, SUM(size_bytes) as total_bytes,
               MAX(uploaded_at) as last_upload
        FROM deal_documents
@@ -221,7 +222,7 @@ router.get('/api/deal-documents/summary', async (req, res) => {
 // ============================================================================
 router.get('/api/deal-documents/by-type', async (req, res) => {
   try {
-    const r = await global.db.query(
+    const r = await pool.query(
       `SELECT doc_type, lane, COUNT(*) as count, SUM(size_bytes) as total_bytes
        FROM deal_documents
        GROUP BY doc_type, lane

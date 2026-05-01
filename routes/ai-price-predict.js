@@ -22,6 +22,7 @@
 const express = require('express');
 const router = express.Router();
 const Anthropic = require('@anthropic-ai/sdk');
+const pool = require('../db');
 
 const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY || '';
 const USDA_API_KEY = process.env.USDA_API_KEY || '4F158DB1-85C2-3243-BFFA-58B53FB40D23';
@@ -32,7 +33,7 @@ const anth = ANTHROPIC_API_KEY
   : null;
 
 function getDb(req) {
-  return global.db || req.app.locals.pool || req.app.locals.db || null;
+  return pool || req.app.locals.pool || req.app.locals.db || null;
 }
 
 async function fetchUsdaBaseline(commodity, origin) {

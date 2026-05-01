@@ -13,6 +13,7 @@
 // =============================================================================
 
 const AGENTS = require('./swarm-agents');
+const pool = require('../db');
 
 const POLL_INTERVAL_MS    = 2000;
 const QUERY_TIMEOUT_MS    = 4000;
@@ -84,7 +85,7 @@ class CircuitBreaker {
 // =============================================================================
 class SwarmCoordinator {
   constructor(opts = {}) {
-    this.pool         = opts.pool || global.pool || global.db || null;
+    this.pool         = opts.pool || global.pool || pool || null;
     this.brainEmit    = opts.brainEmit || global.brainEmit || (() => {});
     this.startedAt    = Date.now();
     this.running      = false;

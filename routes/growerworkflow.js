@@ -134,7 +134,7 @@ const initWorkflowTables = async () => {
   `;
 
   try {
-    await global.db.query(createTablesSQL);
+    await pool.query(createTablesSQL);
     console.log('âœ… [Grower Workflow] Tables initialized');
   } catch (error) {
     console.error('âŒ [Grower Workflow] Table init failed:', error.message);
@@ -227,7 +227,7 @@ router.get('/:growerId', async (req, res) => {
   try {
     const { growerId } = req.params;
 
-    const workflow = await global.db.query(
+    const workflow = await pool.query(
       'SELECT * FROM grower_workflows WHERE grower_id = $1',
       [growerId]
     );
@@ -239,14 +239,14 @@ router.get('/:growerId', async (req, res) => {
       });
     }
 
-    const tasks = await global.db.query(
+    const tasks = await pool.query(
       `SELECT * FROM workflow_tasks 
        WHERE workflow_id = $1 
        ORDER BY created_at ASC`,
       [workflow.rows[0].id]
     );
 
-    const history = await global.db.query(
+    const history = await pool.query(
       `SELECT * FROM workflow_history 
        WHERE workflow_id = $1 
        ORDER BY created_at DESC 
@@ -435,7 +435,7 @@ router.post('/advance/:workflowId', async (req, res) => {
 
 router.get('/dashboard', async (req, res) => {
   try {
-    const stats = await global.db.query(`
+    const stats = await pool.query(`
       SELECT 
         COUNT(*) as total_workflows,
         COUNT(*) FILTER (WHERE current_stage = 'registration') as in_registration,
@@ -450,7 +450,7 @@ router.get('/dashboard', async (req, res) => {
       WHERE stage_status != 'completed'
     `);
 
-    const taskStats = await global.db.query(`
+    const taskStats = await pool.query(`
       SELECT 
         COUNT(*) as total_tasks,
         COUNT(*) FILTER (WHERE status = 'pending') as pending_tasks,

@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const nodemailer = require('nodemailer');
+const pool = require('../db');
 
 const USDA_KEY = '4F158DB1-85C2-3243-BFFA-58B53FB40D23';
 const CM_DISCOUNT = 0.175;
@@ -66,7 +67,7 @@ async function runCampaign(pool, segment) {
       try {
         const terms = labels[segment]||[];
         const q = terms.length ? `SELECT email, COALESCE(trade_name, legal_name) AS name, COALESCE(trade_name, legal_name) AS company, primary_contact FROM buyers WHERE email IS NOT NULL AND UPPER(status)='ACTIVE' AND (${terms.map((_,i)=>`product_specialties ILIKE $${i+1}`).join(' OR ')}) LIMIT 2000` : `SELECT email, COALESCE(trade_name, legal_name) AS name, COALESCE(trade_name, legal_name) AS company, primary_contact FROM buyers WHERE email IS NOT NULL AND UPPER(status)='ACTIVE' LIMIT 2000`;
-        const r = await global.db.query(q, terms.map(t=>`%${t}%`));
+        const r = await pool.query(q, terms.map(t=>`%${t}%`));
         buyers = r.rows;
       } catch(e) { console.error('[usda-campaign] DB error', e.message); }
     }

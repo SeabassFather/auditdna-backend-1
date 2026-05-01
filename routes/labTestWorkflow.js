@@ -126,7 +126,7 @@ const initLabTestTables = async () => {
   `;
 
   try {
-    await global.db.query(createTablesSQL);
+    await pool.query(createTablesSQL);
     console.log('âœ… [Lab Test Workflow] Tables initialized');
   } catch (error) {
     console.error('âŒ [Lab Test Workflow] Table init failed:', error.message);
@@ -415,7 +415,7 @@ router.get('/requests/:growerId', async (req, res) => {
     query += ` ORDER BY created_at DESC LIMIT $${paramIndex}`;
     params.push(parseInt(limit));
 
-    const result = await global.db.query(query, params);
+    const result = await pool.query(query, params);
 
     res.json({
       success: true,
@@ -437,7 +437,7 @@ router.get('/request/:requestId', async (req, res) => {
   try {
     const { requestId } = req.params;
 
-    const request = await global.db.query(
+    const request = await pool.query(
       'SELECT * FROM lab_test_requests WHERE id = $1',
       [requestId]
     );
@@ -446,12 +446,12 @@ router.get('/request/:requestId', async (req, res) => {
       return res.status(404).json({ success: false, error: 'Request not found' });
     }
 
-    const results = await global.db.query(
+    const results = await pool.query(
       'SELECT * FROM lab_test_results WHERE request_id = $1 ORDER BY created_at ASC',
       [requestId]
     );
 
-    const history = await global.db.query(
+    const history = await pool.query(
       'SELECT * FROM lab_test_history WHERE request_id = $1 ORDER BY created_at DESC',
       [requestId]
     );
@@ -475,7 +475,7 @@ router.get('/request/:requestId', async (req, res) => {
 
 router.get('/dashboard', async (req, res) => {
   try {
-    const stats = await global.db.query(`
+    const stats = await pool.query(`
       SELECT 
         COUNT(*) as total_requests,
         COUNT(*) FILTER (WHERE status = 'requested') as pending_collection,
@@ -491,7 +491,7 @@ router.get('/dashboard', async (req, res) => {
       WHERE created_at > NOW() - INTERVAL '90 days'
     `);
 
-    const byTestType = await global.db.query(`
+    const byTestType = await pool.query(`
       SELECT test_type, COUNT(*) as count
       FROM lab_test_requests
       WHERE created_at > NOW() - INTERVAL '90 days'

@@ -7,6 +7,7 @@ const express = require('express');
 const router = express.Router();
 const crypto = require('crypto');
 const jwt = require('jsonwebtoken');
+const pool = require('../db');
 
 const ENCRYPTION_KEY = process.env.VAULT_KEY || process.env.SESSION_SECRET || 'auditdna_gmail_vault_2026';
 const getKey = () => crypto.createHash('sha256').update(ENCRYPTION_KEY).digest();
@@ -34,7 +35,7 @@ let _dbImport;
 try { _dbImport = require('../db/connection'); } catch (e) { _dbImport = null; }
 const db = {
   query: (...args) => {
-    const pool = (global.db && typeof global.db.query === 'function') ? global.db
+    const pool = (pool && typeof pool.query === 'function') ? pool
                : (_dbImport && typeof _dbImport.query === 'function') ? _dbImport
                : null;
     if (!pool) throw new Error('[USER] No DB pool available');

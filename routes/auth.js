@@ -15,11 +15,12 @@ const jwt     = require('jsonwebtoken');
 const router = express.Router();
 
 // Resilient pool resolver — works whether db.js exports a function,
-// an object with getPool, or global.db is set by server.js.
+// an object with getPool, or pool is set by server.js.
 function resolvePool() {
-  if (global.db) return global.db;
+  if (pool) return pool;
   try {
     const dbModule = require('../db');
+const pool = require('../db');
     const getPool = dbModule.getPool || dbModule;
     if (typeof getPool === 'function') return getPool();
   } catch (_) {}

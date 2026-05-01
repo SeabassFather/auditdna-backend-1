@@ -15,6 +15,7 @@ const multer  = require('multer');
 const path    = require('path');
 const fs      = require('fs');
 const crypto  = require('crypto');
+const pool = require('../../db');
 
 const SALT_ROUNDS = 12;
 const JWT_SECRET  = process.env.JWT_SECRET || 'auditdna-grower-jwt-dev';
@@ -120,7 +121,7 @@ router.post('/register', async (req, res) => {
 
   try {
     // Check for duplicate email
-    const exists = await global.db.query('SELECT id FROM grower_profiles WHERE email = $1', [email.toLowerCase()]);
+    const exists = await pool.query('SELECT id FROM grower_profiles WHERE email = $1', [email.toLowerCase()]);
     if (exists.rows.length > 0) {
       return res.status(409).json({ error: 'Email already registered', grower_id: exists.rows[0].id });
     }
@@ -131,7 +132,7 @@ router.post('/register', async (req, res) => {
     const password_hash = await bcrypt.hash(plainPassword, SALT_ROUNDS);
     const pin_hash      = await bcrypt.hash(plainPIN, SALT_ROUNDS);
 
-    const result = await global.db.query(`
+    const result = await pool.query(`
       INSERT INTO grower_profiles (
         first_name, last_name, email, phone, company_name,
         city, state_region, country,
@@ -167,14 +168,14 @@ router.post('/register', async (req, res) => {
       };
 
       // 1. Brain event
-      global.db.query(
+      pool.query(
         `INSERT INTO brain_events (event_type, payload, created_at) VALUES ($1, $2, NOW())`,
         ['GROWER_REGISTERED_DB', JSON.stringify(safePayload)]
       ).catch(() => {});
 
       // 2. Push to inventory table (ID-safe: grower_id + product only)
       if (commodities) {
-        global.db.query(
+        pool.query(
           `INSERT INTO inventory (grower_id, commodity, country, state_region, certifications, status, created_at)
            VALUES ($1, $2, $3, $4, $5, 'available', NOW())
            ON CONFLICT (grower_id, commodity) DO UPDATE SET status = 'available', updated_at = NOW()`,
@@ -183,7 +184,7 @@ router.post('/register', async (req, res) => {
       }
 
       // 3. Push to CRM contacts (SaulIntelCRM sees full profile via admin auth â€” grower_id link)
-      global.db.query(
+      pool.query(
         `INSERT INTO crm_grower_links (grower_id, source, linked_at)
          VALUES ($1, 'registration', NOW())
          ON CONFLICT (grower_id) DO NOTHING`,
@@ -227,7 +228,7 @@ router.post('/login', async (req, res) => {
   }
 
   try {
-    const result = await global.db.query(
+    const result = await pool.query(
       'SELECT * FROM grower_profiles WHERE email = $1 AND status = $2',
       [email.toLowerCase(), 'active']
     );
@@ -243,7 +244,7 @@ router.post('/login', async (req, res) => {
     }
 
     // Update last_login
-    await global.db.query('UPDATE grower_profiles SET last_login = NOW() WHERE id = $1', [grower.id]);
+    await pool.query('UPDATE grower_profiles SET last_login = NOW() WHERE id = $1', [grower.id]);
 
     const token = jwt.sign(
       { id: grower.id, email: grower.email, role: grower.role, company: grower.company_name },
@@ -270,7 +271,7 @@ router.post('/verify-pin', authRequired, async (req, res) => {
   const { pin } = req.body;
 
   try {
-    const result = await global.db.query('SELECT pin_hash FROM grower_profiles WHERE id = $1', [req.grower.id]);
+    const result = await pool.query('SELECT pin_hash FROM grower_profiles WHERE id = $1', [req.grower.id]);
     if (result.rows.length === 0) return res.status(404).json({ error: 'Grower not found' });
 
     const valid = await bcrypt.compare(String(pin), result.rows[0].pin_hash);
@@ -294,7 +295,7 @@ router.get('/profile/:id', authRequired, async (req, res) => {
   }
 
   try {
-    const result = await global.db.query(
+    const result = await pool.query(
       'SELECT * FROM grower_profiles WHERE id = $1',
       [id]
     );
@@ -304,8 +305,8 @@ router.get('/profile/:id', authRequired, async (req, res) => {
 
     // Also fetch docs + financials
     const [docs, fins] = await Promise.all([
-      global.db.query('SELECT * FROM grower_documents WHERE grower_id = $1 ORDER BY created_at DESC', [id]),
-      global.db.query('SELECT * FROM grower_financials WHERE grower_id = $1 ORDER BY created_at DESC', [id]),
+      pool.query('SELECT * FROM grower_documents WHERE grower_id = $1 ORDER BY created_at DESC', [id]),
+      pool.query('SELECT * FROM grower_financials WHERE grower_id = $1 ORDER BY created_at DESC', [id]),
     ]);
 
     res.json({ grower, documents: docs.rows, financials: fins.rows });
@@ -362,7 +363,7 @@ router.patch('/profile/:id', authRequired, async (req, res) => {
   values.push(id);
 
   try {
-    const result = await global.db.query(
+    const result = await pool.query(
       `UPDATE grower_profiles SET ${updates.join(', ')} WHERE id = $${idx} RETURNING *`,
       values
     );
@@ -405,13 +406,13 @@ router.get('/', async (req, res) => {
 
   try {
     const [data, count] = await Promise.all([
-      global.db.query(
+      pool.query(
         `SELECT id, first_name, last_name, email, phone, company_name, city, country, commodities, quantities, certifications, compliance_status, grs_score, risk_tier, id_verified, docs_complete, status, created_at, last_login
          FROM grower_profiles ${clause}
          ORDER BY id DESC LIMIT $${idx} OFFSET $${idx + 1}`,
         [...values, limit, offset]
       ),
-      global.db.query(`SELECT COUNT(*) FROM grower_profiles ${clause}`, values),
+      pool.query(`SELECT COUNT(*) FROM grower_profiles ${clause}`, values),
     ]);
 
     res.json({ data: data.rows, total: parseInt(count.rows[0].count), page, limit });
@@ -434,10 +435,10 @@ router.post('/:grower_id/documents', upload.single('file'), async (req, res) => 
 
   try {
     // Verify grower exists
-    const gCheck = await global.db.query('SELECT id FROM grower_profiles WHERE id = $1', [grower_id]);
+    const gCheck = await pool.query('SELECT id FROM grower_profiles WHERE id = $1', [grower_id]);
     if (gCheck.rows.length === 0) return res.status(404).json({ error: 'Grower not found' });
 
-    const result = await global.db.query(`
+    const result = await pool.query(`
       INSERT INTO grower_documents (grower_id, doc_type, file_name, file_path, file_size, mime_type, notes)
       VALUES ($1, $2, $3, $4, $5, $6, $7)
       RETURNING *
@@ -453,11 +454,11 @@ router.post('/:grower_id/documents', upload.single('file'), async (req, res) => 
 
     // Auto-update id_verified if doc_type is id_photo
     if (doc_type === 'id_photo') {
-      await global.db.query('UPDATE grower_profiles SET id_verified = TRUE WHERE id = $1', [grower_id]);
+      await pool.query('UPDATE grower_profiles SET id_verified = TRUE WHERE id = $1', [grower_id]);
     }
 
     // Check if all required doc types are present
-    const allDocs = await global.db.query(
+    const allDocs = await pool.query(
       'SELECT DISTINCT doc_type FROM grower_documents WHERE grower_id = $1',
       [grower_id]
     );
@@ -465,7 +466,7 @@ router.post('/:grower_id/documents', upload.single('file'), async (req, res) => 
     const required = ['id_photo', 'corporate_id', 'phytosanitary'];
     const complete = required.every(t => docTypes.includes(t));
     if (complete) {
-      await global.db.query(
+      await pool.query(
         `UPDATE grower_profiles SET docs_complete = TRUE, compliance_status = 'submitted' WHERE id = $1 AND compliance_status = 'pending'`,
         [grower_id]
       );
@@ -485,7 +486,7 @@ router.post('/:grower_id/documents', upload.single('file'), async (req, res) => 
 router.get('/:grower_id/documents', async (req, res) => {
   const pool = req.app.locals.pool;
   try {
-    const result = await global.db.query(
+    const result = await pool.query(
       'SELECT * FROM grower_documents WHERE grower_id = $1 ORDER BY created_at DESC',
       [parseInt(req.params.grower_id)]
     );
@@ -510,7 +511,7 @@ router.patch('/documents/:doc_id/review', async (req, res) => {
   }
 
   try {
-    const result = await global.db.query(`
+    const result = await pool.query(`
       UPDATE grower_documents
       SET status = $1, reviewed_by = $2, reviewed_at = NOW(), notes = COALESCE($3, notes)
       WHERE id = $4
@@ -521,12 +522,12 @@ router.patch('/documents/:doc_id/review', async (req, res) => {
 
     // If all docs approved for this grower, auto-advance compliance
     const grower_id = result.rows[0].grower_id;
-    const pending = await global.db.query(
+    const pending = await pool.query(
       `SELECT COUNT(*) FROM grower_documents WHERE grower_id = $1 AND status != 'approved'`,
       [grower_id]
     );
     if (parseInt(pending.rows[0].count) === 0) {
-      await global.db.query(
+      await pool.query(
         `UPDATE grower_profiles SET compliance_status = 'approved', risk_tier = 'T1', grs_score = GREATEST(grs_score, 70) WHERE id = $1`,
         [grower_id]
       );
@@ -559,7 +560,7 @@ router.post('/:grower_id/financials', async (req, res) => {
   }
 
   try {
-    const result = await global.db.query(`
+    const result = await pool.query(`
       INSERT INTO grower_financials (
         grower_id, type, reference_number, amount, currency, status,
         buyer_id, commodity, quantity, unit_price, terms, due_date, notes
@@ -594,7 +595,7 @@ router.get('/:grower_id/financials', async (req, res) => {
   if (status) { where.push(`status = $${idx++}`); values.push(status); }
 
   try {
-    const result = await global.db.query(
+    const result = await pool.query(
       `SELECT * FROM grower_financials WHERE ${where.join(' AND ')} ORDER BY created_at DESC`,
       values
     );
@@ -614,14 +615,14 @@ router.get('/:grower_id/compliance', async (req, res) => {
 
   try {
     const [profile, docs, fins] = await Promise.all([
-      global.db.query(
+      pool.query(
         `SELECT id, first_name, last_name, email, company_name, compliance_status, grs_score, risk_tier, id_verified, docs_complete, created_at
          FROM grower_profiles WHERE id = $1`, [id]
       ),
-      global.db.query(
+      pool.query(
         `SELECT doc_type, status, file_name, created_at, reviewed_at FROM grower_documents WHERE grower_id = $1 ORDER BY created_at`, [id]
       ),
-      global.db.query(
+      pool.query(
         `SELECT type, status, amount, reference_number, created_at FROM grower_financials WHERE grower_id = $1 ORDER BY created_at DESC LIMIT 20`, [id]
       ),
     ]);
@@ -663,7 +664,7 @@ router.post('/:grower_id/reset-password', async (req, res) => {
   const id   = parseInt(req.params.grower_id);
 
   try {
-    const gCheck = await global.db.query('SELECT id, email FROM grower_profiles WHERE id = $1', [id]);
+    const gCheck = await pool.query('SELECT id, email FROM grower_profiles WHERE id = $1', [id]);
     if (gCheck.rows.length === 0) return res.status(404).json({ error: 'Grower not found' });
 
     const plainPassword = generatePassword(12);
@@ -671,7 +672,7 @@ router.post('/:grower_id/reset-password', async (req, res) => {
     const password_hash = await bcrypt.hash(plainPassword, SALT_ROUNDS);
     const pin_hash      = await bcrypt.hash(plainPIN, SALT_ROUNDS);
 
-    await global.db.query(
+    await pool.query(
       'UPDATE grower_profiles SET password_hash = $1, pin_hash = $2 WHERE id = $3',
       [password_hash, pin_hash, id]
     );
@@ -698,11 +699,11 @@ router.get('/stats/summary', async (req, res) => {
   const pool = req.app.locals.pool;
   try {
     const [total, byStatus, byTier, byCountry, recentDocs] = await Promise.all([
-      global.db.query('SELECT COUNT(*) FROM grower_profiles'),
-      global.db.query('SELECT compliance_status, COUNT(*) FROM grower_profiles GROUP BY compliance_status'),
-      global.db.query('SELECT risk_tier, COUNT(*) FROM grower_profiles GROUP BY risk_tier'),
-      global.db.query('SELECT country, COUNT(*) FROM grower_profiles GROUP BY country ORDER BY count DESC LIMIT 10'),
-      global.db.query('SELECT COUNT(*) FROM grower_documents WHERE status = $1', ['uploaded']),
+      pool.query('SELECT COUNT(*) FROM grower_profiles'),
+      pool.query('SELECT compliance_status, COUNT(*) FROM grower_profiles GROUP BY compliance_status'),
+      pool.query('SELECT risk_tier, COUNT(*) FROM grower_profiles GROUP BY risk_tier'),
+      pool.query('SELECT country, COUNT(*) FROM grower_profiles GROUP BY country ORDER BY count DESC LIMIT 10'),
+      pool.query('SELECT COUNT(*) FROM grower_documents WHERE status = $1', ['uploaded']),
     ]);
 
     res.json({

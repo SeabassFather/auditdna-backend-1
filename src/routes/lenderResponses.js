@@ -6,16 +6,17 @@
 // ============================================================================
 
 const express = require('express');
+const pool = require('../../db');
 const router = express.Router();
 
 // ---- Self-migrating schema ------------------------------------------------
 async function ensureSchema() {
-  if (!global.db) {
-    console.warn('[lenderResponses] global.db not available at startup, skipping migration');
+  if (!pool) {
+    console.warn('[lenderResponses] pool not available at startup, skipping migration');
     return;
   }
   try {
-    await global.db.query(`
+    await pool.query(`
       CREATE TABLE IF NOT EXISTS lender_responses (
         id SERIAL PRIMARY KEY,
         deal_id INTEGER NOT NULL,
@@ -42,9 +43,9 @@ async function ensureSchema() {
         notes TEXT
       );
     `);
-    await global.db.query(`CREATE INDEX IF NOT EXISTS idx_lender_responses_deal ON lender_responses(deal_id, lane);`);
-    await global.db.query(`CREATE INDEX IF NOT EXISTS idx_lender_responses_decision ON lender_responses(decision);`);
-    await global.db.query(`CREATE INDEX IF NOT EXISTS idx_lender_responses_received ON lender_responses(received_at DESC);`);
+    await pool.query(`CREATE INDEX IF NOT EXISTS idx_lender_responses_deal ON lender_responses(deal_id, lane);`);
+    await pool.query(`CREATE INDEX IF NOT EXISTS idx_lender_responses_decision ON lender_responses(decision);`);
+    await pool.query(`CREATE INDEX IF NOT EXISTS idx_lender_responses_received ON lender_responses(received_at DESC);`);
     console.log('[lenderResponses] schema OK');
   } catch (e) {
     console.error('[lenderResponses] schema error:', e.message);
@@ -81,7 +82,7 @@ router.post('/api/deals/:lane/:dealId/lender-responses', heavyJson, async (req, 
   }
 
   try {
-    const r = await global.db.query(
+    const r = await pool.query(
       `INSERT INTO lender_responses
          (deal_id, lane, partner_id, partner_name, response_type, decision,
           advance_rate, factor_rate, reserve_rate,
@@ -141,7 +142,7 @@ router.post('/api/deals/:lane/:dealId/lender-responses', heavyJson, async (req, 
 router.get('/api/deals/:lane/:dealId/lender-responses', async (req, res) => {
   const { lane, dealId } = req.params;
   try {
-    const r = await global.db.query(
+    const r = await pool.query(
       `SELECT * FROM lender_responses
        WHERE deal_id = $1 AND lane = $2
        ORDER BY received_at DESC`,
@@ -171,7 +172,7 @@ router.get('/api/lender-responses/inbox', async (req, res) => {
   const lim = Math.min(parseInt(limit || '100', 10), 500);
 
   try {
-    const r = await global.db.query(
+    const r = await pool.query(
       `SELECT id, deal_id, lane, partner_id, partner_name, response_type, decision,
               advance_rate, factor_rate, reserve_rate,
               interest_rate, term_months, loan_amount,
@@ -198,7 +199,7 @@ router.post('/api/deals/:lane/:dealId/lender-responses/:respId/accept', heavyJso
   const decidedBy = (req.body && req.body.decided_by) || 'saul';
 
   try {
-    const r = await global.db.query(
+    const r = await pool.query(
       `UPDATE lender_responses
        SET decision = 'accepted', decided_at = NOW(), decided_by = $4
        WHERE id = $1 AND deal_id = $2 AND lane = $3 AND decision = 'pending'
@@ -210,7 +211,7 @@ router.post('/api/deals/:lane/:dealId/lender-responses/:respId/accept', heavyJso
     }
 
     // Mark sibling pending responses as superseded (not rejected, just marked)
-    await global.db.query(
+    await pool.query(
       `UPDATE lender_responses
        SET decision = 'superseded', decided_at = NOW(), decided_by = $3
        WHERE deal_id = $1 AND lane = $2 AND id != $4 AND decision = 'pending'`,
@@ -247,7 +248,7 @@ router.post('/api/deals/:lane/:dealId/lender-responses/:respId/reject', heavyJso
   const reason = (req.body && req.body.reason) || null;
 
   try {
-    const r = await global.db.query(
+    const r = await pool.query(
       `UPDATE lender_responses
        SET decision = 'rejected', decided_at = NOW(), decided_by = $4,
            notes = COALESCE(notes, '') || CASE WHEN $5::text IS NULL THEN '' ELSE E'\nReject reason: ' || $5::text END
@@ -279,7 +280,7 @@ router.post('/api/deals/:lane/:dealId/lender-responses/:respId/reject', heavyJso
 router.delete('/api/deals/:lane/:dealId/lender-responses/:respId', async (req, res) => {
   const { lane, dealId, respId } = req.params;
   try {
-    const r = await global.db.query(
+    const r = await pool.query(
       `DELETE FROM lender_responses WHERE id = $1 AND deal_id = $2 AND lane = $3 RETURNING id`,
       [parseInt(respId, 10), parseInt(dealId, 10), lane]
     );
@@ -296,7 +297,7 @@ router.delete('/api/deals/:lane/:dealId/lender-responses/:respId', async (req, r
 // ============================================================================
 router.get('/api/lender-responses/stats', async (req, res) => {
   try {
-    const r = await global.db.query(
+    const r = await pool.query(
       `SELECT
          decision, lane, COUNT(*) as count,
          AVG(advance_rate) as avg_advance,

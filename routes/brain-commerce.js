@@ -19,8 +19,9 @@ const express   = require('express');
 const router    = express.Router();
 const nodemailer = require('nodemailer');
 const Anthropic  = require('@anthropic-ai/sdk');
+const pool = require('../db');
 
-const getDb = () => global.db || require('../db');
+const getDb = () => pool || require('../db');
 
 const getTransport = () => nodemailer.createTransport({
   host:   process.env.SMTP_HOST || 'smtp.gmail.com',

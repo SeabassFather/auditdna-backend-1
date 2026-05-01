@@ -6,7 +6,7 @@ const crypto = require('crypto');
 const uid = () => crypto.randomUUID();
 
 const bootstrap = async () => {
-  await global.db.query(`
+  await pool.query(`
     CREATE TABLE IF NOT EXISTS tenants (
       id VARCHAR(36) PRIMARY KEY DEFAULT gen_random_uuid()::text,
       name VARCHAR(255) NOT NULL,
@@ -22,7 +22,7 @@ bootstrap();
 
 router.get('/tenants', async (req, res) => {
   try {
-    const r = await global.db.query('SELECT * FROM tenants ORDER BY created_at DESC');
+    const r = await pool.query('SELECT * FROM tenants ORDER BY created_at DESC');
     res.json({ ok:true, tenants:r.rows });
   } catch(e) { res.status(500).json({ ok:false, error:e.message }); }
 });
@@ -30,7 +30,7 @@ router.get('/tenants', async (req, res) => {
 router.post('/tenants', async (req, res) => {
   try {
     const { name, plan } = req.body;
-    const r = await global.db.query(
+    const r = await pool.query(
       'INSERT INTO tenants (id, name, plan) VALUES ($1,$2,$3) RETURNING *',
       [uid(), name, plan||'starter']
     );
@@ -40,7 +40,7 @@ router.post('/tenants', async (req, res) => {
 
 router.get('/tenants/:id', async (req, res) => {
   try {
-    const r = await global.db.query('SELECT * FROM tenants WHERE id=$1', [req.params.id]);
+    const r = await pool.query('SELECT * FROM tenants WHERE id=$1', [req.params.id]);
     if (!r.rows.length) return res.status(404).json({ ok:false, error:'Not found' });
     res.json({ ok:true, tenant:r.rows[0] });
   } catch(e) { res.status(500).json({ ok:false, error:e.message }); }
@@ -49,21 +49,21 @@ router.get('/tenants/:id', async (req, res) => {
 router.put('/tenants/:id', async (req, res) => {
   try {
     const { name, plan, status } = req.body;
-    await global.db.query('UPDATE tenants SET name=$1,plan=$2,status=$3 WHERE id=$4', [name,plan,status,req.params.id]);
+    await pool.query('UPDATE tenants SET name=$1,plan=$2,status=$3 WHERE id=$4', [name,plan,status,req.params.id]);
     res.json({ ok:true, message:'Updated' });
   } catch(e) { res.status(500).json({ ok:false, error:e.message }); }
 });
 
 router.delete('/tenants/:id', async (req, res) => {
   try {
-    await global.db.query('DELETE FROM tenants WHERE id=$1', [req.params.id]);
+    await pool.query('DELETE FROM tenants WHERE id=$1', [req.params.id]);
     res.json({ ok:true, message:'Deleted' });
   } catch(e) { res.status(500).json({ ok:false, error:e.message }); }
 });
 
 router.get('/tenants/:id/users', async (req, res) => {
   try {
-    const r = await global.db.query('SELECT id,email,name,role,status FROM auth_users WHERE tenant_id=$1', [req.params.id]).catch(()=>({rows:[]}));
+    const r = await pool.query('SELECT id,email,name,role,status FROM auth_users WHERE tenant_id=$1', [req.params.id]).catch(()=>({rows:[]}));
     res.json({ ok:true, users:r.rows });
   } catch(e) { res.status(500).json({ ok:false, error:e.message }); }
 });
@@ -74,7 +74,7 @@ router.post('/tenants/:id/users', async (req, res) => {
 
 router.get('/tenants/:id/modules', async (req, res) => {
   try {
-    const r = await global.db.query('SELECT modules FROM tenants WHERE id=$1', [req.params.id]);
+    const r = await pool.query('SELECT modules FROM tenants WHERE id=$1', [req.params.id]);
     res.json({ ok:true, modules:r.rows[0]?.modules||[] });
   } catch(e) { res.status(500).json({ ok:false, error:e.message }); }
 });
@@ -82,10 +82,10 @@ router.get('/tenants/:id/modules', async (req, res) => {
 router.put('/tenants/:id/modules/:moduleName', async (req, res) => {
   try {
     const { enabled } = req.body;
-    const r = await global.db.query('SELECT modules FROM tenants WHERE id=$1', [req.params.id]);
+    const r = await pool.query('SELECT modules FROM tenants WHERE id=$1', [req.params.id]);
     const modules = r.rows[0]?.modules||[];
     const updated = enabled ? [...new Set([...modules, req.params.moduleName])] : modules.filter(m=>m!==req.params.moduleName);
-    await global.db.query('UPDATE tenants SET modules=$1 WHERE id=$2', [JSON.stringify(updated), req.params.id]);
+    await pool.query('UPDATE tenants SET modules=$1 WHERE id=$2', [JSON.stringify(updated), req.params.id]);
     res.json({ ok:true, modules:updated });
   } catch(e) { res.status(500).json({ ok:false, error:e.message }); }
 });

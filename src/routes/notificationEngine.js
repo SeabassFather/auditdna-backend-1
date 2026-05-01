@@ -6,13 +6,14 @@
 // ============================================================================
 
 const express = require('express');
+const pool = require('../../db');
 const router = express.Router();
 
 // ---- Schema ---------------------------------------------------------------
 async function ensureSchema() {
-  if (!global.db) return;
+  if (!pool) return;
   try {
-    await global.db.query(`
+    await pool.query(`
       CREATE TABLE IF NOT EXISTS notification_templates (
         id SERIAL PRIMARY KEY,
         event_type VARCHAR(80) NOT NULL,
@@ -25,9 +26,9 @@ async function ensureSchema() {
         updated_at TIMESTAMP DEFAULT NOW()
       );
     `);
-    await global.db.query(`CREATE INDEX IF NOT EXISTS idx_notif_templates_event ON notification_templates(event_type, active);`);
+    await pool.query(`CREATE INDEX IF NOT EXISTS idx_notif_templates_event ON notification_templates(event_type, active);`);
 
-    await global.db.query(`
+    await pool.query(`
       CREATE TABLE IF NOT EXISTS notification_subscriptions (
         id SERIAL PRIMARY KEY,
         recipient_name VARCHAR(200),
@@ -41,7 +42,7 @@ async function ensureSchema() {
       );
     `);
 
-    await global.db.query(`
+    await pool.query(`
       CREATE TABLE IF NOT EXISTS notification_log (
         id SERIAL PRIMARY KEY,
         event_type VARCHAR(80),
@@ -57,11 +58,11 @@ async function ensureSchema() {
         sent_at TIMESTAMP DEFAULT NOW()
       );
     `);
-    await global.db.query(`CREATE INDEX IF NOT EXISTS idx_notif_log_event ON notification_log(event_type, sent_at DESC);`);
-    await global.db.query(`CREATE INDEX IF NOT EXISTS idx_notif_log_status ON notification_log(status);`);
+    await pool.query(`CREATE INDEX IF NOT EXISTS idx_notif_log_event ON notification_log(event_type, sent_at DESC);`);
+    await pool.query(`CREATE INDEX IF NOT EXISTS idx_notif_log_status ON notification_log(status);`);
 
     // Seed default templates if none exist
-    const existing = await global.db.query(`SELECT COUNT(*)::int as c FROM notification_templates`);
+    const existing = await pool.query(`SELECT COUNT(*)::int as c FROM notification_templates`);
     if (existing.rows[0].c === 0) {
       await seedDefaultTemplates();
     }
@@ -174,7 +175,7 @@ Risk Center will recompute the DRS automatically.`
 
   for (const t of defaults) {
     try {
-      await global.db.query(
+      await pool.query(
         `INSERT INTO notification_templates (event_type, channel, subject, body_template) VALUES ($1, 'email', $2, $3)`,
         [t.event_type, t.subject, t.body]
       );
@@ -186,7 +187,7 @@ Risk Center will recompute the DRS automatically.`
   const saulPhone = process.env.SAUL_PHONE || '+18312513116';
   if (saulEmail) {
     try {
-      await global.db.query(
+      await pool.query(
         `INSERT INTO notification_subscriptions (recipient_name, email, phone, event_types, channels)
          VALUES ('Saul Garcia', $1, $2, 'ALL', 'email')`,
         [saulEmail, saulPhone]
@@ -268,9 +269,9 @@ async function sendSMS({ to, body }) {
 
 // ---- Match subscribers for an event ---------------------------------------
 async function findSubscribers(eventType, payload) {
-  if (!global.db) return [];
+  if (!pool) return [];
   try {
-    const r = await global.db.query(
+    const r = await pool.query(
       `SELECT * FROM notification_subscriptions WHERE active = true`
     );
     return r.rows.filter(s => {
@@ -289,9 +290,9 @@ async function findSubscribers(eventType, payload) {
 
 // ---- Find templates for an event ------------------------------------------
 async function findTemplates(eventType, lane) {
-  if (!global.db) return [];
+  if (!pool) return [];
   try {
-    const r = await global.db.query(
+    const r = await pool.query(
       `SELECT * FROM notification_templates
        WHERE event_type = $1 AND active = true
          AND (lane_filter IS NULL OR lane_filter = $2)`,
@@ -303,9 +304,9 @@ async function findTemplates(eventType, lane) {
 
 // ---- Log a notification ---------------------------------------------------
 async function logNotification(rec) {
-  if (!global.db) return;
+  if (!pool) return;
   try {
-    await global.db.query(
+    await pool.query(
       `INSERT INTO notification_log
          (event_type, template_id, subscription_id, channel, recipient, subject, body_preview, payload_json, status, error)
        VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)`,
@@ -384,7 +385,7 @@ const heavyJson = express.json({ limit: '1mb' });
 // Templates
 router.get('/api/notifications/templates', async (req, res) => {
   try {
-    const r = await global.db.query(`SELECT * FROM notification_templates ORDER BY event_type, channel`);
+    const r = await pool.query(`SELECT * FROM notification_templates ORDER BY event_type, channel`);
     res.json({ templates: r.rows });
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
@@ -393,7 +394,7 @@ router.post('/api/notifications/templates', heavyJson, async (req, res) => {
   const b = req.body || {};
   if (!b.event_type || !b.body_template) return res.status(400).json({ error: 'event_type and body_template required' });
   try {
-    const r = await global.db.query(
+    const r = await pool.query(
       `INSERT INTO notification_templates (event_type, channel, lane_filter, subject, body_template, active)
        VALUES ($1,$2,$3,$4,$5,$6) RETURNING id`,
       [b.event_type, b.channel || 'email', b.lane_filter || null, b.subject || null, b.body_template, b.active !== false]
@@ -412,7 +413,7 @@ router.put('/api/notifications/templates/:id', heavyJson, async (req, res) => {
   if (sets.length === 0) return res.json({ ok: true, no_changes: true });
   sets.push(`updated_at = NOW()`); params.push(id);
   try {
-    const r = await global.db.query(
+    const r = await pool.query(
       `UPDATE notification_templates SET ${sets.join(', ')} WHERE id = $${pidx} RETURNING id`,
       params
     );
@@ -423,7 +424,7 @@ router.put('/api/notifications/templates/:id', heavyJson, async (req, res) => {
 
 router.delete('/api/notifications/templates/:id', async (req, res) => {
   try {
-    await global.db.query(`DELETE FROM notification_templates WHERE id = $1`, [parseInt(req.params.id, 10)]);
+    await pool.query(`DELETE FROM notification_templates WHERE id = $1`, [parseInt(req.params.id, 10)]);
     res.json({ ok: true });
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
@@ -431,7 +432,7 @@ router.delete('/api/notifications/templates/:id', async (req, res) => {
 // Subscriptions
 router.get('/api/notifications/subscriptions', async (req, res) => {
   try {
-    const r = await global.db.query(`SELECT * FROM notification_subscriptions ORDER BY created_at DESC`);
+    const r = await pool.query(`SELECT * FROM notification_subscriptions ORDER BY created_at DESC`);
     res.json({ subscriptions: r.rows });
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
@@ -440,7 +441,7 @@ router.post('/api/notifications/subscriptions', heavyJson, async (req, res) => {
   const b = req.body || {};
   if (!b.email && !b.phone) return res.status(400).json({ error: 'email or phone required' });
   try {
-    const r = await global.db.query(
+    const r = await pool.query(
       `INSERT INTO notification_subscriptions (recipient_name, email, phone, event_types, lanes, channels, active)
        VALUES ($1,$2,$3,$4,$5,$6,$7) RETURNING id`,
       [
@@ -463,14 +464,14 @@ router.put('/api/notifications/subscriptions/:id', heavyJson, async (req, res) =
   if (sets.length === 0) return res.json({ ok: true });
   params.push(id);
   try {
-    await global.db.query(`UPDATE notification_subscriptions SET ${sets.join(', ')} WHERE id = $${pidx}`, params);
+    await pool.query(`UPDATE notification_subscriptions SET ${sets.join(', ')} WHERE id = $${pidx}`, params);
     res.json({ ok: true });
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
 router.delete('/api/notifications/subscriptions/:id', async (req, res) => {
   try {
-    await global.db.query(`DELETE FROM notification_subscriptions WHERE id = $1`, [parseInt(req.params.id, 10)]);
+    await pool.query(`DELETE FROM notification_subscriptions WHERE id = $1`, [parseInt(req.params.id, 10)]);
     res.json({ ok: true });
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
@@ -484,7 +485,7 @@ router.get('/api/notifications/log', async (req, res) => {
   const where = conditions.length ? `WHERE ${conditions.join(' AND ')}` : '';
   const lim = Math.min(parseInt(limit || '200', 10), 1000);
   try {
-    const r = await global.db.query(
+    const r = await pool.query(
       `SELECT id, event_type, template_id, channel, recipient, subject, body_preview, status, error, sent_at
        FROM notification_log ${where}
        ORDER BY sent_at DESC LIMIT ${lim}`,
@@ -497,7 +498,7 @@ router.get('/api/notifications/log', async (req, res) => {
 // Stats
 router.get('/api/notifications/stats', async (req, res) => {
   try {
-    const r = await global.db.query(`
+    const r = await pool.query(`
       SELECT
         COUNT(*)::int as total,
         SUM(CASE WHEN status='sent' THEN 1 ELSE 0 END)::int as sent,
@@ -506,7 +507,7 @@ router.get('/api/notifications/stats', async (req, res) => {
       FROM notification_log
       WHERE sent_at > NOW() - INTERVAL '30 days'
     `);
-    const byEvent = await global.db.query(`
+    const byEvent = await pool.query(`
       SELECT event_type, COUNT(*)::int as count
       FROM notification_log
       WHERE sent_at > NOW() - INTERVAL '30 days'

@@ -122,7 +122,7 @@ const CACHE_TTL_HOURS = 24;
 
 // â”€â”€â”€ cache table â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 async function ensureCacheTable() {
-  await global.db.query(`
+  await pool.query(`
     CREATE TABLE IF NOT EXISTS ag_intel_cache (
       cache_key  TEXT PRIMARY KEY,
       payload    JSONB NOT NULL,
@@ -133,7 +133,7 @@ async function ensureCacheTable() {
 
 async function getCached(key) {
   try {
-    const r = await global.db.query(
+    const r = await pool.query(
       `SELECT payload, fetched_at FROM ag_intel_cache WHERE cache_key = $1`, [key]
     );
     if (!r.rows.length) return null;
@@ -144,7 +144,7 @@ async function getCached(key) {
 
 async function setCached(key, payload) {
   try {
-    await global.db.query(`
+    await pool.query(`
       INSERT INTO ag_intel_cache (cache_key, payload, fetched_at)
       VALUES ($1, $2, NOW())
       ON CONFLICT (cache_key) DO UPDATE SET payload = $2, fetched_at = NOW()
@@ -284,7 +284,7 @@ router.get('/snapshot', async (req, res) => {
 router.delete('/cache', async (req, res) => {
   try {
     await ensureCacheTable();
-    const r = await global.db.query(`DELETE FROM ag_intel_cache WHERE fetched_at < NOW() - INTERVAL '${CACHE_TTL_HOURS} hours'`);
+    const r = await pool.query(`DELETE FROM ag_intel_cache WHERE fetched_at < NOW() - INTERVAL '${CACHE_TTL_HOURS} hours'`);
     res.json({ deleted: r.rowCount, message: 'Expired cache cleared' });
   } catch (e) { res.status(500).json({ error: e.message }); }
 });

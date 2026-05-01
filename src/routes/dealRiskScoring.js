@@ -6,18 +6,19 @@
 // ============================================================================
 
 const express = require('express');
+const pool = require('../../db');
 const router = express.Router();
 
 // ---- Self-migrating schema ------------------------------------------------
 async function ensureSchema() {
-  if (!global.db) return;
+  if (!pool) return;
   try {
     // Add borrower_id to financing_deals (idempotent, nullable)
-    await global.db.query(`
+    await pool.query(`
       ALTER TABLE financing_deals
       ADD COLUMN IF NOT EXISTS borrower_id INTEGER REFERENCES borrower_entities(id) ON DELETE SET NULL
     `);
-    await global.db.query(`CREATE INDEX IF NOT EXISTS idx_financing_deals_borrower ON financing_deals(borrower_id);`);
+    await pool.query(`CREATE INDEX IF NOT EXISTS idx_financing_deals_borrower ON financing_deals(borrower_id);`);
     console.log('[riskCenter] schema OK (borrower_id added to financing_deals)');
   } catch (e) {
     console.error('[riskCenter] schema error (non-fatal):', e.message);
@@ -56,7 +57,7 @@ const FACTOR_DEFS = [
 // ---- Compute score for one deal -------------------------------------------
 async function computeDealScore(lane, dealId) {
   // Fetch deal
-  const dealQ = await global.db.query(
+  const dealQ = await pool.query(
     `SELECT * FROM financing_deals WHERE id = $1`,
     [parseInt(dealId, 10)]
   );
@@ -66,10 +67,10 @@ async function computeDealScore(lane, dealId) {
   // Resolve borrower (by borrower_id, fallback to fuzzy match on grower_name)
   let borrower = null;
   if (deal.borrower_id) {
-    const bq = await global.db.query(`SELECT * FROM borrower_entities WHERE id = $1`, [deal.borrower_id]);
+    const bq = await pool.query(`SELECT * FROM borrower_entities WHERE id = $1`, [deal.borrower_id]);
     borrower = bq.rows[0] || null;
   } else if (deal.grower_name) {
-    const fuzzy = await global.db.query(
+    const fuzzy = await pool.query(
       `SELECT * FROM borrower_entities WHERE LOWER(legal_name) = LOWER($1) OR LOWER(dba) = LOWER($1) LIMIT 1`,
       [deal.grower_name]
     );
@@ -79,7 +80,7 @@ async function computeDealScore(lane, dealId) {
   // Documents count
   let docCount = 0;
   try {
-    const dq = await global.db.query(
+    const dq = await pool.query(
       `SELECT COUNT(*)::int as c FROM deal_documents WHERE deal_id = $1 AND lane = $2`,
       [parseInt(dealId, 10), lane]
     );
@@ -89,7 +90,7 @@ async function computeDealScore(lane, dealId) {
   // Lender responses count
   let respCount = 0;
   try {
-    const rq = await global.db.query(
+    const rq = await pool.query(
       `SELECT COUNT(*)::int as c FROM lender_responses WHERE deal_id = $1 AND lane = $2`,
       [parseInt(dealId, 10), lane]
     );
@@ -247,7 +248,7 @@ router.get('/api/risk/dashboard', async (req, res) => {
     const where = conditions.length ? `WHERE ${conditions.join(' AND ')}` : '';
 
     // Pull deals
-    const dealsQ = await global.db.query(
+    const dealsQ = await pool.query(
       `SELECT id, lane FROM financing_deals ${where} ORDER BY id DESC LIMIT ${lim}`,
       params
     );
@@ -291,10 +292,10 @@ router.post('/api/financing/deals/:dealId/link-borrower', express.json({ limit: 
 
   try {
     // Verify borrower exists
-    const bq = await global.db.query(`SELECT id, legal_name FROM borrower_entities WHERE id = $1`, [parseInt(borrowerId, 10)]);
+    const bq = await pool.query(`SELECT id, legal_name FROM borrower_entities WHERE id = $1`, [parseInt(borrowerId, 10)]);
     if (bq.rows.length === 0) return res.status(404).json({ error: 'borrower not found' });
 
-    const r = await global.db.query(
+    const r = await pool.query(
       `UPDATE financing_deals SET borrower_id = $1, updated_at = NOW() WHERE id = $2 RETURNING id, lane`,
       [parseInt(borrowerId, 10), dealId]
     );

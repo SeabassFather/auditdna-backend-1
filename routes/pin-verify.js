@@ -14,13 +14,14 @@ const express = require('express');
 const router = express.Router();
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
+const pool = require('../db');
 
 const JWT_SECRET = process.env.JWT_SECRET || 'auditdna-grower-jwt-dev';
 const PIN_TOKEN_TTL = '12h';
 
 function getPool(req) {
   if (req.app && req.app.locals && req.app.locals.pool) return req.app.locals.pool;
-  if (global.db) return global.db;
+  if (pool) return pool;
   throw new Error('database pool not available');
 }
 

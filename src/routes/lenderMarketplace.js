@@ -5,14 +5,15 @@
 // ============================================================================
 
 const express = require('express');
+const pool = require('../../db');
 const router = express.Router();
 const heavyJson = express.json({ limit: '1mb' });
 
 // ---- Schema ---------------------------------------------------------------
 async function ensureSchema() {
-  if (!global.db) return;
+  if (!pool) return;
   try {
-    await global.db.query(`
+    await pool.query(`
       CREATE TABLE IF NOT EXISTS lender_partners (
         id SERIAL PRIMARY KEY,
         name VARCHAR(200) NOT NULL,
@@ -39,9 +40,9 @@ async function ensureSchema() {
         updated_at TIMESTAMP DEFAULT NOW()
       );
     `);
-    await global.db.query(`CREATE INDEX IF NOT EXISTS idx_lender_partners_active ON lender_partners(active);`);
+    await pool.query(`CREATE INDEX IF NOT EXISTS idx_lender_partners_active ON lender_partners(active);`);
 
-    await global.db.query(`
+    await pool.query(`
       CREATE TABLE IF NOT EXISTS loi_broadcasts (
         id SERIAL PRIMARY KEY,
         deal_id INTEGER NOT NULL,
@@ -54,10 +55,10 @@ async function ensureSchema() {
         notes TEXT
       );
     `);
-    await global.db.query(`CREATE INDEX IF NOT EXISTS idx_broadcasts_deal ON loi_broadcasts(deal_id, lane, broadcast_at DESC);`);
+    await pool.query(`CREATE INDEX IF NOT EXISTS idx_broadcasts_deal ON loi_broadcasts(deal_id, lane, broadcast_at DESC);`);
 
     // Seed common partners if empty (factoring + PO + commercial)
-    const existing = await global.db.query(`SELECT COUNT(*)::int as c FROM lender_partners`);
+    const existing = await pool.query(`SELECT COUNT(*)::int as c FROM lender_partners`);
     if (existing.rows[0].c === 0) {
       await seedDefaultPartners();
     }
@@ -98,7 +99,7 @@ async function seedDefaultPartners() {
 
   for (const p of seeds) {
     try {
-      await global.db.query(
+      await pool.query(
         `INSERT INTO lender_partners
            (name, lanes_supported, min_amount, max_amount,
             advance_rate_typical, factor_rate_typical, interest_rate_typical, turnaround_days,
@@ -201,7 +202,7 @@ router.get('/api/marketplace/partners', async (req, res) => {
   }
   const where = conditions.length ? `WHERE ${conditions.join(' AND ')}` : '';
   try {
-    const r = await global.db.query(
+    const r = await pool.query(
       `SELECT * FROM lender_partners ${where} ORDER BY name ASC`, params
     );
     res.json({ partners: r.rows, count: r.rows.length });
@@ -211,7 +212,7 @@ router.get('/api/marketplace/partners', async (req, res) => {
 // GET single partner
 router.get('/api/marketplace/partners/:id', async (req, res) => {
   try {
-    const r = await global.db.query(`SELECT * FROM lender_partners WHERE id = $1`, [parseInt(req.params.id, 10)]);
+    const r = await pool.query(`SELECT * FROM lender_partners WHERE id = $1`, [parseInt(req.params.id, 10)]);
     if (r.rows.length === 0) return res.status(404).json({ error: 'not found' });
     res.json({ partner: r.rows[0] });
   } catch (e) { res.status(500).json({ error: e.message }); }
@@ -222,7 +223,7 @@ router.post('/api/marketplace/partners', heavyJson, async (req, res) => {
   const b = req.body || {};
   if (!b.name) return res.status(400).json({ error: 'name required' });
   try {
-    const r = await global.db.query(
+    const r = await pool.query(
       `INSERT INTO lender_partners
          (name, contact_name, contact_email, contact_phone,
           lanes_supported, min_amount, max_amount,
@@ -258,7 +259,7 @@ router.put('/api/marketplace/partners/:id', heavyJson, async (req, res) => {
   if (sets.length === 0) return res.json({ ok: true, no_changes: true });
   sets.push(`updated_at = NOW()`); params.push(id);
   try {
-    await global.db.query(`UPDATE lender_partners SET ${sets.join(', ')} WHERE id = $${pidx}`, params);
+    await pool.query(`UPDATE lender_partners SET ${sets.join(', ')} WHERE id = $${pidx}`, params);
     res.json({ ok: true });
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
@@ -266,7 +267,7 @@ router.put('/api/marketplace/partners/:id', heavyJson, async (req, res) => {
 // DELETE
 router.delete('/api/marketplace/partners/:id', async (req, res) => {
   try {
-    await global.db.query(`DELETE FROM lender_partners WHERE id = $1`, [parseInt(req.params.id, 10)]);
+    await pool.query(`DELETE FROM lender_partners WHERE id = $1`, [parseInt(req.params.id, 10)]);
     res.json({ ok: true });
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
@@ -275,11 +276,11 @@ router.delete('/api/marketplace/partners/:id', async (req, res) => {
 router.get('/api/marketplace/match/:lane/:dealId', async (req, res) => {
   const { lane, dealId } = req.params;
   try {
-    const dq = await global.db.query(`SELECT * FROM financing_deals WHERE id = $1`, [parseInt(dealId, 10)]);
+    const dq = await pool.query(`SELECT * FROM financing_deals WHERE id = $1`, [parseInt(dealId, 10)]);
     if (dq.rows.length === 0) return res.status(404).json({ error: 'deal not found' });
     const deal = { ...dq.rows[0], lane };
 
-    const pq = await global.db.query(`SELECT * FROM lender_partners WHERE active = true`);
+    const pq = await pool.query(`SELECT * FROM lender_partners WHERE active = true`);
     const ranked = pq.rows.map(p => {
       const scored = scorePartner(p, deal);
       return {
@@ -310,14 +311,14 @@ router.post('/api/marketplace/broadcast', heavyJson, async (req, res) => {
   }
   try {
     // Record broadcast
-    const bcast = await global.db.query(
+    const bcast = await pool.query(
       `INSERT INTO loi_broadcasts (deal_id, lane, partner_ids, partner_count, broadcast_message, broadcast_by)
        VALUES ($1,$2,$3,$4,$5,$6) RETURNING id, broadcast_at`,
       [parseInt(deal_id, 10), lane, partner_ids, partner_ids.length, message || null, broadcast_by || 'saul']
     );
 
     // Get partner details for each
-    const pq = await global.db.query(
+    const pq = await pool.query(
       `SELECT id, name, contact_email FROM lender_partners WHERE id = ANY($1::int[])`,
       [partner_ids]
     );
@@ -326,7 +327,7 @@ router.post('/api/marketplace/broadcast', heavyJson, async (req, res) => {
     let stubsCreated = 0;
     for (const p of pq.rows) {
       try {
-        await global.db.query(
+        await pool.query(
           `INSERT INTO lender_responses (deal_id, lane, partner_id, partner_name, response_type, decision, notes)
            VALUES ($1, $2, $3, $4, 'loi_sent', 'pending', $5)`,
           [parseInt(deal_id, 10), lane, p.id, p.name, `LOI broadcast - awaiting response`]
@@ -374,7 +375,7 @@ router.get('/api/marketplace/broadcasts', async (req, res) => {
   const where = conditions.length ? `WHERE ${conditions.join(' AND ')}` : '';
   const lim = Math.min(parseInt(limit || '100', 10), 500);
   try {
-    const r = await global.db.query(
+    const r = await pool.query(
       `SELECT * FROM loi_broadcasts ${where} ORDER BY broadcast_at DESC LIMIT ${lim}`, params
     );
     res.json({ broadcasts: r.rows });
@@ -384,9 +385,9 @@ router.get('/api/marketplace/broadcasts', async (req, res) => {
 // Stats
 router.get('/api/marketplace/stats', async (req, res) => {
   try {
-    const partners = await global.db.query(`SELECT COUNT(*)::int as total, SUM(CASE WHEN active THEN 1 ELSE 0 END)::int as active FROM lender_partners`);
-    const broadcasts = await global.db.query(`SELECT COUNT(*)::int as total, SUM(partner_count)::int as total_lois FROM loi_broadcasts WHERE broadcast_at > NOW() - INTERVAL '30 days'`);
-    const byLane = await global.db.query(`
+    const partners = await pool.query(`SELECT COUNT(*)::int as total, SUM(CASE WHEN active THEN 1 ELSE 0 END)::int as active FROM lender_partners`);
+    const broadcasts = await pool.query(`SELECT COUNT(*)::int as total, SUM(partner_count)::int as total_lois FROM loi_broadcasts WHERE broadcast_at > NOW() - INTERVAL '30 days'`);
+    const byLane = await pool.query(`
       SELECT lanes_supported, COUNT(*)::int as count
       FROM lender_partners WHERE active = true
       GROUP BY lanes_supported ORDER BY count DESC

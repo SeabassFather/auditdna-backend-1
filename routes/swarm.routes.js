@@ -15,6 +15,7 @@
 // =============================================================================
 
 const express = require('express');
+const pool = require('../db');
 const router = express.Router();
 
 const QUERY_TIMEOUT_MS = 4000;
@@ -45,7 +46,7 @@ function safeQuery(pool, sql, params = [], timeoutMs = QUERY_TIMEOUT_MS) {
 }
 
 function getPool(req) {
-  return req.app.get('pool') || global.pool || global.db || null;
+  return req.app.get('pool') || global.pool || pool || null;
 }
 
 function getCoordinator() {

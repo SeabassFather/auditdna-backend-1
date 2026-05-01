@@ -13,8 +13,9 @@
 
 const Anthropic = require('@anthropic-ai/sdk');
 const { DIEGO_SYSTEM, MODELS, TOKEN_CAPS } = require('./agent-prompts');
+const pool = require('../db');
 
-const getDb = () => global.db;
+const getDb = () => pool;
 
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 

@@ -12,7 +12,7 @@
 //   express, multer, jsonwebtoken, pg
 //
 // DB ACCESS:
-//   Uses global.db (set in server.js). Never instantiates a new Pool.
+//   Uses pool (set in server.js). Never instantiates a new Pool.
 //
 // FILE STORAGE:
 //   /uploads/compliance/   - cert + document files
@@ -25,6 +25,7 @@ const multer  = require('multer');
 const path    = require('path');
 const fs      = require('fs');
 const jwt     = require('jsonwebtoken');
+const pool = require('../db');
 
 const router = express.Router();
 
@@ -106,11 +107,11 @@ const uploadField = multer({
 });
 
 // ================================================================================
-// DB ACCESS - global.db only, never localhost Pool
+// DB ACCESS - pool only, never localhost Pool
 // ================================================================================
 function getDb() {
-  if (global.db && typeof global.db.query === 'function') return global.db;
-  console.error('[ComplianceCenter] global.db not initialized. Check server.js bootstrap.');
+  if (pool && typeof pool.query === 'function') return pool;
+  console.error('[ComplianceCenter] pool not initialized. Check server.js bootstrap.');
   return null;
 }
 

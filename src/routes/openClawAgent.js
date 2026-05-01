@@ -8,15 +8,16 @@
 // ============================================================================
 
 const express = require('express');
+const pool = require('../../db');
 const router = express.Router();
 
 // ---------------------------------------------------------------------------
 // SCHEMA - ensure tables exist (idempotent, runs once at boot)
 // ---------------------------------------------------------------------------
 async function ensureSchema() {
-  if (!global.db || typeof global.db.query !== "function") { console.warn("[openclaw] global.db not ready, skipping schema init"); return; }
+  if (!pool || typeof pool.query !== "function") { console.warn("[openclaw] pool not ready, skipping schema init"); return; }
   // openclaw_actions: every action OpenClaw should/did take
-  await global.db.query(`
+  await pool.query(`
     CREATE TABLE IF NOT EXISTS openclaw_actions (
       id SERIAL PRIMARY KEY,
       action_type TEXT NOT NULL,
@@ -44,7 +45,7 @@ async function ensureSchema() {
   `);
 
   // openclaw_heartbeats: gateway online/offline tracking
-  await global.db.query(`
+  await pool.query(`
     CREATE TABLE IF NOT EXISTS openclaw_heartbeats (
       id SERIAL PRIMARY KEY,
       gateway_id TEXT NOT NULL DEFAULT 'wsl2-primary',
@@ -58,7 +59,7 @@ async function ensureSchema() {
   `);
 
   // tree_bus_subscriptions: which modules listen to which event types
-  await global.db.query(`
+  await pool.query(`
     CREATE TABLE IF NOT EXISTS tree_bus_subscriptions (
       id SERIAL PRIMARY KEY,
       subscriber TEXT NOT NULL,
@@ -71,7 +72,7 @@ async function ensureSchema() {
   `);
 
   // niner_miners_registry: SI agents in the network
-  await global.db.query(`
+  await pool.query(`
     CREATE TABLE IF NOT EXISTS niner_miners_registry (
       id SERIAL PRIMARY KEY,
       agent_name TEXT NOT NULL UNIQUE,
@@ -84,7 +85,7 @@ async function ensureSchema() {
   `);
 
   // Seed default subscriptions if empty
-  const { rows: subCheck } = await global.db.query('SELECT COUNT(*) as c FROM tree_bus_subscriptions');
+  const { rows: subCheck } = await pool.query('SELECT COUNT(*) as c FROM tree_bus_subscriptions');
   if (parseInt(subCheck[0].c) === 0) {
     const defaultSubs = [
       ['openclaw', 'PRODUCTION_DECLARED', 'queue_grower_outreach'],
@@ -104,7 +105,7 @@ async function ensureSchema() {
       ['command_sphere', '*', 'broadcast_to_dashboard'],
     ];
     for (const [sub, evt, handler] of defaultSubs) {
-      await global.db.query(
+      await pool.query(
         'INSERT INTO tree_bus_subscriptions (subscriber, event_type, handler) VALUES ($1, $2, $3) ON CONFLICT DO NOTHING',
         [sub, evt, handler]
       );
@@ -112,7 +113,7 @@ async function ensureSchema() {
   }
 
   // Seed niner miners registry if empty
-  const { rows: nmCheck } = await global.db.query('SELECT COUNT(*) as c FROM niner_miners_registry');
+  const { rows: nmCheck } = await pool.query('SELECT COUNT(*) as c FROM niner_miners_registry');
   if (parseInt(nmCheck[0].c) === 0) {
     const miners = [
       ['Yield Analyzer', 'production_intelligence', '["yield_forecast","weather_impact","price_projection"]'],
@@ -126,7 +127,7 @@ async function ensureSchema() {
       ['Recovery Sentinel', 'financial_recovery', '["delinquency_detection","escrow_check","aging_alert"]'],
     ];
     for (const [name, role, caps] of miners) {
-      await global.db.query(
+      await pool.query(
         'INSERT INTO niner_miners_registry (agent_name, agent_role, capabilities) VALUES ($1, $2, $3::jsonb) ON CONFLICT DO NOTHING',
         [name, role, caps]
       );
@@ -149,7 +150,7 @@ async function routeTreeEvent(pool, brainEvent) {
   if (!evt) return;
 
   // Find all subscribers (specific or wildcard)
-  const { rows: subs } = await global.db.query(
+  const { rows: subs } = await pool.query(
     `SELECT subscriber, handler FROM tree_bus_subscriptions
      WHERE active = true AND (event_type = $1 OR event_type = '*')`,
     [evt]
@@ -159,7 +160,7 @@ async function routeTreeEvent(pool, brainEvent) {
     try {
       if (sub.subscriber === 'openclaw') {
         // Queue an action for OpenClaw to consider (status = pending until operator approves)
-        await global.db.query(
+        await pool.query(
           `INSERT INTO openclaw_actions
            (action_type, payload, status, source, source_event_id, brain_event_id, lane, deal_id, grower_id, requested_by)
            VALUES ($1, $2, 'pending', 'brain_event', $3, $3, $4, $5, $6, 'tree_bus_router')`,
@@ -176,7 +177,7 @@ async function routeTreeEvent(pool, brainEvent) {
       // niner_miners + marketing_engine + command_sphere are tracked the same way
       // but with a specialized action_type prefix so each subsystem can poll its own slice
       else {
-        await global.db.query(
+        await pool.query(
           `INSERT INTO openclaw_actions
            (action_type, payload, status, source, source_event_id, brain_event_id, lane, deal_id, requested_by)
            VALUES ($1, $2, 'pending', $3, $4, $4, $5, $6, 'tree_bus_router')`,
@@ -231,16 +232,16 @@ module.exports = function (pool) {
   // GET /api/openclaw/status - gateway health + queue depth
   router.get('/status', async (req, res) => {
     try {
-      const { rows: hb } = await global.db.query(
+      const { rows: hb } = await pool.query(
         `SELECT * FROM openclaw_heartbeats ORDER BY heartbeat_at DESC LIMIT 1`
       );
-      const { rows: pending } = await global.db.query(
+      const { rows: pending } = await pool.query(
         `SELECT COUNT(*) as c FROM openclaw_actions WHERE status = 'pending'`
       );
-      const { rows: approved } = await global.db.query(
+      const { rows: approved } = await pool.query(
         `SELECT COUNT(*) as c FROM openclaw_actions WHERE status = 'approved'`
       );
-      const { rows: today } = await global.db.query(
+      const { rows: today } = await pool.query(
         `SELECT COUNT(*) as c FROM openclaw_actions WHERE created_at > NOW() - INTERVAL '24 hours'`
       );
       const last = hb[0];
@@ -268,7 +269,7 @@ module.exports = function (pool) {
       const params = [];
       if (status) { params.push(status); q += ` WHERE status = $${params.length}`; }
       q += ' ORDER BY created_at DESC LIMIT ' + limit;
-      const { rows } = await global.db.query(q, params);
+      const { rows } = await pool.query(q, params);
       res.json({ ok: true, actions: rows });
     } catch (e) {
       res.status(500).json({ ok: false, error: e.message });
@@ -278,7 +279,7 @@ module.exports = function (pool) {
   // GET /api/openclaw/actions/pending
   router.get('/actions/pending', async (req, res) => {
     try {
-      const { rows } = await global.db.query(
+      const { rows } = await pool.query(
         `SELECT * FROM openclaw_actions WHERE status = 'pending' ORDER BY created_at ASC LIMIT 100`
       );
       res.json({ ok: true, pending: rows });
@@ -291,7 +292,7 @@ module.exports = function (pool) {
   router.get('/actions/queue', async (req, res) => {
     const limit = Math.min(parseInt(req.query.limit) || 10, 50);
     try {
-      const { rows } = await global.db.query(
+      const { rows } = await pool.query(
         `SELECT * FROM openclaw_actions
          WHERE status = 'approved' AND executed_at IS NULL
          ORDER BY approved_at ASC LIMIT $1`,
@@ -308,7 +309,7 @@ module.exports = function (pool) {
     const { action_type, payload, lane, deal_id, grower_id, requested_by } = req.body;
     if (!action_type) return res.status(400).json({ ok: false, error: 'action_type required' });
     try {
-      const { rows } = await global.db.query(
+      const { rows } = await pool.query(
         `INSERT INTO openclaw_actions
          (action_type, payload, status, source, lane, deal_id, grower_id, requested_by)
          VALUES ($1, $2, 'pending', 'dashboard', $3, $4, $5, $6)
@@ -326,7 +327,7 @@ module.exports = function (pool) {
     const { id } = req.params;
     const approved_by = (req.body && req.body.approved_by) || 'operator';
     try {
-      const { rows } = await global.db.query(
+      const { rows } = await pool.query(
         `UPDATE openclaw_actions
          SET status = 'approved', approved_by = $1, approved_at = NOW(), updated_at = NOW()
          WHERE id = $2 AND status = 'pending'
@@ -344,7 +345,7 @@ module.exports = function (pool) {
   router.post('/actions/:id/skip', async (req, res) => {
     const { id } = req.params;
     try {
-      const { rows } = await global.db.query(
+      const { rows } = await pool.query(
         `UPDATE openclaw_actions
          SET status = 'skipped', updated_at = NOW()
          WHERE id = $1 AND status = 'pending'
@@ -364,7 +365,7 @@ module.exports = function (pool) {
     const { result, error_message } = req.body || {};
     const status = error_message ? 'failed' : 'executed';
     try {
-      const { rows } = await global.db.query(
+      const { rows } = await pool.query(
         `UPDATE openclaw_actions
          SET status = $1, result = $2::jsonb, error_message = $3, executed_at = NOW(), updated_at = NOW()
          WHERE id = $4
@@ -381,10 +382,10 @@ module.exports = function (pool) {
   router.post('/heartbeat', async (req, res) => {
     const { gateway_id, whatsapp_connected, last_action_id } = req.body || {};
     try {
-      const { rows: pending } = await global.db.query(
+      const { rows: pending } = await pool.query(
         `SELECT COUNT(*) as c FROM openclaw_actions WHERE status = 'approved' AND executed_at IS NULL`
       );
-      await global.db.query(
+      await pool.query(
         `INSERT INTO openclaw_heartbeats
          (gateway_id, status, last_action_id, whatsapp_connected, pending_count)
          VALUES ($1, 'online', $2, $3, $4)`,
@@ -399,7 +400,7 @@ module.exports = function (pool) {
   // GET /api/openclaw/niner-miners - registry of all SI agents
   router.get('/niner-miners', async (req, res) => {
     try {
-      const { rows } = await global.db.query(
+      const { rows } = await pool.query(
         `SELECT * FROM niner_miners_registry ORDER BY agent_name ASC`
       );
       res.json({ ok: true, miners: rows });
@@ -411,12 +412,12 @@ module.exports = function (pool) {
   // GET /api/openclaw/tree-bus - subscriptions map (the cohesive nervous system)
   router.get('/tree-bus', async (req, res) => {
     try {
-      const { rows: subs } = await global.db.query(
+      const { rows: subs } = await pool.query(
         `SELECT subscriber, event_type, handler, active
          FROM tree_bus_subscriptions
          ORDER BY subscriber, event_type`
       );
-      const { rows: stats } = await global.db.query(
+      const { rows: stats } = await pool.query(
         `SELECT source, COUNT(*) as count
          FROM openclaw_actions
          WHERE created_at > NOW() - INTERVAL '24 hours'

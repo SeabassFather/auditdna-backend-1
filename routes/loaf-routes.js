@@ -2,6 +2,7 @@
 const express  = require('express');
 const router   = express.Router();
 const nodemailer = require('nodemailer');
+const pool = require('../db');
 
 let intelligence, dataEngine;
 try { intelligence = require('../services/loaf-intelligence'); console.log('[loaf-routes] intelligence loaded'); }
@@ -9,7 +10,7 @@ catch (e) { console.warn('[loaf-routes] intelligence not found:', e.message); in
 try { dataEngine = require('../services/loaf-data-engine'); console.log('[loaf-routes] data engine loaded'); }
 catch (e) { console.warn('[loaf-routes] data engine not found:', e.message); dataEngine = { saveSubmission: async()=>null, updateDailyAnalytics: async()=>{}, ensureDataTables: async()=>{}, generateUSDAReport: async()=>({error:'not loaded'}), generateFDAReport: async()=>({error:'not loaded'}), generateSustainabilityReport: async()=>({error:'not loaded'}), generateCorridorIntelligence: async()=>({error:'not loaded'}) }; }
 
-const getDb = () => global.db || require('../db');
+const getDb = () => pool || require('../db');
 const getTransport = () => nodemailer.createTransport({ host: process.env.SMTP_HOST||'smtp.gmail.com', port: parseInt(process.env.SMTP_PORT||'587'), secure:false, auth:{ user:process.env.SMTP_USER, pass:process.env.SMTP_PASS } });
 const FROM = `"MexaUSA Food Group â€” LOAF" <${process.env.SMTP_USER||'sgarcia1911@gmail.com'}>`;
 const ADMIN_EMAILS = ['saul@mexausafg.com','sgarcia1911@gmail.com','palt@mfginc.com'];

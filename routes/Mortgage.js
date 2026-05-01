@@ -27,7 +27,7 @@ const brainLog = (event, data) => {
 router.post('/pre-approval', async (req, res) => {
   try {
     const d = req.body;
-    await global.db.query(
+    await pool.query(
       `INSERT INTO mortgage_applications (type, name, email, phone, data, status, created_at)
        VALUES ($1,$2,$3,$4,$5,'pending',NOW())
        ON CONFLICT DO NOTHING`,
@@ -45,7 +45,7 @@ router.post('/pre-approval', async (req, res) => {
 router.post('/mexico-application', async (req, res) => {
   try {
     const d = req.body;
-    await global.db.query(
+    await pool.query(
       `INSERT INTO mortgage_applications (type, name, email, phone, data, status, created_at)
        VALUES ($1,$2,$3,$4,$5,'pending',NOW())
        ON CONFLICT DO NOTHING`,
@@ -102,7 +102,7 @@ router.post('/contact', async (req, res) => {
 // â”€â”€ GET /api/mortgage/stats (Admin) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 router.get('/stats', async (req, res) => {
   try {
-    const result = await global.db.query(
+    const result = await pool.query(
       `SELECT
          COUNT(*) FILTER (WHERE type='pre-approval')      AS pre_approvals,
          COUNT(*) FILTER (WHERE type='mexico-application') AS mexico_apps,

@@ -5,14 +5,15 @@
 // â•šâ•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
 const express = require('express');
+const pool = require('../db');
 const router = express.Router();
-// Prefer ../db/connection, fall back to global.db (set in server.js) if it returns undefined.
+// Prefer ../db/connection, fall back to pool (set in server.js) if it returns undefined.
 let _dbImport;
 try { _dbImport = require('../db/connection'); } catch (e) { _dbImport = null; }
 const db = {
   query: (...args) => {
     const pool = (_dbImport && typeof _dbImport.query === 'function') ? _dbImport
-               : (global.db && typeof global.db.query === 'function') ? global.db
+               : (pool && typeof pool.query === 'function') ? pool
                : null;
     if (!pool) throw new Error('[CRM] No DB pool available');
     return pool.query(...args);

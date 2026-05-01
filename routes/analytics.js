@@ -8,9 +8,10 @@
 // =============================================================================
 
 const express = require('express');
+const pool = require('../db');
 const router = express.Router();
 
-const db = () => global.db || null;
+const db = () => pool || null;
 
 router.get('/dashboard', async (req, res) => {
   const pool = db();

@@ -16,9 +16,10 @@
 // =============================================================================
 
 const express = require('express');
+const pool = require('../db');
 const router = express.Router();
 
-const getDb = () => global.db;
+const getDb = () => pool;
 
 // Lightweight auth gate -- presence of bearer token. Replace with full JWT verify when you wire that.
 function requireAuth(req, res, next) {

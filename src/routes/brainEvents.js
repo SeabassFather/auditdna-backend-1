@@ -7,15 +7,16 @@
 // ============================================================================
 
 const express = require('express');
+const pool = require('../../db');
 const router = express.Router();
 
 const heavyJson = express.json({ limit: '2mb' });
 
 // ---- Schema ---------------------------------------------------------------
 async function ensureSchema() {
-  if (!global.db) return;
+  if (!pool) return;
   try {
-    await global.db.query(`
+    await pool.query(`
       CREATE TABLE IF NOT EXISTS brain_event_log (
         id SERIAL PRIMARY KEY,
         event_type VARCHAR(80) NOT NULL,
@@ -26,10 +27,10 @@ async function ensureSchema() {
         emitted_at TIMESTAMP DEFAULT NOW()
       );
     `);
-    await global.db.query(`CREATE INDEX IF NOT EXISTS idx_brain_log_type ON brain_event_log(event_type, emitted_at DESC);`);
-    await global.db.query(`CREATE INDEX IF NOT EXISTS idx_brain_log_recent ON brain_event_log(emitted_at DESC);`);
+    await pool.query(`CREATE INDEX IF NOT EXISTS idx_brain_log_type ON brain_event_log(event_type, emitted_at DESC);`);
+    await pool.query(`CREATE INDEX IF NOT EXISTS idx_brain_log_recent ON brain_event_log(emitted_at DESC);`);
 
-    await global.db.query(`
+    await pool.query(`
       CREATE TABLE IF NOT EXISTS production_declarations (
         id SERIAL PRIMARY KEY,
         grower_id INTEGER,
@@ -56,8 +57,8 @@ async function ensureSchema() {
         updated_at TIMESTAMP DEFAULT NOW()
       );
     `);
-    await global.db.query(`CREATE INDEX IF NOT EXISTS idx_prod_decl_grower ON production_declarations(grower_id);`);
-    await global.db.query(`CREATE INDEX IF NOT EXISTS idx_prod_decl_year ON production_declarations(year, commodity);`);
+    await pool.query(`CREATE INDEX IF NOT EXISTS idx_prod_decl_grower ON production_declarations(grower_id);`);
+    await pool.query(`CREATE INDEX IF NOT EXISTS idx_prod_decl_year ON production_declarations(year, commodity);`);
 
     console.log('[brainEvents] schema OK');
   } catch (e) {
@@ -75,9 +76,9 @@ function installBrainLogHook() {
     try { if (typeof original === 'function') original(eventType, payload); } catch (e) {}
     setImmediate(async () => {
       try {
-        if (!global.db || !eventType) return;
+        if (!pool || !eventType) return;
         const p = payload || {};
-        await global.db.query(
+        await pool.query(
           `INSERT INTO brain_event_log (event_type, payload, actor, deal_id, lane)
            VALUES ($1, $2, $3, $4, $5)`,
           [eventType, JSON.stringify(p), p.actor || p.created_by || p.uploaded_by || 'system', p.deal_id || null, p.lane || null]
@@ -103,7 +104,7 @@ router.get('/api/brain/events', async (req, res) => {
   const where = conditions.length ? `WHERE ${conditions.join(' AND ')}` : '';
   const lim = Math.min(parseInt(limit || '50', 10), 500);
   try {
-    const r = await global.db.query(
+    const r = await pool.query(
       `SELECT id, event_type, payload, actor, deal_id, lane, emitted_at
        FROM brain_event_log ${where}
        ORDER BY emitted_at DESC LIMIT ${lim}`,
@@ -118,17 +119,17 @@ router.get('/api/brain/events', async (req, res) => {
 // /api/brain/events/stats - live counts for Omega dashboard
 router.get('/api/brain/events/stats', async (req, res) => {
   try {
-    const total = await global.db.query(
+    const total = await pool.query(
       `SELECT COUNT(*)::int as c FROM brain_event_log WHERE emitted_at > NOW() - INTERVAL '24 hours'`
     );
-    const byType = await global.db.query(`
+    const byType = await pool.query(`
       SELECT event_type, COUNT(*)::int as count
       FROM brain_event_log
       WHERE emitted_at > NOW() - INTERVAL '24 hours'
       GROUP BY event_type
       ORDER BY count DESC LIMIT 20
     `);
-    const byHour = await global.db.query(`
+    const byHour = await pool.query(`
       SELECT date_trunc('hour', emitted_at) as hour, COUNT(*)::int as count
       FROM brain_event_log
       WHERE emitted_at > NOW() - INTERVAL '24 hours'
@@ -171,7 +172,7 @@ router.get('/api/grower/production-declarations', async (req, res) => {
   const where = conditions.length ? `WHERE ${conditions.join(' AND ')}` : '';
   const lim = Math.min(parseInt(limit || '200', 10), 1000);
   try {
-    const r = await global.db.query(
+    const r = await pool.query(
       `SELECT * FROM production_declarations ${where}
        ORDER BY submitted_at DESC LIMIT ${lim}`,
       params
@@ -189,7 +190,7 @@ router.post('/api/grower/production-declarations', heavyJson, async (req, res) =
       ? Number(b.acres_planted) * Number(b.expected_yield_per_acre)
       : (b.expected_total || null);
 
-    const r = await global.db.query(
+    const r = await pool.query(
       `INSERT INTO production_declarations
          (grower_id, grower_name, commodity, variety, season, year,
           acres_planted, acres_harvested, expected_yield_per_acre, unit, expected_total,
@@ -246,7 +247,7 @@ router.put('/api/grower/production-declarations/:id', heavyJson, async (req, res
   if (sets.length === 0) return res.json({ ok: true, no_changes: true });
   sets.push(`updated_at = NOW()`); params.push(id);
   try {
-    await global.db.query(
+    await pool.query(
       `UPDATE production_declarations SET ${sets.join(', ')} WHERE id = $${pidx}`,
       params
     );
@@ -261,7 +262,7 @@ router.put('/api/grower/production-declarations/:id', heavyJson, async (req, res
 router.delete('/api/grower/production-declarations/:id', async (req, res) => {
   const id = parseInt(req.params.id, 10);
   try {
-    await global.db.query(`DELETE FROM production_declarations WHERE id = $1`, [id]);
+    await pool.query(`DELETE FROM production_declarations WHERE id = $1`, [id]);
     res.json({ ok: true });
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
@@ -271,7 +272,7 @@ router.get('/api/grower/production-declarations/summary', async (req, res) => {
   const { year } = req.query;
   const yr = year ? parseInt(year, 10) : new Date().getFullYear();
   try {
-    const r = await global.db.query(
+    const r = await pool.query(
       `SELECT
          commodity,
          COUNT(*)::int as declarations,

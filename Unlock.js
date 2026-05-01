@@ -1,5 +1,5 @@
 const { pool } = require('./db');
-global.db.query(
+pool.query(
   'UPDATE auth_users SET failed_attempts=0, locked_until=NULL, is_active=true WHERE username=$1',
   ['saul']
 ).then(r => {

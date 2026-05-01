@@ -28,7 +28,7 @@ const brainTask = (action, data, priority) => {
 // ============================================================================
 const initIntelTables = async () => {
   try {
-    await global.db.query(`
+    await pool.query(`
       CREATE TABLE IF NOT EXISTS grower_intel_yields (
         id SERIAL PRIMARY KEY,
         grower_id INTEGER NOT NULL,
@@ -95,7 +95,7 @@ initIntelTables();
 // ============================================================================
 router.get('/network', async (req, res) => {
   try {
-    const stats = await global.db.query(`
+    const stats = await pool.query(`
       SELECT
         COUNT(*) as total_growers,
         COUNT(*) FILTER (WHERE status = 'active') as active_growers,
@@ -114,7 +114,7 @@ router.get('/network', async (req, res) => {
       FROM growers
     `);
 
-    const byCountry = await global.db.query(`
+    const byCountry = await pool.query(`
       SELECT country, COUNT(*) as count,
         SUM(total_acres) as acres,
         SUM(annual_volume_tons) as volume_tons
@@ -122,19 +122,19 @@ router.get('/network', async (req, res) => {
       GROUP BY country ORDER BY count DESC
     `);
 
-    const byState = await global.db.query(`
+    const byState = await pool.query(`
       SELECT state_province, country, COUNT(*) as count
       FROM growers WHERE status = 'active' AND state_province IS NOT NULL
       GROUP BY state_province, country ORDER BY count DESC LIMIT 20
     `);
 
-    const byCert = await global.db.query(`
+    const byCert = await pool.query(`
       SELECT certification_type, COUNT(*) as count
       FROM growers WHERE certification_type IS NOT NULL AND status = 'active'
       GROUP BY certification_type ORDER BY count DESC
     `);
 
-    const byRisk = await global.db.query(`
+    const byRisk = await pool.query(`
       SELECT risk_rating, COUNT(*) as count
       FROM growers WHERE status = 'active'
       GROUP BY risk_rating ORDER BY count DESC
@@ -189,8 +189,8 @@ router.get('/directory', async (req, res) => {
     query += ` ORDER BY g.compliance_score DESC, g.company_name ASC LIMIT $${idx++} OFFSET $${idx++}`;
     params.push(parseInt(limit), parseInt(offset));
 
-    const { rows } = await global.db.query(query, params);
-    const countRes = await global.db.query('SELECT COUNT(*) FROM growers WHERE status = $1', [status || 'active']);
+    const { rows } = await pool.query(query, params);
+    const countRes = await pool.query('SELECT COUNT(*) FROM growers WHERE status = $1', [status || 'active']);
 
     brainTask('directory_viewed', { count: rows.length, filters: req.query });
 
@@ -227,7 +227,7 @@ router.get('/yields', async (req, res) => {
     if (product) { query += ` AND y.product ILIKE $${idx++}`; params.push(`%${product}%`); }
 
     query += ' ORDER BY y.year DESC, y.yield_lbs DESC';
-    const { rows } = await global.db.query(query, params);
+    const { rows } = await pool.query(query, params);
 
     // Aggregate by year
     const byYear = {};
@@ -260,7 +260,7 @@ router.post('/yields', async (req, res) => {
 
     const yieldPerAcre = acres_harvested > 0 ? Math.round((yield_lbs || 0) / acres_harvested) : 0;
 
-    const { rows } = await global.db.query(`
+    const { rows } = await pool.query(`
       INSERT INTO grower_intel_yields (grower_id, grower_code, year, yield_lbs, yield_tons, revenue, acres_harvested, yield_per_acre, product, season, quality_avg, notes, source)
       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13)
       ON CONFLICT (grower_id, year, product)
@@ -268,7 +268,7 @@ router.post('/yields', async (req, res) => {
       RETURNING *
     `, [grower_id, grower_code, year, yield_lbs || 0, yield_tons || 0, revenue || 0, acres_harvested || 0, yieldPerAcre, product, season, quality_avg, notes, source || 'manual']);
 
-    await global.db.query('INSERT INTO grower_intel_events (grower_id, grower_code, event_type, data) VALUES ($1,$2,$3,$4)',
+    await pool.query('INSERT INTO grower_intel_events (grower_id, grower_code, event_type, data) VALUES ($1,$2,$3,$4)',
       [grower_id, grower_code, 'YIELD_RECORDED', JSON.stringify({ year, product, yield_lbs, revenue })]);
 
     brainTask('yield_recorded', { grower_id, year, product, yield_lbs }, 'NORMAL');
@@ -300,7 +300,7 @@ router.get('/availability', async (req, res) => {
     if (open_market === 'true') query += ' AND a.open_market = true';
 
     query += ' ORDER BY a.available_lbs DESC';
-    const { rows } = await global.db.query(query, params);
+    const { rows } = await pool.query(query, params);
 
     const totalAvail = rows.reduce((s, r) => s + (r.available_lbs || 0), 0);
     const totalCapacity = rows.reduce((s, r) => s + (r.capacity_weekly_lbs || 0), 0);
@@ -324,7 +324,7 @@ router.post('/availability', async (req, res) => {
   try {
     const { grower_id, grower_code, product, available_lbs, capacity_weekly_lbs, next_harvest, price_per_lb, open_market } = req.body;
 
-    const { rows } = await global.db.query(`
+    const { rows } = await pool.query(`
       INSERT INTO grower_intel_availability (grower_id, grower_code, product, available_lbs, capacity_weekly_lbs, next_harvest, price_per_lb, open_market)
       VALUES ($1,$2,$3,$4,$5,$6,$7,$8)
       ON CONFLICT (grower_id, product)
@@ -346,7 +346,7 @@ router.post('/availability', async (req, res) => {
 // ============================================================================
 router.get('/certifications', async (req, res) => {
   try {
-    const byCert = await global.db.query(`
+    const byCert = await pool.query(`
       SELECT certification_type, COUNT(*) as count,
         COUNT(*) FILTER (WHERE verified = true) as verified,
         COUNT(*) FILTER (WHERE fsma_compliant = true) as fsma,
@@ -357,7 +357,7 @@ router.get('/certifications', async (req, res) => {
       GROUP BY certification_type ORDER BY count DESC
     `);
 
-    const expiring = await global.db.query(`
+    const expiring = await pool.query(`
       SELECT id, grower_code, company_name, certification_type, certification_number, certification_expiry
       FROM growers
       WHERE certification_expiry IS NOT NULL
@@ -366,7 +366,7 @@ router.get('/certifications', async (req, res) => {
       ORDER BY certification_expiry ASC LIMIT 50
     `);
 
-    const complianceDist = await global.db.query(`
+    const complianceDist = await pool.query(`
       SELECT
         COUNT(*) FILTER (WHERE compliance_score >= 90) as excellent,
         COUNT(*) FILTER (WHERE compliance_score >= 70 AND compliance_score < 90) as good,
@@ -396,7 +396,7 @@ router.get('/certifications', async (req, res) => {
 // ============================================================================
 router.get('/small-grower', async (req, res) => {
   try {
-    const stats = await global.db.query(`
+    const stats = await pool.query(`
       SELECT
         COUNT(*) as total,
         COUNT(*) FILTER (WHERE small_grower_program = true) as enrolled,
@@ -408,13 +408,13 @@ router.get('/small-grower', async (req, res) => {
       FROM growers WHERE status = 'active'
     `);
 
-    const byTier = await global.db.query(`
+    const byTier = await pool.query(`
       SELECT tier_level, COUNT(*) as count, AVG(compliance_score) as avg_score
       FROM growers WHERE status = 'active'
       GROUP BY tier_level ORDER BY tier_level
     `);
 
-    const smallGrowers = await global.db.query(`
+    const smallGrowers = await pool.query(`
       SELECT id, grower_code, company_name, country, state_province, total_acres,
         tier_level, compliance_score, risk_rating, fsma_compliant, gfsi_certified,
         certification_type, primary_products
@@ -443,20 +443,20 @@ router.get('/small-grower', async (req, res) => {
 router.get('/grower/:id', async (req, res) => {
   try {
     const { id } = req.params;
-    const grower = await global.db.query('SELECT * FROM growers WHERE id = $1 OR grower_code = $1', [id]);
+    const grower = await pool.query('SELECT * FROM growers WHERE id = $1 OR grower_code = $1', [id]);
     if (grower.rows.length === 0) return res.status(404).json({ success: false, error: 'Grower not found' });
 
     const g = grower.rows[0];
     const growerId = g.id;
 
-    const yields = await global.db.query('SELECT * FROM grower_intel_yields WHERE grower_id = $1 ORDER BY year DESC', [growerId]);
-    const availability = await global.db.query('SELECT * FROM grower_intel_availability WHERE grower_id = $1', [growerId]);
-    const events = await global.db.query('SELECT * FROM grower_intel_events WHERE grower_id = $1 ORDER BY created_at DESC LIMIT 30', [growerId]);
+    const yields = await pool.query('SELECT * FROM grower_intel_yields WHERE grower_id = $1 ORDER BY year DESC', [growerId]);
+    const availability = await pool.query('SELECT * FROM grower_intel_availability WHERE grower_id = $1', [growerId]);
+    const events = await pool.query('SELECT * FROM grower_intel_events WHERE grower_id = $1 ORDER BY created_at DESC LIMIT 30', [growerId]);
 
     // Try to get workflow data
     let workflow = null;
     try {
-      const wf = await global.db.query('SELECT * FROM grower_workflows WHERE grower_id = $1 ORDER BY created_at DESC LIMIT 1', [growerId]);
+      const wf = await pool.query('SELECT * FROM grower_workflows WHERE grower_id = $1 ORDER BY created_at DESC LIMIT 1', [growerId]);
       if (wf.rows.length > 0) workflow = wf.rows[0];
     } catch (e) { /* workflow table may not exist yet */ }
 
@@ -485,14 +485,14 @@ router.get('/grower/:id', async (req, res) => {
 router.get('/products', async (req, res) => {
   try {
     // From crops_grown array
-    const crops = await global.db.query(`
+    const crops = await pool.query(`
       SELECT unnest(crops_grown) as crop, COUNT(*) as grower_count
       FROM growers WHERE status = 'active' AND crops_grown IS NOT NULL
       GROUP BY crop ORDER BY grower_count DESC
     `);
 
     // From primary_products array
-    const primary = await global.db.query(`
+    const primary = await pool.query(`
       SELECT unnest(primary_products) as product, COUNT(*) as grower_count
       FROM growers WHERE status = 'active' AND primary_products IS NOT NULL
       GROUP BY product ORDER BY grower_count DESC
@@ -516,7 +516,7 @@ router.get('/products', async (req, res) => {
 router.post('/event', async (req, res) => {
   try {
     const { grower_id, grower_code, event_type, data, user_id } = req.body;
-    const { rows } = await global.db.query(
+    const { rows } = await pool.query(
       'INSERT INTO grower_intel_events (grower_id, grower_code, event_type, data, user_id) VALUES ($1,$2,$3,$4,$5) RETURNING *',
       [grower_id, grower_code, event_type, JSON.stringify(data || {}), user_id || 'SYSTEM']
     );

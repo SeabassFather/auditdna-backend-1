@@ -7,6 +7,7 @@ const router       = express.Router();
 const nodemailer   = require('nodemailer');
 const { getPool }  = require('../db');
 const jwt          = require('jsonwebtoken');
+const pool = require('../db');
 
 const SMTP = nodemailer.createTransport({
   host: 'smtpout.secureserver.net',
@@ -50,7 +51,7 @@ router.get('/pending', ownerOnly, async (req, res) => {
     // Try approval_registrations table first, fall back to auth_users pending
     let rows = [];
     try {
-      const r = await global.db.query(`
+      const r = await pool.query(`
         SELECT id, name, email, company, origin, phone, country, tier, paca_number,
                docs_completed, created_at, status
         FROM approval_registrations
@@ -60,7 +61,7 @@ router.get('/pending', ownerOnly, async (req, res) => {
       rows = r.rows;
     } catch {
       // Table may not exist yet â€” use auth_users with pending status
-      const r = await global.db.query(`
+      const r = await pool.query(`
         SELECT id, username as name, username as email, '' as company,
                '' as origin, '' as phone, 'unknown' as country,
                tier, '' as paca_number, '[]' as docs_completed,
@@ -96,7 +97,7 @@ router.post('/approve/:id', ownerOnly, async (req, res) => {
 
     // Update approval_registrations if table exists
     try {
-      const r = await global.db.query(`
+      const r = await pool.query(`
         UPDATE approval_registrations
         SET status = 'approved', tier = $1, approved_by = $2, approved_at = $3,
             access_code = $4, pin = $5, approval_note = $6
@@ -110,7 +111,7 @@ router.post('/approve/:id', ownerOnly, async (req, res) => {
       }
     } catch {
       // Fall back to auth_users
-      const r = await global.db.query(`
+      const r = await pool.query(`
         UPDATE auth_users
         SET is_active = true, tier = $1, tier_approved_at = $2, tier_approved_by = $3
         WHERE id = $4
@@ -178,7 +179,7 @@ router.post('/deny/:id', ownerOnly, async (req, res) => {
     let userName  = '';
 
     try {
-      const r = await global.db.query(`
+      const r = await pool.query(`
         UPDATE approval_registrations
         SET status = 'denied', approved_by = $1, approved_at = $2, approval_note = $3
         WHERE id = $4
@@ -189,7 +190,7 @@ router.post('/deny/:id', ownerOnly, async (req, res) => {
         userName  = r.rows[0].name;
       }
     } catch {
-      const r = await global.db.query(
+      const r = await pool.query(
         'SELECT username FROM auth_users WHERE id = $1', [id]
       );
       if (r.rows.length > 0) userEmail = r.rows[0].username;
@@ -230,7 +231,7 @@ router.post('/update-tier', ownerOnly, async (req, res) => {
   const { email, tier } = req.body;
   if (!email || !tier) return res.status(400).json({ error: 'email and tier required' });
   try {
-    await global.db.query(
+    await pool.query(
       'UPDATE auth_users SET tier = $1, tier_approved_at = $2, tier_approved_by = $3 WHERE LOWER(username) = LOWER($4)',
       [tier, new Date(), req.user.email, email]
     );
@@ -254,7 +255,7 @@ router.post('/update-tier', ownerOnly, async (req, res) => {
 router.post('/init-table', ownerOnly, async (req, res) => {
   const pool = getPool(req);
   try {
-    await global.db.query(`
+    await pool.query(`
       CREATE TABLE IF NOT EXISTS approval_registrations (
         id               SERIAL PRIMARY KEY,
         name             VARCHAR(200),

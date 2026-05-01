@@ -5,8 +5,9 @@ const nodemailer = require('nodemailer');
 
 const { classifyBatch, matchBuyersForInventory } = require('../services/contact-classifier');
 const { buildBlastBatch } = require('../services/email-generator');
+const pool = require('../db');
 
-const db = global.db || global.pgglobal;
+const db = pool || global.pgglobal;
 
 function createTransport(){
   return nodemailer.createTransport({

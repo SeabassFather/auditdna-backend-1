@@ -35,7 +35,7 @@ router.get('/', async (req, res) => {
     query += ` ORDER BY company LIMIT ${limit} OFFSET ${offset}`;
 
     console.log('Fetching shippers from shipper_contacts table');
-    const result = await global.db.query(query, params);
+    const result = await pool.query(query, params);
     res.json({ success: true, count: result.rows.length, data: result.rows, total: result.rows.length });
   } catch (error) {
     console.error('Shippers error:', error);
@@ -46,7 +46,7 @@ router.get('/', async (req, res) => {
 // GET single shipper
 router.get('/:id', async (req, res) => {
   try {
-    const result = await global.db.query('SELECT * FROM shipper_contacts WHERE id = $1', [req.params.id]);
+    const result = await pool.query('SELECT * FROM shipper_contacts WHERE id = $1', [req.params.id]);
     if (result.rows.length === 0) return res.status(404).json({ error: 'Shipper not found' });
     res.json({ success: true, data: result.rows[0] });
   } catch (error) {
@@ -59,7 +59,7 @@ router.post('/', async (req, res) => {
   try {
     const { company, contact, email, phone } = req.body;
     if (!company) return res.status(400).json({ error: 'company required' });
-    const result = await global.db.query(
+    const result = await pool.query(
       `INSERT INTO shipper_contacts (company, contact, email, phone, source) VALUES ($1,$2,$3,$4,'Manual Entry') RETURNING *`,
       [company, contact, email, phone]
     );
@@ -88,7 +88,7 @@ router.patch('/:id', async (req, res) => {
     setClause.push(`updated_at = NOW()`);
     paramNum++;
     values.push(id);
-    const result = await global.db.query(
+    const result = await pool.query(
       `UPDATE shipper_contacts SET ${setClause.join(', ')} WHERE id = $${paramNum} RETURNING *`,
       values
     );

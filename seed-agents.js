@@ -10,7 +10,7 @@ async function seed() {
   console.log('\n[AUDITDNA] Adding Jose B and Armando M only...\n');
   for (const u of NEW_AGENTS) {
     const hash = await bcrypt.hash(u.password, 12);
-    await global.db.query(
+    await pool.query(
       `INSERT INTO auth_users (username, password_hash, access_code, pin, display_name, role, is_active)
        VALUES ($1,$2,$3,$4,$5,$6,true)
        ON CONFLICT (username) DO UPDATE SET

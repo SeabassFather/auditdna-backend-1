@@ -7,13 +7,14 @@
 // ============================================================================
 
 const express = require('express');
+const pool = require('../../db');
 const router = express.Router();
 
 // ---- Schema ---------------------------------------------------------------
 async function ensureSchema() {
-  if (!global.db) return;
+  if (!pool) return;
   try {
-    await global.db.query(`
+    await pool.query(`
       CREATE TABLE IF NOT EXISTS deal_audit_trail (
         id SERIAL PRIMARY KEY,
         deal_id INTEGER,
@@ -27,11 +28,11 @@ async function ensureSchema() {
         occurred_at TIMESTAMP DEFAULT NOW()
       );
     `);
-    await global.db.query(`CREATE INDEX IF NOT EXISTS idx_audit_deal ON deal_audit_trail(deal_id, lane, occurred_at DESC);`);
-    await global.db.query(`CREATE INDEX IF NOT EXISTS idx_audit_action ON deal_audit_trail(action);`);
-    await global.db.query(`CREATE INDEX IF NOT EXISTS idx_audit_event ON deal_audit_trail(brain_event);`);
+    await pool.query(`CREATE INDEX IF NOT EXISTS idx_audit_deal ON deal_audit_trail(deal_id, lane, occurred_at DESC);`);
+    await pool.query(`CREATE INDEX IF NOT EXISTS idx_audit_action ON deal_audit_trail(action);`);
+    await pool.query(`CREATE INDEX IF NOT EXISTS idx_audit_event ON deal_audit_trail(brain_event);`);
 
-    await global.db.query(`
+    await pool.query(`
       CREATE TABLE IF NOT EXISTS deal_suggestions (
         id SERIAL PRIMARY KEY,
         source_deal_id INTEGER,
@@ -50,8 +51,8 @@ async function ensureSchema() {
         result_deal_id INTEGER
       );
     `);
-    await global.db.query(`CREATE INDEX IF NOT EXISTS idx_suggestions_status ON deal_suggestions(status, priority DESC, created_at DESC);`);
-    await global.db.query(`CREATE INDEX IF NOT EXISTS idx_suggestions_source ON deal_suggestions(source_deal_id, source_lane);`);
+    await pool.query(`CREATE INDEX IF NOT EXISTS idx_suggestions_status ON deal_suggestions(status, priority DESC, created_at DESC);`);
+    await pool.query(`CREATE INDEX IF NOT EXISTS idx_suggestions_source ON deal_suggestions(source_deal_id, source_lane);`);
 
     console.log('[dealIntelligence] schema OK');
   } catch (e) {
@@ -66,9 +67,9 @@ const heavyJson = express.json({ limit: '1mb' });
 // AUDIT TRAIL - record every brain event
 // ============================================================================
 async function recordAudit(brainEvent, payload) {
-  if (!global.db || !brainEvent) return;
+  if (!pool || !brainEvent) return;
   try {
-    await global.db.query(
+    await pool.query(
       `INSERT INTO deal_audit_trail (deal_id, lane, actor, action, brain_event, payload)
        VALUES ($1, $2, $3, $4, $5, $6)`,
       [
@@ -98,14 +99,14 @@ const SUGGESTION_RULES = [
       (event !== 'DOCUMENT_UPLOADED' || payload?.doc_type === 'invoice'),
     build: async (event, payload) => {
       // Only suggest once per source deal
-      const exists = await global.db.query(
+      const exists = await pool.query(
         `SELECT id FROM deal_suggestions WHERE source_deal_id = $1 AND source_lane = 'po' AND suggestion_type = 'PO_TO_FACTORING' AND status IN ('pending','accepted')`,
         [payload.deal_id]
       );
       if (exists.rows.length > 0) return null;
 
       // Pull PO deal details
-      const dq = await global.db.query(`SELECT * FROM financing_deals WHERE id = $1`, [payload.deal_id]);
+      const dq = await pool.query(`SELECT * FROM financing_deals WHERE id = $1`, [payload.deal_id]);
       if (dq.rows.length === 0) return null;
       const d = dq.rows[0];
 
@@ -139,7 +140,7 @@ const SUGGESTION_RULES = [
       if (!borrowerId) return null;
 
       // Count funded factoring deals for this borrower
-      const c = await global.db.query(
+      const c = await pool.query(
         `SELECT COUNT(*)::int as funded_count, SUM(invoice_amount) as total_volume
          FROM financing_deals
          WHERE borrower_id = $1 AND lane = 'factoring' AND (stage = 'funded' OR status = 'funded')`,
@@ -148,7 +149,7 @@ const SUGGESTION_RULES = [
       if (!c.rows[0] || c.rows[0].funded_count < 3) return null;
 
       // Suggest only once per borrower
-      const exists = await global.db.query(
+      const exists = await pool.query(
         `SELECT id FROM deal_suggestions
          WHERE suggestion_type = 'FACTORING_TO_COMMERCIAL'
            AND payload->>'borrower_id' = $1::text
@@ -157,7 +158,7 @@ const SUGGESTION_RULES = [
       );
       if (exists.rows.length > 0) return null;
 
-      const bq = await global.db.query(`SELECT legal_name, annual_revenue FROM borrower_entities WHERE id = $1`, [borrowerId]);
+      const bq = await pool.query(`SELECT legal_name, annual_revenue FROM borrower_entities WHERE id = $1`, [borrowerId]);
       const b = bq.rows[0] || {};
       const fundedCount = c.rows[0].funded_count;
       const totalVolume = Number(c.rows[0].total_volume || 0);
@@ -190,21 +191,21 @@ const SUGGESTION_RULES = [
     build: async (event, payload) => {
       if (!payload?.deal_id) return null;
 
-      const sent = await global.db.query(
+      const sent = await pool.query(
         `SELECT COUNT(*)::int as c FROM lender_responses
          WHERE deal_id = $1 AND lane = $2`,
         [payload.deal_id, payload.lane]
       );
       if (!sent.rows[0] || sent.rows[0].c < 5) return null;
 
-      const accepted = await global.db.query(
+      const accepted = await pool.query(
         `SELECT COUNT(*)::int as c FROM lender_responses
          WHERE deal_id = $1 AND lane = $2 AND decision = 'accepted'`,
         [payload.deal_id, payload.lane]
       );
       if (accepted.rows[0]?.c > 0) return null;
 
-      const exists = await global.db.query(
+      const exists = await pool.query(
         `SELECT id FROM deal_suggestions
          WHERE source_deal_id = $1 AND source_lane = $2 AND suggestion_type = 'STALLED_LOI_REPRICE' AND status IN ('pending','accepted')`,
         [payload.deal_id, payload.lane]
@@ -237,20 +238,20 @@ const SUGGESTION_RULES = [
       const borrowerId = payload?.borrower_id;
       if (!borrowerId) return null;
 
-      const dealCount = await global.db.query(
+      const dealCount = await pool.query(
         `SELECT COUNT(*)::int as c FROM financing_deals WHERE borrower_id = $1`,
         [borrowerId]
       );
       if (dealCount.rows[0]?.c > 0) return null;
 
-      const exists = await global.db.query(
+      const exists = await pool.query(
         `SELECT id FROM deal_suggestions
          WHERE suggestion_type = 'NEW_BORROWER_PIPELINE' AND payload->>'borrower_id' = $1::text AND status IN ('pending','accepted')`,
         [String(borrowerId)]
       );
       if (exists.rows.length > 0) return null;
 
-      const bq = await global.db.query(`SELECT legal_name, borrower_role FROM borrower_entities WHERE id = $1`, [borrowerId]);
+      const bq = await pool.query(`SELECT legal_name, borrower_role FROM borrower_entities WHERE id = $1`, [borrowerId]);
       const b = bq.rows[0] || {};
 
       return {
@@ -272,13 +273,13 @@ const SUGGESTION_RULES = [
 ];
 
 async function runSuggestionRules(event, payload) {
-  if (!global.db) return;
+  if (!pool) return;
   for (const rule of SUGGESTION_RULES) {
     try {
       if (!rule.matches(event, payload)) continue;
       const suggestion = await rule.build(event, payload);
       if (!suggestion) continue;
-      await global.db.query(
+      await pool.query(
         `INSERT INTO deal_suggestions
            (source_deal_id, source_lane, suggested_lane, suggestion_type, title, rationale, payload, priority)
          VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
@@ -328,7 +329,7 @@ router.get('/api/intelligence/suggestions', async (req, res) => {
   const where = conditions.length ? `WHERE ${conditions.join(' AND ')}` : "WHERE status = 'pending'";
   const lim = Math.min(parseInt(limit || '100', 10), 500);
   try {
-    const r = await global.db.query(
+    const r = await pool.query(
       `SELECT * FROM deal_suggestions ${where}
        ORDER BY (status = 'pending') DESC, priority DESC, created_at DESC
        LIMIT ${lim}`,
@@ -341,7 +342,7 @@ router.get('/api/intelligence/suggestions', async (req, res) => {
 // Per-deal suggestions
 router.get('/api/intelligence/suggestions/:lane/:dealId', async (req, res) => {
   try {
-    const r = await global.db.query(
+    const r = await pool.query(
       `SELECT * FROM deal_suggestions
        WHERE source_deal_id = $1 AND source_lane = $2
        ORDER BY priority DESC, created_at DESC`,
@@ -357,7 +358,7 @@ router.post('/api/intelligence/suggestions/:id/accept', heavyJson, async (req, r
   const actedBy = (req.body && req.body.acted_by) || 'saul';
 
   try {
-    const sq = await global.db.query(`SELECT * FROM deal_suggestions WHERE id = $1`, [id]);
+    const sq = await pool.query(`SELECT * FROM deal_suggestions WHERE id = $1`, [id]);
     if (sq.rows.length === 0) return res.status(404).json({ error: 'not found' });
     const s = sq.rows[0];
     if (s.status !== 'pending') return res.status(400).json({ error: 'not pending' });
@@ -368,7 +369,7 @@ router.post('/api/intelligence/suggestions/:id/accept', heavyJson, async (req, r
     if (s.suggestion_type === 'PO_TO_FACTORING') {
       // Create draft factoring deal inheriting from the source PO deal
       const p = s.payload || {};
-      const ins = await global.db.query(
+      const ins = await pool.query(
         `INSERT INTO financing_deals
            (lane, source_type, status, stage, buyer_name, commodity, invoice_amount, grower_name, borrower_id, notes, created_by)
          VALUES ('factoring', 'auto_suggest', 'draft', 'submitted', $1, $2, $3, $4, $5, $6, $7)
@@ -379,7 +380,7 @@ router.post('/api/intelligence/suggestions/:id/accept', heavyJson, async (req, r
     }
     // Other suggestion types just record acceptance - admin acts manually
 
-    await global.db.query(
+    await pool.query(
       `UPDATE deal_suggestions
        SET status = 'accepted', acted_at = NOW(), acted_by = $2, result_deal_id = $3
        WHERE id = $1`,
@@ -406,7 +407,7 @@ router.post('/api/intelligence/suggestions/:id/dismiss', heavyJson, async (req, 
   const reason = (req.body && req.body.reason) || null;
   const actedBy = (req.body && req.body.acted_by) || 'saul';
   try {
-    const r = await global.db.query(
+    const r = await pool.query(
       `UPDATE deal_suggestions
        SET status = 'dismissed', acted_at = NOW(), acted_by = $2, dismissed_reason = $3
        WHERE id = $1 AND status = 'pending' RETURNING id`,
@@ -420,7 +421,7 @@ router.post('/api/intelligence/suggestions/:id/dismiss', heavyJson, async (req, 
 // Audit timeline per deal
 router.get('/api/intelligence/audit/:lane/:dealId', async (req, res) => {
   try {
-    const r = await global.db.query(
+    const r = await pool.query(
       `SELECT * FROM deal_audit_trail
        WHERE deal_id = $1 AND lane = $2
        ORDER BY occurred_at DESC LIMIT 500`,
@@ -440,7 +441,7 @@ router.get('/api/intelligence/audit', async (req, res) => {
   const where = conditions.length ? `WHERE ${conditions.join(' AND ')}` : '';
   const lim = Math.min(parseInt(limit || '300', 10), 1000);
   try {
-    const r = await global.db.query(
+    const r = await pool.query(
       `SELECT id, deal_id, lane, actor, action, brain_event, payload, occurred_at
        FROM deal_audit_trail ${where}
        ORDER BY occurred_at DESC LIMIT ${lim}`,
@@ -453,7 +454,7 @@ router.get('/api/intelligence/audit', async (req, res) => {
 // Stats
 router.get('/api/intelligence/stats', async (req, res) => {
   try {
-    const sg = await global.db.query(`
+    const sg = await pool.query(`
       SELECT
         SUM(CASE WHEN status='pending' THEN 1 ELSE 0 END)::int as pending,
         SUM(CASE WHEN status='accepted' THEN 1 ELSE 0 END)::int as accepted,
@@ -461,7 +462,7 @@ router.get('/api/intelligence/stats', async (req, res) => {
         COUNT(*)::int as total
       FROM deal_suggestions
     `);
-    const audit = await global.db.query(`
+    const audit = await pool.query(`
       SELECT COUNT(*)::int as total_events, COUNT(DISTINCT brain_event)::int as event_types
       FROM deal_audit_trail
       WHERE occurred_at > NOW() - INTERVAL '30 days'

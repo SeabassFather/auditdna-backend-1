@@ -11,6 +11,7 @@ const nodemailer = require('nodemailer');
 
 const getPool = () => {
   const { Pool } = require('pg');
+const pool = require('../db');
   return new Pool({ connectionString: process.env.DATABASE_URL || 'postgresql://postgres:auditdna2026@process.env.DB_HOST:5432/auditdna' });
 };
 
@@ -22,7 +23,7 @@ const mailer = nodemailer.createTransport({
 // â”€â”€ INIT TABLE â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 const initTable = async () => {
   const pool = getPool();
-  await global.db.query(`
+  await pool.query(`
     CREATE TABLE IF NOT EXISTS credit_applications (
       id SERIAL PRIMARY KEY,
       legal_name VARCHAR(255),
@@ -54,7 +55,7 @@ router.post('/', async (req, res) => {
 
   const pool = getPool();
   try {
-    const result = await global.db.query(`
+    const result = await pool.query(`
       INSERT INTO credit_applications (legal_name, role_type, biz_data, officers, trade_refs, bank_refs, signature, is_priority, status, submitted_at)
       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10) RETURNING id
     `, [biz.legalName, biz.roleType, JSON.stringify(biz), JSON.stringify(officers),
@@ -128,7 +129,7 @@ router.post('/', async (req, res) => {
 router.get('/', async (req, res) => {
   const pool = getPool();
   try {
-    const r = await global.db.query(`SELECT id, legal_name, role_type, biz_data as biz, is_priority, status, tier, credit_limit, submitted_at FROM credit_applications ORDER BY is_priority DESC, submitted_at DESC`);
+    const r = await pool.query(`SELECT id, legal_name, role_type, biz_data as biz, is_priority, status, tier, credit_limit, submitted_at FROM credit_applications ORDER BY is_priority DESC, submitted_at DESC`);
     res.json({ apps: r.rows.map(row => ({
       id: row.id, biz: row.biz, isPriority: row.is_priority,
       status: row.status, tier: row.tier, creditLimit: row.credit_limit,
@@ -143,7 +144,7 @@ router.patch('/:id', async (req, res) => {
   const { status, tier, creditLimit } = req.body;
   const pool = getPool();
   try {
-    await global.db.query(`UPDATE credit_applications SET status=$1, tier=$2, credit_limit=$3, reviewed_at=NOW() WHERE id=$4`,
+    await pool.query(`UPDATE credit_applications SET status=$1, tier=$2, credit_limit=$3, reviewed_at=NOW() WHERE id=$4`,
       [status, tier||null, creditLimit||null, req.params.id]);
     res.json({ success: true });
   } catch(e) { res.status(500).json({ error: e.message }); }

@@ -15,7 +15,7 @@ const signToken = (payload) => {
 router.post('/login', async (req, res) => {
   try {
     const { email, password } = req.body;
-    const r = await global.db.query('SELECT * FROM auth_users WHERE email = $1', [email]);
+    const r = await pool.query('SELECT * FROM auth_users WHERE email = $1', [email]);
     if (!r.rows.length) return res.status(401).json({ ok:false, error:'Invalid credentials' });
     const user = r.rows[0];
     const valid = await bcrypt.compare(password, user.password_hash||user.password||'');
@@ -29,7 +29,7 @@ router.post('/register', async (req, res) => {
   try {
     const { email, password, name, role } = req.body;
     const hash = await bcrypt.hash(password, 12);
-    const r = await global.db.query(
+    const r = await pool.query(
       'INSERT INTO auth_users (email, password_hash, name, role, status) VALUES ($1,$2,$3,$4,$5) RETURNING id,email,role',
       [email, hash, name, role||'agent', 'active']
     );
@@ -53,7 +53,7 @@ router.post('/change-password', async (req, res) => {
   try {
     const { email, newPassword } = req.body;
     const hash = await bcrypt.hash(newPassword, 12);
-    await global.db.query('UPDATE auth_users SET password_hash=$1 WHERE email=$2', [hash, email]);
+    await pool.query('UPDATE auth_users SET password_hash=$1 WHERE email=$2', [hash, email]);
     res.json({ ok:true, message:'Password updated' });
   } catch(e) { res.status(500).json({ ok:false, error:e.message }); }
 });

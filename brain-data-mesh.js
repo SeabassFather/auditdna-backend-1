@@ -1,3 +1,4 @@
+const pool = require('./db');
 // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 // BRAIN DATA MESH v1.0 â€” AuditDNA Central Intelligence Feed
 // Save to: C:\AuditDNA\backend\brain-data-mesh.js
@@ -527,7 +528,7 @@ async function brainLog(type, data, source) {
   BrainState.eventLog.unshift(event);
   // Persist to DB
   try {
-    await global.db.query(
+    await pool.query(
       "INSERT INTO brain_events (event_type, module, miners, payload, created_at) VALUES ($1,$2,$3,$4,NOW())",
       [event.type||'BRAIN_EVENT', event.module||'brain', JSON.stringify(event.miners||[]), JSON.stringify(event)]
     ).catch(()=>{});
@@ -816,7 +817,7 @@ module.exports = function installBrainMesh(app, pool) {
   app.get('/api/brain/grower-scores', async (req, res) => {
     try {
       // Pull growers from PostgreSQL and score them via Brain
-      const result = await global.db.query(
+      const result = await pool.query(
         'SELECT id, name, email, commodity, state, country, tier FROM growers LIMIT 100'
       );
 

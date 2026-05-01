@@ -26,7 +26,7 @@ const sessionLogs = [];
 const safeQuery = async (query, params = []) => {
   if (!pool) return null;
   try {
-    const result = await global.db.query(query, params);
+    const result = await pool.query(query, params);
     return result;
   } catch (error) {
     console.error('[Sessions] DB Query error:', error.message);
@@ -64,7 +64,7 @@ const initSessionTable = async () => {
   `;
   
   try {
-    await global.db.query(createTableSQL);
+    await pool.query(createTableSQL);
     console.log('âœ… [Sessions] PostgreSQL table initialized');
   } catch (error) {
     console.warn('âš ï¸  [Sessions] Table init skipped:', error.message);

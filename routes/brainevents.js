@@ -2,6 +2,7 @@
 const express = require('express');
 const router = express.Router();
 const { getPool } = require('../db');
+const pool = require('../db');
 
 // POST /api/brain/events
 router.post('/', async (req, res) => {
@@ -14,7 +15,7 @@ router.post('/', async (req, res) => {
     const pool = getPool(req);
     for (const event of events) {
       const { type, payload, timestamp } = event;
-      await global.db.query(
+      await pool.query(
         `INSERT INTO brain_events (type, payload, created_at)
          VALUES ($1, $2, to_timestamp($3 / 1000.0))
          ON CONFLICT DO NOTHING`,
@@ -36,7 +37,7 @@ router.post('/event', async (req, res) => {
   try {
     const { type, payload, timestamp, ...rest } = req.body;
     const pool = getPool(req);
-    await global.db.query(
+    await pool.query(
       `INSERT INTO brain_events (type, payload, created_at)
        VALUES ($1, $2, to_timestamp($3 / 1000.0))
        ON CONFLICT DO NOTHING`,
@@ -53,7 +54,7 @@ router.post('/event', async (req, res) => {
 router.get('/events', async (req, res) => {
   try {
     const pool = getPool(req);
-    const result = await global.db.query(
+    const result = await pool.query(
       `SELECT id, event_type, payload, created_at FROM brain_events ORDER BY created_at DESC LIMIT 50`
     );
     res.json({ success: true, events: result.rows });

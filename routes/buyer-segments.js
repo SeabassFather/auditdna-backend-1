@@ -4,6 +4,7 @@
 // Save to: C:\AuditDNA\backend\routes\buyer-segments.js
 // ============================================================
 const express = require('express');
+const pool = require('../db');
 const router = express.Router();
 
 // GET /api/buyer-segments/by-commodity
@@ -11,7 +12,7 @@ const router = express.Router();
 // Auto-create buyer_segments table if missing
 async function ensureBuyerSegmentsTable(pool) {
   try {
-    await global.db.query(`
+    await pool.query(`
       CREATE TABLE IF NOT EXISTS buyer_segments (
         id SERIAL PRIMARY KEY,
         email TEXT,
@@ -35,7 +36,7 @@ router.get('/by-commodity', async (req, res) => {
     const params = [];
     if (commodity) { where += ` AND commodities ILIKE $1`; params.push(`%${commodity}%`); }
 
-    const result = await global.db.query(
+    const result = await pool.query(
       `SELECT id, entity_id, first_name, last_name, email, phone, company_name, city, state_region, country, commodities FROM trade_registry WHERE ${where} ORDER BY state_region ASC, company_name ASC`,
       params
     );
@@ -80,7 +81,7 @@ router.get('/by-state', async (req, res) => {
     if (state) { where += ` AND state_region ILIKE $${pi++}`; params.push(`%${state}%`); }
     if (commodity) { where += ` AND commodities ILIKE $${pi++}`; params.push(`%${commodity}%`); }
 
-    const result = await global.db.query(
+    const result = await pool.query(
       `SELECT id, entity_id, first_name, last_name, email, phone, company_name, city, state_region, country, commodities FROM trade_registry WHERE ${where} ORDER BY state_region ASC, company_name ASC`,
       params
     );
@@ -108,10 +109,10 @@ router.get('/targets', async (req, res) => {
   const pool = req.app.locals.pool;
   try {
     const [avo, straw, berry, targets] = await Promise.all([
-      global.db.query("SELECT id, first_name, last_name, email, phone, company_name, city, state_region, commodities FROM trade_registry WHERE entity_type='buyer' AND commodities ILIKE '%avocado%' ORDER BY state_region, company_name"),
-      global.db.query("SELECT id, first_name, last_name, email, phone, company_name, city, state_region, commodities FROM trade_registry WHERE entity_type='buyer' AND commodities ILIKE '%strawberry%' ORDER BY state_region, company_name"),
-      global.db.query("SELECT id, first_name, last_name, email, phone, company_name, city, state_region, commodities FROM trade_registry WHERE entity_type='buyer' AND commodities ILIKE '%berry%' ORDER BY state_region, company_name"),
-      global.db.query("SELECT id, first_name, last_name, email, phone, company_name, city, state_region, commodities FROM trade_registry WHERE entity_type='buyer' AND (company_name ILIKE '%c&s%' OR company_name ILIKE '%spartan%' OR company_name ILIKE '%freshko%') ORDER BY company_name"),
+      pool.query("SELECT id, first_name, last_name, email, phone, company_name, city, state_region, commodities FROM trade_registry WHERE entity_type='buyer' AND commodities ILIKE '%avocado%' ORDER BY state_region, company_name"),
+      pool.query("SELECT id, first_name, last_name, email, phone, company_name, city, state_region, commodities FROM trade_registry WHERE entity_type='buyer' AND commodities ILIKE '%strawberry%' ORDER BY state_region, company_name"),
+      pool.query("SELECT id, first_name, last_name, email, phone, company_name, city, state_region, commodities FROM trade_registry WHERE entity_type='buyer' AND commodities ILIKE '%berry%' ORDER BY state_region, company_name"),
+      pool.query("SELECT id, first_name, last_name, email, phone, company_name, city, state_region, commodities FROM trade_registry WHERE entity_type='buyer' AND (company_name ILIKE '%c&s%' OR company_name ILIKE '%spartan%' OR company_name ILIKE '%freshko%') ORDER BY company_name"),
     ]);
     // Group each by state
     const groupByState = (rows) => {
@@ -133,7 +134,7 @@ router.get('/targets', async (req, res) => {
 router.get('/commodity-list', async (req, res) => {
   const pool = req.app.locals.pool;
   try {
-    const result = await global.db.query("SELECT TRIM(UNNEST(string_to_array(commodities, ','))) AS commodity, COUNT(DISTINCT id) AS buyers FROM trade_registry WHERE entity_type='buyer' AND commodities != '' GROUP BY commodity ORDER BY buyers DESC");
+    const result = await pool.query("SELECT TRIM(UNNEST(string_to_array(commodities, ','))) AS commodity, COUNT(DISTINCT id) AS buyers FROM trade_registry WHERE entity_type='buyer' AND commodities != '' GROUP BY commodity ORDER BY buyers DESC");
     res.json({ commodities: result.rows });
   } catch (e) { res.status(500).json({ error: e.message }); }
 });

@@ -1,3 +1,4 @@
+const pool = require('./db');
 // =============================================================================
 // File: complianceCleaner.js
 // Save to: C:\AuditDNA\backend\complianceCleaner.js
@@ -9,7 +10,7 @@
 // This version exports a callable function with .sweep/.start/.stop properties.
 // =============================================================================
 
-const db = () => global.db || null;
+const db = () => pool || null;
 let intervalHandle = null;
 
 async function sweep() {

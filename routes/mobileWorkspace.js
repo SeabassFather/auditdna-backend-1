@@ -13,6 +13,7 @@ const multer   = require('multer');
 const path     = require('path');
 const fs       = require('fs');
 const jwt      = require('jsonwebtoken');
+const pool = require('../db');
 
 // ---------- file upload (multipart) ----------
 const UPLOAD_ROOT = path.join(__dirname, '..', 'uploads', 'mobile');
@@ -29,8 +30,8 @@ const upload = multer({ storage, limits: { fileSize: 25 * 1024 * 1024 } });
 
 // ---------- DB ----------
 function db() {
-  if (global.db) return global.db;
-  throw new Error('global.db not initialized');
+  if (pool) return pool;
+  throw new Error('pool not initialized');
 }
 
 // ---------- brain emit ----------

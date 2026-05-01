@@ -12,12 +12,13 @@ const crypto  = require('crypto');
 const path    = require('path');
 const fs      = require('fs');
 const multer  = require('multer');
+const pool = require('../db');
 const router  = express.Router();
 
 // ──────────────────────────────────────────────────────────────────────────────
-// DB pool — reuses global pool set by server.js (global.db)
+// DB pool — reuses global pool set by server.js (pool)
 // ──────────────────────────────────────────────────────────────────────────────
-const getPool = () => global.db || require('../db').getPool();
+const getPool = () => pool || require('../db').getPool();
 
 // ──────────────────────────────────────────────────────────────────────────────
 // File upload config — DD vault lives on local disk

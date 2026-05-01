@@ -134,7 +134,7 @@ const initAIVerificationTables = async () => {
   `;
 
   try {
-    await global.db.query(createTablesSQL);
+    await pool.query(createTablesSQL);
     console.log('âœ… [Multi-AI Verification] Tables initialized');
   } catch (error) {
     console.error('âŒ [Multi-AI Verification] Table init failed:', error.message);
@@ -470,7 +470,7 @@ router.get('/verify/:requestId', async (req, res) => {
   try {
     const { requestId } = req.params;
 
-    const request = await global.db.query(
+    const request = await pool.query(
       'SELECT * FROM ai_verification_requests WHERE request_id = $1',
       [requestId]
     );
@@ -482,12 +482,12 @@ router.get('/verify/:requestId', async (req, res) => {
       });
     }
 
-    const responses = await global.db.query(
+    const responses = await pool.query(
       'SELECT * FROM ai_cowboy_responses WHERE request_id = $1 ORDER BY responded_at ASC',
       [requestId]
     );
 
-    const consensus = await global.db.query(
+    const consensus = await pool.query(
       'SELECT * FROM ai_consensus_analysis WHERE request_id = $1 ORDER BY created_at DESC LIMIT 1',
       [requestId]
     );
@@ -511,7 +511,7 @@ router.get('/verify/:requestId', async (req, res) => {
 
 router.get('/dashboard', async (req, res) => {
   try {
-    const stats = await global.db.query(`
+    const stats = await pool.query(`
       SELECT 
         COUNT(*) as total_requests,
         COUNT(*) FILTER (WHERE status = 'pending') as pending,
@@ -526,7 +526,7 @@ router.get('/dashboard', async (req, res) => {
       WHERE created_at > NOW() - INTERVAL '30 days'
     `);
 
-    const byType = await global.db.query(`
+    const byType = await pool.query(`
       SELECT verification_type, COUNT(*) as count
       FROM ai_verification_requests
       WHERE created_at > NOW() - INTERVAL '30 days'
@@ -534,7 +534,7 @@ router.get('/dashboard', async (req, res) => {
       ORDER BY count DESC
     `);
 
-    const teamPerformance = await global.db.query(`
+    const teamPerformance = await pool.query(`
       SELECT 
         team,
         COUNT(*) as total_responses,

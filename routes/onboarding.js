@@ -55,7 +55,7 @@ function generateOTP() {
 
 async function fireBrainEvent(event_type, payload, tenant_id = null) {
   try {
-    await global.db.query(
+    await pool.query(
       `INSERT INTO brain_events (event_type, payload, source, tenant_id)
        VALUES ($1, $2, $3, $4)`,
       [event_type, JSON.stringify(payload), 'onboarding', tenant_id]
@@ -152,7 +152,7 @@ router.post('/lead', async (req, res) => {
   }
 
   try {
-    const result = await global.db.query(
+    const result = await pool.query(
       `INSERT INTO tenant_leads (email, phone, crop_type, business_name, source, agent_id)
        VALUES ($1, $2, $3, $4, $5, $6)
        ON CONFLICT (email) DO UPDATE SET
@@ -238,7 +238,7 @@ router.post('/otp/send', async (req, res) => {
 
   // Rate limit: check for recent unsent OTP within 60 seconds
   try {
-    const recent = await global.db.query(
+    const recent = await pool.query(
       `SELECT created_at FROM tenant_otp
        WHERE identifier = $1 AND type = $2 AND verified = FALSE
          AND created_at > NOW() - INTERVAL '60 seconds'
@@ -255,13 +255,13 @@ router.post('/otp/send', async (req, res) => {
     const expires = new Date(Date.now() + 10 * 60 * 1000);
 
     // Invalidate old OTPs
-    await global.db.query(
+    await pool.query(
       `UPDATE tenant_otp SET verified = TRUE
        WHERE identifier = $1 AND type = $2 AND verified = FALSE`,
       [identifier, type]
     );
 
-    await global.db.query(
+    await pool.query(
       `INSERT INTO tenant_otp (identifier, type, code, expires_at)
        VALUES ($1, $2, $3, $4)`,
       [identifier, type, code, expires]
@@ -301,7 +301,7 @@ router.post('/otp/verify', async (req, res) => {
   }
 
   try {
-    const result = await global.db.query(
+    const result = await pool.query(
       `SELECT * FROM tenant_otp
        WHERE identifier = $1 AND type = $2
          AND verified = FALSE AND expires_at > NOW()
@@ -317,14 +317,14 @@ router.post('/otp/verify', async (req, res) => {
 
     // Check lockout
     if (otp.attempts >= 3) {
-      await global.db.query(`UPDATE tenant_otp SET verified = TRUE WHERE id = $1`, [otp.id]);
+      await pool.query(`UPDATE tenant_otp SET verified = TRUE WHERE id = $1`, [otp.id]);
       return res.status(429).json({
         error: 'Too many failed attempts. Please request a new code.'
       });
     }
 
     // Increment attempt
-    await global.db.query(
+    await pool.query(
       `UPDATE tenant_otp SET attempts = attempts + 1 WHERE id = $1`,
       [otp.id]
     );
@@ -337,12 +337,12 @@ router.post('/otp/verify', async (req, res) => {
     }
 
     // Mark verified
-    await global.db.query(`UPDATE tenant_otp SET verified = TRUE WHERE id = $1`, [otp.id]);
+    await pool.query(`UPDATE tenant_otp SET verified = TRUE WHERE id = $1`, [otp.id]);
 
     // Update KYC record
     if (lead_id) {
       const col = type === 'email' ? 'email_verified' : 'phone_verified';
-      await global.db.query(
+      await pool.query(
         `UPDATE tenant_kyc SET ${col} = TRUE, updated_at = NOW() WHERE lead_id = $1`,
         [lead_id]
       );
@@ -366,7 +366,7 @@ router.post('/kyc/init', async (req, res) => {
 
   try {
     // Verify lead exists
-    const lead = await global.db.query(
+    const lead = await pool.query(
       `SELECT id FROM tenant_leads WHERE id = $1`, [lead_id]
     );
     if (lead.rows.length === 0) {
@@ -374,7 +374,7 @@ router.post('/kyc/init', async (req, res) => {
     }
 
     // Create or return existing KYC record
-    const result = await global.db.query(
+    const result = await pool.query(
       `INSERT INTO tenant_kyc (lead_id) VALUES ($1)
        ON CONFLICT (lead_id) DO UPDATE SET updated_at = NOW()
        RETURNING id, current_step, status`,
@@ -402,7 +402,7 @@ router.post('/kyc/step1', async (req, res) => {
   }
 
   try {
-    await global.db.query(
+    await pool.query(
       `UPDATE tenant_kyc SET
          legal_name = $2, ein_rfc = $3, business_type = $4,
          incorporation_state = $5, contact_title = $6,
@@ -428,7 +428,7 @@ router.post('/kyc/step2/complete', async (req, res) => {
   if (!lead_id) return res.status(400).json({ error: 'lead_id required' });
 
   try {
-    const result = await global.db.query(
+    const result = await pool.query(
       `SELECT email_verified, phone_verified FROM tenant_kyc WHERE lead_id = $1`,
       [lead_id]
     );
@@ -441,7 +441,7 @@ router.post('/kyc/step2/complete', async (req, res) => {
       return res.status(400).json({ error: 'Email not verified. Please complete email OTP.' });
     }
 
-    await global.db.query(
+    await pool.query(
       `UPDATE tenant_kyc SET current_step = GREATEST(current_step, 3),
          updated_at = NOW() WHERE lead_id = $1`,
       [lead_id]
@@ -477,7 +477,7 @@ router.post('/kyc/step3',
     const backPath  = req.files.gov_id_back?.[0]?.path || null;
 
     try {
-      await global.db.query(
+      await pool.query(
         `UPDATE tenant_kyc SET
            gov_id_front_path  = $2, gov_id_back_path = $3,
            gov_id_type        = $4, liveness_passed  = $5,
@@ -497,7 +497,7 @@ router.post('/kyc/step3',
 
       // Log to document vault
       if (frontPath) {
-        await global.db.query(
+        await pool.query(
           `INSERT INTO document_vault
              (owner_id, owner_type, file_name, file_path, file_type, category)
            SELECT id, 'tenant_kyc', $2, $3, $4, 'government_id'
@@ -529,7 +529,7 @@ router.post('/kyc/step4',
     const certPath = req.file?.path || null;
 
     try {
-      await global.db.query(
+      await pool.query(
         `UPDATE tenant_kyc SET
            usda_farm_id       = $2, grower_reg_num    = $3,
            food_safety_license = $4, fsma_status      = $5,
@@ -542,7 +542,7 @@ router.post('/kyc/step4',
       );
 
       if (certPath) {
-        await global.db.query(
+        await pool.query(
           `INSERT INTO document_vault
              (owner_id, owner_type, file_name, file_path, file_type, category)
            SELECT id, 'tenant_kyc', $2, $3, 'pdf', 'organic_certification'
@@ -582,7 +582,7 @@ router.post('/kyc/step5', async (req, res) => {
   ) ? 85 : (country === 'US' || country === 'MX' ? 50 : 20);
 
   try {
-    await global.db.query(
+    await pool.query(
       `UPDATE tenant_kyc SET
          address_line1       = $2, city             = $3,
          state_region        = $4, postal_code      = $5,
@@ -615,7 +615,7 @@ router.post('/kyc/complete', async (req, res) => {
   if (!lead_id) return res.status(400).json({ error: 'lead_id required' });
 
   try {
-    const result = await global.db.query(
+    const result = await pool.query(
       `SELECT k.*, l.email, l.phone, l.crop_type, l.business_name, l.agent_id
        FROM tenant_kyc k
        JOIN tenant_leads l ON l.id = k.lead_id
@@ -635,7 +635,7 @@ router.post('/kyc/complete', async (req, res) => {
     const score = calculateKYCScore({ ...kyc, ofac_cleared });
     const status = getKYCStatus(score);
 
-    await global.db.query(
+    await pool.query(
       `UPDATE tenant_kyc SET
          kyc_score = $2, ofac_cleared = $3, status = $4, updated_at = NOW()
        WHERE lead_id = $1`,
@@ -643,7 +643,7 @@ router.post('/kyc/complete', async (req, res) => {
     );
 
     // Update lead status
-    await global.db.query(
+    await pool.query(
       `UPDATE tenant_leads SET status = $2, updated_at = NOW() WHERE id = $1`,
       [lead_id, status === 'approved' ? 'kyc_approved' :
                 status === 'manual_review' ? 'kyc_review' : 'kyc_rejected']
@@ -704,7 +704,7 @@ router.post('/kyc/complete', async (req, res) => {
 // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 router.get('/status/:lead_id', async (req, res) => {
   try {
-    const result = await global.db.query(
+    const result = await pool.query(
       `SELECT k.current_step, k.kyc_score, k.status,
               k.email_verified, k.phone_verified,
               l.email, l.crop_type, l.business_name
@@ -773,7 +773,7 @@ function recommendTier(kyc) {
 // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 router.get('/tier/recommend/:lead_id', async (req, res) => {
   try {
-    const result = await global.db.query(
+    const result = await pool.query(
       `SELECT k.kyc_score, k.latam_countries, k.fsma_status,
               k.usda_farm_id, k.grower_reg_num, k.country,
               l.crop_type
@@ -828,7 +828,7 @@ router.post('/tier/select', async (req, res) => {
 
   try {
     // Verify KYC exists and was not rejected
-    const kyc = await global.db.query(
+    const kyc = await pool.query(
       `SELECT k.kyc_score, k.latam_countries, k.fsma_status,
               k.usda_farm_id, k.grower_reg_num, k.country, k.status
        FROM tenant_kyc k WHERE k.lead_id = $1`,
@@ -845,7 +845,7 @@ router.post('/tier/select', async (req, res) => {
     const ai_recommended = recommendTier(kyc.rows[0]);
 
     // Upsert tier selection
-    const result = await global.db.query(
+    const result = await pool.query(
       `INSERT INTO tenant_tier_selections
          (lead_id, tier_id, tier_name, billing_cycle,
           price_monthly, price_paid, ai_recommended, ai_score_basis, status)
@@ -1206,7 +1206,7 @@ const TIER_DOCS = {
 // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 router.get('/legal/required/:lead_id', async (req, res) => {
   try {
-    const tier = await global.db.query(
+    const tier = await pool.query(
       `SELECT tier_id, tier_name FROM tenant_tier_selections WHERE lead_id = $1`,
       [req.params.lead_id]
     );
@@ -1215,7 +1215,7 @@ router.get('/legal/required/:lead_id', async (req, res) => {
     }
 
     const required   = TIER_DOCS[tier.rows[0].tier_id] || ['AUP'];
-    const signed     = await global.db.query(
+    const signed     = await pool.query(
       `SELECT doc_key, signer_name, signed_at
        FROM tenant_legal_acceptances
        WHERE lead_id = $1 ORDER BY signed_at ASC`,
@@ -1286,7 +1286,7 @@ router.post('/legal/sign', async (req, res) => {
 
   try {
     // Verify lead exists and KYC was not rejected
-    const lead = await global.db.query(
+    const lead = await pool.query(
       `SELECT l.id FROM tenant_leads l
        JOIN tenant_kyc k ON k.lead_id = l.id
        WHERE l.id = $1 AND k.status != 'rejected'`,
@@ -1297,7 +1297,7 @@ router.post('/legal/sign', async (req, res) => {
     }
 
     // Insert â€” conflict on (lead_id, doc_key, doc_version) = already signed, no-op
-    await global.db.query(
+    await pool.query(
       `INSERT INTO tenant_legal_acceptances
          (lead_id, doc_key, doc_version, doc_title,
           signer_name, signed_at, signer_ip, user_agent, checksum)
@@ -1319,7 +1319,7 @@ router.post('/legal/sign', async (req, res) => {
     });
 
     // Check if all required docs are now signed
-    const tierResult = await global.db.query(
+    const tierResult = await pool.query(
       `SELECT tier_id FROM tenant_tier_selections WHERE lead_id = $1`,
       [lead_id]
     );
@@ -1328,7 +1328,7 @@ router.post('/legal/sign', async (req, res) => {
 
     if (tierResult.rows.length > 0) {
       const required   = TIER_DOCS[tierResult.rows[0].tier_id] || ['AUP'];
-      const signedRows = await global.db.query(
+      const signedRows = await pool.query(
         `SELECT doc_key FROM tenant_legal_acceptances WHERE lead_id = $1`,
         [lead_id]
       );
@@ -1343,7 +1343,7 @@ router.post('/legal/sign', async (req, res) => {
           completed_at: new Date().toISOString(),
         });
 
-        await global.db.query(
+        await pool.query(
           `UPDATE tenant_tier_selections
            SET status = 'legal_complete', updated_at = NOW()
            WHERE lead_id = $1`,
@@ -1375,7 +1375,7 @@ router.post('/legal/sign', async (req, res) => {
 // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 router.get('/legal/status/:lead_id', async (req, res) => {
   try {
-    const result = await global.db.query(
+    const result = await pool.query(
       `SELECT doc_key, doc_title, doc_version, signer_name, signed_at, checksum
        FROM tenant_legal_acceptances
        WHERE lead_id = $1 ORDER BY signed_at ASC`,
@@ -1404,7 +1404,7 @@ try {
 
 // â”€â”€ Invoice number generator â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 async function nextInvoiceNumber() {
-  const result = await global.db.query(`SELECT NEXTVAL('invoice_seq') AS n`);
+  const result = await pool.query(`SELECT NEXTVAL('invoice_seq') AS n`);
   const n      = result.rows[0].n.toString().padStart(6, '0');
   return `AUDIT-${new Date().getFullYear()}-${n}`;
 }
@@ -1416,7 +1416,7 @@ async function createInvoiceRecord(lead_id, payment_id, tier_name, amount_cents,
   const periodEnd      = new Date(now);
   periodEnd.setMonth(periodEnd.getMonth() + (billing_cycle === 'annual' ? 12 : 1));
 
-  await global.db.query(
+  await pool.query(
     `INSERT INTO tenant_invoices
        (lead_id, payment_id, invoice_number, amount_cents, line_item, billing_period, payment_status)
      VALUES ($1,$2,$3,$4,$5,$6,'paid')`,
@@ -1442,7 +1442,7 @@ router.post('/payment/create-intent', async (req, res) => {
   if (!lead_id) return res.status(400).json({ error: 'lead_id required' });
 
   try {
-    const tierResult = await global.db.query(
+    const tierResult = await pool.query(
       `SELECT t.tier_id, t.tier_name, t.billing_cycle, t.price_monthly, t.price_paid,
               l.email, l.business_name, k.legal_name
        FROM tenant_tier_selections t
@@ -1468,7 +1468,7 @@ router.post('/payment/create-intent', async (req, res) => {
 
     // Retrieve existing Stripe customer or create new
     let stripe_customer_id;
-    const existing = await global.db.query(
+    const existing = await pool.query(
       `SELECT stripe_customer_id FROM tenant_payments
        WHERE lead_id = $1 AND stripe_customer_id IS NOT NULL LIMIT 1`,
       [lead_id]
@@ -1502,7 +1502,7 @@ router.post('/payment/create-intent', async (req, res) => {
     });
 
     // Store pending payment record
-    await global.db.query(
+    await pool.query(
       `INSERT INTO tenant_payments
          (lead_id, stripe_customer_id, stripe_pi_id,
           amount_cents, billing_cycle, tier_id, tier_name, status)
@@ -1558,7 +1558,7 @@ router.post('/payment/confirm', async (req, res) => {
       });
     }
 
-    const tierResult = await global.db.query(
+    const tierResult = await pool.query(
       `SELECT tier_id, tier_name, billing_cycle, price_paid
        FROM tenant_tier_selections WHERE lead_id = $1`,
       [lead_id]
@@ -1566,7 +1566,7 @@ router.post('/payment/confirm', async (req, res) => {
     const tier = tierResult.rows[0];
 
     // Update payment record
-    const paymentResult = await global.db.query(
+    const paymentResult = await pool.query(
       `UPDATE tenant_payments SET
          status       = 'succeeded',
          stripe_pm_id = $3,
@@ -1584,7 +1584,7 @@ router.post('/payment/confirm', async (req, res) => {
     const payment_id   = paymentResult.rows[0].id;
     const amount_cents = paymentResult.rows[0].amount_cents;
 
-    await global.db.query(
+    await pool.query(
       `UPDATE tenant_tier_selections
        SET status = 'payment_complete', updated_at = NOW()
        WHERE lead_id = $1`,
@@ -1629,7 +1629,7 @@ router.post('/payment/free-activate', async (req, res) => {
   if (!lead_id) return res.status(400).json({ error: 'lead_id required' });
 
   try {
-    const tierResult = await global.db.query(
+    const tierResult = await pool.query(
       `SELECT tier_id, tier_name FROM tenant_tier_selections
        WHERE lead_id = $1 AND tier_id = 0`,
       [lead_id]
@@ -1638,7 +1638,7 @@ router.post('/payment/free-activate', async (req, res) => {
       return res.status(400).json({ error: 'Not a free tier account.' });
     }
 
-    await global.db.query(
+    await pool.query(
       `UPDATE tenant_tier_selections
        SET status = 'payment_complete', updated_at = NOW()
        WHERE lead_id = $1`,
@@ -1691,7 +1691,7 @@ router.post('/payment/webhook',
         const intent  = event.data.object;
         const lead_id = intent.metadata?.lead_id;
         if (lead_id) {
-          await global.db.query(
+          await pool.query(
             `UPDATE tenant_payments SET status = 'succeeded', paid_at = NOW()
              WHERE stripe_pi_id = $1 AND status != 'succeeded'`,
             [intent.id]
@@ -1705,7 +1705,7 @@ router.post('/payment/webhook',
         const lead_id     = intent.metadata?.lead_id;
         const failure_msg = intent.last_payment_error?.message || 'Payment failed';
         if (lead_id) {
-          await global.db.query(
+          await pool.query(
             `UPDATE tenant_payments SET status = 'failed', failure_reason = $2, updated_at = NOW()
              WHERE stripe_pi_id = $1`,
             [intent.id, failure_msg]
@@ -1731,7 +1731,7 @@ router.post('/payment/webhook',
 // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 router.get('/payment/invoice/:lead_id', async (req, res) => {
   try {
-    const result = await global.db.query(
+    const result = await pool.query(
       `SELECT i.*, p.payment_method, p.stripe_pi_id
        FROM tenant_invoices i
        JOIN tenant_payments p ON p.id = i.payment_id
@@ -1906,7 +1906,7 @@ router.post('/provision', async (req, res) => {
 
   try {
     // â”€â”€ 1. Verify payment complete â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-    const tierResult = await global.db.query(
+    const tierResult = await pool.query(
       `SELECT t.tier_id, t.tier_name, t.billing_cycle, t.price_monthly, t.status,
               l.email, l.business_name, l.crop_type,
               k.legal_name, k.contact_title, k.gps_lat, k.gps_lng,
@@ -1931,7 +1931,7 @@ router.post('/provision', async (req, res) => {
     }
 
     // â”€â”€ 2. Idempotency â€” return existing if already provisioned â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-    const existing = await global.db.query(
+    const existing = await pool.query(
       `SELECT id, email, tier_name, status FROM tenants WHERE lead_id = $1`,
       [lead_id]
     );
@@ -1963,7 +1963,7 @@ router.post('/provision', async (req, res) => {
     const brain_tenant_id = `tenant_${lead_id.replace(/-/g, '').substring(0, 12)}`;
 
     // â”€â”€ 7. Insert tenant record â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-    const tenantResult = await global.db.query(
+    const tenantResult = await pool.query(
       `INSERT INTO tenants (
          lead_id, email, legal_name, business_name, contact_title,
          pin_hash, pin_temp,
@@ -2004,7 +2004,7 @@ router.post('/provision', async (req, res) => {
     // â”€â”€ 8. Insert module access rows â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     if (module_set.length > 0) {
       const moduleValues = module_set.map((_, i) => `($1, $${i + 2})`).join(', ');
-      await global.db.query(
+      await pool.query(
         `INSERT INTO tenant_module_access (tenant_id, module_key)
          VALUES ${moduleValues} ON CONFLICT DO NOTHING`,
         [tenant_id, ...module_set]
@@ -2012,7 +2012,7 @@ router.post('/provision', async (req, res) => {
     }
 
     // â”€â”€ 9. Create owner user record â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-    await global.db.query(
+    await pool.query(
       `INSERT INTO tenant_users
          (tenant_id, email, name, role, pin_hash, pin_temp, status, activated_at)
        VALUES ($1,$2,$3,'owner',$4,TRUE,'active',NOW())
@@ -2021,7 +2021,7 @@ router.post('/provision', async (req, res) => {
     );
 
     // â”€â”€ 10. Advance tier selection status â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-    await global.db.query(
+    await pool.query(
       `UPDATE tenant_tier_selections
        SET status = 'provisioned', updated_at = NOW()
        WHERE lead_id = $1`,
@@ -2110,7 +2110,7 @@ router.post('/provision', async (req, res) => {
 // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 router.get('/provision/status/:lead_id', async (req, res) => {
   try {
-    const result = await global.db.query(
+    const result = await pool.query(
       `SELECT id, email, tier_id, tier_name, billing_cycle,
               module_set, assigned_miners, brain_tenant_id,
               renewal_date, status, provisioned_at
@@ -2149,7 +2149,7 @@ router.post('/provision/verify-pin', async (req, res) => {
   if (!email || !pin) return res.status(400).json({ error: 'email and pin required' });
 
   try {
-    const result = await global.db.query(
+    const result = await pool.query(
       `SELECT id, pin_hash, pin_temp, tier_id, tier_name, status
        FROM tenants WHERE email = $1`,
       [email.toLowerCase().trim()]
@@ -2164,7 +2164,7 @@ router.post('/provision/verify-pin', async (req, res) => {
     const valid = await bcrypt.compare(pin.toString(), tenant.pin_hash);
     if (!valid) return res.status(401).json({ error: 'Invalid PIN.' });
 
-    await global.db.query(`UPDATE tenants SET last_login = NOW() WHERE id = $1`, [tenant.id]);
+    await pool.query(`UPDATE tenants SET last_login = NOW() WHERE id = $1`, [tenant.id]);
 
     res.json({
       success:   true,
@@ -2194,11 +2194,11 @@ router.post('/provision/set-pin', async (req, res) => {
   try {
     const pin_hash = await bcrypt.hash(new_pin.toString(), 12);
 
-    await global.db.query(
+    await pool.query(
       `UPDATE tenants SET pin_hash = $2, pin_temp = FALSE, updated_at = NOW() WHERE id = $1`,
       [tenant_id, pin_hash]
     );
-    await global.db.query(
+    await pool.query(
       `UPDATE tenant_users SET pin_hash = $2, pin_temp = FALSE
        WHERE tenant_id = $1 AND role = 'owner'`,
       [tenant_id, pin_hash]
@@ -2226,7 +2226,7 @@ router.post('/provision/set-pin', async (req, res) => {
 router.get('/wizard/:tenant_id', async (req, res) => {
   try {
     // Get tenant core data
-    const tenantResult = await global.db.query(
+    const tenantResult = await pool.query(
       `SELECT t.id, t.email, t.legal_name, t.business_name, t.contact_title,
               t.tier_id, t.tier_name, t.billing_cycle, t.country,
               t.gps_lat, t.gps_lng, t.latam_countries, t.crop_types,
@@ -2248,17 +2248,17 @@ router.get('/wizard/:tenant_id', async (req, res) => {
     const tenant = tenantResult.rows[0];
 
     // Get or create wizard progress record
-    let wizardResult = await global.db.query(
+    let wizardResult = await pool.query(
       `SELECT * FROM tenant_wizard_progress WHERE tenant_id = $1`,
       [req.params.tenant_id]
     );
 
     if (wizardResult.rows.length === 0) {
-      await global.db.query(
+      await pool.query(
         `INSERT INTO tenant_wizard_progress (tenant_id) VALUES ($1)`,
         [req.params.tenant_id]
       );
-      wizardResult = await global.db.query(
+      wizardResult = await pool.query(
         `SELECT * FROM tenant_wizard_progress WHERE tenant_id = $1`,
         [req.params.tenant_id]
       );
@@ -2332,7 +2332,7 @@ router.post('/wizard/step1', async (req, res) => {
 
   try {
     // Verify tenant exists
-    const tenantCheck = await global.db.query(
+    const tenantCheck = await pool.query(
       `SELECT id, email FROM tenants WHERE id = $1`, [tenant_id]
     );
     if (tenantCheck.rows.length === 0) {
@@ -2340,7 +2340,7 @@ router.post('/wizard/step1', async (req, res) => {
     }
 
     // Upsert wizard progress â€” set step1 complete, save all profile fields
-    await global.db.query(
+    await pool.query(
       `INSERT INTO tenant_wizard_progress (
          tenant_id, step1_profile,
          profile_legal_name, profile_dba, profile_address, profile_city,
@@ -2391,7 +2391,7 @@ router.post('/wizard/step1', async (req, res) => {
     );
 
     // Also update the canonical tenants record with confirmed legal name
-    await global.db.query(
+    await pool.query(
       `UPDATE tenants SET
          legal_name    = $2,
          business_name = COALESCE($3, business_name),
@@ -2440,14 +2440,14 @@ router.post('/wizard/skip', async (req, res) => {
   if (!col) return res.status(400).json({ error: 'Invalid step (1â€“6)' });
 
   try {
-    await global.db.query(
+    await pool.query(
       `UPDATE tenant_wizard_progress SET ${col} = TRUE, updated_at = NOW()
        WHERE tenant_id = $1`,
       [tenant_id]
     );
 
     // Check if all steps are now complete
-    const result = await global.db.query(
+    const result = await pool.query(
       `SELECT step1_profile, step2_catalog, step3_bank,
               step4_docs, step5_team, step6_alerts
        FROM tenant_wizard_progress WHERE tenant_id = $1`,
@@ -2458,7 +2458,7 @@ router.post('/wizard/skip', async (req, res) => {
     const allDone = w && Object.values(w).every(Boolean);
 
     if (allDone) {
-      await global.db.query(
+      await pool.query(
         `UPDATE tenant_wizard_progress
          SET wizard_complete = TRUE, completed_at = NOW()
          WHERE tenant_id = $1`,
@@ -2485,7 +2485,7 @@ router.post('/wizard/complete', async (req, res) => {
   if (!tenant_id) return res.status(400).json({ error: 'tenant_id required' });
 
   try {
-    await global.db.query(
+    await pool.query(
       `UPDATE tenant_wizard_progress
        SET step1_profile = TRUE, step2_catalog = TRUE, step3_bank = TRUE,
            step4_docs = TRUE, step5_team = TRUE, step6_alerts = TRUE,
@@ -2534,7 +2534,7 @@ router.post('/brain/activate', async (req, res) => {
 
   try {
     // Verify tenant provisioned
-    const tenant = await global.db.query(
+    const tenant = await pool.query(
       `SELECT id, email, tier_id, tier_name, brain_tenant_id,
               assigned_miners, crop_types, latam_countries, country,
               gps_lat, gps_lng
@@ -2548,7 +2548,7 @@ router.post('/brain/activate', async (req, res) => {
     const t = tenant.rows[0];
 
     // Idempotent â€” return existing if already activated
-    const existing = await global.db.query(
+    const existing = await pool.query(
       `SELECT * FROM tenant_brain_activations WHERE tenant_id = $1`,
       [tenant_id]
     );
@@ -2567,7 +2567,7 @@ router.post('/brain/activate', async (req, res) => {
     const activatedAt   = new Date();
 
     // Create or update brain activation record
-    await global.db.query(
+    await pool.query(
       `INSERT INTO tenant_brain_activations
          (tenant_id, activated, activated_at, miners_total, miners_active,
           brain_tenant_id, api_key, last_miner_ping)
@@ -2589,7 +2589,7 @@ router.post('/brain/activate', async (req, res) => {
       .filter(m => miners.some(am => am.includes(m.split('_')[0])));
 
     for (const miner of minerCategories.slice(0, 10)) {
-      await global.db.query(
+      await pool.query(
         `INSERT INTO tenant_miner_events
            (tenant_id, miner_key, event_type, payload)
          VALUES ($1, $2, 'activated', $3)`,
@@ -2615,7 +2615,7 @@ router.post('/brain/activate', async (req, res) => {
 
     // Schedule first intelligence report (24h from now)
     const reportAt = new Date(Date.now() + 24 * 60 * 60 * 1000);
-    await global.db.query(
+    await pool.query(
       `INSERT INTO tenant_backoffice_jobs
          (tenant_id, job_type, status, scheduled_at)
        VALUES ($1, 'report_gen', 'pending', $2)
@@ -2683,7 +2683,7 @@ router.post('/brain/activate', async (req, res) => {
 
 router.get('/brain/status/:tenant_id', async (req, res) => {
   try {
-    const result = await global.db.query(
+    const result = await pool.query(
       `SELECT b.*, t.tier_name, t.assigned_miners, t.email
        FROM tenant_brain_activations b
        JOIN tenants t ON t.id = b.tenant_id
@@ -2698,7 +2698,7 @@ router.get('/brain/status/:tenant_id', async (req, res) => {
     const b = result.rows[0];
 
     // Get recent miner events
-    const events = await global.db.query(
+    const events = await pool.query(
       `SELECT miner_key, event_type, payload, created_at
        FROM tenant_miner_events
        WHERE tenant_id = $1
@@ -2731,14 +2731,14 @@ router.post('/brain/ping', async (req, res) => {
   }
 
   try {
-    await global.db.query(
+    await pool.query(
       `UPDATE tenant_brain_activations
        SET last_miner_ping = NOW(), updated_at = NOW()
        WHERE tenant_id = $1`,
       [tenant_id]
     );
 
-    await global.db.query(
+    await pool.query(
       `INSERT INTO tenant_miner_events
          (tenant_id, miner_key, event_type, payload)
        VALUES ($1, $2, 'data_collected', $3)`,
@@ -2760,7 +2760,7 @@ router.post('/brain/ping', async (req, res) => {
 
 router.get('/backoffice/status/:tenant_id', async (req, res) => {
   try {
-    const tenant = await global.db.query(
+    const tenant = await pool.query(
       `SELECT id, email, tier_id, tier_name, billing_cycle,
               price_monthly, renewal_date
        FROM tenants WHERE id = $1`,
@@ -2773,23 +2773,23 @@ router.get('/backoffice/status/:tenant_id', async (req, res) => {
     const t = tenant.rows[0];
 
     // Get or create settings
-    let settings = await global.db.query(
+    let settings = await pool.query(
       `SELECT * FROM tenant_backoffice_settings WHERE tenant_id = $1`,
       [req.params.tenant_id]
     );
     if (settings.rows.length === 0) {
-      await global.db.query(
+      await pool.query(
         `INSERT INTO tenant_backoffice_settings (tenant_id) VALUES ($1)`,
         [req.params.tenant_id]
       );
-      settings = await global.db.query(
+      settings = await pool.query(
         `SELECT * FROM tenant_backoffice_settings WHERE tenant_id = $1`,
         [req.params.tenant_id]
       );
     }
 
     // Get recent jobs
-    const jobs = await global.db.query(
+    const jobs = await pool.query(
       `SELECT job_type, status, records_processed, created_at, completed_at, error_msg
        FROM tenant_backoffice_jobs
        WHERE tenant_id = $1
@@ -2798,7 +2798,7 @@ router.get('/backoffice/status/:tenant_id', async (req, res) => {
     );
 
     // Get invoices
-    const invoices = await global.db.query(
+    const invoices = await pool.query(
       `SELECT invoice_number, amount_cents, line_item, billing_period,
               issued_at, payment_status
        FROM tenant_invoices
@@ -2864,7 +2864,7 @@ router.post('/backoffice/settings', async (req, res) => {
   }
 
   try {
-    await global.db.query(
+    await pool.query(
       `INSERT INTO tenant_backoffice_settings
          (tenant_id, bank_connected, bank_sync_hour, auto_categorize,
           ocr_enabled, fsma_auto_record, monthly_report)
@@ -2903,7 +2903,7 @@ router.post('/backoffice/run-job', async (req, res) => {
   if (!valid.includes(job_type)) return res.status(400).json({ error: `Invalid job_type. Valid: ${valid.join(', ')}` });
 
   try {
-    const result = await global.db.query(
+    const result = await pool.query(
       `INSERT INTO tenant_backoffice_jobs
          (tenant_id, job_type, status, started_at)
        VALUES ($1, $2, 'running', NOW())
@@ -2916,7 +2916,7 @@ router.post('/backoffice/run-job', async (req, res) => {
     // Simulate job completion (wire real logic per job type here)
     setTimeout(async () => {
       try {
-        await global.db.query(
+        await pool.query(
           `UPDATE tenant_backoffice_jobs
            SET status = 'complete', completed_at = NOW(),
                records_processed = $2
@@ -2947,7 +2947,7 @@ router.post('/backoffice/run-job', async (req, res) => {
 
 router.get('/renewal/status/:tenant_id', async (req, res) => {
   try {
-    const result = await global.db.query(
+    const result = await pool.query(
       `SELECT t.id, t.email, t.legal_name, t.tier_id, t.tier_name,
               t.billing_cycle, t.price_monthly, t.renewal_date, t.status,
               t.provisioned_at, t.module_set,
@@ -2970,7 +2970,7 @@ router.get('/renewal/status/:tenant_id', async (req, res) => {
     const daysUntilRenewal = Math.ceil((renewalDate - Date.now()) / (1000 * 60 * 60 * 24));
 
     // Renewal event history
-    const history = await global.db.query(
+    const history = await pool.query(
       `SELECT event_type, old_tier_id, new_tier_id,
               effective_date, created_at, note
        FROM tenant_renewal_events
@@ -3011,7 +3011,7 @@ router.post('/renewal/renew', async (req, res) => {
   if (!tenant_id) return res.status(400).json({ error: 'tenant_id required' });
 
   try {
-    const tenant = await global.db.query(
+    const tenant = await pool.query(
       `SELECT id, email, legal_name, tier_id, tier_name,
               billing_cycle, price_monthly, renewal_date
        FROM tenants WHERE id = $1`,
@@ -3023,12 +3023,12 @@ router.post('/renewal/renew', async (req, res) => {
     const newRenewal = new Date(t.renewal_date);
     newRenewal.setMonth(newRenewal.getMonth() + (t.billing_cycle === 'annual' ? 12 : 1));
 
-    await global.db.query(
+    await pool.query(
       `UPDATE tenants SET renewal_date = $2, updated_at = NOW() WHERE id = $1`,
       [tenant_id, newRenewal.toISOString().split('T')[0]]
     );
 
-    await global.db.query(
+    await pool.query(
       `INSERT INTO tenant_renewal_events
          (tenant_id, event_type, old_tier_id, new_tier_id,
           amount_cents, effective_date, triggered_by)
@@ -3085,7 +3085,7 @@ router.post('/renewal/cancel', async (req, res) => {
   if (!tenant_id) return res.status(400).json({ error: 'tenant_id required' });
 
   try {
-    const tenant = await global.db.query(
+    const tenant = await pool.query(
       `SELECT id, email, legal_name, tier_id, tier_name,
               billing_cycle, renewal_date
        FROM tenants WHERE id = $1`,
@@ -3100,12 +3100,12 @@ router.post('/renewal/cancel', async (req, res) => {
     const days       = noticeDays[t.tier_id] || 30;
     const effectiveDate = new Date(t.renewal_date);
 
-    await global.db.query(
+    await pool.query(
       `UPDATE tenants SET status = 'cancellation_pending', updated_at = NOW() WHERE id = $1`,
       [tenant_id]
     );
 
-    await global.db.query(
+    await pool.query(
       `INSERT INTO tenant_renewal_events
          (tenant_id, event_type, old_tier_id, note, effective_date, triggered_by)
        VALUES ($1,'cancelled',$2,$3,$4,'tenant')`,
@@ -3159,7 +3159,7 @@ router.post('/renewal/export', async (req, res) => {
   try {
     const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000); // 30 days
 
-    const result = await global.db.query(
+    const result = await pool.query(
       `INSERT INTO tenant_data_exports
          (tenant_id, status, expires_at, requested_by)
        VALUES ($1,'queued',$2,$3)
@@ -3186,7 +3186,7 @@ router.post('/renewal/export', async (req, res) => {
 
 router.get('/renewal/export/:tenant_id', async (req, res) => {
   try {
-    const result = await global.db.query(
+    const result = await pool.query(
       `SELECT id, status, download_url, expires_at, file_size_mb, created_at, completed_at
        FROM tenant_data_exports
        WHERE tenant_id = $1
@@ -3213,7 +3213,7 @@ router.post('/wizard/step2', async (req, res) => {
     // Upsert each catalog item
     for (const item of items) {
       if (!item.commodity?.trim()) continue;
-      await global.db.query(
+      await pool.query(
         `INSERT INTO tenant_catalog_items
            (tenant_id, commodity, category, unit,
             price_min, price_max, cogs_target)
@@ -3233,7 +3233,7 @@ router.post('/wizard/step2', async (req, res) => {
       );
     }
 
-    await global.db.query(
+    await pool.query(
       `UPDATE tenant_wizard_progress
        SET step2_catalog = TRUE, updated_at = NOW()
        WHERE tenant_id = $1`,
@@ -3255,7 +3255,7 @@ router.post('/wizard/step2', async (req, res) => {
 // GET catalog items for a tenant
 router.get('/wizard/step2/:tenant_id', async (req, res) => {
   try {
-    const result = await global.db.query(
+    const result = await pool.query(
       `SELECT * FROM tenant_catalog_items WHERE tenant_id = $1 AND active = TRUE ORDER BY commodity`,
       [req.params.tenant_id]
     );
@@ -3276,7 +3276,7 @@ router.post('/wizard/step3', async (req, res) => {
   if (!method)    return res.status(400).json({ error: 'method required (csv|manual)' });
 
   try {
-    await global.db.query(
+    await pool.query(
       `INSERT INTO tenant_bank_connections
          (tenant_id, method, bank_name, account_label,
           currency, sync_hour, connected, connected_at)
@@ -3295,7 +3295,7 @@ router.post('/wizard/step3', async (req, res) => {
     );
 
     // Also update backoffice settings
-    await global.db.query(
+    await pool.query(
       `INSERT INTO tenant_backoffice_settings
          (tenant_id, bank_connected, bank_sync_hour)
        VALUES ($1, TRUE, $2)
@@ -3306,7 +3306,7 @@ router.post('/wizard/step3', async (req, res) => {
       [tenant_id, parseInt(sync_hour) || 6]
     );
 
-    await global.db.query(
+    await pool.query(
       `UPDATE tenant_wizard_progress
        SET step3_bank = TRUE, updated_at = NOW()
        WHERE tenant_id = $1`,
@@ -3374,7 +3374,7 @@ router.post('/wizard/step4',
     const fileSizeKb = Math.round(req.file.size / 1024);
 
     try {
-      await global.db.query(
+      await pool.query(
         `INSERT INTO tenant_first_uploads
            (tenant_id, file_name, file_type, file_size_kb,
             detected_type, routed_to)
@@ -3385,7 +3385,7 @@ router.post('/wizard/step4',
       );
 
       // Also log to document vault
-      await global.db.query(
+      await pool.query(
         `INSERT INTO document_vault
            (owner_id, owner_type, file_name, file_path, file_type, category)
          VALUES ($1,'tenant',$2,$3,$4,$5)`,
@@ -3395,7 +3395,7 @@ router.post('/wizard/step4',
          type]
       ).catch(() => {}); // non-blocking if table structure differs
 
-      await global.db.query(
+      await pool.query(
         `UPDATE tenant_wizard_progress
          SET step4_docs = TRUE, updated_at = NOW()
          WHERE tenant_id = $1`,
@@ -3433,7 +3433,7 @@ router.post('/wizard/step5', async (req, res) => {
   if (!tenant_id) return res.status(400).json({ error: 'tenant_id required' });
 
   // Get tenant email to send from
-  const tenantRow = await global.db.query(
+  const tenantRow = await pool.query(
     `SELECT email, legal_name, tier_id FROM tenants WHERE id = $1`, [tenant_id]
   );
   if (tenantRow.rows.length === 0) return res.status(404).json({ error: 'Tenant not found' });
@@ -3448,7 +3448,7 @@ router.post('/wizard/step5', async (req, res) => {
         const role = ['admin','agent','field_inspector'].includes(inv.role) ? inv.role : 'agent';
 
         try {
-          await global.db.query(
+          await pool.query(
             `INSERT INTO tenant_team_invites
                (tenant_id, email, name, role, status)
              VALUES ($1,$2,$3,$4,'pending')
@@ -3460,7 +3460,7 @@ router.post('/wizard/step5', async (req, res) => {
           );
 
           // Also create user record
-          await global.db.query(
+          await pool.query(
             `INSERT INTO tenant_users
                (tenant_id, email, name, role, status)
              VALUES ($1,$2,$3,$4,'invited')
@@ -3508,7 +3508,7 @@ router.post('/wizard/step5', async (req, res) => {
       }
     }
 
-    await global.db.query(
+    await pool.query(
       `UPDATE tenant_wizard_progress
        SET step5_team = TRUE, updated_at = NOW()
        WHERE tenant_id = $1`,
@@ -3540,7 +3540,7 @@ router.post('/wizard/step6', async (req, res) => {
     if (alerts && alerts.length > 0) {
       for (const alert of alerts) {
         if (!alert.alert_type) continue;
-        await global.db.query(
+        await pool.query(
           `INSERT INTO tenant_alert_configs
              (tenant_id, alert_type, commodity, threshold_above,
               threshold_below, threshold_unit, channel, active)
@@ -3556,7 +3556,7 @@ router.post('/wizard/step6', async (req, res) => {
       }
     }
 
-    await global.db.query(
+    await pool.query(
       `UPDATE tenant_wizard_progress
        SET step6_alerts = TRUE, wizard_complete = TRUE,
            completed_at = NOW(), updated_at = NOW()

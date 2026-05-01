@@ -16,6 +16,7 @@
 // =============================================================================
 
 const express = require('express');
+const pool = require('../db');
 const router = express.Router();
 
 // Rate limiter for public submissions -- 5 per IP per hour
@@ -33,7 +34,7 @@ function checkRateLimit(ip) {
 }
 
 // Get DB pool (set globally by server.js)
-const getDb = () => global.db;
+const getDb = () => pool;
 
 // Auth middleware -- require admin JWT for inbox/status/dispatch
 function requireAdmin(req, res, next) {

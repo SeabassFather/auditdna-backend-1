@@ -3,7 +3,8 @@ const express = require('express');
 const router = express.Router();
 const https = require('https');
 const { classifyBatch, matchBuyersForInventory } = require('../services/contact-classifier');
-const db = global.db || global.pgglobal;
+const pool = require('../db');
+const db = pool || global.pgglobal;
 const USDA_KEY = process.env.USDA_API_KEY || process.env.USDA_NASS_API_KEY || '4F158DB1-85C2-3243-BFFA-58B53FB40D23';
 
 const _cache = new Map();

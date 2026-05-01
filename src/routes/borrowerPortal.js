@@ -8,13 +8,14 @@
 
 const express = require('express');
 const crypto = require('crypto');
+const pool = require('../../db');
 const router = express.Router();
 
 // ---- Schema ---------------------------------------------------------------
 async function ensureSchema() {
-  if (!global.db) return;
+  if (!pool) return;
   try {
-    await global.db.query(`
+    await pool.query(`
       CREATE TABLE IF NOT EXISTS portal_tokens (
         id SERIAL PRIMARY KEY,
         token VARCHAR(80) NOT NULL UNIQUE,
@@ -34,8 +35,8 @@ async function ensureSchema() {
         notes TEXT
       );
     `);
-    await global.db.query(`CREATE INDEX IF NOT EXISTS idx_portal_tokens_token ON portal_tokens(token);`);
-    await global.db.query(`CREATE INDEX IF NOT EXISTS idx_portal_tokens_deal ON portal_tokens(deal_id, lane);`);
+    await pool.query(`CREATE INDEX IF NOT EXISTS idx_portal_tokens_token ON portal_tokens(token);`);
+    await pool.query(`CREATE INDEX IF NOT EXISTS idx_portal_tokens_deal ON portal_tokens(deal_id, lane);`);
     console.log('[borrowerPortal] schema OK');
   } catch (e) {
     console.error('[borrowerPortal] schema error:', e.message);
@@ -69,7 +70,7 @@ router.post('/api/portal/tokens', heavyJson, async (req, res) => {
 
   try {
     const token = generateToken();
-    const r = await global.db.query(
+    const r = await pool.query(
       `INSERT INTO portal_tokens
          (token, deal_id, lane, borrower_id, recipient_name, recipient_email, created_by, expires_at, notes)
        VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)
@@ -108,7 +109,7 @@ router.post('/api/portal/tokens', heavyJson, async (req, res) => {
 router.get('/api/portal/tokens/:lane/:dealId', async (req, res) => {
   const { lane, dealId } = req.params;
   try {
-    const r = await global.db.query(
+    const r = await pool.query(
       `SELECT id, token, deal_id, lane, borrower_id, recipient_name, recipient_email,
               created_at, created_by, expires_at, view_count, last_viewed_at, revoked_at, revoked_by, notes
        FROM portal_tokens
@@ -129,7 +130,7 @@ router.post('/api/portal/tokens/:tokenId/revoke', heavyJson, async (req, res) =>
   const tokenId = parseInt(req.params.tokenId, 10);
   const revokedBy = (req.body && req.body.revoked_by) || 'saul';
   try {
-    const r = await global.db.query(
+    const r = await pool.query(
       `UPDATE portal_tokens SET revoked_at = NOW(), revoked_by = $2
        WHERE id = $1 AND revoked_at IS NULL
        RETURNING id, token, deal_id, lane`,
@@ -169,7 +170,7 @@ router.get('/api/portal/admin/all', async (req, res) => {
   const lim = Math.min(parseInt(limit || '200', 10), 500);
 
   try {
-    const r = await global.db.query(
+    const r = await pool.query(
       `SELECT id, token, deal_id, lane, recipient_name, recipient_email,
               created_at, expires_at, view_count, last_viewed_at, revoked_at
        FROM portal_tokens
@@ -193,7 +194,7 @@ router.get('/api/portal/public/:token', async (req, res) => {
 
   try {
     // Lookup token
-    const tq = await global.db.query(
+    const tq = await pool.query(
       `SELECT id, deal_id, lane, borrower_id, recipient_name, expires_at, revoked_at, view_count
        FROM portal_tokens
        WHERE token = $1`,
@@ -207,7 +208,7 @@ router.get('/api/portal/public/:token', async (req, res) => {
 
     // Increment view count + record IP
     const ip = (req.headers['x-forwarded-for'] || req.connection.remoteAddress || '').toString().split(',')[0].trim();
-    await global.db.query(
+    await pool.query(
       `UPDATE portal_tokens SET view_count = view_count + 1, last_viewed_at = NOW(), last_viewed_ip = $2 WHERE id = $1`,
       [t.id, ip.substring(0, 50)]
     );
@@ -215,14 +216,14 @@ router.get('/api/portal/public/:token', async (req, res) => {
     emitBrain('PORTAL_VIEWED', { token_id: t.id, deal_id: t.deal_id, lane: t.lane, view_count: t.view_count + 1 });
 
     // Fetch deal (sanitize - strip internal-only fields)
-    const dq = await global.db.query(`SELECT * FROM financing_deals WHERE id = $1`, [t.deal_id]);
+    const dq = await pool.query(`SELECT * FROM financing_deals WHERE id = $1`, [t.deal_id]);
     if (dq.rows.length === 0) return res.status(404).json({ error: 'deal not found' });
     const deal = dq.rows[0];
 
     // Fetch borrower (sanitize - only legal name + role)
     let borrowerName = null, borrowerRole = null;
     if (t.borrower_id || deal.borrower_id) {
-      const bq = await global.db.query(
+      const bq = await pool.query(
         `SELECT legal_name, dba, borrower_role FROM borrower_entities WHERE id = $1`,
         [t.borrower_id || deal.borrower_id]
       );
@@ -235,11 +236,11 @@ router.get('/api/portal/public/:token', async (req, res) => {
     // Counts (no actual content)
     let docCount = 0, respCount = 0;
     try {
-      const dc = await global.db.query(`SELECT COUNT(*)::int as c FROM deal_documents WHERE deal_id = $1 AND lane = $2`, [t.deal_id, t.lane]);
+      const dc = await pool.query(`SELECT COUNT(*)::int as c FROM deal_documents WHERE deal_id = $1 AND lane = $2`, [t.deal_id, t.lane]);
       docCount = dc.rows[0].c;
     } catch (e) {}
     try {
-      const rc = await global.db.query(`SELECT COUNT(*)::int as c FROM lender_responses WHERE deal_id = $1 AND lane = $2 AND decision != 'rejected'`, [t.deal_id, t.lane]);
+      const rc = await pool.query(`SELECT COUNT(*)::int as c FROM lender_responses WHERE deal_id = $1 AND lane = $2 AND decision != 'rejected'`, [t.deal_id, t.lane]);
       respCount = rc.rows[0].c;
     } catch (e) {}
 

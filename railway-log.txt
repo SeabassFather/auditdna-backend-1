@@ -1,0 +1,500 @@
+﻿    |-- /api/zadarma-sync/* + /api/Zadarma-sync/* <-- server.js (inline)
+    |-- /api/Grower-intelligence     <-- Grower-intelligence.js
+    |-- /api/brain/*                 <-- Brain.js (inline)
+    |-- /internal-messenger + /api/internal-messenger <-- Internal-messenger.js
+ AUTO-DISCOVERED: 137
+    |-- /api/Aicowboysroutes         <-- Aicowboysroutes.js
+    |-- /api/AiemailRoute            <-- AiemailRoute.js
+    |-- /api/Ailearningroutes        <-- Ailearningroutes.js
+    |-- /api/All_products_500_database_part1 <-- All_products_500_database_part1.js
+    |-- /api/Audit                   <-- Audit.js
+    |-- /api/Complianceroutes        <-- Complianceroutes.js
+    |-- /api/Grower_bot              <-- Grower_bot.js
+    |-- /api/Growerrecommendationsroutes <-- Growerrecommendationsroutes.js
+    |-- /api/accounting              <-- accounting.js
+    |-- /api/Inventory               <-- Inventory.js
+    |-- /api/LedgerApi.routes        <-- LedgerApi.routes.js
+    |-- /api/admin.routes            <-- admin.routes.js
+    |-- /api/Mortgage                <-- Mortgage.js
+    |-- /api/agIntelligence          <-- agIntelligence.js
+    |-- /api/MortgageRoutes          <-- MortgageRoutes.js
+    |-- /api/ag_Intel                <-- ag_Intel.js
+    |-- /api/PriceFeed               <-- PriceFeed.js
+    |-- /api/agrimaxx                <-- agrimaxx.js
+    |-- /api/ProduceIntelligence     <-- ProduceIntelligence.js
+    |-- /api/Products                <-- Products.js
+    |-- /api/Recipes                 <-- Recipes.js
+    |-- /api/Seedtestingroutes       <-- Seedtestingroutes.js
+    |-- /api/Shippers                <-- Shippers.js
+    |-- /api/Soiltechroute           <-- Soiltechroute.js
+    |-- /api/Traceability            <-- Traceability.js
+    |-- /api/User                    <-- User.js
+    |-- /api/Watertech               <-- Watertech.js
+    |-- /api/ai-price-predict        <-- ai-price-predict.js
+    |-- /api/ai-test                 <-- ai-test.js
+    |-- /api/ai                      <-- ai.js
+    |-- /api/ai.routes               <-- ai.routes.js
+    |-- /api/aiAgentDashboard        <-- aiAgentDashboard.js
+    |-- /api/approval                <-- approval.js
+    |-- /api/audit-notifications     <-- audit-notifications.js
+    |-- /api/auth-portal             <-- auth-portal.js
+    |-- /api/authApi.routes          <-- authApi.routes.js
+    |-- /api/autonomy-loop           <-- autonomy-loop.js
+    |-- /api/bci-finance             <-- bci-finance.js
+    |-- /api/brain-commerce          <-- brain-commerce.js
+    |-- /api/brain-events            <-- brain-events.js
+    |-- /api/brain-stream            <-- brain-stream.js
+    |-- /api/brainevents             <-- brainevents.js
+    |-- /api/buyer-segments          <-- buyer-segments.js
+    |-- /api/buyers                  <-- buyers.js
+    |-- /api/buyers.routes           <-- buyers.routes.js
+    |-- /api/cogs                    <-- cogs.js
+    |-- /api/commodity-search        <-- commodity-search.js
+    |-- /api/credit-apps             <-- credit-apps.js
+    |-- /api/crossBorderRealEstate   <-- crossBorderRealEstate.js
+    |-- /api/dataIntake              <-- dataIntake.js
+    |-- /api/deal-floor              <-- deal-floor.js
+    |-- /api/deal-stream             <-- deal-stream.js
+    |-- /api/did_video               <-- did_video.js
+    |-- /api/disputeRecovery         <-- disputeRecovery.js
+    |-- /api/email-campaigns         <-- email-campaigns.js
+    |-- /api/email                   <-- email.js
+    |-- /api/email_campaigns         <-- email_campaigns.js
+    |-- /api/email_sequence_ecmw     <-- email_sequence_ecmw.js
+    |-- /api/entityResolution        <-- entityResolution.js
+    |-- /api/escrowApi.routes        <-- escrowApi.routes.js
+    |-- /api/escrowGatekeeper        <-- escrowGatekeeper.js
+    |-- /api/factor-intake           <-- factor-intake.js
+    |-- /api/factor-matchmaker       <-- factor-matchmaker.js
+    |-- /api/factoringRoutes         <-- factoringRoutes.js
+    |-- /api/fdaApi_.routes          <-- fdaApi_.routes.js
+    |-- /api/field-agents            <-- field-agents.js
+    |-- /api/fieldOps                <-- fieldOps.js
+    |-- /api/financial               <-- financial.js
+    |-- /api/financing               <-- financing.js
+    |-- /api/mobileSales             <-- mobileSales.js
+    |-- /api/foodSafety              <-- foodSafety.js
+    |-- /api/globalCompliance        <-- globalCompliance.js
+    |-- /api/mobileWorkspace         <-- mobileWorkspace.js
+    |-- /api/gmail                   <-- gmail.js
+    |-- /api/mortgage-stats          <-- mortgage-stats.js
+    |-- /api/grower-compliance       <-- grower-compliance.js
+    |-- /api/grower-pipeline         <-- grower-pipeline.js
+    |-- /api/grower-public-register  <-- grower-public-register.js
+    |-- /api/grower                  <-- grower.js
+    |-- /api/grower_pipeline         <-- grower_pipeline.js
+    |-- /api/growers                 <-- growers.js
+    |-- /api/growers_legacy_backup   <-- growers_legacy_backup.js
+    |-- /api/growerworkflow          <-- growerworkflow.js
+    |-- /api/hot-leads.routes        <-- hot-leads.routes.js
+    |-- /api/index                   <-- index.js
+    |-- /api/inventoryManifest       <-- inventoryManifest.js
+    |-- /api/labTestWorkflow         <-- labTestWorkflow.js
+    |-- /api/lender-panel            <-- lender-panel.js
+    |-- /api/loaf-routes             <-- loaf-routes.js
+    |-- /api/market.routes           <-- market.routes.js
+    |-- /api/reports.routes          <-- reports.routes.js
+    |-- /api/sessionRoutes           <-- sessionRoutes.js
+    |-- /api/sii_mx                  <-- sii_mx.js
+    |-- /api/multiAIVerification.routes <-- multiAIVerification.routes.js
+    |-- /api/multiVerification.routes <-- multiVerification.routes.js
+    |-- /api/niner-bridge            <-- niner-bridge.js
+    |-- /api/notifications.helper    <-- notifications.helper.js
+    |-- /api/notifications.routes    <-- notifications.routes.js
+    |-- /api/notify                  <-- notify.js
+    |-- /api/ollama                  <-- ollama.js
+    |-- /api/onboarding              <-- onboarding.js
+    |-- /api/ownerMetrics            <-- ownerMetrics.js
+    |-- /api/pin-verify              <-- pin-verify.js
+    |-- /api/ports.routes            <-- ports.routes.js
+    |-- /api/price_intelligence      <-- price_intelligence.js
+    |-- /api/produce                 <-- produce.js
+    |-- /api/product-market          <-- product-market.js
+    |-- /api/product-submissions-clean <-- product-submissions-clean.js
+    |-- /api/product-submissions     <-- product-submissions.js
+    |-- /api/properties              <-- properties.js
+    |-- /api/workflowApi.routes      <-- workflowApi.routes.js
+    |-- /api/waterRoutes             <-- waterRoutes.js
+    |-- /api/smallGrowerRoutes       <-- smallGrowerRoutes.js
+    |-- /api/userApi.routes          <-- userApi.routes.js
+    |-- /api/sms                     <-- sms.js
+    |-- /api/uploadRoutes            <-- uploadRoutes.js
+    |-- /api/tenant-auth             <-- tenant-auth.js
+    |-- /api/voiceRoutes             <-- voiceRoutes.js
+    |-- /api/usda-campaign           <-- usda-campaign.js
+    |-- /api/tenants                 <-- tenants.js
+    |-- /api/usda-market-intel       <-- usda-market-intel.js
+    |-- /api/watch                   <-- watch.js
+    |-- /api/terminal-markets        <-- terminal-markets.js
+    |-- /api/usda                    <-- usda.js
+    |-- /api/traceabilityWorkflow    <-- traceabilityWorkflow.js
+    |-- /api/usdaMarketOverlay       <-- usdaMarketOverlay.js
+    |-- /api/trade-registry          <-- trade-registry.js
+    |-- /api/usdaRegistry            <-- usdaRegistry.js
+    |-- /api/triangularRisk          <-- triangularRisk.js
+    |-- /api/unifiedCRM.routes       <-- unifiedCRM.routes.js
+    |-- /api/upload                  <-- upload.js
+
+ TOTAL ROUTES: 158
+================================================================
+
+[WARN] MISSING ROUTE FILES:
+    \-- routes/developments.js
+    \-- routes/agent-registrations.js
+    \-- routes/notifications.js
+[OK] POSTGRESQL POOL CONNECTED (max: 20, idle: 30s)
+[Gmail] PostgreSQL table ready
+├ó┼ôΓÇª SII-MX connected to PostgreSQL
+├ó┼ôΓÇª [Grower Workflow] Tables initialized
+├ó┼ôΓÇª [Multi-AI Verification] Tables initialized
+[FIELD-AGENT v2] All tables initialized
+├ó┼ôΓÇª [Lab Test Workflow] Tables initialized
+[GROWER-INTEL] Intelligence tables initialized
+├ó┼ôΓÇª [Water Tech] Tables initialized
+[AUTONOMY] A1 Match Scout every 300s
+? [AUTH] Tables ready (secured v2.0)
+[AUTONOMY] A2 Price Hawk every 600s
+[AUTONOMY] A3 Deal Closer every 900s
+[AUTONOMY] A4 DD Inspector every 600s
+[mobileWorkspace] schema ensured
+[AUTONOMY] A5 Compliance Sentinel every 1800s
+[openclaw] schema ready
+[AUTONOMY] A6 Factor Matchmaker every 600s
+[AUTONOMY] A7 Logistics Hunter every 900s
+[AUTONOMY] A8 Dispute Mediator every 1800s
+[AUTONOMY] A9 Profit Optimizer every 600s
+[AUTONOMY] A10 Lookalike Launcher every 1800s
+[AUTONOMY] A11 Sleep Agent every 300s
+[AUTONOMY] A12 Grower Nurture every 1800s
+[AUTONOMY] A13 Buyer Intel every 1800s
+[AUTONOMY] A14 Cert Expiry Radar every 3600s
+[AUTONOMY] A15 Cross-Sell Spotter every 1800s
+├ó┼ôΓÇª [PROPERTIES] PostgreSQL tables ready (v4.0 secured)
+[OK] ANTHROPIC AI: Connected
+[tree_bus] hooked global.brainEmit -> OpenClaw + Niner Miners + Marketing + CommandSphere
+::ffff:100.64.0.3 - - [28/Apr/2026:21:30:36 +0000] "GET /health HTTP/1.1" 200 49 "https://mexausafg.com/" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36"
+::ffff:100.64.0.2 - - [28/Apr/2026:21:30:45 +0000] "GET /health HTTP/1.1" 200 49 "https://mexausafg.com/" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36"
+::ffff:100.64.0.4 - - [28/Apr/2026:21:31:27 +0000] "GET /health HTTP/1.1" 200 49 "-" "-"
+[BRAIN-NTFY] WARNING: LOAF Page ΓÇö ntfy status: 200
+::ffff:100.64.0.5 - - [28/Apr/2026:21:31:36 +0000] "GET /health HTTP/1.1" 200 49 "https://mexausafg.com/" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36"
+::ffff:100.64.0.4 - - [28/Apr/2026:21:31:45 +0000] "GET /health HTTP/1.1" 200 49 "https://mexausafg.com/" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36"
+[SMTP] Connection failed: Connection timeout
+[SMTP] Check SMTP_HOST/SMTP_PORT/SMTP_USER/SMTP_PASS in .env
+::ffff:100.64.0.6 - - [28/Apr/2026:21:32:36 +0000] "GET /health HTTP/1.1" 200 50 "https://mexausafg.com/" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36"
+::ffff:100.64.0.7 - - [28/Apr/2026:21:32:45 +0000] "GET /health HTTP/1.1" 200 50 "https://mexausafg.com/" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36"
+::ffff:100.64.0.8 - - [28/Apr/2026:21:33:29 +0000] "GET /health HTTP/1.1" 200 50 "-" "-"
+::ffff:100.64.0.9 - - [28/Apr/2026:21:33:36 +0000] "GET /health HTTP/1.1" 200 50 "https://mexausafg.com/" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36"
+::ffff:100.64.0.2 - - [28/Apr/2026:21:33:45 +0000] "GET /health HTTP/1.1" 200 50 "https://mexausafg.com/" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36"
+        at afterConnectMultiple (node:net:1708:16) {
+      code: 'ECONNREFUSED',
+      errno: -111,
+      code: 'ECONNREFUSED',
+      syscall: 'connect',
+      address: '::1',
+      port: 5432
+    },
+    Error: connect ECONNREFUSED 127.0.0.1:5432
+        at createConnectionError (node:net:1678:14)
+        at afterConnectMultiple (node:net:1708:16) {
+      errno: -111,
+::ffff:100.64.0.2 - - [28/Apr/2026:21:34:30 +0000] "GET /health HTTP/1.1" 200 50 "-" "Mozilla/5.0 (Windows NT; Windows NT 10.0; en-US) WindowsPowerShell/5.1.26100.8115"
+/app/node_modules/pg-pool/index.js:45
+    Error.captureStackTrace(err)
+          ^
+
+AggregateError [ECONNREFUSED]: 
+    at /app/node_modules/pg-pool/index.js:45:11
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async /app/services/paca-validator.js:264:13 {
+  code: 'ECONNREFUSED',
+  [errors]: [
+    Error: connect ECONNREFUSED ::1:5432
+        at createConnectionError (node:net:1678:14)
+- /app/server.js
+[WARN] analytics not found: Cannot find module './routes/mortgage-leads'
+[BRAIN v4.0] Initialized: 81 Miners + 40 AI Agents + 8 SI Modules
+      syscall: 'connect',
+[BRAIN] Initializing 81 Niner Miners...
+      address: '127.0.0.1',
+[WARN] inventory route failed to mount: Cannot find module './routes/inventory'
+      port: 5432
+Require stack:
+Require stack:
+    }
+- /app/server.js
+  ]
+- /app/server.js
+[OK] openClawAgent.js mounted at /api/openclaw
+}
+[OK] deal-stream.js mounted at /api/stream
+[WARN] ownerMetrics not found: Cannot find module './routes/Ownermetrics'
+
+[OK] deal-floor.js mounted at /api/deals
+Require stack:
+Node.js v24.10.0
+[WARN] mortgage not found: Cannot find module './routes/mortgage'
+
+> auditdna-backend@1.0.0 start
+> node server.js
+
+[DB] global.db assigned -> pool accessible to all routes
+Require stack:
+- /app/server.js
+[OK] emailScraper: mounted at /api/scraper
+[WARN] user.js mount failed: Cannot find module './routes/user'
+Require stack:
+- /app/server.js
+[OK] buyers.routes: mounted at /api/buyers
+[OK] hot-leads.routes: mounted at /api/hot-leads
+[OK] factor-matchmaker mounted
+[OK] factor-intake mounted at /api/factor/intake function
+[BRAIN-EVENTS] Health monitor started ΓÇö checks every 5 minutes
+[OK] brain-events SSE + health + webhook mounted
+[OK] brain-stream mounted at /api/brain
+[OK] grower-pipeline.js: mounted at /api/grower (Sprint C)
+[OK] rfq-match-engine mounted at /api/rfq (Phase 1 Day 3)
+[PACA] Nightly cron scheduled: 03:00 UTC daily
+[OK] paca-validator mounted at /api/paca + nightly cron 03:00 UTC
+[OK] cfdi-generator mounted at /api/cfdi (test mode=true)
+[OK] /api/financing mounted
+[OK] crm.routes: mounted at /api/crm
+[OK] compliance-center: mounted at /api/compliance-center
+[OK] Internal-messenger: mounted at /internal-messenger and /api/internal-messenger
+
+[SCAN] Discovering routes...
+   [SKIP] compliance-center.js (explicitly mounted)
+   [SKIP] crm.routes.js (explicitly mounted)
+   [SKIP] emailScraper.js (explicitly mounted)
+[FIELD-AGENT v2] Routes: submit, verify, listings, offers, po, invoice, factoring, food-safety, trail, sheds, entities, hts, usda, email-docs
+
+   [SKIP] letters.js (explicitly mounted)
+   [SKIP] Brainlog.js (explicitly mounted)
+[loaf-routes] intelligence loaded
+   [SKIP] Crm.js (explicitly mounted)
+[loaf-routes] data engine loaded
+[GROWER-INTEL] Routes loaded: /network, /directory, /yields, /availability, /certifications, /small-grower, /grower/:id, /products, /event
+[WARN] Stripe not installed. Run: npm install stripe
+   [SKIP] Internal-messenger.js (explicitly mounted)
+   [SKIP] unsubscribe.js (explicitly mounted)
+[PRODUCTS] Route loaded - 501 products, 23 categories, 12 countries
+[USDA] Route loaded. API key: SET
+   [SKIP] admin-notifications.js (explicitly mounted)
+[OK] autonomy-loop mounted at /api/autonomy
+   [SKIP] analytics.js (explicitly mounted)
+[NOTIFICATIONS] SMTP transporter ready
+   [SKIP] audits.js (explicitly mounted)
+   [SKIP] auth.js (explicitly mounted)
+[OK] SCHEDULER: 5 cron jobs registered
+[DB] global.db assigned -> pool accessible to all routes
+[OK] gmail routes loaded
+[OK] commodity-search mounted at /api/commodity
+[OK] mobileWorkspace mounted at /api/mobile
+[AUTONOMY] Starting registry with 15 agents
+[OK] Autonomy Phase 2A booted - 15 agents loaded
+
+================================================================
+ AUDITDNA BACKEND SERVER v4.1 (SECURED)
+ Port: 5050
+ Env: production
+ CORS: restricted
+================================================================
+ EXPLICIT MOUNTS: 21
+    |-- /api/openclaw                <-- openClawAgent.js
+    |-- /api/deals                   <-- deal-floor.js
+    |-- /api/auth                    <-- auth.js
+    |-- /api/unsubscribe             <-- unsubscribe.js
+    |-- /api/letters                 <-- letters.js
+    |-- /api/audits                  <-- audits.js
+    |-- /api/scraper                 <-- emailScraper.js
+    |-- /api/brain/log               <-- Brainlog.js
+    |-- /api/admin/notifications     <-- admin-notifications.js
+    |-- /api/crm                     <-- crm.routes.js
+    |-- /api/compliance-center       <-- compliance-center.js
+    |-- /api/auth/recover-credentials <-- server.js (inline)
+    |-- /api/email/send-campaign     <-- server.js (inline)
+    |-- /api/email/analytics         <-- server.js (inline)
+    |-- /api/track/open + /api/track/click + /api/unsubscribe <-- server.js (inline)
+    |-- /api/claude/generate-email   <-- server.js (inline)
+    |-- /api/ai/generate             <-- server.js (inline)
+    |-- /api/brain/query             <-- server.js (inline)
+    |-- /api/zadarma-sync/* + /api/Zadarma-sync/* <-- server.js (inline)
+    |-- /api/brain/*                 <-- Brain.js (inline)
+    |-- /internal-messenger + /api/internal-messenger <-- Internal-messenger.js
+ AUTO-DISCOVERED: 137
+    |-- /api/Aicowboysroutes         <-- Aicowboysroutes.js
+    |-- /api/AiemailRoute            <-- AiemailRoute.js
+    |-- /api/Ailearningroutes        <-- Ailearningroutes.js
+    |-- /api/All_products_500_database_part1 <-- All_products_500_database_part1.js
+    |-- /api/Audit                   <-- Audit.js
+    |-- /api/Complianceroutes        <-- Complianceroutes.js
+    |-- /api/Cowboys                 <-- Cowboys.js
+    |-- /api/Shippers                <-- Shippers.js
+    |-- /api/Dashboard               <-- Dashboard.js
+    |-- /api/Soiltechroute           <-- Soiltechroute.js
+    |-- /api/Emergency_backend_routes <-- Emergency_backend_routes.js
+    |-- /api/Traceability            <-- Traceability.js
+    |-- /api/Fertilizer              <-- Fertilizer.js
+    |-- /api/User                    <-- User.js
+    |-- /api/Fraudapi.routes         <-- Fraudapi.routes.js
+    |-- /api/Watertech               <-- Watertech.js
+    |-- /api/Grower-intelligence     <-- Grower-intelligence.js
+    |-- /api/Grower_bot              <-- Grower_bot.js
+    |-- /api/Growerrecommendationsroutes <-- Growerrecommendationsroutes.js
+    |-- /api/Inventory               <-- Inventory.js
+    |-- /api/LedgerApi.routes        <-- LedgerApi.routes.js
+    |-- /api/Mortgage                <-- Mortgage.js
+    |-- /api/MortgageRoutes          <-- MortgageRoutes.js
+    |-- /api/PriceFeed               <-- PriceFeed.js
+    |-- /api/ProduceIntelligence     <-- ProduceIntelligence.js
+    |-- /api/Products                <-- Products.js
+    |-- /api/Recipes                 <-- Recipes.js
+    |-- /api/Seedtestingroutes       <-- Seedtestingroutes.js
+    |-- /api/accounting              <-- accounting.js
+    |-- /api/brain-stream            <-- brain-stream.js
+    |-- /api/admin.routes            <-- admin.routes.js
+    |-- /api/agrimaxx                <-- agrimaxx.js
+    |-- /api/brainevents             <-- brainevents.js
+    |-- /api/autonomy-loop           <-- autonomy-loop.js
+    |-- /api/agIntelligence          <-- agIntelligence.js
+    |-- /api/buyer-segments          <-- buyer-segments.js
+    |-- /api/ai-price-predict        <-- ai-price-predict.js
+    |-- /api/bci-finance             <-- bci-finance.js
+    |-- /api/approval                <-- approval.js
+    |-- /api/ag_Intel                <-- ag_Intel.js
+    |-- /api/ai-test                 <-- ai-test.js
+    |-- /api/audit-notifications     <-- audit-notifications.js
+    |-- /api/ai                      <-- ai.js
+    |-- /api/auth-portal             <-- auth-portal.js
+    |-- /api/brain-commerce          <-- brain-commerce.js
+    |-- /api/ai.routes               <-- ai.routes.js
+    |-- /api/aiAgentDashboard        <-- aiAgentDashboard.js
+    |-- /api/brain-events            <-- brain-events.js
+    |-- /api/authApi.routes          <-- authApi.routes.js
+    |-- /api/factor-intake           <-- factor-intake.js
+    |-- /api/buyers                  <-- buyers.js
+    |-- /api/factor-matchmaker       <-- factor-matchmaker.js
+    |-- /api/buyers.routes           <-- buyers.routes.js
+    |-- /api/factoringRoutes         <-- factoringRoutes.js
+    |-- /api/cogs                    <-- cogs.js
+    |-- /api/commodity-search        <-- commodity-search.js
+    |-- /api/credit-apps             <-- credit-apps.js
+    |-- /api/crossBorderRealEstate   <-- crossBorderRealEstate.js
+    |-- /api/dataIntake              <-- dataIntake.js
+    |-- /api/deal-floor              <-- deal-floor.js
+    |-- /api/deal-stream             <-- deal-stream.js
+    |-- /api/did_video               <-- did_video.js
+    |-- /api/disputeRecovery         <-- disputeRecovery.js
+    |-- /api/email-campaigns         <-- email-campaigns.js
+    |-- /api/email                   <-- email.js
+    |-- /api/email_campaigns         <-- email_campaigns.js
+    |-- /api/email_sequence_ecmw     <-- email_sequence_ecmw.js
+    |-- /api/entityResolution        <-- entityResolution.js
+    |-- /api/escrowApi.routes        <-- escrowApi.routes.js
+    |-- /api/escrowGatekeeper        <-- escrowGatekeeper.js
+    |-- /api/growerworkflow          <-- growerworkflow.js
+    |-- /api/fdaApi_.routes          <-- fdaApi_.routes.js
+    |-- /api/field-agents            <-- field-agents.js
+    |-- /api/hot-leads.routes        <-- hot-leads.routes.js
+    |-- /api/fieldOps                <-- fieldOps.js
+    |-- /api/index                   <-- index.js
+    |-- /api/financial               <-- financial.js
+    |-- /api/inventoryManifest       <-- inventoryManifest.js
+    |-- /api/labTestWorkflow         <-- labTestWorkflow.js
+    |-- /api/financing               <-- financing.js
+    |-- /api/lender-panel            <-- lender-panel.js
+    |-- /api/foodSafety              <-- foodSafety.js
+    |-- /api/globalCompliance        <-- globalCompliance.js
+    |-- /api/gmail                   <-- gmail.js
+    |-- /api/grower-compliance       <-- grower-compliance.js
+    |-- /api/grower-pipeline         <-- grower-pipeline.js
+    |-- /api/grower-public-register  <-- grower-public-register.js
+    |-- /api/grower                  <-- grower.js
+    |-- /api/grower_pipeline         <-- grower_pipeline.js
+    |-- /api/growers                 <-- growers.js
+    |-- /api/growers_legacy_backup   <-- growers_legacy_backup.js
+    |-- /api/loaf-routes             <-- loaf-routes.js
+    |-- /api/market.routes           <-- market.routes.js
+    |-- /api/mobileSales             <-- mobileSales.js
+    |-- /api/mobileWorkspace         <-- mobileWorkspace.js
+    |-- /api/mortgage-stats          <-- mortgage-stats.js
+    |-- /api/multiAIVerification.routes <-- multiAIVerification.routes.js
+    |-- /api/multiVerification.routes <-- multiVerification.routes.js
+    |-- /api/niner-bridge            <-- niner-bridge.js
+    |-- /api/notifications.helper    <-- notifications.helper.js
+    |-- /api/notifications.routes    <-- notifications.routes.js
+    |-- /api/notify                  <-- notify.js
+    |-- /api/ollama                  <-- ollama.js
+    |-- /api/onboarding              <-- onboarding.js
+    |-- /api/ownerMetrics            <-- ownerMetrics.js
+    |-- /api/pin-verify              <-- pin-verify.js
+    |-- /api/ports.routes            <-- ports.routes.js
+    |-- /api/price_intelligence      <-- price_intelligence.js
+    |-- /api/produce                 <-- produce.js
+    |-- /api/product-market          <-- product-market.js
+    |-- /api/product-submissions-clean <-- product-submissions-clean.js
+    |-- /api/usda                    <-- usda.js
+    |-- /api/usdaMarketOverlay       <-- usdaMarketOverlay.js
+    |-- /api/product-submissions     <-- product-submissions.js
+    |-- /api/properties              <-- properties.js
+    |-- /api/reports.routes          <-- reports.routes.js
+    |-- /api/sessionRoutes           <-- sessionRoutes.js
+    |-- /api/sii_mx                  <-- sii_mx.js
+    |-- /api/smallGrowerRoutes       <-- smallGrowerRoutes.js
+    |-- /api/sms                     <-- sms.js
+    |-- /api/tenant-auth             <-- tenant-auth.js
+    |-- /api/tenants                 <-- tenants.js
+    |-- /api/terminal-markets        <-- terminal-markets.js
+    |-- /api/traceabilityWorkflow    <-- traceabilityWorkflow.js
+    |-- /api/trade-registry          <-- trade-registry.js
+    |-- /api/triangularRisk          <-- triangularRisk.js
+    |-- /api/unifiedCRM.routes       <-- unifiedCRM.routes.js
+    |-- /api/upload                  <-- upload.js
+    |-- /api/uploadRoutes            <-- uploadRoutes.js
+    |-- /api/usda-campaign           <-- usda-campaign.js
+    |-- /api/usda-market-intel       <-- usda-market-intel.js
+├ó┼ôΓÇª [Water Tech] Tables initialized
+├ó┼ôΓÇª SII-MX connected to PostgreSQL
+[AUTONOMY] A1 Match Scout every 300s
+[GROWER-INTEL] Intelligence tables initialized
+    |-- /api/usdaRegistry            <-- usdaRegistry.js
+├ó┼ôΓÇª [Grower Workflow] Tables initialized
+    |-- /api/userApi.routes          <-- userApi.routes.js
+[FIELD-AGENT v2] All tables initialized
+    |-- /api/voiceRoutes             <-- voiceRoutes.js
+[Gmail] PostgreSQL table ready
+    |-- /api/watch                   <-- watch.js
+├ó┼ôΓÇª [Lab Test Workflow] Tables initialized
+    |-- /api/waterRoutes             <-- waterRoutes.js
+? [AUTH] Tables ready (secured v2.0)
+    |-- /api/workflowApi.routes      <-- workflowApi.routes.js
+
+ TOTAL ROUTES: 158
+================================================================
+
+[WARN] MISSING ROUTE FILES:
+    \-- routes/developments.js
+    \-- routes/agent-registrations.js
+    \-- routes/notifications.js
+[OK] POSTGRESQL POOL CONNECTED (max: 20, idle: 30s)
+├ó┼ôΓÇª [Multi-AI Verification] Tables initialized
+[AUTONOMY] A14 Cert Expiry Radar every 3600s
+[AUTONOMY] A15 Cross-Sell Spotter every 1800s
+[openclaw] schema ready
+├ó┼ôΓÇª [PROPERTIES] PostgreSQL tables ready (v4.0 secured)
+[AUTONOMY] A2 Price Hawk every 600s
+[AUTONOMY] A6 Factor Matchmaker every 600s
+[AUTONOMY] A3 Deal Closer every 900s
+[AUTONOMY] A7 Logistics Hunter every 900s
+[mobileWorkspace] schema ensured
+[AUTONOMY] A8 Dispute Mediator every 1800s
+[AUTONOMY] A4 DD Inspector every 600s
+[AUTONOMY] A9 Profit Optimizer every 600s
+[AUTONOMY] A5 Compliance Sentinel every 1800s
+[AUTONOMY] A10 Lookalike Launcher every 1800s
+[AUTONOMY] A11 Sleep Agent every 300s
+[AUTONOMY] A12 Grower Nurture every 1800s
+[AUTONOMY] A13 Buyer Intel every 1800s
+[OK] ANTHROPIC AI: Connected
+::ffff:100.64.0.3 - - [28/Apr/2026:21:34:36 +0000] "GET /health HTTP/1.1" 200 48 "https://mexausafg.com/" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36"
+[tree_bus] hooked global.brainEmit -> OpenClaw + Niner Miners + Marketing + CommandSphere
+::ffff:100.64.0.4 - - [28/Apr/2026:21:34:45 +0000] "GET /health HTTP/1.1" 200 49 "https://mexausafg.com/" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36"

@@ -10,7 +10,7 @@
 
 const express = require('express');
 const router  = express.Router();
-const db      = global.db || require('../db/connection');
+const db      = pool || require('../db/connection');
 
 // ──────────────────────────────────────────────────────────────────────────
 // Brain event fire helper (non-blocking)
@@ -35,6 +35,7 @@ function requireAuth(req, res, next) {
   if (!token) return res.status(401).json({ success: false, error: 'No auth token' });
   try {
     const jwt = require('jsonwebtoken');
+const pool = require('../db');
     req.user = jwt.verify(token, process.env.JWT_SECRET);
     next();
   } catch (e) {

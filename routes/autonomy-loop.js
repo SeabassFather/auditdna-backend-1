@@ -21,9 +21,10 @@
 // =============================================================================
 
 const express = require('express');
+const pool = require('../db');
 const router = express.Router();
 
-const db = () => global.db || null;
+const db = () => pool || null;
 
 // =============================================================================
 // 1. CLOSE - feedback learning loop

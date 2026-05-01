@@ -7,6 +7,7 @@ const express = require('express');
 const router = express.Router();
 const crypto = require('crypto');
 const axios = require('axios');
+const pool = require('../db');
 
 // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 // ZADARMA CONFIGURATION (from memory)
@@ -184,7 +185,7 @@ router.post('/email/send-campaign', async (req, res) => {
 router.get('/communication/groups', async (req, res) => {
   // Fetch groups from database
   // Example with PostgreSQL:
-  // const result = await global.db.query('SELECT * FROM communication_groups');
+  // const result = await pool.query('SELECT * FROM communication_groups');
   // res.json(result.rows);
   
   res.json([
@@ -198,7 +199,7 @@ router.post('/communication/groups', async (req, res) => {
   
   // Save to database
   // Example:
-  // const result = await global.db.query(
+  // const result = await pool.query(
   //   'INSERT INTO communication_groups (name, contacts) VALUES ($1, $2) RETURNING *',
   //   [name, JSON.stringify(contacts)]
   // );
@@ -211,7 +212,7 @@ router.delete('/communication/groups/:id', async (req, res) => {
   const { id } = req.params;
   
   // Delete from database
-  // await global.db.query('DELETE FROM communication_groups WHERE id = $1', [id]);
+  // await pool.query('DELETE FROM communication_groups WHERE id = $1', [id]);
   
   res.json({ success: true });
 });

@@ -24,13 +24,14 @@
 const express = require('express');
 const router = express.Router();
 const Anthropic = require('@anthropic-ai/sdk');
+const pool = require('../db');
 const {
   ENRIQUE_SYSTEM, ELIOT_SYSTEM, DIEGO_SYSTEM,
   ENRIQUE_TOOLS, ELIOT_TOOLS,
   MODELS, TOKEN_CAPS,
 } = require('../services/agent-prompts');
 
-const getDb = () => global.db;
+const getDb = () => pool;
 
 const anthropic = new Anthropic({
   apiKey: process.env.ANTHROPIC_API_KEY,

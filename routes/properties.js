@@ -153,7 +153,7 @@ const nextPayDate = (fromDate) => {
 
 // â”€â”€ Bootstrap table â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 const initTable = async () => {
-  await global.db.query(`
+  await pool.query(`
     CREATE TABLE IF NOT EXISTS properties (
       id               SERIAL PRIMARY KEY,
       property_id      VARCHAR(32) UNIQUE,
@@ -253,11 +253,11 @@ const initTable = async () => {
     `ALTER TABLE properties ADD COLUMN IF NOT EXISTS commission_pay_date DATE`,
   ];
   for (const sql of cols) {
-    await global.db.query(sql).catch(() => {});
+    await pool.query(sql).catch(() => {});
   }
 
   // v4: agent_registrations table for secure credential storage
-  await global.db.query(`
+  await pool.query(`
     CREATE TABLE IF NOT EXISTS agent_registrations (
       id            SERIAL PRIMARY KEY,
       agent_code    VARCHAR(100) UNIQUE,
@@ -431,7 +431,7 @@ const shapeFull = (r) => ({
 // â”€â”€ GET /stats (OWNER) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 router.get('/stats', async (req, res) => {
   try {
-    const { rows } = await global.db.query(`
+    const { rows } = await pool.query(`
       SELECT
         COUNT(*)                                                   AS total,
         COUNT(*) FILTER (WHERE type='fsbo')                        AS fsbo,
@@ -464,7 +464,7 @@ router.get('/commission-schedule', requireOwner, (req, res) => {
 // â”€â”€ GET /pending (OWNER) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 router.get('/pending', requireOwner, async (req, res) => {
   try {
-    const { rows } = await global.db.query(
+    const { rows } = await pool.query(
       `SELECT * FROM properties WHERE status='pending_review' ORDER BY created_at ASC`
     );
     res.json({ success: true, count: rows.length, properties: rows.map(shapeFull) });
@@ -474,7 +474,7 @@ router.get('/pending', requireOwner, async (req, res) => {
 // â”€â”€ GET /sold (OWNER â€” commission tracking) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 router.get('/sold', requireOwner, async (req, res) => {
   try {
-    const { rows } = await global.db.query(
+    const { rows } = await pool.query(
       `SELECT * FROM properties WHERE status='sold' ORDER BY sold_at DESC`
     );
     res.json({ success: true, count: rows.length, properties: rows.map(shapeFull) });
@@ -493,10 +493,10 @@ router.get('/all', requireOwner, async (req, res) => {
   const where = conditions.length ? 'WHERE ' + conditions.join(' AND ') : '';
   params.push(parseInt(limit), parseInt(offset));
   try {
-    const { rows } = await global.db.query(
+    const { rows } = await pool.query(
       `SELECT * FROM properties ${where} ORDER BY created_at DESC LIMIT $${params.length-1} OFFSET $${params.length}`, params
     );
-    const cnt = await global.db.query(`SELECT COUNT(*) FROM properties ${where}`, params.slice(0,-2));
+    const cnt = await pool.query(`SELECT COUNT(*) FROM properties ${where}`, params.slice(0,-2));
     res.json({ success: true, count: parseInt(cnt.rows[0].count), properties: rows.map(shapeFull) });
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
@@ -522,7 +522,7 @@ router.get('/', attachRole, async (req, res) => {
   params.push(parseInt(limit), parseInt(offset));
 
   try {
-    const { rows } = await global.db.query(
+    const { rows } = await pool.query(
       `SELECT * FROM properties WHERE ${conditions.join(' AND ')}
        ORDER BY featured DESC, created_at DESC
        LIMIT $${params.length-1} OFFSET $${params.length}`, params
@@ -535,7 +535,7 @@ router.get('/', attachRole, async (req, res) => {
 // â”€â”€ GET /public-stats â€” hero stats (limited, no financials) â”€â”€
 router.get('/public-stats', async (req, res) => {
   try {
-    const { rows } = await global.db.query(`
+    const { rows } = await pool.query(`
       SELECT
         COUNT(*) FILTER (WHERE status='approved') AS total_listings,
         COUNT(*) FILTER (WHERE status='sold')     AS sold_listings
@@ -544,7 +544,7 @@ router.get('/public-stats', async (req, res) => {
     // Agent count from registrations
     let agentCount = 0;
     try {
-      const agents = await global.db.query(`SELECT COUNT(*) FROM agent_registrations`);
+      const agents = await pool.query(`SELECT COUNT(*) FROM agent_registrations`);
       agentCount = parseInt(agents.rows[0].count) || 0;
     } catch {}
     res.json({
@@ -560,11 +560,11 @@ router.get('/public-stats', async (req, res) => {
 // â”€â”€ GET /:id (PUBLIC â€” sanitized for non-owners) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 router.get('/:id', attachRole, async (req, res) => {
   try {
-    const { rows } = await global.db.query(
+    const { rows } = await pool.query(
       'SELECT * FROM properties WHERE id=$1 OR property_id=$1', [req.params.id]
     );
     if (!rows.length) return res.status(404).json({ error: 'Property not found' });
-    global.db.query('UPDATE properties SET views=views+1 WHERE id=$1', [rows[0].id]).catch(() => {});
+    pool.query('UPDATE properties SET views=views+1 WHERE id=$1', [rows[0].id]).catch(() => {});
     const shaper = (req.role === 'owner' || req.role === 'admin') ? shapeFull : shapePublic;
     res.json({ success: true, property: shaper(rows[0]) });
   } catch (e) { res.status(500).json({ error: e.message }); }
@@ -584,7 +584,7 @@ router.post('/fsbo', async (req, res) => {
     const propertyId = genPropId();
     const priceUSD   = parseFloat(d.priceUSD) || 0;
     const priceMXN   = parseFloat(d.priceMXN) || (priceUSD * 17.5);
-    const { rows } = await global.db.query(`
+    const { rows } = await pool.query(`
       INSERT INTO properties (
         property_id, type, listing_type, status,
         uploaded_by, uploader_role,
@@ -631,7 +631,7 @@ router.post('/traspaso', async (req, res) => {
   try {
     const propertyId = genPropId();
     const priceUSD   = parseFloat(d.totalPrice) || 0;
-    const { rows } = await global.db.query(`
+    const { rows } = await pool.query(`
       INSERT INTO properties (
         property_id, type, listing_type, status,
         uploaded_by, uploader_role,
@@ -705,7 +705,7 @@ router.post('/', requireAuth, async (req, res) => {
     const isaiTax      = priceUSD * 0.025;
     const fideicomiso  = (d.zona_restringida || d.zonaRestringida) ? 2500 : 0;
 
-    const { rows } = await global.db.query(`
+    const { rows } = await pool.query(`
       INSERT INTO properties (
         property_id, type, listing_type, status,
         uploaded_by, uploader_role, uploader_name, agent_email,
@@ -817,7 +817,7 @@ router.put('/:id', requireAuth, async (req, res) => {
   const d = req.body;
   try {
     // Check ownership
-    const existing = await global.db.query(
+    const existing = await pool.query(
       'SELECT uploaded_by, uploader_role FROM properties WHERE id=$1 OR property_id=$1', [req.params.id]
     );
     if (!existing.rows.length) return res.status(404).json({ error: 'Property not found' });
@@ -829,7 +829,7 @@ router.put('/:id', requireAuth, async (req, res) => {
       return res.status(403).json({ error: 'You can only edit your own listings.' });
     }
 
-    const { rows } = await global.db.query(`
+    const { rows } = await pool.query(`
       UPDATE properties SET
         titulo=$1, titulo_es=$2, region=$3,
         calle=$4, num_ext=$5, num_int=$6, colonia=$7, municipio=$8, estado=$9,
@@ -894,7 +894,7 @@ router.put('/:id/status', requireOwner, async (req, res) => {
     }
     sets.push('updated_at=NOW()');
     params.push(req.params.id);
-    const { rows } = await global.db.query(
+    const { rows } = await pool.query(
       `UPDATE properties SET ${sets.join(',')} WHERE id=$${params.length} OR property_id=$${params.length} RETURNING *`,
       params
     );
@@ -908,7 +908,7 @@ router.put('/:id/sold', requireOwner, async (req, res) => {
   const { sold_price, buyer_name, buyer_email, closing_date, admin_email } = req.body;
   try {
     const payDate = nextPayDate(closing_date);
-    const { rows } = await global.db.query(`
+    const { rows } = await pool.query(`
       UPDATE properties SET
         status='sold',
         sold_price=$1, buyer_name=$2, buyer_email=$3,
@@ -951,7 +951,7 @@ router.put('/:id/sold', requireOwner, async (req, res) => {
 router.post('/:id/approve', requireOwner, async (req, res) => {
   const { approvedBy } = req.body;
   try {
-    const { rows } = await global.db.query(
+    const { rows } = await pool.query(
       `UPDATE properties SET status='approved', approved_at=NOW(), approved_by=$1
        WHERE id=$2 OR property_id=$2 RETURNING *`,
       [approvedBy || 'admin', req.params.id]
@@ -964,7 +964,7 @@ router.post('/:id/approve', requireOwner, async (req, res) => {
 // â”€â”€ DELETE /:id (OWNER ONLY) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 router.delete('/:id', requireOwner, async (req, res) => {
   try {
-    const { rows } = await global.db.query(
+    const { rows } = await pool.query(
       'DELETE FROM properties WHERE id=$1 OR property_id=$1 RETURNING id', [req.params.id]
     );
     if (!rows.length) return res.status(404).json({ error: 'Property not found' });
@@ -995,7 +995,7 @@ router.post('/register-agent',
 
     try {
       // Check for duplicate email
-      const existing = await global.db.query(
+      const existing = await pool.query(
         'SELECT agent_code FROM agent_registrations WHERE LOWER(email) = $1',
         [d.email.toLowerCase()]
       );
@@ -1011,7 +1011,7 @@ router.post('/register-agent',
       for (let attempt = 0; attempt < 20; attempt++) {
         const slotNum = crypto.randomInt(51, 999);
         const candidate = `REagent-${String(slotNum).padStart(2, '0')}@eb.com`;
-        const check = await global.db.query(
+        const check = await pool.query(
           'SELECT 1 FROM agent_registrations WHERE agent_code = $1', [candidate]
         );
         if (!check.rows.length) {
@@ -1035,7 +1035,7 @@ router.post('/register-agent',
       // Commission from server-side schedule
       const commRate = COMMISSION_SCHEDULE[d.agentType] || COMMISSION_SCHEDULE.fsbo;
 
-      await global.db.query(`
+      await pool.query(`
         INSERT INTO agent_registrations (
           agent_code, password_hash, pin_hash, salt,
           nombre, apellidos, email, phone, whatsapp,

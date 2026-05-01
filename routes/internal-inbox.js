@@ -18,8 +18,9 @@
 'use strict';
 
 const express = require('express');
+const pool = require('../db');
 const router  = express.Router();
-function db() { return global.db || require('../db').pool; }
+function db() { return pool || require('../db').pool; }
 
 // ----------------------------------------------------------------------------
 // Helper: get logged-in username from JWT (assumes auth middleware sets req.user)

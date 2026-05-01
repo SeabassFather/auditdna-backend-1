@@ -9,10 +9,11 @@
 'use strict';
 
 const crypto = require('crypto');
+const pool = require('../db');
 
 function getDB() {
-  if (global.db && typeof global.db.query === 'function') return global.db;
-  throw new Error('[financing-waterfall] global.db not available');
+  if (pool && typeof pool.query === 'function') return pool;
+  throw new Error('[financing-waterfall] pool not available');
 }
 
 function generateDealId() {

@@ -11,9 +11,10 @@
 // =============================================================================
 
 const express = require('express');
+const pool = require('../db');
 const router = express.Router();
 
-const db = () => global.db || null;
+const db = () => pool || null;
 const NTFY_TOPIC = process.env.NTFY_NINER_TOPIC || 'mfg-niner-alerts';
 const NTFY_BASE  = process.env.NTFY_BASE || 'https://ntfy.sh';
 const NTFY_TOKEN = process.env.NTFY_TOKEN || '';

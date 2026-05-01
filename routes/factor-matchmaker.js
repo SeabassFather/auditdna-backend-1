@@ -9,6 +9,7 @@ require('dotenv').config({ path: path.join(__dirname, '..', '.env') });
 
 const router = express.Router();
 const matchmaker = require('../services/factor-matchmaker-service');
+const pool = require('../db');
 
 const JWT_SECRET = process.env.JWT_SECRET || 'auditdna-grower-jwt-dev';
 
@@ -27,7 +28,7 @@ function authRequired(req, res, next) {
 
 function getPool(req) {
   if (req.app && req.app.locals && req.app.locals.pool) return req.app.locals.pool;
-  if (global.db) return global.db;
+  if (pool) return pool;
   throw new Error('database pool not available');
 }
 

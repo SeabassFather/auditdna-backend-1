@@ -1,3 +1,4 @@
+const pool = require('../db');
 import pkg from 'pg';
 const { Pool } = pkg;
 
@@ -30,7 +31,7 @@ export const pool = new Pool({
 });
 
 export async function checkDb() {
-  const res = await global.db.query('SELECT now() as now');
+  const res = await pool.query('SELECT now() as now');
   return res.rows[0];
 }
 

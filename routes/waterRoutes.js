@@ -87,7 +87,7 @@ const initWaterTables = async () => {
   `;
 
   try {
-    await global.db.query(createTablesSQL);
+    await pool.query(createTablesSQL);
     console.log('âœ… [Water Tech] Tables initialized');
   } catch (error) {
     console.error('âŒ [Water Tech] Table init failed:', error.message);
@@ -127,7 +127,7 @@ router.post('/tests', async (req, res) => {
       issues.push('Coliform bacteria detected');
     }
 
-    const result = await global.db.query(
+    const result = await pool.query(
       `INSERT INTO water_tests (
         grower_id, grower_name, test_type, sample_location,
         ph_level, tds_ppm, ec_value, nitrate_ppm, phosphate_ppm,
@@ -172,7 +172,7 @@ router.get('/tests/:growerId', async (req, res) => {
     const { growerId } = req.params;
     const limit = parseInt(req.query.limit) || 50;
 
-    const result = await global.db.query(
+    const result = await pool.query(
       `SELECT * FROM water_tests 
        WHERE grower_id = $1 
        ORDER BY sample_date DESC 
@@ -204,7 +204,7 @@ router.post('/irrigation', async (req, res) => {
       agrimaxXInstalled, treatmentSystem
     } = req.body;
 
-    const result = await global.db.query(
+    const result = await pool.query(
       `INSERT INTO irrigation_systems (
         grower_id, grower_name, system_type, coverage_acres,
         water_source, pump_capacity_gpm, efficiency_rating,
@@ -243,7 +243,7 @@ router.post('/treatment', async (req, res) => {
       operatorName, agrimaxXProduct, results
     } = req.body;
 
-    const result = await global.db.query(
+    const result = await pool.query(
       `INSERT INTO water_treatments (
         grower_id, treatment_type, chemical_used, dosage_amount,
         dosage_unit, area_treated_acres, water_volume_gallons,
@@ -278,7 +278,7 @@ router.get('/compliance/:growerId', async (req, res) => {
     const { growerId } = req.params;
 
     // Get latest test
-    const latestTest = await global.db.query(
+    const latestTest = await pool.query(
       `SELECT * FROM water_tests 
        WHERE grower_id = $1 
        ORDER BY sample_date DESC 
@@ -287,14 +287,14 @@ router.get('/compliance/:growerId', async (req, res) => {
     );
 
     // Get irrigation systems
-    const systems = await global.db.query(
+    const systems = await pool.query(
       `SELECT * FROM irrigation_systems 
        WHERE grower_id = $1 AND status = 'active'`,
       [growerId]
     );
 
     // Get recent treatments
-    const treatments = await global.db.query(
+    const treatments = await pool.query(
       `SELECT * FROM water_treatments 
        WHERE grower_id = $1 
        ORDER BY treatment_date DESC 
@@ -331,7 +331,7 @@ router.get('/compliance/:growerId', async (req, res) => {
 
 router.get('/dashboard', async (req, res) => {
   try {
-    const stats = await global.db.query(`
+    const stats = await pool.query(`
       SELECT 
         COUNT(DISTINCT grower_id) as total_growers,
         COUNT(*) FILTER (WHERE compliance_status = 'compliant') as compliant_tests,
@@ -342,7 +342,7 @@ router.get('/dashboard', async (req, res) => {
       WHERE sample_date > NOW() - INTERVAL '90 days'
     `);
 
-    const systemStats = await global.db.query(`
+    const systemStats = await pool.query(`
       SELECT 
         COUNT(*) as total_systems,
         SUM(coverage_acres) as total_acres,

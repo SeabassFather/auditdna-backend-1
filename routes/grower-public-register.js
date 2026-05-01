@@ -177,11 +177,11 @@ router.patch('/:id/reject', async (req, res) => {
   const { id } = req.params;
   const { reason } = req.body;
   try {
-    await global.db.query(
+    await pool.query(
       `UPDATE growers SET status='rejected', admin_notes=$1 WHERE id=$2`,
       [reason||'Application not approved', id]
     );
-    await global.db.query(
+    await pool.query(
       `UPDATE auth_users SET status='suspended'
        WHERE email=(SELECT email FROM growers WHERE id=$1)`, [id]
     ).catch(() => {});
@@ -195,7 +195,7 @@ router.patch('/:id/reject', async (req, res) => {
 // Returns all growers with status='pending' for the admin approval queue
 router.get('/pending', async (req, res) => {
   try {
-    const result = await global.db.query(`
+    const result = await pool.query(`
       SELECT id, company_name, entity_type, email, phone, city, state, country,
              commodities, region, fsma_tier, gap_cert, global_gap,
              compliance_status, registered_at, notes, contact_email

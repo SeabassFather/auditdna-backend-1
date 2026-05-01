@@ -20,6 +20,7 @@
 const express = require('express');
 const router = express.Router();
 const Anthropic = require('@anthropic-ai/sdk');
+const pool = require('../db');
 
 const ANTHROPIC_KEY = process.env.ANTHROPIC_API_KEY || '';
 const MODEL = process.env.NINER_MODEL || 'claude-sonnet-4-20250514';
@@ -47,9 +48,9 @@ const ADMIN_RECIPIENTS = [
   { email: 'ogut@mfginc.com',     name: 'Osvaldo Gutierrez',  role: 'admin' }
 ];
 
-// Database pool (set on server boot via global.db, like other routes)
+// Database pool (set on server boot via pool, like other routes)
 const _dbImport = (() => { try { return require('../db'); } catch { return null; } })();
-const db = () => global.db || (_dbImport && _dbImport.pool) || (_dbImport && _dbImport);
+const db = () => pool || (_dbImport && _dbImport.pool) || (_dbImport && _dbImport);
 
 // Anthropic client (lazy init)
 let anth = null;

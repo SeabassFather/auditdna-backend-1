@@ -1,6 +1,7 @@
 const express  = require('express');
 const router   = express.Router();
 const nodemailer = require('nodemailer');
+const pool = require('../db');
 
 // Save to: C:\AuditDNA\backend\routes\notify.js
 
@@ -62,7 +63,7 @@ router.post('/admin-alert', async (req, res) => {
     try {
       const pool = req.app.locals.pool || req.pool;
       if (pool) {
-        await global.db.query(
+        await pool.query(
           `INSERT INTO brain_events (event_type, module, payload, created_at)
            VALUES ($1, $2, $3, NOW())
            ON CONFLICT DO NOTHING`,

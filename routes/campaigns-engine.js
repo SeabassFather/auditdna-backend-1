@@ -22,9 +22,10 @@ const router  = express.Router();
 const nodemailer = require('nodemailer');
 const path    = require('path');
 const fs      = require('fs');
+const pool = require('../db');
 
 // Use the global pool from server.js (per AuditDNA convention)
-function db() { return global.db || require('../db').pool; }
+function db() { return pool || require('../db').pool; }
 
 // ----------------------------------------------------------------------------
 // SMTP transporter (Gmail per platform rules)

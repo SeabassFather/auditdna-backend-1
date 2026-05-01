@@ -1,8 +1,9 @@
 // Save to: C:\AuditDNA\backend\routes\crm-contacts.routes.js
 const express = require('express');
+const pool = require('../db');
 const router = express.Router();
 
-const getDb = () => global.db;
+const getDb = () => pool;
 
 // ============================================================
 // GET /api/crm-contacts

@@ -72,7 +72,7 @@ setInterval(() => {
 // DB TABLE BOOTSTRAP
 // ================================================================
 const initAuthTables = async () => {
-  await global.db.query(`
+  await pool.query(`
     CREATE TABLE IF NOT EXISTS auth_users (
       id            SERIAL PRIMARY KEY,
       email         VARCHAR(150) UNIQUE NOT NULL,
@@ -89,7 +89,7 @@ const initAuthTables = async () => {
     CREATE INDEX IF NOT EXISTS idx_auth_role  ON auth_users(role);
   `).catch(() => {});
 
-  await global.db.query(`
+  await pool.query(`
     CREATE TABLE IF NOT EXISTS auth_login_log (
       id         SERIAL PRIMARY KEY,
       email      VARCHAR(150),
@@ -123,7 +123,7 @@ function issueToken(user) {
 }
 
 async function logLogin(email, ip, success, role, reason) {
-  global.db.query(
+  pool.query(
     'INSERT INTO auth_login_log (email, ip, success, role, reason) VALUES ($1,$2,$3,$4,$5)',
     [email, ip, success, role || null, reason || null]
   ).catch(() => {});
@@ -144,7 +144,7 @@ router.post('/login',
 
     try {
       // Look up user in auth_users table
-      const result = await global.db.query(
+      const result = await pool.query(
         'SELECT id, username, password_hash, access_code, pin, role, display_name, is_active, tier FROM auth_users WHERE LOWER(username) = $1 LIMIT 1',
         [cleanEmail]
       );
@@ -186,7 +186,7 @@ router.post('/login',
       const token = issueToken(user);
 
       // Update last_login
-      global.db.query('UPDATE auth_users SET last_login = NOW() WHERE id = $1', [user.id]).catch(() => {});
+      pool.query('UPDATE auth_users SET last_login = NOW() WHERE id = $1', [user.id]).catch(() => {});
 
       await logLogin(cleanEmail, req.ip, true, user.role, 'success');
       console.log(`? [AUTH] Login: ${user.username} (${user.role})`);
@@ -218,7 +218,7 @@ router.post('/login-agent',
     const cleanEmail = email.toLowerCase().trim();
 
     try {
-      const result = await global.db.query(
+      const result = await pool.query(
         'SELECT agent_code, password_hash, password_hash, salt, nombre, agent_type, role, status FROM agent_registrations WHERE LOWER(agent_code) = $1 LIMIT 1',
         [cleanEmail]
       );
@@ -277,7 +277,7 @@ router.post('/check-email',
     if (!email) return res.status(400).json({ error: 'Email required' });
 
     try {
-      const result = await global.db.query(
+      const result = await pool.query(
         'SELECT role FROM auth_users WHERE LOWER(email) = $1 AND status = $2 LIMIT 1',
         [email.toLowerCase().trim(), 'active']
       );
@@ -289,7 +289,7 @@ router.post('/check-email',
       }
 
       // Check agent_registrations
-      const agentResult = await global.db.query(
+      const agentResult = await pool.query(
         'SELECT agent_code FROM agent_registrations WHERE LOWER(agent_code) = $1 OR LOWER(email) = $1 LIMIT 1',
         [email.toLowerCase().trim()]
       );
@@ -298,7 +298,7 @@ router.post('/check-email',
       }
 
       // Check consumers table
-      const consumerResult = await global.db.query(
+      const consumerResult = await pool.query(
         'SELECT id FROM consumers WHERE LOWER(email) = $1 LIMIT 1',
         [email.toLowerCase().trim()]
       ).catch(() => ({ rows: [] }));
@@ -333,7 +333,7 @@ router.get('/verify', (req, res) => {
 // ================================================================
 router.get('/users', requireAdmin, async (req, res) => {
   try {
-    const { rows } = await global.db.query(
+    const { rows } = await pool.query(
       `SELECT email, name, role, status, last_login, created_at
        FROM auth_users ORDER BY role ASC, name ASC`
     );
@@ -391,7 +391,7 @@ router.put('/users/:email', requireOwner, async (req, res) => {
     }
 
     params.push(targetEmail);
-    const { rows } = await global.db.query(
+    const { rows } = await pool.query(
       `UPDATE auth_users SET ${sets.join(', ')} WHERE LOWER(email) = $${params.length} RETURNING email, name, role, status`,
       params
     );
@@ -429,7 +429,7 @@ router.post('/change-password', async (req, res) => {
   }
 
   try {
-    const result = await global.db.query(
+    const result = await pool.query(
       'SELECT id, password_hash FROM auth_users WHERE LOWER(email) = $1',
       [decoded.email.toLowerCase()]
     );
@@ -449,7 +449,7 @@ router.post('/change-password', async (req, res) => {
     }
 
     params.push(user.id);
-    await global.db.query(
+    await pool.query(
       `UPDATE auth_users SET ${updates.join(', ')} WHERE id = $${params.length}`,
       params
     );
@@ -481,7 +481,7 @@ router.post('/reset-password', requireOwner, async (req, res) => {
     }
 
     params.push(targetEmail.toLowerCase());
-    const { rows } = await global.db.query(
+    const { rows } = await pool.query(
       `UPDATE auth_users SET ${updates.join(', ')} WHERE LOWER(email) = $${params.length} RETURNING email, name, role`,
       params
     );

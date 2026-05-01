@@ -7,6 +7,7 @@ const path    = require('path');
 const fs      = require('fs');
 const jwt     = require('jsonwebtoken');
 const { getPool } = require('../db');
+const pool = require('../db');
 const JWT_SECRET = process.env.JWT_SECRET || 'auditdna_super_jwt_secret';
 
 const UPLOAD_DIR = path.join(__dirname, '..', 'uploads', 'grower-docs');
@@ -52,8 +53,8 @@ router.get('/compliance/:id', authRequired, async (req, res) => {
     return res.status(403).json({ error: 'Access denied' });
   try {
     const [gr, docs] = await Promise.all([
-      global.db.query('SELECT id,email,company_name,compliance_status,docs_complete,admin_bypass,bypass_expires_at,bypass_note FROM grower_profiles WHERE id=$1',[id]),
-      global.db.query('SELECT doc_type,file_name,verified,rejected,reject_reason,created_at FROM grower_documents WHERE grower_id=$1 ORDER BY created_at DESC',[id])
+      pool.query('SELECT id,email,company_name,compliance_status,docs_complete,admin_bypass,bypass_expires_at,bypass_note FROM grower_profiles WHERE id=$1',[id]),
+      pool.query('SELECT doc_type,file_name,verified,rejected,reject_reason,created_at FROM grower_documents WHERE grower_id=$1 ORDER BY created_at DESC',[id])
     ]);
     if (!gr.rows.length) return res.status(404).json({ error: 'Not found' });
     const g = gr.rows[0];
@@ -66,7 +67,7 @@ router.get('/compliance/:id', authRequired, async (req, res) => {
     });
     const allUploaded = checklist.every(d => d.uploaded);
     if (allUploaded !== g.docs_complete)
-      await global.db.query('UPDATE grower_profiles SET docs_complete=$1,compliance_status=$2 WHERE id=$3',[allUploaded, allUploaded?'complete':'pending', id]);
+      await pool.query('UPDATE grower_profiles SET docs_complete=$1,compliance_status=$2 WHERE id=$3',[allUploaded, allUploaded?'complete':'pending', id]);
     res.json({ grower_id:id, company:g.company_name, access_granted:allUploaded||bypassActive,
                bypass_active:bypassActive, bypass_note:g.bypass_note, bypass_expires:g.bypass_expires_at,
                all_uploaded:allUploaded, missing_count:checklist.filter(d=>!d.uploaded).length, checklist });
@@ -85,17 +86,17 @@ router.post('/documents/upload', authRequired, upload.single('file'), async (req
     return res.status(403).json({ error: 'Access denied' });
   try {
     const fileUrl  = '/uploads/grower-docs/' + req.file.filename;
-    const existing = await global.db.query('SELECT id FROM grower_documents WHERE grower_id=$1 AND doc_type=$2 LIMIT 1',[targetId,doc_type]);
+    const existing = await pool.query('SELECT id FROM grower_documents WHERE grower_id=$1 AND doc_type=$2 LIMIT 1',[targetId,doc_type]);
     if (existing.rows.length) {
-      await global.db.query('UPDATE grower_documents SET file_url=$1,file_name=$2,file_size=$3,mime_type=$4,verified=false,rejected=false,reject_reason=NULL,created_at=NOW() WHERE grower_id=$5 AND doc_type=$6',
+      await pool.query('UPDATE grower_documents SET file_url=$1,file_name=$2,file_size=$3,mime_type=$4,verified=false,rejected=false,reject_reason=NULL,created_at=NOW() WHERE grower_id=$5 AND doc_type=$6',
         [fileUrl,req.file.originalname,req.file.size,req.file.mimetype,targetId,doc_type]);
     } else {
-      await global.db.query('INSERT INTO grower_documents(grower_id,doc_type,file_url,file_name,file_size,mime_type,verified,rejected) VALUES($1,$2,$3,$4,$5,$6,false,false)',
+      await pool.query('INSERT INTO grower_documents(grower_id,doc_type,file_url,file_name,file_size,mime_type,verified,rejected) VALUES($1,$2,$3,$4,$5,$6,false,false)',
         [targetId,doc_type,fileUrl,req.file.originalname,req.file.size,req.file.mimetype]);
     }
-    const allDocs    = await global.db.query('SELECT DISTINCT doc_type FROM grower_documents WHERE grower_id=$1 AND rejected=false',[targetId]);
+    const allDocs    = await pool.query('SELECT DISTINCT doc_type FROM grower_documents WHERE grower_id=$1 AND rejected=false',[targetId]);
     const allComplete = REQUIRED_DOCS.every(d => allDocs.rows.map(r=>r.doc_type).includes(d.doc_key));
-    if (allComplete) await global.db.query('UPDATE grower_profiles SET docs_complete=true,compliance_status=$1 WHERE id=$2',['complete',targetId]);
+    if (allComplete) await pool.query('UPDATE grower_profiles SET docs_complete=true,compliance_status=$1 WHERE id=$2',['complete',targetId]);
     res.json({ success:true, doc_type, file_name:req.file.originalname, file_url:fileUrl, all_complete:allComplete });
   } catch(e) { res.status(500).json({ error: e.message }); }
 });
@@ -107,7 +108,7 @@ router.post('/admin/bypass/:id', adminRequired, async (req, res) => {
   const { bypass, note, expires_days } = req.body;
   const expiresAt = expires_days ? new Date(Date.now() + parseInt(expires_days)*86400000) : null;
   try {
-    await global.db.query('UPDATE grower_profiles SET admin_bypass=$1,bypass_note=$2,bypass_expires_at=$3,bypass_granted_by=$4 WHERE id=$5',
+    await pool.query('UPDATE grower_profiles SET admin_bypass=$1,bypass_note=$2,bypass_expires_at=$3,bypass_granted_by=$4 WHERE id=$5',
       [!!bypass, note||null, expiresAt, req.grower.id, id]);
     res.json({ success:true, bypass:!!bypass, expires_at:expiresAt });
   } catch(e) { res.status(500).json({ error: e.message }); }
@@ -117,9 +118,9 @@ router.post('/admin/bypass/:id', adminRequired, async (req, res) => {
 router.get('/admin/pending-docs', adminRequired, async (req, res) => {
   const pool = getPool(req);
   try {
-    const result = await global.db.query('SELECT id,first_name,last_name,email,company_name,compliance_status,docs_complete,admin_bypass,bypass_expires_at FROM grower_profiles WHERE docs_complete=false ORDER BY created_at DESC LIMIT 100');
+    const result = await pool.query('SELECT id,first_name,last_name,email,company_name,compliance_status,docs_complete,admin_bypass,bypass_expires_at FROM grower_profiles WHERE docs_complete=false ORDER BY created_at DESC LIMIT 100');
     const growers = await Promise.all(result.rows.map(async g => {
-      const docs    = await global.db.query('SELECT DISTINCT doc_type FROM grower_documents WHERE grower_id=$1',[g.id]);
+      const docs    = await pool.query('SELECT DISTINCT doc_type FROM grower_documents WHERE grower_id=$1',[g.id]);
       const uploaded = docs.rows.map(d=>d.doc_type);
       const missing  = REQUIRED_DOCS.filter(d=>!uploaded.includes(d.doc_key)).map(d=>d.doc_key);
       return { ...g, uploaded_docs:uploaded, missing_docs:missing };

@@ -8,13 +8,14 @@
 // ============================================================================
 
 const express = require('express');
+const pool = require('../../db');
 const router = express.Router();
 
 // ---- Self-migrating schema ------------------------------------------------
 async function ensureSchema() {
-  if (!global.db) return;
+  if (!pool) return;
   try {
-    await global.db.query(`
+    await pool.query(`
       CREATE TABLE IF NOT EXISTS borrower_entities (
         id SERIAL PRIMARY KEY,
         legal_name VARCHAR(200) NOT NULL,
@@ -59,12 +60,12 @@ async function ensureSchema() {
         updated_at TIMESTAMP DEFAULT NOW()
       );
     `);
-    await global.db.query(`CREATE INDEX IF NOT EXISTS idx_borrower_entities_ein ON borrower_entities(ein);`);
-    await global.db.query(`CREATE INDEX IF NOT EXISTS idx_borrower_entities_legal_name ON borrower_entities(legal_name);`);
-    await global.db.query(`CREATE INDEX IF NOT EXISTS idx_borrower_entities_role ON borrower_entities(borrower_role);`);
-    await global.db.query(`CREATE INDEX IF NOT EXISTS idx_borrower_entities_kyc ON borrower_entities(kyc_status);`);
+    await pool.query(`CREATE INDEX IF NOT EXISTS idx_borrower_entities_ein ON borrower_entities(ein);`);
+    await pool.query(`CREATE INDEX IF NOT EXISTS idx_borrower_entities_legal_name ON borrower_entities(legal_name);`);
+    await pool.query(`CREATE INDEX IF NOT EXISTS idx_borrower_entities_role ON borrower_entities(borrower_role);`);
+    await pool.query(`CREATE INDEX IF NOT EXISTS idx_borrower_entities_kyc ON borrower_entities(kyc_status);`);
 
-    await global.db.query(`
+    await pool.query(`
       CREATE TABLE IF NOT EXISTS borrower_beneficial_owners (
         id SERIAL PRIMARY KEY,
         borrower_id INTEGER NOT NULL REFERENCES borrower_entities(id) ON DELETE CASCADE,
@@ -79,7 +80,7 @@ async function ensureSchema() {
         added_at TIMESTAMP DEFAULT NOW()
       );
     `);
-    await global.db.query(`CREATE INDEX IF NOT EXISTS idx_beneficial_owners_borrower ON borrower_beneficial_owners(borrower_id);`);
+    await pool.query(`CREATE INDEX IF NOT EXISTS idx_beneficial_owners_borrower ON borrower_beneficial_owners(borrower_id);`);
 
     console.log('[borrowers] schema OK');
   } catch (e) {
@@ -102,7 +103,7 @@ router.post('/api/borrowers/onboard', heavyJson, async (req, res) => {
   if (!b.legal_name) return res.status(400).json({ error: 'legal_name required' });
 
   try {
-    const r = await global.db.query(
+    const r = await pool.query(
       `INSERT INTO borrower_entities (
          legal_name, dba, entity_type, ein, borrower_role,
          street, city, state, zip, country,
@@ -160,7 +161,7 @@ router.get('/api/borrowers', async (req, res) => {
   const lim = Math.min(parseInt(limit || '200', 10), 500);
 
   try {
-    const r = await global.db.query(
+    const r = await pool.query(
       `SELECT id, legal_name, dba, entity_type, ein, borrower_role, state,
               kyc_status, master_agreement_signed, bank_verified,
               annual_revenue, fico_score, onboarded_at, updated_at
@@ -182,9 +183,9 @@ router.get('/api/borrowers', async (req, res) => {
 // ============================================================================
 router.get('/api/borrowers/:id', async (req, res) => {
   try {
-    const e = await global.db.query(`SELECT * FROM borrower_entities WHERE id = $1`, [parseInt(req.params.id, 10)]);
+    const e = await pool.query(`SELECT * FROM borrower_entities WHERE id = $1`, [parseInt(req.params.id, 10)]);
     if (e.rows.length === 0) return res.status(404).json({ error: 'not found' });
-    const bos = await global.db.query(
+    const bos = await pool.query(
       `SELECT * FROM borrower_beneficial_owners WHERE borrower_id = $1 ORDER BY ownership_pct DESC NULLS LAST, added_at`,
       [parseInt(req.params.id, 10)]
     );
@@ -227,7 +228,7 @@ router.put('/api/borrowers/:id', heavyJson, async (req, res) => {
   params.push(id);
 
   try {
-    const r = await global.db.query(
+    const r = await pool.query(
       `UPDATE borrower_entities SET ${sets.join(', ')} WHERE id = $${pidx} RETURNING id, legal_name`,
       params
     );
@@ -244,7 +245,7 @@ router.put('/api/borrowers/:id', heavyJson, async (req, res) => {
 // ============================================================================
 router.delete('/api/borrowers/:id', async (req, res) => {
   try {
-    const r = await global.db.query(
+    const r = await pool.query(
       `DELETE FROM borrower_entities WHERE id = $1 RETURNING legal_name`,
       [parseInt(req.params.id, 10)]
     );
@@ -262,7 +263,7 @@ router.post('/api/borrowers/:id/approve', heavyJson, async (req, res) => {
   const id = parseInt(req.params.id, 10);
   const approvedBy = (req.body && req.body.approved_by) || 'saul';
   try {
-    const r = await global.db.query(
+    const r = await pool.query(
       `UPDATE borrower_entities
        SET kyc_status = 'approved', kyc_approved_at = NOW(), kyc_approved_by = $2, updated_at = NOW()
        WHERE id = $1 RETURNING id, legal_name, ein, borrower_role`,
@@ -288,7 +289,7 @@ router.post('/api/borrowers/:id/reject', heavyJson, async (req, res) => {
   const id = parseInt(req.params.id, 10);
   const reason = (req.body && req.body.reason) || null;
   try {
-    const r = await global.db.query(
+    const r = await pool.query(
       `UPDATE borrower_entities
        SET kyc_status = 'rejected', updated_at = NOW(),
            notes = COALESCE(notes, '') || CASE WHEN $2::text IS NULL THEN '' ELSE E'\nKYC rejected: ' || $2::text END
@@ -309,7 +310,7 @@ router.post('/api/borrowers/:id/sign-master', heavyJson, async (req, res) => {
   const id = parseInt(req.params.id, 10);
   const signDate = (req.body && req.body.signed_date) || new Date().toISOString().split('T')[0];
   try {
-    const r = await global.db.query(
+    const r = await pool.query(
       `UPDATE borrower_entities
        SET master_agreement_signed = true, master_agreement_date = $2, updated_at = NOW()
        WHERE id = $1 RETURNING id, legal_name`,
@@ -333,7 +334,7 @@ router.post('/api/borrowers/:id/sign-master', heavyJson, async (req, res) => {
 router.post('/api/borrowers/:id/verify-bank', heavyJson, async (req, res) => {
   const id = parseInt(req.params.id, 10);
   try {
-    const r = await global.db.query(
+    const r = await pool.query(
       `UPDATE borrower_entities
        SET bank_verified = true, bank_verified_at = NOW(), updated_at = NOW()
        WHERE id = $1 RETURNING id, legal_name, bank_name, bank_account_last4`,
@@ -361,7 +362,7 @@ router.post('/api/borrowers/:id/beneficial-owners', heavyJson, async (req, res) 
   if (!b.full_name) return res.status(400).json({ error: 'full_name required' });
 
   try {
-    const r = await global.db.query(
+    const r = await pool.query(
       `INSERT INTO borrower_beneficial_owners
          (borrower_id, full_name, ownership_pct, title, ssn_last4, dob, email, phone, is_signer)
        VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)
@@ -389,7 +390,7 @@ router.post('/api/borrowers/:id/beneficial-owners', heavyJson, async (req, res) 
 // ============================================================================
 router.delete('/api/borrowers/:id/beneficial-owners/:boId', async (req, res) => {
   try {
-    const r = await global.db.query(
+    const r = await pool.query(
       `DELETE FROM borrower_beneficial_owners WHERE id = $1 AND borrower_id = $2 RETURNING full_name`,
       [parseInt(req.params.boId, 10), parseInt(req.params.id, 10)]
     );
@@ -406,9 +407,9 @@ router.delete('/api/borrowers/:id/beneficial-owners/:boId', async (req, res) => 
 router.get('/api/borrowers/:id/readiness', async (req, res) => {
   try {
     const id = parseInt(req.params.id, 10);
-    const e = await global.db.query(`SELECT * FROM borrower_entities WHERE id = $1`, [id]);
+    const e = await pool.query(`SELECT * FROM borrower_entities WHERE id = $1`, [id]);
     if (e.rows.length === 0) return res.status(404).json({ error: 'not found' });
-    const bos = await global.db.query(`SELECT COUNT(*)::int as c FROM borrower_beneficial_owners WHERE borrower_id = $1`, [id]);
+    const bos = await pool.query(`SELECT COUNT(*)::int as c FROM borrower_beneficial_owners WHERE borrower_id = $1`, [id]);
     const b = e.rows[0];
 
     const checks = [
@@ -438,7 +439,7 @@ router.get('/api/borrowers/:id/readiness', async (req, res) => {
 // ============================================================================
 router.get('/api/borrowers/stats', async (req, res) => {
   try {
-    const r = await global.db.query(`
+    const r = await pool.query(`
       SELECT
         COUNT(*)::int as total,
         SUM(CASE WHEN kyc_status = 'approved' THEN 1 ELSE 0 END)::int as approved,
@@ -448,7 +449,7 @@ router.get('/api/borrowers/stats', async (req, res) => {
         SUM(CASE WHEN bank_verified THEN 1 ELSE 0 END)::int as bank_verified
       FROM borrower_entities
     `);
-    const byRole = await global.db.query(`
+    const byRole = await pool.query(`
       SELECT borrower_role, COUNT(*)::int as count
       FROM borrower_entities
       WHERE borrower_role IS NOT NULL
