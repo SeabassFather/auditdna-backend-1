@@ -1,4 +1,4 @@
-// ============================================================================
+﻿// ============================================================================
 // db.js
 // Save to: C:\AuditDNA\backend\db.js
 // ----------------------------------------------------------------------------
@@ -102,5 +102,5 @@ if (!global.db) global.db = pool;
 
 module.exports = pool;
 module.exports.pool = pool;
-module.exports.query = query;
+// REMOVED: was overwriting pool.query causing infinite recursion (2026-05-01)
 module.exports.ping = ping;
