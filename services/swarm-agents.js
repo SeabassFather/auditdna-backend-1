@@ -489,6 +489,18 @@ const COURIER = {
 };
 
 // =============================================================================
+// 16. GG - SMTP Medic (self-repair via Claude AI)
+// =============================================================================
+const GG = {
+  description: 'SMTP Medic - self-repair via Claude AI',
+  subscribes: ['smtp.health.degraded', 'smtp.send.failed', 'smtp.health.recovered'],
+  cron:       null,
+  async handler(event, ctx) {
+    return { ok: true, note: 'handled_by_gg-smtp-medic_service', event_type: event.event_type };
+  }
+};
+
+// =============================================================================
 // REGISTRY - the swarm
 // =============================================================================
 const REGISTRY = {
@@ -506,7 +518,8 @@ const REGISTRY = {
   COSTHAWK,
   INVENTORY,
   WHISPERER,
-  COURIER
+  COURIER,
+  GG
 };
 
 module.exports = { REGISTRY };
