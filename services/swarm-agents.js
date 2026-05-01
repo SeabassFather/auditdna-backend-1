@@ -501,6 +501,30 @@ const GG = {
 };
 
 // =============================================================================
+// 17. EMMA - OAuth Medic (self-repair via Claude AI)
+// =============================================================================
+const EMMA = {
+  description: 'OAuth Medic - Google token refresh self-repair via Claude AI',
+  subscribes: ['oauth.refresh.failed', 'oauth.token.expired', 'oauth.scope.missing'],
+  cron:       null,
+  async handler(event, ctx) {
+    return { ok: true, note: 'handled_by_emma-oauth-medic_service', event_type: event.event_type };
+  }
+};
+
+// =============================================================================
+// 18. EVELYN - Code Janitor (proactive cleanup via Claude AI)
+// =============================================================================
+const EVELYN = {
+  description: 'Code Janitor - aggressive cleanup proposals via Claude AI',
+  subscribes: ['cleanup.scan.completed', 'cleanup.approved', 'cleanup.executed'],
+  cron:       null,
+  async handler(event, ctx) {
+    return { ok: true, note: 'handled_by_evelyn-code-janitor_service', event_type: event.event_type };
+  }
+};
+
+// =============================================================================
 // REGISTRY - the swarm
 // =============================================================================
 const REGISTRY = {
@@ -519,7 +543,9 @@ const REGISTRY = {
   INVENTORY,
   WHISPERER,
   COURIER,
-  GG
+  GG,
+  EMMA,
+  EVELYN
 };
 
 module.exports = { REGISTRY };
