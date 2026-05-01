@@ -1491,6 +1491,26 @@ ${failedRoutes.length ? ` FAILED: ${failedRoutes.length}\n${failedRoutes.map(r =
     console.log(`[WARN] MISSING ROUTE FILES:`);
     missing.forEach(r => console.log(`    \\-- routes/${r}.js`));
   }
+
+  // Auto-start EMMA OAuth Medic
+  try {
+    const emma = require('./services/emma-oauth-medic');
+    emma.init({ pool, aiHelper });
+    emma.start();
+    console.log('[EMMA] OAuth Medic startup invoked');
+  } catch (err) {
+    console.error('[EMMA] load error:', err.message);
+  }
+
+  // Auto-start EVELYN Code Janitor
+  try {
+    const evelyn = require('./services/evelyn-code-janitor');
+    evelyn.init({ pool, aiHelper });
+    evelyn.start();
+    console.log('[EVELYN] Code Janitor startup invoked');
+  } catch (err) {
+    console.error('[EVELYN] load error:', err.message);
+  }
 });
 
 // ===============================================================
