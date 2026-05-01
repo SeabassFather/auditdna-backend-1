@@ -21,6 +21,7 @@ import usdaRegistryRouter from './routes/usdaRegistry.js';
 
 // miniapi-agents-wired
 import miniApiAgents from './agents/index.js';
+import pg from 'pg';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -831,7 +832,18 @@ app.listen(PORT, () => {
   console.log(`[MiniAPI] Running on port ${PORT}`);
   console.log(`[MiniAPI] URL: http://process.env.DB_HOST:${PORT}`);
   try {
-    miniApiAgents.initAll({ pool, aiHelper: global.aiHelper || null });
+    // miniapi-pool-injected
+    const { Pool } = pg;
+    const miniApiPool = new Pool({
+      host:     process.env.DB_HOST     || 'localhost',
+      port:     parseInt(process.env.DB_PORT || 5432, 10),
+      database: process.env.DB_NAME     || 'auditdna',
+      user:     process.env.DB_USER     || 'postgres',
+      password: process.env.DB_PASSWORD,
+      max: 5
+    });
+    miniApiPool.on('error', (err) => console.error('[miniapi-pool] error:', err.message));
+    miniApiAgents.initAll({ pool: miniApiPool, aiHelper: global.aiHelper || null });
     miniApiAgents.startAll();
   } catch (err) {
     console.error('[MiniAPI Agents] init error:', err.message);
