@@ -168,17 +168,13 @@ app.set('pool', pool);
 // =============================================================================
 // GG SHARED SMTP TRANSPORTER - 2026-05-01
 // Single Gmail-only transporter. Used by ALL inline send sites + GG medic.
-// Reads SMTP_HOST/PORT/SECURE/USER/PASS from env so Railway vars take effect.
-// Standing rule: Gmail account sgarcia1911@gmail.com. Port 465+secure=true on
-// Railway (587 outbound is firewalled there); port 587+secure=false locally.
+// Standing rule: smtp.gmail.com:587, secure=false, sgarcia1911@gmail.com
 // =============================================================================
 const __ggNodemailer = require('nodemailer');
-const __ggPort = parseInt(process.env.SMTP_PORT || '465', 10);
-const __ggSecure = (process.env.SMTP_SECURE || 'true').toLowerCase() === 'true';
 const sharedTransporter = __ggNodemailer.createTransport({
-  host:   process.env.SMTP_HOST || 'smtp.gmail.com',
-  port:   __ggPort,
-  secure: __ggSecure,
+  host:   'smtp.gmail.com',
+  port:   587,
+  secure: false,
   auth: {
     user: process.env.SMTP_USER || 'sgarcia1911@gmail.com',
     pass: process.env.SMTP_PASS,
@@ -186,11 +182,7 @@ const sharedTransporter = __ggNodemailer.createTransport({
   pool: true,
   maxConnections: 5,
   maxMessages: 100,
-  connectionTimeout: 10000,
-  greetingTimeout: 10000,
-  socketTimeout: 15000,
 });
-console.log(`[SMTP] sharedTransporter host=${process.env.SMTP_HOST||'smtp.gmail.com'} port=${__ggPort} secure=${__ggSecure} user=${process.env.SMTP_USER||'sgarcia1911@gmail.com'}`);
 app.set('smtp', sharedTransporter);
 
 if (typeof brain?.setAI   === 'function') brain.setAI(aiHelper);
@@ -1487,14 +1479,19 @@ __server.listen(PORT, () => {
 
   // ============================================================
   // 2026-05-01: Auto-start GG SMTP Medic agent
+  // Skip on Railway (SMTP blocked) by setting SKIP_GG=true
   // ============================================================
-  try {
-    const gg = require('./services/gg-smtp-medic');
-    gg.init({ pool, aiHelper, transporter: sharedTransporter });
-    gg.start().catch(e => console.error('[GG] start error:', e.message));
-    console.log('[GG] SMTP Medic startup invoked');
-  } catch (err) {
-    console.error('[GG] load error:', err.message);
+  if (process.env.SKIP_GG === 'true') {
+    console.log('[GG] SKIP_GG=true - SMTP medic disabled (Railway env)');
+  } else {
+    try {
+      const gg = require('./services/gg-smtp-medic');
+      gg.init({ pool, aiHelper, transporter: sharedTransporter });
+      gg.start().catch(e => console.error('[GG] start error:', e.message));
+      console.log('[GG] SMTP Medic startup invoked');
+    } catch (err) {
+      console.error('[GG] load error:', err.message);
+    }
   }
   const totalRoutes = explicitMounts.length + loadedRoutes.length;
   console.log(`
