@@ -132,25 +132,48 @@ function buildDigest() {
   return lines.join('\n');
 }
 
-// --------- SEND digest via existing SMTP ---------
+// --------- SEND digest: Gmail API first, SMTP fallback ---------
 async function sendDigest(smtp) {
+  const text = buildDigest();
+  const subject = '[Priscilla] LOAF marketing digest - ' + new Date().toISOString().slice(0,16);
+
+  // Try Gmail API first (HTTPS port 443 - works on Railway)
+  try {
+    const gmailRoute = require('../routes/gmail');
+    if (gmailRoute && typeof gmailRoute.gmailApiSend === 'function') {
+      const info = await gmailRoute.gmailApiSend({
+        to: SAUL_EMAIL,
+        subject: subject,
+        text: text,
+        html: '<pre style="font-family:monospace;font-size:12px;line-height:1.5">' + text.replace(/</g,'&lt;') + '</pre>',
+        attachments: []
+      });
+      _state.lastDigestAt = new Date().toISOString();
+      log('digest sent via Gmail API to ' + SAUL_EMAIL + ' (msg=' + info.messageId + ')');
+      return;
+    }
+  } catch (apiErr) {
+    log('Gmail API path failed, falling back to SMTP: ' + apiErr.message);
+  }
+
+  // SMTP fallback (works locally - blocked on Railway but try anyway)
   if (!smtp || typeof smtp.sendMail !== 'function') {
-    log('SMTP not provided to Priscilla; skipping digest');
+    _state.errors++;
+    log('Gmail API unavailable AND no SMTP transporter; digest skipped');
     return;
   }
-  const text = buildDigest();
   try {
     await smtp.sendMail({
       from: '"Priscilla LOAF Agent" <sgarcia1911@gmail.com>',
       to: SAUL_EMAIL,
-      subject: '[Priscilla] LOAF marketing digest - ' + new Date().toISOString().slice(0,16),
+      subject: subject,
       text: text
     });
     _state.lastDigestAt = new Date().toISOString();
-    log('digest sent to ' + SAUL_EMAIL);
+    log('digest sent via SMTP to ' + SAUL_EMAIL);
   } catch (err) {
     _state.errors++;
-    log('digest send failed: ' + err.message);
+    log('digest send failed (Gmail API and SMTP both): ' + err.message);
   }
 }
 
@@ -179,9 +202,12 @@ function registerRoutes(app) {
   });
 
   app.post('/api/priscilla/digest/now', async (req, res) => {
-    if (!app.locals.smtp) return res.status(503).json({ ok: false, error: 'smtp not wired' });
-    await sendDigest(app.locals.smtp);
-    res.json({ ok: true, lastDigestAt: _state.lastDigestAt });
+    try {
+      await sendDigest(app.locals.smtp);
+      res.json({ ok: true, lastDigestAt: _state.lastDigestAt });
+    } catch (err) {
+      res.status(500).json({ ok: false, error: err.message });
+    }
   });
 }
 

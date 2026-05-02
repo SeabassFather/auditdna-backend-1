@@ -720,3 +720,6 @@ router.post('/smtp-test', async (req, res) => {
 });
 
 module.exports = router;
+module.exports.gmailApiSend = gmailApiSend;
+module.exports.oauth2Client = oauth2Client;
+module.exports.ensureFreshTokens = ensureFreshTokens;
