@@ -45,6 +45,11 @@ function createTransport() {
 
 // Verify SMTP on startup
 (async () => {
+  // Skip startup verify on Railway (port 587/465 firewalled) or when explicitly disabled
+  if (process.env.SKIP_SMTP_STARTUP_VERIFY === 'true' || process.env.RAILWAY_ENVIRONMENT || process.env.RAILWAY_PROJECT_ID) {
+    console.log('[SMTP] startup verify skipped (Railway env or SKIP_SMTP_STARTUP_VERIFY=true) - Gmail API is the active send path');
+    return;
+  }
   if (!SMTP_PASS) {
     console.warn('[SMTP] WARNING: SMTP_PASS not set in .env ΓÇö email sending will fail');
     return;
