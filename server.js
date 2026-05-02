@@ -1,4 +1,4 @@
-﻿// ===============================================================
+// ===============================================================
 // AUDITDNA BACKEND SERVER v4.1 ???????? SECURED
 // ===============================================================
 // CHANGES FROM v4.0:
@@ -1446,6 +1446,22 @@ try { app.use('/api/autonomy', require('./routes/autonomy-loop')); console.log('
 
 const __server = require('http').createServer(app);
 try { if (global.__auctionWs && typeof global.__auctionWs.attach === 'function') { global.__auctionWs.attach(__server); console.log('[OK] auction-ws attached to http server'); } } catch(e) { console.error('[FAIL] auction-ws attach:', e.message); }
+// ============ LOAF AGENTS - Priscilla (reporter) + Nadine (onboarding) ============
+try {
+  const priscilla = require('./agents/priscilla');
+  priscilla.init(app, pool, sharedTransporter);
+  console.log('[PRISCILLA] LOAF marketing agent ONLINE');
+} catch (err) {
+  console.error('[PRISCILLA] init failed:', err.message);
+}
+try {
+  const nadine = require('./agents/nadine');
+  nadine.init(app, pool);
+  console.log('[NADINE] LOAF sponsor onboarding agent ONLINE');
+} catch (err) {
+  console.error('[NADINE] init failed:', err.message);
+}
+
 __server.listen(PORT, () => {
   // ============================================================
   // 2026-05-01: Auto-start swarm Phase 4 coordinator
