@@ -13,6 +13,14 @@
 // =============================================================================
 
 const nodemailer = require('nodemailer');
+const https = require('https');
+
+// Health check mode: 'auto' | 'smtp' | 'gmail_api'
+//   auto      = if SKIP_SMTP_CHECK=true OR running on Railway (no port 465/587), use gmail_api
+//   smtp      = legacy transporter.verify() — works locally, NOT on Railway
+//   gmail_api = HTTPS GET to Gmail API discovery endpoint — works everywhere
+const CHECK_MODE = (process.env.GG_CHECK_MODE || 'auto').toLowerCase();
+const SKIP_SMTP_CHECK = process.env.SKIP_SMTP_CHECK === 'true';
 
 let pool = null;
 let aiHelper = null;
@@ -56,7 +64,7 @@ async function start() {
     console.warn('[GG] already running');
     return;
   }
-  console.log('[GG] SMTP Medic starting (poll every 60s)');
+  console.log(`[GG] SMTP Medic starting (poll every 60s, mode=${shouldUseGmailApi() ? 'gmail_api' : 'smtp'})`);
 
   // Immediate first check
   await tick();
@@ -75,30 +83,76 @@ function stop() {
 }
 
 // =============================================================================
+// Gmail API HTTPS health check (works on Railway — port 443 always allowed)
+// Calls Gmail's discovery document, validates DNS + TLS + HTTP reachability.
+// No auth needed for discovery endpoint — pure network reachability test.
+// =============================================================================
+function gmailApiVerify() {
+  return new Promise((resolve, reject) => {
+    const req = https.get({
+      hostname: 'gmail.googleapis.com',
+      path: '/$discovery/rest?version=v1',
+      timeout: 8000,
+      headers: { 'User-Agent': 'AuditDNA-GG-Medic/2.0' }
+    }, (res) => {
+      // Drain the response so socket releases
+      res.on('data', () => {});
+      res.on('end', () => {
+        if (res.statusCode >= 200 && res.statusCode < 400) {
+          resolve({ ok: true, status: res.statusCode });
+        } else {
+          reject(new Error(`Gmail API discovery returned HTTP ${res.statusCode}`));
+        }
+      });
+    });
+    req.on('timeout', () => { req.destroy(); reject(new Error('Gmail API timeout')); });
+    req.on('error', (err) => reject(err));
+    req.end();
+  });
+}
+
+function shouldUseGmailApi() {
+  if (CHECK_MODE === 'gmail_api') return true;
+  if (CHECK_MODE === 'smtp') return false;
+  // auto: detect Railway via env, or honor explicit SKIP_SMTP_CHECK
+  if (SKIP_SMTP_CHECK) return true;
+  if (process.env.RAILWAY_ENVIRONMENT) return true;
+  if (process.env.RAILWAY_PROJECT_ID) return true;
+  return false;
+}
+
+// =============================================================================
 async function tick() {
   lastVerifyAt = new Date();
+  const useGmailApi = shouldUseGmailApi();
+  const checkLabel = useGmailApi ? 'Gmail API' : 'SMTP';
   try {
-    await transporter.verify();
+    if (useGmailApi) {
+      await gmailApiVerify();
+    } else {
+      await transporter.verify();
+    }
     if (!lastVerifyOk && lastVerifyOk !== null) {
       // RECOVERED
-      await publishEvent('smtp.health.recovered', { after_failures: consecutiveFailures });
-      console.log('[GG] SMTP recovered after', consecutiveFailures, 'failures');
+      await publishEvent('smtp.health.recovered', { after_failures: consecutiveFailures, mode: useGmailApi ? 'gmail_api' : 'smtp' });
+      console.log(`[GG] ${checkLabel} recovered after`, consecutiveFailures, 'failures');
     }
     lastVerifyOk = true;
     lastError = null;
     consecutiveFailures = 0;
   } catch (err) {
     lastVerifyOk = false;
-    lastError = { message: err.message, code: err.code, command: err.command };
+    lastError = { message: err.message, code: err.code, command: err.command, mode: useGmailApi ? 'gmail_api' : 'smtp' };
     consecutiveFailures++;
 
     await publishEvent('smtp.health.degraded', {
       consecutive_failures: consecutiveFailures,
       error: lastError,
+      check_mode: useGmailApi ? 'gmail_api' : 'smtp',
       transporter_options: scrubAuth(transporter.options),
     });
 
-    console.warn(`[GG] SMTP verify failed (${consecutiveFailures}/${FAILURE_THRESHOLD}):`, err.message);
+    console.warn(`[GG] ${checkLabel} verify failed (${consecutiveFailures}/${FAILURE_THRESHOLD}):`, err.message);
 
     // Trigger Claude proposal at threshold (with cooldown)
     if (consecutiveFailures >= FAILURE_THRESHOLD &&
@@ -223,6 +277,7 @@ Respond with a single JSON object (no markdown, no preamble) with shape:
 async function getStatus() {
   return {
     running:              !!pollTimer,
+    check_mode:           shouldUseGmailApi() ? 'gmail_api' : 'smtp',
     last_verify_at:       lastVerifyAt,
     last_verify_ok:       lastVerifyOk,
     consecutive_failures: consecutiveFailures,
