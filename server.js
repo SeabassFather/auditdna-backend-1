@@ -168,13 +168,17 @@ app.set('pool', pool);
 // =============================================================================
 // GG SHARED SMTP TRANSPORTER - 2026-05-01
 // Single Gmail-only transporter. Used by ALL inline send sites + GG medic.
-// Standing rule: smtp.gmail.com:587, secure=false, sgarcia1911@gmail.com
+// Reads SMTP_HOST/PORT/SECURE/USER/PASS from env so Railway vars take effect.
+// Standing rule: Gmail account sgarcia1911@gmail.com. Port 465+secure=true on
+// Railway (587 outbound is firewalled there); port 587+secure=false locally.
 // =============================================================================
 const __ggNodemailer = require('nodemailer');
+const __ggPort = parseInt(process.env.SMTP_PORT || '465', 10);
+const __ggSecure = (process.env.SMTP_SECURE || 'true').toLowerCase() === 'true';
 const sharedTransporter = __ggNodemailer.createTransport({
-  host:   'smtp.gmail.com',
-  port:   587,
-  secure: false,
+  host:   process.env.SMTP_HOST || 'smtp.gmail.com',
+  port:   __ggPort,
+  secure: __ggSecure,
   auth: {
     user: process.env.SMTP_USER || 'sgarcia1911@gmail.com',
     pass: process.env.SMTP_PASS,
@@ -182,7 +186,11 @@ const sharedTransporter = __ggNodemailer.createTransport({
   pool: true,
   maxConnections: 5,
   maxMessages: 100,
+  connectionTimeout: 10000,
+  greetingTimeout: 10000,
+  socketTimeout: 15000,
 });
+console.log(`[SMTP] sharedTransporter host=${process.env.SMTP_HOST||'smtp.gmail.com'} port=${__ggPort} secure=${__ggSecure} user=${process.env.SMTP_USER||'sgarcia1911@gmail.com'}`);
 app.set('smtp', sharedTransporter);
 
 if (typeof brain?.setAI   === 'function') brain.setAI(aiHelper);
