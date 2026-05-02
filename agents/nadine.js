@@ -47,8 +47,18 @@ let _state = {
   startedAt: new Date().toISOString(),
   sponsorsAddedThisSession: 0,
   lastError: null,
-  loafHtmlPath: DEFAULT_LOAF_HTML
+  loafHtmlPath: DEFAULT_LOAF_HTML,
+  // Email tracking
+  drafts: new Map(),              // slug -> { form, previewedAt, errors, owner_email, owner_name }
+  failedAttempts: [],             // ring buffer last 50
+  emailsSent: 0,
+  lastEmailAt: null,
+  emailErrors: 0
 };
+
+const SAUL_EMAIL = process.env.NADINE_ALERT_EMAIL || 'sgarcia1911@gmail.com';
+const ABANDONMENT_MS = 30 * 60 * 1000;   // 30 minutes
+const ABANDONMENT_CHECK_MS = 5 * 60 * 1000; // poll every 5 min
 
 function log(msg) { console.log('[' + AGENT_NAME + '] ' + msg); }
 
@@ -494,7 +504,144 @@ function applySponsorToFile(form, loafPath) {
 }
 
 // ============================================================================
-// 5. ROUTES
+// 5. EMAIL ALERTS (Gmail API via routes/gmail.js)
+// ============================================================================
+
+async function sendAlert(subject, textBody) {
+  const html = '<pre style="font-family:monospace;font-size:12px;line-height:1.5">' +
+    textBody.replace(/</g,'&lt;') + '</pre>';
+  // Try Gmail API first (Railway-safe)
+  try {
+    const gmailRoute = require('../routes/gmail');
+    if (gmailRoute && typeof gmailRoute.gmailApiSend === 'function') {
+      const info = await gmailRoute.gmailApiSend({
+        to: SAUL_EMAIL,
+        subject: subject,
+        text: textBody,
+        html: html,
+        attachments: []
+      });
+      _state.emailsSent++;
+      _state.lastEmailAt = new Date().toISOString();
+      log('alert sent via Gmail API to ' + SAUL_EMAIL + ' (msg=' + info.messageId + ')');
+      return { ok: true, via: 'gmail_api', messageId: info.messageId };
+    }
+  } catch (apiErr) {
+    log('Gmail API failed, trying SMTP fallback: ' + apiErr.message);
+  }
+  // SMTP fallback
+  try {
+    const nodemailer = require('nodemailer');
+    const t = nodemailer.createTransport({
+      host: process.env.SMTP_HOST || 'smtp.gmail.com',
+      port: parseInt(process.env.SMTP_PORT || '587', 10),
+      secure: false,
+      auth: { user: process.env.SMTP_USER || 'sgarcia1911@gmail.com', pass: process.env.SMTP_PASS }
+    });
+    const info = await t.sendMail({
+      from: '"Nadine LOAF Onboarding" <sgarcia1911@gmail.com>',
+      to: SAUL_EMAIL,
+      subject: subject,
+      text: textBody
+    });
+    _state.emailsSent++;
+    _state.lastEmailAt = new Date().toISOString();
+    log('alert sent via SMTP to ' + SAUL_EMAIL);
+    return { ok: true, via: 'smtp', messageId: info.messageId };
+  } catch (smtpErr) {
+    _state.emailErrors++;
+    log('alert send failed (Gmail API + SMTP both): ' + smtpErr.message);
+    return { ok: false, error: smtpErr.message };
+  }
+}
+
+function buildFailedAttemptEmail(form, errors) {
+  const lines = [];
+  lines.push('NADINE - Sponsor Intake VALIDATION FAILED');
+  lines.push('Time: ' + new Date().toISOString());
+  lines.push('');
+  lines.push('=== ATTEMPTED SPONSOR ===');
+  lines.push('  slug    : ' + (form.slug || '(missing)'));
+  lines.push('  title   : ' + (form.title || '(missing)'));
+  lines.push('  pitch   : ' + (form.pitch ? form.pitch.slice(0, 200) : '(missing)'));
+  lines.push('');
+  if (form.owner) {
+    lines.push('=== OWNER ===');
+    lines.push('  name    : ' + (form.owner.name || '(missing)'));
+    lines.push('  email   : ' + (form.owner.email || '(missing)'));
+    lines.push('  phone US: ' + (form.owner.phone_us || '-'));
+    lines.push('  phone MX: ' + (form.owner.phone_mx || '-'));
+    lines.push('  whatsapp: ' + (form.owner.whatsapp || '-'));
+    lines.push('  location: ' + (form.owner.location || '-'));
+    lines.push('  website : ' + (form.owner.website || '-'));
+  }
+  lines.push('');
+  lines.push('=== VALIDATION ERRORS (' + errors.length + ') ===');
+  errors.forEach((e, i) => lines.push('  ' + (i+1) + '. ' + e));
+  lines.push('');
+  lines.push('=== RAW INTAKE ===');
+  lines.push(JSON.stringify(form, null, 2));
+  lines.push('');
+  lines.push('-- Nadine v' + AGENT_VERSION + ', LOAF Sponsor Onboarding agent --');
+  return lines.join('\n');
+}
+
+function buildAbandonmentEmail(slug, draft) {
+  const ageMin = Math.round((Date.now() - draft.previewedAt) / 60000);
+  const lines = [];
+  lines.push('NADINE - Sponsor Intake ABANDONED');
+  lines.push('Time: ' + new Date().toISOString());
+  lines.push('');
+  lines.push('A sponsor previewed intake ' + ageMin + ' minutes ago and never applied.');
+  lines.push('');
+  lines.push('=== SPONSOR ===');
+  lines.push('  slug    : ' + slug);
+  lines.push('  title   : ' + (draft.form.title || '-'));
+  lines.push('  pitch   : ' + (draft.form.pitch || '').slice(0, 200));
+  lines.push('');
+  lines.push('=== OWNER (follow up) ===');
+  if (draft.form.owner) {
+    lines.push('  name    : ' + (draft.form.owner.name || '-'));
+    lines.push('  email   : ' + (draft.form.owner.email || '-'));
+    lines.push('  phone US: ' + (draft.form.owner.phone_us || '-'));
+    lines.push('  phone MX: ' + (draft.form.owner.phone_mx || '-'));
+    lines.push('  whatsapp: ' + (draft.form.owner.whatsapp || '-'));
+  }
+  lines.push('');
+  lines.push('Reach out to close the deal. To finalize, POST the intake JSON to:');
+  lines.push('  POST /api/nadine/sponsor/apply');
+  lines.push('');
+  lines.push('=== RAW INTAKE ===');
+  lines.push(JSON.stringify(draft.form, null, 2));
+  lines.push('');
+  lines.push('-- Nadine v' + AGENT_VERSION + ', LOAF Sponsor Onboarding agent --');
+  return lines.join('\n');
+}
+
+async function checkAbandonments() {
+  const now = Date.now();
+  const stale = [];
+  for (const [slug, draft] of _state.drafts.entries()) {
+    if (now - draft.previewedAt >= ABANDONMENT_MS && !draft.alerted) {
+      stale.push({ slug, draft });
+      draft.alerted = true;  // mark so we only alert once
+    }
+  }
+  for (const { slug, draft } of stale) {
+    try {
+      await sendAlert(
+        '[Nadine] Sponsor intake ABANDONED: ' + slug,
+        buildAbandonmentEmail(slug, draft)
+      );
+    } catch (err) {
+      log('abandonment email failed for ' + slug + ': ' + err.message);
+    }
+  }
+  if (stale.length > 0) log('alerted ' + stale.length + ' abandoned draft(s)');
+}
+
+// ============================================================================
+// 6. ROUTES
 // ============================================================================
 
 function registerRoutes(app) {
@@ -502,7 +649,13 @@ function registerRoutes(app) {
     res.json({
       ok: true, agent: AGENT_NAME, version: AGENT_VERSION,
       startedAt: _state.startedAt, sponsorsAddedThisSession: _state.sponsorsAddedThisSession,
-      lastError: _state.lastError, loafHtmlPath: _state.loafHtmlPath
+      lastError: _state.lastError, loafHtmlPath: _state.loafHtmlPath,
+      drafts_pending: _state.drafts.size,
+      failed_attempts_total: _state.failedAttempts.length,
+      emails_sent: _state.emailsSent,
+      last_email_at: _state.lastEmailAt,
+      email_errors: _state.emailErrors,
+      abandonment_threshold_min: ABANDONMENT_MS / 60000
     });
   });
 
@@ -557,10 +710,19 @@ function registerRoutes(app) {
     });
   });
 
-  app.post('/api/nadine/sponsor', (req, res) => {
+  app.post('/api/nadine/sponsor', async (req, res) => {
     const form = req.body || {};
     const errors = validateIntake(form);
-    if (errors.length) return res.status(400).json({ ok: false, errors: errors });
+    if (errors.length) {
+      // Track failed attempt + email Saul
+      _state.failedAttempts.push({ form, errors, at: new Date().toISOString() });
+      if (_state.failedAttempts.length > 50) _state.failedAttempts.shift();
+      sendAlert(
+        '[Nadine] Sponsor intake FAILED: ' + (form.slug || 'no-slug'),
+        buildFailedAttemptEmail(form, errors)
+      ).catch(err => log('failed-attempt email error: ' + err.message));
+      return res.status(400).json({ ok: false, errors: errors });
+    }
     try {
       const generated = {
         carousel_slot : generateCarouselSlot(form),
@@ -569,6 +731,13 @@ function registerRoutes(app) {
         js_handlers   : generateJSHandlers(form),
         voice_scripts : generateVoiceScripts(form)
       };
+      // Track as draft until /apply is called
+      _state.drafts.set(form.slug, {
+        form: form,
+        previewedAt: Date.now(),
+        alerted: false
+      });
+      log('draft tracked: ' + form.slug + ' (will alert if not applied within ' + (ABANDONMENT_MS/60000) + ' min)');
       res.json({ ok: true, sponsor: form.slug, mode: 'preview', generated: generated });
     } catch (err) {
       res.status(500).json({ ok: false, error: err.message });
@@ -578,16 +747,67 @@ function registerRoutes(app) {
   app.post('/api/nadine/sponsor/apply', (req, res) => {
     const form = req.body || {};
     const errors = validateIntake(form);
-    if (errors.length) return res.status(400).json({ ok: false, errors: errors });
+    if (errors.length) {
+      _state.failedAttempts.push({ form, errors, at: new Date().toISOString() });
+      if (_state.failedAttempts.length > 50) _state.failedAttempts.shift();
+      sendAlert(
+        '[Nadine] Sponsor APPLY validation FAILED: ' + (form.slug || 'no-slug'),
+        buildFailedAttemptEmail(form, errors)
+      ).catch(err => log('apply-failed email error: ' + err.message));
+      return res.status(400).json({ ok: false, errors: errors });
+    }
     try {
       const result = applySponsorToFile(form, _state.loafHtmlPath);
       _state.sponsorsAddedThisSession++;
       _state.lastError = null;
+      // Clear from draft tracker - successfully applied
+      if (_state.drafts.has(form.slug)) {
+        _state.drafts.delete(form.slug);
+        log('draft cleared (applied): ' + form.slug);
+      }
       res.json(result);
     } catch (err) {
       _state.lastError = err.message;
       res.status(500).json({ ok: false, error: err.message });
     }
+  });
+
+  // Inspect draft tracker
+  app.get('/api/nadine/drafts', (req, res) => {
+    const drafts = [];
+    for (const [slug, draft] of _state.drafts.entries()) {
+      drafts.push({
+        slug: slug,
+        title: draft.form.title,
+        owner_name: draft.form.owner ? draft.form.owner.name : null,
+        owner_email: draft.form.owner ? draft.form.owner.email : null,
+        previewed_at: new Date(draft.previewedAt).toISOString(),
+        age_minutes: Math.round((Date.now() - draft.previewedAt) / 60000),
+        alerted: draft.alerted
+      });
+    }
+    res.json({
+      ok: true,
+      count: drafts.length,
+      abandonment_threshold_min: ABANDONMENT_MS / 60000,
+      drafts: drafts,
+      failed_attempts_recent: _state.failedAttempts.slice(-10)
+    });
+  });
+
+  // Manual abandonment check trigger (testing)
+  app.post('/api/nadine/check-abandonments', async (req, res) => {
+    await checkAbandonments();
+    res.json({ ok: true, drafts_remaining: _state.drafts.size });
+  });
+
+  // Test email send
+  app.post('/api/nadine/email/test', async (req, res) => {
+    const result = await sendAlert(
+      '[Nadine] Test email from agent',
+      'Nadine test email\nTime: ' + new Date().toISOString() + '\nIf you see this, the Gmail API + SMTP fallback chain is working.'
+    );
+    res.json(result);
   });
 }
 
@@ -601,12 +821,18 @@ function init(app, pool) {
     return;
   }
   registerRoutes(app);
+  // Start abandonment poller
+  setInterval(() => {
+    checkAbandonments().catch(err => log('abandonment poll error: ' + err.message));
+  }, ABANDONMENT_CHECK_MS);
   log('ONLINE - LOAF html path = ' + _state.loafHtmlPath);
-  log('endpoints: GET /api/nadine/health | GET /api/nadine/sponsors | GET /api/nadine/playbook | POST /api/nadine/sponsor | POST /api/nadine/sponsor/apply');
+  log('abandonment monitor: alert after ' + (ABANDONMENT_MS/60000) + ' min, poll every ' + (ABANDONMENT_CHECK_MS/60000) + ' min');
+  log('alert email = ' + SAUL_EMAIL);
+  log('endpoints: GET /api/nadine/health | GET /api/nadine/sponsors | GET /api/nadine/playbook | GET /api/nadine/drafts | POST /api/nadine/sponsor | POST /api/nadine/sponsor/apply | POST /api/nadine/check-abandonments | POST /api/nadine/email/test');
 }
 
 module.exports = {
   init, validateIntake, generateCarouselSlot, generateCSS, generateDetailScreen,
   generateJSHandlers, generateVoiceScripts, applySponsorToFile, listExistingSponsors,
-  phoneToPhonetic, emailToPhonetic, _state
+  phoneToPhonetic, emailToPhonetic, sendAlert, checkAbandonments, _state
 };
