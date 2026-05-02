@@ -233,19 +233,34 @@ async function handleInquiry(data) {
   const saved = await saveInquiry(data);
   const fullInquiry = { ...data, id: saved.id, created_at: saved.created_at };
 
-  // 2. Look up product to get notify_emails
-  let notifyEmails = ['h11mariscal@gmail.com', 'sgarcia1911@gmail.com'];
-  try {
-    const r = await pool.query(
-      "SELECT notify_emails FROM platform_products WHERE slug = $1",
-      [data.product_slug || 'plastpac-ecocrate']
-    );
-    if (r.rows[0] && Array.isArray(r.rows[0].notify_emails) && r.rows[0].notify_emails.length) {
-      notifyEmails = r.rows[0].notify_emails;
+  // 2. Route by source: EcoCrate-related = Hector + Saul. LOAF advertising/ops = Saul only.
+  const src  = String(data.source || '').toLowerCase();
+  const slug = String(data.product_slug || '').toLowerCase();
+  const isEcoCrateLead =
+    slug.includes('ecocrate') || slug.includes('plastpac') ||
+    src.includes('ecocrate')  || src.includes('plastpac')  ||
+    src === 'loaf-quick-contact' || src === 'loaf';
+
+  let notifyEmails = isEcoCrateLead
+    ? ['h11mariscal@gmail.com', 'sgarcia1911@gmail.com']
+    : ['sgarcia1911@gmail.com'];
+
+  // Per-product override only applies to EcoCrate-style leads
+  if (isEcoCrateLead) {
+    try {
+      const r = await pool.query(
+        "SELECT notify_emails FROM platform_products WHERE slug = $1",
+        [data.product_slug || 'plastpac-ecocrate']
+      );
+      if (r.rows[0] && Array.isArray(r.rows[0].notify_emails) && r.rows[0].notify_emails.length) {
+        notifyEmails = r.rows[0].notify_emails;
+      }
+    } catch (err) {
+      console.error('[plastpac] product lookup failed:', err.message);
     }
-  } catch (err) {
-    console.error('[plastpac] product lookup failed:', err.message);
   }
+
+  console.log('[plastpac] route source=' + src + ' slug=' + slug + ' isEcoCrate=' + isEcoCrateLead + ' notify=' + JSON.stringify(notifyEmails));
 
   // 3. Fire emails
   const emailResult = await fireEmails(fullInquiry, notifyEmails);
