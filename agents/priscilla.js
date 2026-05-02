@@ -132,13 +132,68 @@ function buildDigest() {
   return lines.join('\n');
 }
 
-// --------- SEND digest via existing SMTP ---------
+// --------- SEND digest via Gmail API (Railway-safe) with SMTP fallback ---------
+async function gmailApiSendDigest(text) {
+  // Build raw RFC822 message and POST to Gmail API over HTTPS port 443.
+  // Uses the existing OAuth client wired in routes/gmail.js.
+  const { google } = require('googleapis');
+  const path = require('path');
+  let oauth2Client = null;
+  try {
+    // Pull the shared oauth2Client from the loaded gmail route (it stores tokens).
+    const gmailModule = require(path.join(__dirname, '..', 'routes', 'gmail.js'));
+    if (gmailModule && gmailModule.oauth2Client) {
+      oauth2Client = gmailModule.oauth2Client;
+    }
+  } catch (e) {
+    // routes/gmail.js may not export oauth2Client; build our own from env
+  }
+  if (!oauth2Client) {
+    const CLIENT_ID = process.env.GMAIL_CLIENT_ID || process.env.GOOGLE_CLIENT_ID;
+    const CLIENT_SECRET = process.env.GMAIL_CLIENT_SECRET || process.env.GOOGLE_CLIENT_SECRET;
+    const REDIRECT_URI = process.env.GMAIL_REDIRECT_URI;
+    const REFRESH_TOKEN = process.env.GMAIL_REFRESH_TOKEN;
+    if (!CLIENT_ID || !CLIENT_SECRET || !REFRESH_TOKEN) {
+      throw new Error('Gmail OAuth env vars missing (GMAIL_CLIENT_ID/SECRET/REFRESH_TOKEN)');
+    }
+    oauth2Client = new google.auth.OAuth2(CLIENT_ID, CLIENT_SECRET, REDIRECT_URI);
+    oauth2Client.setCredentials({ refresh_token: REFRESH_TOKEN });
+  }
+  const gmail = google.gmail({ version: 'v1', auth: oauth2Client });
+  const subject = '[Priscilla] LOAF marketing digest - ' + new Date().toISOString().slice(0,16);
+  const headers = [
+    'From: "Priscilla LOAF Agent" <' + SAUL_EMAIL + '>',
+    'To: ' + SAUL_EMAIL,
+    'Subject: =?UTF-8?B?' + Buffer.from(subject).toString('base64') + '?=',
+    'MIME-Version: 1.0',
+    'Content-Type: text/plain; charset=UTF-8',
+    'Content-Transfer-Encoding: 7bit'
+  ].join('\r\n');
+  const raw = Buffer.from(headers + '\r\n\r\n' + text)
+    .toString('base64')
+    .replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+  const result = await gmail.users.messages.send({ userId: 'me', requestBody: { raw } });
+  return { messageId: result.data.id };
+}
+
+// --------- SEND digest: Gmail API first, SMTP fallback ---------
 async function sendDigest(smtp) {
+  const text = buildDigest();
+  // Try Gmail API first (works on Railway)
+  try {
+    const info = await gmailApiSendDigest(text);
+    _state.lastDigestAt = new Date().toISOString();
+    log('digest sent via Gmail API to ' + SAUL_EMAIL + ' (msg=' + info.messageId + ')');
+    return;
+  } catch (apiErr) {
+    log('Gmail API send failed, falling back to SMTP: ' + apiErr.message);
+  }
+  // Fall back to SMTP (works locally; will fail silently on Railway)
   if (!smtp || typeof smtp.sendMail !== 'function') {
-    log('SMTP not provided to Priscilla; skipping digest');
+    _state.errors++;
+    log('SMTP not provided and Gmail API failed; digest skipped');
     return;
   }
-  const text = buildDigest();
   try {
     await smtp.sendMail({
       from: '"Priscilla LOAF Agent" <sgarcia1911@gmail.com>',
@@ -147,10 +202,10 @@ async function sendDigest(smtp) {
       text: text
     });
     _state.lastDigestAt = new Date().toISOString();
-    log('digest sent to ' + SAUL_EMAIL);
+    log('digest sent via SMTP to ' + SAUL_EMAIL);
   } catch (err) {
     _state.errors++;
-    log('digest send failed: ' + err.message);
+    log('digest send failed (both Gmail API and SMTP): ' + err.message);
   }
 }
 
