@@ -127,16 +127,10 @@ function sendToNtfy({ agent, severity, summary, context }) {
 }
 
 // ----------------------------------------------------------------------------
-// EMAIL (with VISIBLE error trace)
+// EMAIL (Gmail API first - Railway-safe, SMTP fallback for local)
 // ----------------------------------------------------------------------------
 async function sendToEmail({ agent, severity, summary, context }) {
   console.log('[notifier-email] entry: agent=', agent, 'severity=', severity);
-
-  const m = buildMailer();
-  if (!m) {
-    console.error('[notifier-email] buildMailer returned null - aborting');
-    return false;
-  }
 
   const tag = severity === 'critical' ? '[CRITICAL]' : severity === 'high' ? '[HIGH]' : '[ALERT]';
   const subject = `${tag} ${agent}: ${summary.slice(0, 80)}`;
@@ -153,24 +147,49 @@ async function sendToEmail({ agent, severity, summary, context }) {
     lines.push('Context:');
     lines.push(JSON.stringify(context, null, 2));
   }
-
+  const text = lines.join('\n');
   const to = env('ALERT_EMAIL', 'sgarcia1911@gmail.com');
-  console.log('[notifier-email] attempting sendMail to=', to, 'subject=', subject.slice(0, 60));
+
+  // Path 1: Gmail API via routes/gmail.js (HTTPS port 443 - works on Railway)
+  try {
+    const gmailRoute = require('../routes/gmail');
+    if (gmailRoute && typeof gmailRoute.gmailApiSend === 'function') {
+      console.log('[notifier-email] trying Gmail API to=', to, 'subject=', subject.slice(0, 60));
+      const info = await gmailRoute.gmailApiSend({
+        to: to,
+        subject: subject,
+        text: text,
+        html: '<pre style="font-family:monospace;font-size:12px;line-height:1.5">' + text.replace(/</g,'&lt;') + '</pre>',
+        attachments: []
+      });
+      console.log('[notifier-email] Gmail API SUCCESS messageId=', info.messageId);
+      return true;
+    }
+  } catch (apiErr) {
+    console.warn('[notifier-email] Gmail API failed, falling back to SMTP:', apiErr.message);
+  }
+
+  // Path 2: SMTP fallback (works locally; blocked on Railway but try anyway)
+  const m = buildMailer();
+  if (!m) {
+    console.error('[notifier-email] Gmail API unavailable AND buildMailer returned null - aborting');
+    return false;
+  }
+  console.log('[notifier-email] attempting SMTP sendMail to=', to, 'subject=', subject.slice(0, 60));
 
   try {
     const info = await m.sendMail({
       from: 'Saul Garcia | Mexausa Food Group <sgarcia1911@gmail.com>',
       to,
       subject,
-      text: lines.join('\n')
+      text: text
     });
-    console.log('[notifier-email] SUCCESS messageId=', info.messageId);
+    console.log('[notifier-email] SMTP SUCCESS messageId=', info.messageId);
     return true;
   } catch (err) {
-    console.error('[notifier-email] FAILED message=', err.message);
-    console.error('[notifier-email] FAILED code=', err.code);
-    console.error('[notifier-email] FAILED response=', err.response);
-    console.error('[notifier-email] FAILED stack=', err.stack);
+    console.error('[notifier-email] SMTP FAILED message=', err.message);
+    console.error('[notifier-email] SMTP FAILED code=', err.code);
+    console.error('[notifier-email] SMTP FAILED response=', err.response);
     return false;
   }
 }
