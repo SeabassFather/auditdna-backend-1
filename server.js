@@ -269,6 +269,10 @@ app.use(morgan(NODE_ENV === 'development' ? 'dev' : 'combined'));
 // Body limits ???????? 12MB for property photo uploads, 1MB for everything else
 app.use('/api/properties', express.json({ limit: '12mb' }));
 app.use('/api/properties', require('./routes/properties'));
+// LOAF Stripe webhook needs RAW body BEFORE express.json
+app.post('/api/nadine/stripe/webhook',
+  express.raw({ type: 'application/json' }),
+  require('./services/nadine-payments').webhookHandler);
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 
@@ -1457,6 +1461,16 @@ try {
 try {
   const nadine = require('./agents/nadine');
   nadine.init(app, pool);
+  // LOAF sponsor payments - Stripe checkout + apply pipeline
+  const nadinePayments = require('./services/nadine-payments');
+  nadinePayments.init(app, {
+    pool,
+    publicSiteUrl: process.env.LOAF_PUBLIC_URL || 'https://loaf.mexausafg.com',
+    alertEmail:    process.env.NADINE_ALERT_EMAIL || 'sgarcia1911@gmail.com',
+    selfBaseUrl:   process.env.NADINE_SELF_URL || ('http://127.0.0.1:' + (process.env.PORT || 5050)),
+    gmailApiSend:  (function(){ try { return require('./routes/gmail').gmailApiSend; } catch (e) { return null; } })()
+  });
+  console.log('[NADINE-PAY] payments routes ONLINE');
   console.log('[NADINE] LOAF sponsor onboarding agent ONLINE');
 } catch (err) {
   console.error('[NADINE] init failed:', err.message);
