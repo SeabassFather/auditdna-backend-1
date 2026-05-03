@@ -61,43 +61,31 @@ async function getContacts(pool, agentId, limit = 50) {
     switch (agentId) {
       case 'AVOCADO':
         return await pool.query(
-          `SELECT DISTINCT email, name, commodity, state, country FROM (
-            SELECT contact_email AS email, contact_name AS name, commodity_primary AS commodity, state, country FROM growers WHERE commodity_primary ILIKE '%avocado%' AND contact_email IS NOT NULL AND contact_email != '' 
-            UNION ALL
-            SELECT contact_email, contact_name, commodity, state, country FROM buyers WHERE commodity ILIKE '%avocado%' AND contact_email IS NOT NULL 
-          ) t WHERE email IS NOT NULL ORDER BY random() LIMIT $1`, [limit]
+          `SELECT email, contact_name AS name, COALESCE(array_to_string(crops_grown,','),'') AS commodity, state_province AS state, country FROM growers WHERE email IS NOT NULL AND email != '' ORDER BY random() LIMIT $1`, [limit]
         );
       case 'BUYER_OUTREACH':
         return await pool.query(
-          `SELECT contact_email AS email, contact_name AS name, commodity, state, country FROM buyers WHERE contact_email IS NOT NULL AND contact_email != '' ORDER BY random() LIMIT $1`, [limit]
+          `SELECT email, legal_name AS name, product_specialties AS commodity, state_region AS state, country FROM buyers WHERE email IS NOT NULL AND email != '' ORDER BY random() LIMIT $1`, [limit]
         );
       case 'GROWER_TENDER':
         return await pool.query(
-          `SELECT contact_email AS email, contact_name AS name, commodity_primary AS commodity, state, country FROM growers WHERE contact_email IS NOT NULL AND contact_email != '' ORDER BY random() LIMIT $1`, [limit]
+          `SELECT email, contact_name AS name, COALESCE(array_to_string(crops_grown,','),'') AS commodity, state_province AS state, country FROM growers WHERE email IS NOT NULL AND email != '' ORDER BY random() LIMIT $1`, [limit]
         );
       case 'LOGISTICS':
         return await pool.query(
-          `SELECT email, name, company, state, country FROM shipper_contacts WHERE email IS NOT NULL AND email != '' ORDER BY random() LIMIT $1`, [limit]
+          `SELECT email, COALESCE(name, company) AS name, company AS commodity, state, address_country AS country FROM shipper_contacts WHERE email IS NOT NULL AND email != '' ORDER BY random() LIMIT $1`, [limit]
         );
       case 'FOOD_SAFETY':
         return await pool.query(
-          `SELECT contact_email AS email, contact_name AS name, commodity_primary AS commodity, state FROM growers WHERE contact_email IS NOT NULL ORDER BY random() LIMIT $1`, [limit]
+          `SELECT email, contact_name AS name, COALESCE(array_to_string(crops_grown,','),'') AS commodity, state_province AS state, country FROM growers WHERE email IS NOT NULL AND email != '' ORDER BY random() LIMIT $1`, [limit]
         );
       case 'FINANCE':
         return await pool.query(
-          `SELECT DISTINCT email, name FROM (
-            SELECT contact_email AS email, contact_name AS name FROM growers WHERE contact_email IS NOT NULL 
-            UNION ALL
-            SELECT contact_email, contact_name FROM buyers WHERE contact_email IS NOT NULL 
-          ) t ORDER BY random() LIMIT $1`, [limit]
+          `SELECT email, contact_name AS name, COALESCE(array_to_string(crops_grown,','),'') AS commodity, state_province AS state, country FROM growers WHERE email IS NOT NULL AND email != '' ORDER BY random() LIMIT $1`, [limit]
         );
       case 'MARKET_INTEL':
         return await pool.query(
-          `SELECT DISTINCT email, name FROM (
-            SELECT contact_email AS email, contact_name AS name FROM buyers WHERE contact_email IS NOT NULL 
-            UNION ALL
-            SELECT contact_email, contact_name FROM growers WHERE contact_email IS NOT NULL 
-          ) t ORDER BY random() LIMIT $1`, [limit]
+          `SELECT email, legal_name AS name, product_specialties AS commodity, state_region AS state, country FROM buyers WHERE email IS NOT NULL AND email != '' ORDER BY random() LIMIT $1`, [limit]
         );
       default:
         return { rows: [] };
