@@ -1,4 +1,4 @@
-﻿// =============================================================================
+// =============================================================================
 // File: C:\AuditDNA\backend\services\enrique.js
 // ENRIQUE — Head AI Command Agent
 // Monitors: Brain, Gatekeeper, Autonomous Blast, PM2, SMTP, Anthropic
@@ -17,7 +17,6 @@ const REPORT_EVERY = 60 * 60 * 1000; // 1 hour
 // ─── SMARTWATCH NOTIFICATION via ntfy.sh ─────────────────────────────────────
 async function notify(title, message, priority = 'default') {
   try {
-    const fetch = (...a) => import('node-fetch').then(({default: f}) => f(...a));
     await fetch(NTFY_URL, {
       method: 'POST',
       headers: {
