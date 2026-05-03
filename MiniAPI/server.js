@@ -53,7 +53,7 @@ const ZADARMA = {
 const GOOGLE_CALENDAR = {
   CLIENT_ID: process.env.GOOGLE_CLIENT_ID || 'YOUR_CLIENT_ID.apps.googleusercontent.com',
   CLIENT_SECRET: process.env.GOOGLE_CLIENT_SECRET || 'YOUR_CLIENT_SECRET',
-  REDIRECT_URI: process.env.GOOGLE_REDIRECT_URI || 'http://process.env.DB_HOST:4000/api/calendar/callback',
+  REDIRECT_URI: process.env.GOOGLE_REDIRECT_URI || '${process.env.REDIRECT_URI || 'http://localhost:4000/api/calendar/callback'}',
   SCOPES: ['https://www.googleapis.com/auth/calendar', 'https://www.googleapis.com/auth/calendar.events'],
   CALENDARS: {
     sales: process.env.SALES_CALENDAR_ID || 'primary',
@@ -830,7 +830,7 @@ const PORT = process.env.PORT || 5051;
 
 app.listen(PORT, () => {
   console.log(`[MiniAPI] Running on port ${PORT}`);
-  console.log(`[MiniAPI] URL: http://process.env.DB_HOST:${PORT}`);
+  console.log(`[MiniAPI] URL: http://localhost:${PORT}`);
   try {
     // miniapi-pool-injected
     const { Pool } = pg;

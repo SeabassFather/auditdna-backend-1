@@ -54,7 +54,10 @@ async function run(ctx) {
 
   // 1. Schema check
   const required = REQUIRED[type] || [];
-  const missing = required.filter(k => data[k] === undefined || data[k] === null || data[k] === '');
+  const aliases = { name: ['contact_name','full_name','borrower_name'], email: ['contact_email','borrower_email','email_address'] };
+  const resolved = Object.assign({}, data);
+  for (const [key, alts] of Object.entries(aliases)) { if (!resolved[key]) { for (const a of alts) { if (resolved[a]) { resolved[key] = resolved[a]; break; } } } }
+  const missing = required.filter(k => resolved[k] === undefined || resolved[k] === null || resolved[k] === '');
   if (missing.length) {
     throw new Error('VERDICT: missing required fields: ' + missing.join(', '));
   }
