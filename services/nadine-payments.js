@@ -416,7 +416,39 @@ function init(app, opts) {
 
   ensureTable(_state.pool).catch(err => console.error('[NADINE-PAY] table init error:', err.message));
   registerRoutes(app);
-  console.log('[NADINE-PAY] checkout + status + retry + queue routes mounted');
+    app.get('/api/nadine/sponsor/intake', async (req, res) => {
+    try {
+      const token = (req.query.token || '').toString().trim();
+      if (!token) return res.status(400).json({ ok: false, error: 'token required' });
+      if (!/^[a-f0-9]{32}$/i.test(token)) return res.status(400).json({ ok: false, error: 'invalid token format' });
+      const r = await _state.pool.query(
+        'SELECT token, status, slug, intake_json, tier, billing_period, amount_cents, owner_email, lang, created_at, paid_at, applied_at, last_error FROM pending_sponsors WHERE token = $1',
+        [token]
+      );
+      if (!r.rows.length) return res.status(404).json({ ok: false, error: 'token not found' });
+      const row = r.rows[0];
+      return res.json({
+        ok: true,
+        token: row.token,
+        status: row.status,
+        slug: row.slug,
+        tier: row.tier,
+        billing_period: row.billing_period,
+        amount_cents: row.amount_cents,
+        owner_email: row.owner_email,
+        lang: row.lang,
+        created_at: row.created_at,
+        paid_at: row.paid_at,
+        applied_at: row.applied_at,
+        last_error: row.last_error,
+        intake: row.intake_json
+      });
+    } catch (e) {
+      console.log('[NADINE-PAY] intake endpoint error: ' + e.message);
+      return res.status(500).json({ ok: false, error: e.message });
+    }
+  });
+  console.log('[NADINE-PAY] checkout + status + intake + retry + queue routes mounted');
 }
 
 module.exports = {
