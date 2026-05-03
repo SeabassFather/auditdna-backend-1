@@ -65,11 +65,11 @@ async function getContacts(pool, agentId, limit = 50) {
         );
       case 'BUYER_OUTREACH':
         return await pool.query(
-          `SELECT email, legal_name AS name, product_specialties AS commodity, state_region AS state, country FROM buyers WHERE email IS NOT NULL AND email != '' ORDER BY random() LIMIT $1`, [limit]
+          `SELECT b.email, b.legal_name AS name, t.commodity, b.state_region AS state, b.country FROM buyers b JOIN contact_commodity_tags t ON t.contact_id = b.id AND t.contact_type = 'buyer' WHERE b.email IS NOT NULL AND b.email != '' ORDER BY random() LIMIT $1`, [limit]
         );
       case 'GROWER_TENDER':
         return await pool.query(
-          `SELECT email, contact_name AS name, COALESCE(array_to_string(crops_grown,','),'') AS commodity, state_province AS state, country FROM growers WHERE email IS NOT NULL AND email != '' ORDER BY random() LIMIT $1`, [limit]
+          `SELECT g.email, COALESCE(g.contact_name, g.legal_name) AS name, t.commodity, g.state_province AS state, g.country FROM growers g JOIN contact_commodity_tags t ON t.contact_id = g.id AND t.contact_type = 'grower' WHERE g.email IS NOT NULL AND g.email != '' ORDER BY random() LIMIT $1`, [limit]
         );
       case 'LOGISTICS':
         return await pool.query(
@@ -77,15 +77,15 @@ async function getContacts(pool, agentId, limit = 50) {
         );
       case 'FOOD_SAFETY':
         return await pool.query(
-          `SELECT email, contact_name AS name, COALESCE(array_to_string(crops_grown,','),'') AS commodity, state_province AS state, country FROM growers WHERE email IS NOT NULL AND email != '' ORDER BY random() LIMIT $1`, [limit]
+          `SELECT g.email, COALESCE(g.contact_name, g.legal_name) AS name, t.commodity, g.state_province AS state, g.country FROM growers g JOIN contact_commodity_tags t ON t.contact_id = g.id AND t.contact_type = 'grower' WHERE g.email IS NOT NULL AND g.email != '' ORDER BY random() LIMIT $1`, [limit]
         );
       case 'FINANCE':
         return await pool.query(
-          `SELECT email, contact_name AS name, COALESCE(array_to_string(crops_grown,','),'') AS commodity, state_province AS state, country FROM growers WHERE email IS NOT NULL AND email != '' ORDER BY random() LIMIT $1`, [limit]
+          `SELECT * FROM (SELECT g.email, COALESCE(g.contact_name, g.legal_name) AS name, t.commodity, g.state_province AS state, g.country FROM growers g JOIN contact_commodity_tags t ON t.contact_id = g.id AND t.contact_type = 'grower' WHERE g.email IS NOT NULL AND g.email != '' UNION ALL SELECT b.email, b.legal_name AS name, t.commodity, b.state_region AS state, b.country FROM buyers b JOIN contact_commodity_tags t ON t.contact_id = b.id AND t.contact_type = 'buyer' WHERE b.email IS NOT NULL AND b.email != '') x ORDER BY random() LIMIT $1`, [limit]
         );
       case 'MARKET_INTEL':
         return await pool.query(
-          `SELECT email, legal_name AS name, product_specialties AS commodity, state_region AS state, country FROM buyers WHERE email IS NOT NULL AND email != '' ORDER BY random() LIMIT $1`, [limit]
+          `SELECT b.email, b.legal_name AS name, t.commodity, b.state_region AS state, b.country FROM buyers b JOIN contact_commodity_tags t ON t.contact_id = b.id AND t.contact_type = 'buyer' WHERE b.email IS NOT NULL AND b.email != '' ORDER BY random() LIMIT $1`, [limit]
         );
       default:
         return { rows: [] };
