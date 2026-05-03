@@ -128,9 +128,13 @@ if (typeof brain?.on === 'function') {
 }
 module.exports.brain = brain;
 // START AUTONOMOUS BLAST ENGINE
-// START ENRIQUE ï¿½ HEAD AI COMMAND AGENT
+// START ENRIQUE - HEAD AI COMMAND AGENT
 setTimeout(function(){ try { const enrique=require('./services/enrique'); enrique.startEnrique(app,brain); } catch(e){ console.error('[ENRIQUE] Start failed:',e.message); } }, 12000);
 setTimeout(function(){ try { const ab=require('./services/autonomous-blast'); ab.startAutonomousAgents(app,brain); } catch(e){ console.error('[AUTONOMOUS] Start failed:',e.message); } }, 8000);
+// START INBOX SORTER - classifies replies, logs to email_activity_log, ntfy hot-lead alerts
+setTimeout(function(){ try { const is=require('./services/inbox-sorter'); is.startInboxSorter(app); } catch(e){ console.error('[INBOX-SORTER] Start failed:',e.message); } }, 15000);
+// START INBOX SORTER - classifies replies, logs to email_activity_log, ntfy hot-lead alerts
+setTimeout(function(){ try { const is=require('./services/inbox-sorter'); is.startInboxSorter(app); } catch(e){ console.error('[INBOX-SORTER] Start failed:',e.message); } }, 15000);
 
 // ===============================================================
 // APP INIT
