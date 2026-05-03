@@ -422,7 +422,9 @@ function listExistingSponsors(loafPath) {
 }
 
 function applySponsorToFile(form, loafPath) {
-  const html = readLoafHtml(loafPath);
+  let html = readLoafHtml(loafPath);
+  const _hadCRLF = html.indexOf('\r\n') >= 0;
+  if (_hadCRLF) html = html.replace(/\r\n/g, '\n');
 
   // Idempotency check
   if (html.indexOf('data-sponsor="' + form.slug + '"') >= 0) {
@@ -494,6 +496,7 @@ function applySponsorToFile(form, loafPath) {
 
   // Backup + write
   const bak = backupLoafHtml(loafPath);
+  if (_hadCRLF) out = out.replace(/\n/g, '\r\n');
   fs.writeFileSync(loafPath, out, 'utf8');
   log('patched ' + loafPath + ' (sponsor=' + form.slug + ', size=' + out.length + ', backup=' + bak + ')');
 
