@@ -1470,7 +1470,17 @@ try {
     selfBaseUrl:   process.env.NADINE_SELF_URL || ('http://127.0.0.1:' + (process.env.PORT || 5050)),
     gmailApiSend:  (function(){ try { return require('./routes/gmail').gmailApiSend; } catch (e) { return null; } })()
   });
-  console.log('[NADINE-PAY] payments routes ONLINE');
+    console.log('[NADINE-PAY] payments routes ONLINE');
+  // LOAF poller - local PM2 picks up paid_apply_failed from Railway
+  try {
+    const nadinePoller = require('./services/nadine-poller');
+    nadinePoller.init(app, {
+      railwayUrl:   process.env.NADINE_POLLER_RAILWAY_URL || null,
+      selfBaseUrl:  process.env.NADINE_SELF_URL || ('http://127.0.0.1:' + (process.env.PORT || 5050)),
+      loafHtmlPath: process.env.LOAF_HTML_PATH || 'C:\\AuditDNA\\frontend\\public\\mfginc-loaf.html',
+      intervalMs:   parseInt(process.env.NADINE_POLLER_INTERVAL_MS, 10) || 60000
+    });
+  } catch (e) { console.error('[FAIL] nadine-poller mount:', e.message); }
   console.log('[NADINE] LOAF sponsor onboarding agent ONLINE');
 } catch (err) {
   console.error('[NADINE] init failed:', err.message);

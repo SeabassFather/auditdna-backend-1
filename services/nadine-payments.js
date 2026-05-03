@@ -448,7 +448,22 @@ function init(app, opts) {
       return res.status(500).json({ ok: false, error: e.message });
     }
   });
-  console.log('[NADINE-PAY] checkout + status + intake + retry + queue routes mounted');
+    app.post('/api/nadine/sponsor/mark-applied', async (req, res) => {
+    try {
+      const token = String((req.body && req.body.token) || req.query.token || '').replace(/[^a-f0-9]/gi, '');
+      if (!token || token.length !== 32) return res.status(400).json({ ok: false, error: 'token required (32 hex chars)' });
+      const r = await _state.pool.query(
+        "UPDATE pending_sponsors SET status='applied', applied_at=NOW(), last_error=NULL WHERE token=$1 RETURNING token, status, applied_at",
+        [token]
+      );
+      if (!r.rows.length) return res.status(404).json({ ok: false, error: 'token not found' });
+      res.json({ ok: true, token: r.rows[0].token, status: r.rows[0].status, applied_at: r.rows[0].applied_at });
+    } catch (err) {
+      console.log('[NADINE-PAY] mark-applied error: ' + err.message);
+      res.status(500).json({ ok: false, error: err.message });
+    }
+  });
+  console.log('[NADINE-PAY] checkout + status + intake + retry + queue + mark-applied routes mounted');
 }
 
 module.exports = {
