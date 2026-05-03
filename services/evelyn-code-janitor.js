@@ -219,7 +219,7 @@ async function validateWithClaude(findings) {
   if (!aiHelper || findings.length === 0) return [];
 
   // Cap at 20 findings per call to avoid overwhelming Claude
-  const batch = findings.slice(0, 20);
+  const batch = findings.slice(0, 8);
 
   const systemPrompt = `You are Evelyn, a code janitor AI agent. You validate cleanup proposals before they're written to a database for human approval.
 Return ONLY a JSON array (no markdown, no preamble) where each entry matches:
@@ -234,7 +234,7 @@ Be aggressive - if a file is clearly orphaned, .bak, empty, or duplicate, return
   const userPrompt = `Validate these ${batch.length} cleanup candidates:\n${JSON.stringify(batch, null, 2)}`;
 
   try {
-    const text = await aiHelper.ask(userPrompt, systemPrompt);
+    const __ant = require('@anthropic-ai/sdk'); const __ac = new __ant.Anthropic({apiKey: process.env.ANTHROPIC_API_KEY}); const __r = await __ac.messages.create({model: process.env.ANTHROPIC_MODEL||'claude-sonnet-4-6',max_tokens:1024,system:systemPrompt,messages:[{role:'user',content:userPrompt}]}); const text = __r.content[0]?.text||'';
     const cleaned = text.replace(/```json|```/g, '').trim();
     const verdicts = JSON.parse(cleaned);
     return Array.isArray(verdicts) ? verdicts : [];
@@ -254,7 +254,7 @@ async function saveProposal(finding, verdict) {
       `INSERT INTO ai_code_cleanup
        (status, kind, file_path, file_size, age_days, reason, claude_verdict, claude_confidence, claude_reasoning, created_at)
        VALUES ('proposed', $1, $2, $3, $4, $5, $6, $7, $8, NOW())
-       ON CONFLICT (file_path) WHERE status = 'proposed' DO NOTHING
+       ON CONFLICT (file_path) WHERE status = 'proposed' DO UPDATE SET claude_verdict=EXCLUDED.claude_verdict, claude_confidence=EXCLUDED.claude_confidence, claude_reasoning=EXCLUDED.claude_reasoning
        RETURNING id`,
       [
         finding.kind,

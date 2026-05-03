@@ -127,6 +127,10 @@ if (typeof brain?.on === 'function') {
   console.log('[BRAIN] Running in direct-call mode');
 }
 module.exports.brain = brain;
+// START AUTONOMOUS BLAST ENGINE
+// START ENRIQUE — HEAD AI COMMAND AGENT
+setTimeout(function(){ try { const enrique=require('./services/enrique'); enrique.startEnrique(app,brain); } catch(e){ console.error('[ENRIQUE] Start failed:',e.message); } }, 12000);
+setTimeout(function(){ try { const ab=require('./services/autonomous-blast'); ab.startAutonomousAgents(app,brain); } catch(e){ console.error('[AUTONOMOUS] Start failed:',e.message); } }, 8000);
 
 // ===============================================================
 // APP INIT
@@ -319,6 +323,10 @@ const margieRoutes = require('./routes/margie.routes');
 app.use('/api/margie', margieRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/plastpac', require('./routes/plastpac.routes'));
+app.use('/api/blast', require('./routes/autonomous-blast.routes'));
+app.use('/api/loaf/agent', require('./routes/loaf-chat.routes'));
+app.use('/api/blast', require('./routes/autonomous-blast.routes'));
+app.use('/api/loaf/agent', require('./routes/loaf-chat.routes'));
 app.use('/api/gatekeeper', require('./routes/gatekeeper.routes'));
 
 // ?????? AUTONOMOUS INVENTORY NOTIFICATION PIPELINE ???????????????????????????????????????????????????????????????????????????
