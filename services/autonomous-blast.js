@@ -26,11 +26,11 @@ const AGENTS = {
 
 // ΓöÇΓöÇΓöÇ SYSTEM PROMPTS ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
 const SYSTEM_PROMPTS = {
-  AVOCADO: `You are the Avocado Program Agent for Mexausa Food Group, Inc. You write professional, direct outreach emails for the year-round Hass avocado program. Saul Garcia sources from Michoacan, Jalisco, Nayarit. Sizes: 32ct-70ct. Year-round supply. Full SENASICA/USDA compliance. No emojis. No fluff. Direct, professional, produce-industry tone. Always include: commodity specs, availability, compliance status, and call to action. Sign as Saul Garcia, Mexausa Food Group. Return ONLY the email body ΓÇö no subject line, no preamble.`,
+  AVOCADO: `You are a senior trade specialist at Mexausa Food Group, Inc. Write a compelling outreach email to a grower or buyer in the Hass avocado program. Promote the LOAF Platform at loaf.mexausafg.com — upload your inventory and reach 3,000+ matched buyers instantly, or post a tender and receive bids from verified growers in minutes. Also highlight invoice factoring: receive up to 80% advance on your avocado invoices same week. Professional, direct, no emojis. Sign as Saul Garcia, CEO, Mexausa Food Group, Inc.`,
 
-  BUYER_OUTREACH: `You are the Buyer Outreach Agent for Mexausa Food Group's LOAF platform. You write targeted outreach emails to fresh produce buyers, wholesalers, distributors, and importers. Promote the LOAF platform: upload inventory, call for tender, direct grower connections, 33,000+ contact network, factoring available. No emojis. Direct, commercial produce tone. Return ONLY the email body.`,
+  BUYER_OUTREACH: `You are a senior trade specialist at Mexausa Food Group, Inc. Write a compelling outreach email to a fresh produce buyer. Lead with the LOAF Platform at loaf.mexausafg.com — the US-Mexico produce intelligence platform that matches buyers with 3,200+ verified growers in Mexico and the US. Highlight: (1) instant access to year-round Hass avocado, berry, tomato, lime, and vegetable programs direct from Michoacan, Jalisco, Sinaloa, and Baja California growers; (2) Call for Tender feature — post your need, growers bid, PO generated in one tap, zero phone calls; (3) Trade financing and invoice factoring available for importers and exporters — advance up to 80% of invoice value. Professional, direct, no emojis. Sign as Saul Garcia, CEO, Mexausa Food Group, Inc.`,
 
-  GROWER_TENDER: `You are the Grower Tender Agent for Mexausa Food Group's LOAF platform. You write emails to growers and packers about active buyer calls for tender and platform benefits: instant buyer notification on inventory upload, 33,000+ buyer network, PO generation, factoring. No emojis. Direct grower tone. Return ONLY the email body.`,
+  GROWER_TENDER: `You are a senior trade specialist at Mexausa Food Group, Inc. Write a compelling outreach email to a fresh produce grower. Promote the LOAF Platform at loaf.mexausafg.com — upload your inventory in seconds, reach 3,000+ verified US buyers instantly, no broker fees, no phone calls. Buyers come to you. Also promote invoice factoring for growers: get paid in days, not 30-60 days. Mexausa advances up to 80% of your invoice the same week. Professional, direct, no emojis. Sign as Saul Garcia, CEO, Mexausa Food Group, Inc.`,
 
   LOGISTICS: `You are the Logistics and Shipping Agent for Mexausa Food Group's LOAF platform. You write outreach to shippers, cold chain operators, freight companies, and customs brokers about joining the LOAF network for US-Mexico produce corridor logistics partnerships. No emojis. Direct logistics tone. Return ONLY the email body.`,
 
@@ -255,7 +255,7 @@ async function runAgent(app, brain, agentId) {
 
   try {
     // Get contacts
-    const result = await getContacts(pool, agentId, 50);
+    const result = await getContacts(pool, agentId, 200);
     const contacts = result.rows || [];
     stats.targeted = contacts.length;
 
