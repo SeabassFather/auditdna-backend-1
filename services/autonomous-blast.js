@@ -62,9 +62,9 @@ async function getContacts(pool, agentId, limit = 50) {
       case 'AVOCADO':
         return await pool.query(
           `SELECT DISTINCT email, name, commodity, state, country FROM (
-            SELECT contact_email AS email, contact_name AS name, commodity_primary AS commodity, state, country FROM growers WHERE commodity_primary ILIKE '%avocado%' AND contact_email IS NOT NULL AND contact_email != '' LIMIT $1
+            SELECT contact_email AS email, contact_name AS name, commodity_primary AS commodity, state, country FROM growers WHERE commodity_primary ILIKE '%avocado%' AND contact_email IS NOT NULL AND contact_email != '' 
             UNION ALL
-            SELECT contact_email, contact_name, commodity, state, country FROM buyers WHERE commodity ILIKE '%avocado%' AND contact_email IS NOT NULL LIMIT $1
+            SELECT contact_email, contact_name, commodity, state, country FROM buyers WHERE commodity ILIKE '%avocado%' AND contact_email IS NOT NULL 
           ) t WHERE email IS NOT NULL ORDER BY random() LIMIT $1`, [limit]
         );
       case 'BUYER_OUTREACH':
@@ -86,17 +86,17 @@ async function getContacts(pool, agentId, limit = 50) {
       case 'FINANCE':
         return await pool.query(
           `SELECT DISTINCT email, name FROM (
-            SELECT contact_email AS email, contact_name AS name FROM growers WHERE contact_email IS NOT NULL LIMIT $1
+            SELECT contact_email AS email, contact_name AS name FROM growers WHERE contact_email IS NOT NULL 
             UNION ALL
-            SELECT contact_email, contact_name FROM buyers WHERE contact_email IS NOT NULL LIMIT $1
+            SELECT contact_email, contact_name FROM buyers WHERE contact_email IS NOT NULL 
           ) t ORDER BY random() LIMIT $1`, [limit]
         );
       case 'MARKET_INTEL':
         return await pool.query(
           `SELECT DISTINCT email, name FROM (
-            SELECT contact_email AS email, contact_name AS name FROM buyers WHERE contact_email IS NOT NULL LIMIT $1
+            SELECT contact_email AS email, contact_name AS name FROM buyers WHERE contact_email IS NOT NULL 
             UNION ALL
-            SELECT contact_email, contact_name FROM growers WHERE contact_email IS NOT NULL LIMIT $1
+            SELECT contact_email, contact_name FROM growers WHERE contact_email IS NOT NULL 
           ) t ORDER BY random() LIMIT $1`, [limit]
         );
       default:
