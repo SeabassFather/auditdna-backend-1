@@ -132,9 +132,7 @@ module.exports.brain = brain;
 setTimeout(function(){ try { const enrique=require('./services/enrique'); enrique.startEnrique(app,brain); } catch(e){ console.error('[ENRIQUE] Start failed:',e.message); } }, 12000);
 setTimeout(function(){ try { const ab=require('./services/autonomous-blast'); ab.startAutonomousAgents(app,brain); } catch(e){ console.error('[AUTONOMOUS] Start failed:',e.message); } }, 8000);
 // START INBOX SORTER - classifies replies, logs to email_activity_log, ntfy hot-lead alerts
-setTimeout(function(){ try { const is=require('./services/inbox-sorter'); is.startInboxSorter(app); } catch(e){ console.error('[INBOX-SORTER] Start failed:',e.message); } }, 15000);
-// START INBOX SORTER - classifies replies, logs to email_activity_log, ntfy hot-lead alerts
-setTimeout(function(){ try { const is=require('./services/inbox-sorter'); is.startInboxSorter(app); } catch(e){ console.error('[INBOX-SORTER] Start failed:',e.message); } }, 15000);
+setTimeout(function(){ try { const is=require('./services/inbox-sorter'); is.startInboxSorter(app); } catch(e){ console.error('[INBOX-SORTER] Start failed:',e.message); } }, 60000);
 
 // ===============================================================
 // APP INIT
@@ -217,7 +215,6 @@ app.use(helmet({
 
 app.use(compression());
 
-
 // RAW CORS PREFLIGHT ???????? must be first, before all middleware
 app.use((req, res, next) => {
   const origin = req.headers.origin;
@@ -269,8 +266,6 @@ app.use(cors({
   credentials: true,
   exposedHeaders: ['Authorization'],
 }));
-
-
 
 app.use(morgan(NODE_ENV === 'development' ? 'dev' : 'combined'));
 
@@ -495,7 +490,6 @@ try {
   explicitMounts.push({ file: 'compliance-center.js', path: '/api/compliance-center' });
   console.log('[OK] compliance-center: mounted at /api/compliance-center');
 } catch(e) { console.error('[FAIL] compliance-center mount:', e.message); }
-
 
 // ===============================================================
 // CREDENTIAL RECOVERY ???????? /api/auth/recover-credentials
@@ -1450,10 +1444,8 @@ const server =
 // SPRINT D - Price Prediction Engine
 app.use('/api/ai/predict-price', require('./routes/ai-price-predict'));
 
-
 // SPRINT D WAVE 2 - Niner Bridge
 app.use('/api/niner', require('./routes/niner-bridge'));
-
 
 // SPRINT D WAVE 3D - Autonomy Loop
 try { app.use('/api/autonomy', require('./routes/autonomy-loop')); console.log('[OK] autonomy-loop mounted at /api/autonomy'); } catch(e) { console.error('[FAIL] autonomy-loop:', e.message); }
@@ -1633,12 +1625,10 @@ module.exports.pool = pool; module.exports.app = app;
 // COMMODITY SEARCH ENGINE
 try { const gm = require('./routes/gmail'); app.use('/api/gmail', gm); console.log('[OK] gmail routes loaded'); } catch(e) { console.error('[FAIL] gmail routes:', e.message); }
 
-
 try { const cs = require('./routes/commodity-search'); app.use('/api/commodity', cs); console.log('[OK] commodity-search mounted at /api/commodity'); } catch(e) { console.warn('[WARN] commodity:', e.message); }
 
 // MOBILE WORKSPACE v2 - Run 13e
 try { const mw = require('./routes/mobileWorkspace'); app.use('/api/mobile', mw); console.log('[OK] mobileWorkspace mounted at /api/mobile'); } catch(e) { console.error('[FAIL] mobileWorkspace mount:', e.message); }
-
 
 // AuditDNA Autonomy Phase 2A boot
 try {
