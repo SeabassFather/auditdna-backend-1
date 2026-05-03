@@ -128,7 +128,7 @@ if (typeof brain?.on === 'function') {
 }
 module.exports.brain = brain;
 // START AUTONOMOUS BLAST ENGINE
-// START ENRIQUE — HEAD AI COMMAND AGENT
+// START ENRIQUE ï¿½ HEAD AI COMMAND AGENT
 setTimeout(function(){ try { const enrique=require('./services/enrique'); enrique.startEnrique(app,brain); } catch(e){ console.error('[ENRIQUE] Start failed:',e.message); } }, 12000);
 setTimeout(function(){ try { const ab=require('./services/autonomous-blast'); ab.startAutonomousAgents(app,brain); } catch(e){ console.error('[AUTONOMOUS] Start failed:',e.message); } }, 8000);
 
