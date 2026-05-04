@@ -1,25 +1,28 @@
 // ============================================================================
-// SPARTAN / TROJAN INTAKE ROUTES
-// Patent US2025-059 - Immutable Audit Database Schema
+// SPARTAN / TROJAN INTAKE ROUTES (PATCHED FOR CALENDAR + NTFY)
+// Patent US2025-059
 // File: C:\AuditDNA\backend\routes\intake.routes.js
-// Mount in server.js: app.use(require('./routes/intake.routes')(pool));
+// Mount: app.use(require('./routes/intake.routes')(pool));
+//
+// Every event funnels through services/event-sink.js so:
+//  - Calendar (/api/calendar/events) sees it
+//  - Phone + smartwatch buzz via ntfy.sh/${NTFY_TOPIC}
 // ============================================================================
 
 const express = require('express');
 const multer = require('multer');
 const crypto = require('crypto');
 const { spartanRequiredDocs, trojanRequiredDocs } = require('../data/intakeRequiredDocs');
+const { logIntakeEvent } = require('../services/event-sink');
 
 module.exports = function (pool) {
   const router = express.Router();
 
-  // 25MB per file, 10 files max per upload, in memory then bytea
   const upload = multer({
     storage: multer.memoryStorage(),
     limits: { fileSize: 25 * 1024 * 1024, files: 10 },
   });
 
-  // ID verify: 3 files (id_front, id_back, selfie)
   const idUpload = multer({
     storage: multer.memoryStorage(),
     limits: { fileSize: 10 * 1024 * 1024 },
@@ -29,14 +32,11 @@ module.exports = function (pool) {
     { name: 'selfie',   maxCount: 1 },
   ]);
 
-  // ----------------------------------------------------------------
-  // Helper: sha256 of buffer
-  // ----------------------------------------------------------------
   function sha256(buf) {
     return crypto.createHash('sha256').update(buf).digest('hex');
   }
 
-  // Compute next anchor in case-scoped hash chain
+  // case-scoped hash chain for tamper detection
   async function nextAnchor(caseId, eventType, payload) {
     const prev = await pool.query(
       `SELECT chain_hash FROM intake_chain_log WHERE case_id = $1 ORDER BY id DESC LIMIT 1`,
@@ -53,13 +53,6 @@ module.exports = function (pool) {
     return chainHash;
   }
 
-  function brain(eventType, payload) {
-    try {
-      // best-effort emit to Brain SSE (in-process if mounted, else no-op)
-      if (global.brainEmit) global.brainEmit(eventType, payload);
-    } catch {}
-  }
-
   // ============================================================================
   // GET REQUIRED DOCS for a service
   // GET /api/:mode/intake/required-docs/:serviceCode
@@ -67,7 +60,6 @@ module.exports = function (pool) {
   router.get('/api/:mode/intake/required-docs/:serviceCode', (req, res) => {
     const { mode, serviceCode } = req.params;
     const catalog = mode === 'trojan' ? trojanRequiredDocs : spartanRequiredDocs;
-    // serviceCode looks like "SP-1" or "1" - extract category id
     const catId = parseInt(String(serviceCode).replace(/^[A-Z]+-/, ''), 10);
     const docs = catalog[catId];
     if (!docs) return res.status(404).json({ ok: false, error: 'Service not found' });
@@ -94,7 +86,8 @@ module.exports = function (pool) {
       );
 
       await nextAnchor(caseId, 'CASE_OPENED', { mode, service_code, service_name });
-      brain('INTAKE_CASE_OPENED', { caseId, mode, service_name });
+      // log to calendar (no ntfy yet - wait for actual user activity)
+      await logIntakeEvent(pool, mode, 'CASE_OPENED', caseId, { service_name });
 
       res.json({ ok: true, case_id: caseId });
     } catch (e) {
@@ -106,7 +99,6 @@ module.exports = function (pool) {
   // ============================================================================
   // UPLOAD document file
   // POST /api/:mode/intake/upload
-  // multipart/form-data: file, case_id, request_id, hash, mode
   // ============================================================================
   router.post('/api/:mode/intake/upload', upload.single('file'), async (req, res) => {
     const { mode } = req.params;
@@ -133,7 +125,10 @@ module.exports = function (pool) {
         size: req.file.size,
         sha256: serverHash,
       });
-      brain('INTAKE_FILE_UPLOADED', { caseId, name: req.file.originalname, size: req.file.size });
+      await logIntakeEvent(pool, mode, 'FILE_UPLOADED', caseId, {
+        file_count: 1,
+        snippet: `${req.file.originalname} (${(req.file.size / 1024).toFixed(1)} KB)`,
+      });
 
       res.json({ ok: true, file_id: result.rows[0].id, sha256: serverHash, hash_match: hashMatch });
     } catch (e) {
@@ -143,7 +138,7 @@ module.exports = function (pool) {
   });
 
   // ============================================================================
-  // ID VERIFICATION (gov ID + selfie + consumer info)
+  // ID VERIFICATION
   // POST /api/:mode/intake/id-verify
   // ============================================================================
   router.post('/api/:mode/intake/id-verify', idUpload, async (req, res) => {
@@ -167,20 +162,11 @@ module.exports = function (pool) {
            verified_at, verification_status)
          VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,NOW(),'PENDING')
          ON CONFLICT (case_id) DO UPDATE SET
-           full_name = EXCLUDED.full_name,
-           email = EXCLUDED.email,
-           phone = EXCLUDED.phone,
-           state = EXCLUDED.state,
-           dob = EXCLUDED.dob,
-           id_front_sha256 = EXCLUDED.id_front_sha256,
-           id_front_content = EXCLUDED.id_front_content,
-           id_front_size = EXCLUDED.id_front_size,
-           id_back_sha256 = EXCLUDED.id_back_sha256,
-           id_back_content = EXCLUDED.id_back_content,
-           id_back_size = EXCLUDED.id_back_size,
-           selfie_sha256 = EXCLUDED.selfie_sha256,
-           selfie_content = EXCLUDED.selfie_content,
-           selfie_size = EXCLUDED.selfie_size,
+           full_name = EXCLUDED.full_name, email = EXCLUDED.email, phone = EXCLUDED.phone,
+           state = EXCLUDED.state, dob = EXCLUDED.dob,
+           id_front_sha256 = EXCLUDED.id_front_sha256, id_front_content = EXCLUDED.id_front_content, id_front_size = EXCLUDED.id_front_size,
+           id_back_sha256  = EXCLUDED.id_back_sha256,  id_back_content  = EXCLUDED.id_back_content,  id_back_size  = EXCLUDED.id_back_size,
+           selfie_sha256 = EXCLUDED.selfie_sha256, selfie_content = EXCLUDED.selfie_content, selfie_size = EXCLUDED.selfie_size,
            verified_at = NOW()`,
         [
           caseId,
@@ -198,7 +184,10 @@ module.exports = function (pool) {
         id_front_sha256: sha256(idFront.buffer),
         selfie_sha256: sha256(selfie.buffer),
       });
-      brain('INTAKE_ID_VERIFIED', { caseId, full_name: req.body.full_name });
+      await logIntakeEvent(pool, mode, 'ID_VERIFIED', caseId, {
+        consumer_email: req.body.email,
+        consumer_name: req.body.full_name,
+      });
 
       res.json({ ok: true });
     } catch (e) {
@@ -214,7 +203,7 @@ module.exports = function (pool) {
   router.post('/api/:mode/intake/consent', express.json(), async (req, res) => {
     const { mode } = req.params;
     try {
-      const { case_id, request_id, consents, signed_name, consent_hash, user_agent } = req.body || {};
+      const { case_id, consents, signed_name, consent_hash, user_agent } = req.body || {};
       if (!case_id) return res.status(400).json({ ok: false, error: 'Missing case_id' });
       if (!consents) return res.status(400).json({ ok: false, error: 'Missing consents' });
       if (!signed_name || signed_name.trim().length < 3) return res.status(400).json({ ok: false, error: 'Signed name required' });
@@ -230,14 +219,10 @@ module.exports = function (pool) {
            signed_name, consent_hash, user_agent, ip_address, signed_at)
          VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, NOW())
          ON CONFLICT (case_id) DO UPDATE SET
-           cfpb_filing = EXCLUDED.cfpb_filing,
-           fund_reassign = EXCLUDED.fund_reassign,
-           escrow_setup = EXCLUDED.escrow_setup,
-           communications = EXCLUDED.communications,
-           service_fee = EXCLUDED.service_fee,
-           signed_name = EXCLUDED.signed_name,
-           consent_hash = EXCLUDED.consent_hash,
-           signed_at = NOW()`,
+           cfpb_filing = EXCLUDED.cfpb_filing, fund_reassign = EXCLUDED.fund_reassign,
+           escrow_setup = EXCLUDED.escrow_setup, communications = EXCLUDED.communications,
+           service_fee = EXCLUDED.service_fee, signed_name = EXCLUDED.signed_name,
+           consent_hash = EXCLUDED.consent_hash, signed_at = NOW()`,
         [
           case_id,
           !!consents.cfpbFiling, !!consents.fundReassign, !!consents.escrowSetup,
@@ -246,8 +231,10 @@ module.exports = function (pool) {
         ]
       );
 
-      await nextAnchor(case_id, 'CONSENT_SIGNED', { signed_name: signed_name.trim(), consent_hash });
-      brain('INTAKE_CONSENT_SIGNED', { caseId: case_id, signed_name: signed_name.trim() });
+      await nextAnchor(case_id, 'CONSENT_SIGNED', { signed_name: signed_name.trim() });
+      await logIntakeEvent(pool, mode, 'CONSENT_SIGNED', case_id, {
+        consumer_name: signed_name.trim(),
+      });
 
       res.json({ ok: true });
     } catch (e) {
@@ -264,14 +251,12 @@ module.exports = function (pool) {
     const { mode } = req.params;
     try {
       const {
-        case_id, request_id, service_code, service_name, category,
-        path, counsel_opt_in, state_limit, estimated_recovery,
-        consumer_info, file_count, consent_signed_at,
+        case_id, service_name, path, counsel_opt_in,
+        state_limit, estimated_recovery, consumer_info, file_count,
       } = req.body || {};
 
       if (!case_id) return res.status(400).json({ ok: false, error: 'Missing case_id' });
 
-      // verify all required pieces present
       const filesQ = await pool.query(`SELECT COUNT(*)::int AS n FROM intake_files WHERE case_id = $1`, [case_id]);
       const idQ = await pool.query(`SELECT 1 FROM intake_id_verification WHERE case_id = $1 LIMIT 1`, [case_id]);
       const consentQ = await pool.query(`SELECT 1 FROM intake_consent WHERE case_id = $1 LIMIT 1`, [case_id]);
@@ -282,14 +267,9 @@ module.exports = function (pool) {
 
       await pool.query(
         `UPDATE intake_cases SET
-          status = 'SUBMITTED',
-          path = $2,
-          counsel_opt_in = $3,
-          state_legal_limit = $4,
-          estimated_recovery = $5,
-          submitted_at = NOW(),
-          consumer_state = $6,
-          consumer_email = $7
+          status = 'SUBMITTED', path = $2, counsel_opt_in = $3,
+          state_legal_limit = $4, estimated_recovery = $5, submitted_at = NOW(),
+          consumer_state = $6, consumer_email = $7
          WHERE case_id = $1`,
         [
           case_id, path || 'escrow', counsel_opt_in,
@@ -302,27 +282,19 @@ module.exports = function (pool) {
       const finalHash = await nextAnchor(case_id, 'CASE_SUBMITTED', {
         path, counsel_opt_in, estimated_recovery, file_count, mode,
       });
-      brain('INTAKE_CASE_SUBMITTED', { caseId: case_id, mode, path, counsel_opt_in });
-
-      // best-effort ntfy push
-      try {
-        const fetch = require('node-fetch');
-        await fetch('https://ntfy.sh/mexausa-saul', {
-          method: 'POST',
-          body: `[${mode.toUpperCase()}] Case ${case_id} submitted | ${file_count} files | path=${path || 'escrow'} | rec=$${(estimated_recovery || 0).toLocaleString()}`,
-          headers: {
-            'Title': `${mode === 'trojan' ? 'TROJAN' : 'SPARTAN'} Intake Submitted`,
-            'Priority': 'high',
-            'Tags': mode === 'trojan' ? 'lock,trojan' : 'shield,spartan',
-          },
-        });
-      } catch {}
+      await logIntakeEvent(pool, mode, 'CASE_SUBMITTED', case_id, {
+        service_name,
+        consumer_email: consumer_info?.email,
+        consumer_name: consumer_info?.fullName,
+        file_count,
+        estimated_recovery: estimated_recovery || 0,
+      });
 
       res.json({
         ok: true,
         case_id,
         chain_anchor: finalHash,
-        message: 'Case submitted. AI/SI analysis will begin shortly. Status updates via email and SMS.',
+        message: 'Case submitted. AI/SI analysis will begin shortly.',
       });
     } catch (e) {
       console.error('[INTAKE-SUBMIT]', e);
@@ -348,12 +320,8 @@ module.exports = function (pool) {
            FROM intake_chain_log WHERE case_id = $1 ORDER BY id`, [caseId]);
 
       res.json({
-        ok: true,
-        case: c.rows[0],
-        files: f.rows,
-        chain: chain.rows,
-        file_count: f.rows.length,
-        chain_length: chain.rows.length,
+        ok: true, case: c.rows[0], files: f.rows, chain: chain.rows,
+        file_count: f.rows.length, chain_length: chain.rows.length,
       });
     } catch (e) {
       console.error('[INTAKE-CASE]', e);
@@ -362,7 +330,7 @@ module.exports = function (pool) {
   });
 
   // ============================================================================
-  // GET file content (auth required in real prod)
+  // GET file content
   // GET /api/:mode/intake/file/:fileId
   // ============================================================================
   router.get('/api/:mode/intake/file/:fileId', async (req, res) => {
