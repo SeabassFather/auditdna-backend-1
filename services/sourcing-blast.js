@@ -81,9 +81,9 @@ async function sendSourcingBlast(pool, commodity, regions) {
 
   // Pull tagged growers + buyers acting as packers/shippers
   const growers = await pool.query(`
-    SELECT g.email, COALESCE(g.contact_name, g.legal_name, g.company_name) AS name
+    SELECT g.email, COALESCE(g.contact_name, g.company_name) AS name
     FROM growers g
-    WHERE (g.crops_grown::text ILIKE $1 OR g.notes ILIKE $1 OR g.primary_products::text ILIKE $1 OR g.legal_name ILIKE $1 OR g.company_name ILIKE $1)
+    WHERE (g.crops_grown::text ILIKE $1 OR g.notes ILIKE $1 OR g.primary_products::text ILIKE $1 OR g.company_name ILIKE $1)
       AND g.email IS NOT NULL AND g.email != ''
   `, [`%${commodity}%`]);
 
