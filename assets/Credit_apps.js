@@ -16,7 +16,7 @@ const pool = require('../db');
 };
 
 const mailer = nodemailer.createTransport({
-  host: 'smtp.gmail.com', port: 465, secure: true,
+  host: process.env.SMTP_HOST || 'smtp-relay.brevo.com', port: parseInt(process.env.SMTP_PORT || '587'), secure: process.env.SMTP_SECURE === 'true',
   auth: { user: 'sgarcia1911@gmail.com', pass: 'izvbtgxxogchstym' }
 });
 

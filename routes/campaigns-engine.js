@@ -31,12 +31,12 @@ function db() { return pool || require('../db').pool; }
 // SMTP transporter (Gmail per platform rules)
 // ----------------------------------------------------------------------------
 const transporter = nodemailer.createTransport({
-  host: 'smtp.gmail.com',
-  port: 587,
-  secure: false,
+  host: process.env.SMTP_HOST || 'smtp-relay.brevo.com',
+  port: parseInt(process.env.SMTP_PORT || '587'),
+  secure: process.env.SMTP_SECURE === 'true',
   auth: {
-    user: process.env.SMTP_USER || 'sgarcia1911@gmail.com',
-    pass: process.env.SMTP_PASS || 'izvbtgxxogchstym'
+    user: process.env.SMTP_USER,
+    pass: process.env.SMTP_PASS
   }
 });
 

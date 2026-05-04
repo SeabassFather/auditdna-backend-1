@@ -21,17 +21,17 @@ const pool = require('../db');
 
 // -- SMTP TRANSPORTER ---------------------------------------------------------
 const transporter = nodemailer.createTransport({
-  host: 'smtp.gmail.com',
-  port: 465,
-  secure: true,
+  host: process.env.SMTP_HOST || 'smtp-relay.brevo.com',
+  port: parseInt(process.env.SMTP_PORT || '587'),
+  secure: process.env.SMTP_SECURE === 'true',
   auth: {
-    user: 'sgarcia1911@gmail.com',
-    pass: 'izvbtgxxogchstym',
+    user: process.env.SMTP_USER,
+    pass: process.env.SMTP_PASS,
   },
   tls: { rejectUnauthorized: false }
 });
 
-const FROM = '"Saul Garcia - Mexausa Food Group" <sgarcia1911@gmail.com>';
+const FROM = '"' + (process.env.SMTP_FROM_NAME || 'Saul Garcia | Mexausa Food Group') + '" <' + (process.env.SMTP_FROM || 'Saul@mexausafg.com') + '>';
 
 // -- HTML EMAIL TEMPLATE -------------------------------------------------------
 function buildHTML(subject, body, recipientEmail, lang) {
