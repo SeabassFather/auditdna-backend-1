@@ -1,82 +1,118 @@
 // File: C:\AuditDNA\backend\services\sourcing-blast.js
-// On-demand commodity sourcing blast - email growers + packers, invite to LOAF
+// REWRITTEN 2026-05-04 - uses Brevo HTTP API (port 443) instead of SMTP
+// Reason: Railway blocks outbound SMTP on ports 587/2525. HTTP API works on 443.
 'use strict';
-const nodemailer = require('nodemailer');
 
-const FROM_EMAIL = process.env.SMTP_USER || 'sgarcia1911@gmail.com';
-const FROM_NAME = 'Saul Garcia | Mexausa Food Group';
-const LOAF_URL = 'https://loaf.mexausafg.com';
-const PLATFORM_URL = 'https://mexausafg.com';
+const FROM_NAME  = process.env.SMTP_FROM_NAME || 'Saul Garcia | Mexausa Food Group';
+const FROM_EMAIL = process.env.SMTP_FROM      || 'saul@mexausafg.com';
+const BREVO_API  = 'https://api.brevo.com/v3/smtp/email';
 
-function buildTransporter() {
-  return nodemailer.createTransport({
-    host: process.env.SMTP_HOST || 'smtp.gmail.com',
-    port: parseInt(process.env.SMTP_PORT || '587'),
-    secure: false,
-    auth: { user: FROM_EMAIL, pass: process.env.SMTP_PASS }
-  });
-}
+function emailTemplate(commodity, regionLabel, contactName) {
+  const cName = (commodity || '').toLowerCase();
+  const cTitle = cName.charAt(0).toUpperCase() + cName.slice(1);
+  const greeting = contactName && contactName.trim()
+    ? `Hi ${contactName.trim().split(' ')[0]}`
+    : 'Hello';
 
-function emailTemplate(commodity, region, recipientName) {
-  const cap = commodity.charAt(0).toUpperCase() + commodity.slice(1);
-  const greeting = recipientName ? `Hello ${recipientName.split(' ')[0]}` : 'Hello';
-  const greetingEs = recipientName ? `Hola ${recipientName.split(' ')[0]}` : 'Hola';
+  const subject = `Sourcing Inquiry: ${cTitle} Volume Available — ${regionLabel}`;
 
-  return {
-    subject: `${cap} Sourcing Inquiry - ${region} | Mexausa Food Group / Consulta de Abasto`,
-    html: `<!DOCTYPE html><html><body style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;padding:20px;color:#0F1419">
-<div style="border-bottom:3px solid #0F7B41;padding-bottom:12px;margin-bottom:20px">
-  <div style="color:#0F7B41;font-size:22px;font-weight:bold">MEXAUSA FOOD GROUP</div>
-  <div style="color:#C9A55C;font-size:13px">Direct Source. Verified. Year-Round.</div>
-</div>
-
-<p><strong>${greeting},</strong></p>
-<p>We have active buyer demand for <strong>${cap}</strong> from <strong>${region}</strong>. Looking for direct grower/shipper partners with consistent volume.</p>
-
-<p><strong>What we need:</strong></p>
-<ul>
-  <li>Available volume (loads/week or pallets)</li>
-  <li>Variety + sizing</li>
-  <li>FOB price + packing location</li>
-  <li>Earliest ship date</li>
-</ul>
-
-<p>If you have ${commodity} available, reply to this email with your specs. We close deals fast - escrow-first, factoring available, payment on cut.</p>
-
-<p><strong>Join our grower platform:</strong> <a href="${LOAF_URL}" style="color:#0F7B41;font-weight:bold">${LOAF_URL}</a> - load board, RFQs, real-time buyer demand. Free to list.</p>
-
-<p style="margin-top:24px;border-top:1px solid #ddd;padding-top:12px">
-<strong>Saul Garcia</strong><br>
-Mexausa Food Group, Inc.<br>
-<a href="${PLATFORM_URL}">${PLATFORM_URL}</a><br>
-US: +1-831-251-3116 | MX WhatsApp: +52-646-340-2686
+  const html = `<!DOCTYPE html><html><body style="font-family:Arial,sans-serif;color:#0F1419;background:#F4F6F4;margin:0;padding:0">
+<table width="100%" cellpadding="0" cellspacing="0" style="max-width:600px;margin:0 auto;background:#FFFFFF">
+<tr><td style="background:linear-gradient(135deg,#0F7B41 0%,#075028 100%);padding:24px;text-align:center">
+<div style="color:#FFFFFF;font-size:20px;font-weight:700;letter-spacing:2px">MEXAUSA FOOD GROUP, INC.</div>
+<div style="color:#C9A55C;font-size:11px;letter-spacing:1.5px;margin-top:6px">WHOLESALE PRODUCE INTELLIGENCE</div>
+</td></tr>
+<tr><td style="padding:30px 24px">
+<p style="font-size:15px;color:#0F1419;margin:0 0 14px">${greeting},</p>
+<p style="font-size:14px;color:#2A3138;line-height:1.6;margin:0 0 14px">
+We are actively sourcing <strong>${cTitle}</strong> for our Texas and California buyer programs. Looking for committed load volume from reliable growers and packers in <strong>${regionLabel}</strong>.
 </p>
-
-<hr style="border:none;border-top:1px dashed #ccc;margin:24px 0">
-
-<p><strong>${greetingEs},</strong></p>
-<p>Tenemos demanda activa de <strong>${cap}</strong> desde <strong>${region}</strong>. Buscamos productores/empacadores directos con volumen consistente.</p>
-
-<p><strong>Necesitamos:</strong></p>
-<ul>
-  <li>Volumen disponible (cargas/semana o tarimas)</li>
-  <li>Variedad y calibre</li>
-  <li>Precio FOB + ubicacion de empaque</li>
-  <li>Primera fecha de embarque</li>
+<p style="font-size:14px;color:#2A3138;line-height:1.6;margin:0 0 14px">
+If you have current availability or upcoming production for ${cName}, please reply to this email with:
+</p>
+<ul style="font-size:14px;color:#2A3138;line-height:1.7;margin:0 0 18px;padding-left:20px">
+<li>Available volume (cases / pallets / loads per week)</li>
+<li>FOB pricing by size and pack</li>
+<li>Origin region and harvest dates</li>
+<li>Certifications (GAP, Organic, PrimusGFS, etc.)</li>
+<li>Standard payment terms</li>
 </ul>
+<table cellpadding="0" cellspacing="0" style="margin:18px 0">
+<tr><td style="background:#0F7B41;padding:12px 24px;border-radius:4px">
+<a href="mailto:saul@mexausafg.com?subject=${encodeURIComponent(cTitle + ' availability — ' + regionLabel)}" style="color:#FFFFFF;text-decoration:none;font-weight:700;font-size:13px;letter-spacing:1px">REPLY WITH AVAILABILITY</a>
+</td></tr></table>
+<p style="font-size:13px;color:#2A3138;line-height:1.6;margin:14px 0 0">
+Best regards,<br/>
+<strong style="color:#0F1419">Saul Garcia</strong><br/>
+<span style="color:#5C6470;font-size:11px">Wholesale Produce Source Analyst — Importer &amp; Distributor</span><br/>
+<span style="color:#5C6470;font-size:11px">Mexausa Food Group, Inc.</span>
+</p>
+<table cellpadding="0" cellspacing="0" style="margin-top:14px;font-size:11px;color:#5C6470">
+<tr><td>US: <a href="tel:+18312513116" style="color:#0F7B41;text-decoration:none">+1-831-251-3116</a> &nbsp;|&nbsp; MX WhatsApp: <a href="tel:+526463402686" style="color:#0F7B41;text-decoration:none">+52-646-340-2686</a></td></tr>
+<tr><td><a href="https://mexausafg.com" style="color:#0F7B41;text-decoration:none">mexausafg.com</a></td></tr>
+</table>
+</td></tr>
+<tr><td style="background:#F4F6F4;padding:14px 24px;font-size:10px;color:#5C6470;text-align:center;border-top:1px solid #D4DBD3">
+You are receiving this because your contact is in our wholesale produce trade network. To stop receiving sourcing inquiries, reply with UNSUBSCRIBE.
+</td></tr>
+</table></body></html>`;
 
-<p>Si tiene ${commodity} disponible, responda con sus especificaciones. Cerramos rapido - escrow primero, factoraje disponible, pago al corte.</p>
+  const text = `${greeting},
 
-<p><strong>Plataforma para productores:</strong> <a href="${LOAF_URL}" style="color:#0F7B41;font-weight:bold">${LOAF_URL}</a> - tablero de cargas, RFQs, demanda en tiempo real. Gratis registrarse.</p>
+We are actively sourcing ${cTitle} for our Texas and California buyer programs. Looking for committed load volume from reliable growers and packers in ${regionLabel}.
 
-</body></html>`,
-    text: `${greeting},\n\nMexausa Food Group has active buyer demand for ${cap} from ${region}. Reply with available volume, variety, FOB price, and ship date.\n\nJoin our platform: ${LOAF_URL}\n\nSaul Garcia | ${PLATFORM_URL}\n+1-831-251-3116 | +52-646-340-2686\n\n---\n\n${greetingEs}, tenemos demanda de ${cap} desde ${region}. Responda con volumen, variedad, precio FOB y fecha. Plataforma: ${LOAF_URL}`
-  };
+If you have current availability or upcoming production for ${cName}, please reply with:
+- Available volume (cases / pallets / loads per week)
+- FOB pricing by size and pack
+- Origin region and harvest dates
+- Certifications (GAP, Organic, PrimusGFS, etc.)
+- Standard payment terms
+
+Reply to: saul@mexausafg.com
+
+Best regards,
+Saul Garcia
+Wholesale Produce Source Analyst - Importer & Distributor
+Mexausa Food Group, Inc.
+US: +1-831-251-3116 | MX WhatsApp: +52-646-340-2686
+mexausafg.com
+
+To stop receiving sourcing inquiries, reply with UNSUBSCRIBE.`;
+
+  return { subject, html, text };
 }
 
-async function sendSourcingBlast(pool, commodity, regions) {
-  const tx = buildTransporter();
-  const regionList = Array.isArray(regions) ? regions : [regions];
+async function sendViaBrevoApi(to, name, subject, html, text) {
+  const apiKey = process.env.BREVO_API_KEY;
+  if (!apiKey) throw new Error('BREVO_API_KEY env var not set');
+
+  const body = {
+    sender: { name: FROM_NAME, email: FROM_EMAIL },
+    to: [{ email: to, name: name || to }],
+    subject: subject,
+    htmlContent: html,
+    textContent: text
+  };
+
+  const r = await fetch(BREVO_API, {
+    method: 'POST',
+    headers: {
+      'accept': 'application/json',
+      'api-key': apiKey,
+      'content-type': 'application/json'
+    },
+    body: JSON.stringify(body)
+  });
+
+  if (!r.ok) {
+    const errText = await r.text().catch(() => '<no body>');
+    throw new Error(`Brevo API ${r.status}: ${errText}`);
+  }
+  const data = await r.json().catch(() => ({}));
+  return data.messageId || 'sent';
+}
+
+async function sendSourcingBlast(pool, commodity, regionList) {
   const regionLabel = regionList.join(' / ');
 
   // Pull tagged growers + buyers acting as packers/shippers
@@ -104,31 +140,37 @@ async function sendSourcingBlast(pool, commodity, regions) {
     return true;
   });
 
-  console.log(`[SOURCING-BLAST] ${commodity}/${regionLabel}: ${recipients.length} unique recipients`);
+  console.log(`[SOURCING-BLAST] ${commodity}/${regionLabel}: ${recipients.length} unique recipients (HTTP API mode)`);
 
   let sent = 0, failed = 0;
   for (const r of recipients) {
     try {
       const tpl = emailTemplate(commodity, regionLabel, r.name);
-      await tx.sendMail({
-        from: `"${FROM_NAME}" <${FROM_EMAIL}>`,
-        to: r.email,
-        subject: tpl.subject,
-        html: tpl.html,
-        text: tpl.text
-      });
-      await pool.query(
-        `INSERT INTO email_activity_log (direction, contact_email, contact_name, commodity, subject, intent, agent_id)
-         VALUES ('outbound', $1, $2, $3, $4, 'sourcing_inquiry', 'SOURCING_BLAST')`,
-        [r.email, r.name, commodity, tpl.subject]
-      );
+      const messageId = await sendViaBrevoApi(r.email, r.name, tpl.subject, tpl.html, tpl.text);
+
+      try {
+        await pool.query(
+          `INSERT INTO email_activity_log (direction, contact_email, contact_name, commodity, subject, intent, agent_id)
+           VALUES ('outbound', $1, $2, $3, $4, 'sourcing_inquiry', 'SOURCING_BLAST')
+           ON CONFLICT (contact_email, commodity, intent, agent_id) DO UPDATE SET created_at = NOW(), subject = EXCLUDED.subject`,
+          [r.email, r.name, commodity, tpl.subject]
+        );
+      } catch (logErr) {
+        console.warn(`[SOURCING-BLAST] log insert failed for ${r.email}:`, logErr.message);
+      }
+
       sent++;
-      await new Promise(res => setTimeout(res, 1500));
+      console.log(`[SOURCING-BLAST] sent ${sent}/${recipients.length} -> ${r.email} (msg ${messageId})`);
+
+      // Brevo paid plan can handle higher rate, but throttle a bit anyway
+      await new Promise(res => setTimeout(res, 200));
     } catch (e) {
       failed++;
       console.error(`[SOURCING-BLAST] ${r.email} failed:`, e.message);
     }
   }
+
+  console.log(`[SOURCING-BLAST] complete: sent=${sent} failed=${failed} total=${recipients.length}`);
   return { commodity, regions: regionList, total: recipients.length, sent, failed };
 }
 
