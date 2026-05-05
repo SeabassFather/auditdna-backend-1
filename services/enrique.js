@@ -129,7 +129,7 @@ async function watchForAlerts(pool, transporter) {
   try {
     // Check for gatekeeper failures in last 10 min
     const fails = await pool.query(
-      `SELECT COUNT(*) AS n FROM gatekeeper_runs WHERE status='failed' AND created_at > NOW() - INTERVAL '10 minutes'`
+      `SELECT COUNT(*) AS n FROM gatekeeper_runs WHERE status='failed' AND started_at > NOW() - INTERVAL '10 minutes'`
     );
     if (parseInt(fails.rows[0].n) >= 3) {
       const msg = `ALERT: ${fails.rows[0].n} gatekeeper failures in last 10 minutes. Check backend logs immediately.`;
@@ -139,7 +139,7 @@ async function watchForAlerts(pool, transporter) {
 
     // Check blast agent failures
     const blastFails = await pool.query(
-      `SELECT COUNT(*) AS n FROM autonomous_agent_runs WHERE status='failed' AND created_at > NOW() - INTERVAL '30 minutes'`
+      `SELECT COUNT(*) AS n FROM autonomous_agent_runs WHERE status='failed' AND started_at > NOW() - INTERVAL '30 minutes'`
     );
     if (parseInt(blastFails.rows[0].n) >= 2) {
       const msg = `ALERT: ${blastFails.rows[0].n} blast agent failures in last 30 minutes. Email delivery may be degraded.`;
