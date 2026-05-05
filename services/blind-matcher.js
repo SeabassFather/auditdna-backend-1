@@ -36,7 +36,7 @@ function buildMailer() {
           replyTo: { email: 'sgarcia1911@gmail.com', name: 'Saul Garcia' },
           subject: msg.subject,
           htmlContent: msg.html,
-          textContent: msg.text || ''
+          textContent: (msg.text && msg.text.trim()) || (msg.html ? msg.html.replace(/<style[^>]*>[\\s\\S]*?<\\/style>/gi,'').replace(/<[^>]+>/g,' ').replace(/\\s+/g,' ').trim().slice(0, 5000) : 'See HTML version.')
         })
       });
       if (!resp.ok) {
