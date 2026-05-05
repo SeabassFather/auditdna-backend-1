@@ -21,11 +21,29 @@ const REPLY_TO  = SMTP_USER;
 const PLATFORM  = 'https://loaf.mexausafg.com';
 
 function buildMailer() {
-  if (!SMTP_PASS) return null;
-  return nodemailer.createTransport({
-    host: SMTP_HOST, port: SMTP_PORT, secure: false,
-    auth: { user: SMTP_USER, pass: SMTP_PASS }
-  });
+  // Gmail API path (port 443, bypasses Railway SMTP egress block)
+  let gmailApiSend = null;
+  try { gmailApiSend = require('../routes/gmail').gmailApiSend; } catch (e) {}
+  if (!gmailApiSend) {
+    console.error('[blind-matcher] gmailApiSend unavailable, falling back to SMTP (likely will timeout)');
+    if (!SMTP_PASS) return null;
+    return nodemailer.createTransport({
+      host: SMTP_HOST, port: SMTP_PORT, secure: false,
+      auth: { user: SMTP_USER, pass: SMTP_PASS }
+    });
+  }
+  return {
+    sendMail: async (msg) => {
+      const result = await gmailApiSend({
+        from: msg.from || ('"Mexausa Food Group" <' + SMTP_USER + '>'),
+        to: msg.to,
+        subject: msg.subject,
+        html: msg.html,
+        text: msg.text || ''
+      });
+      return { messageId: (result && result.id) || ('gmail-api-' + Date.now()), accepted: [msg.to], rejected: [] };
+    }
+  };
 }
 
 function blindId() {
