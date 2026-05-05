@@ -9,6 +9,7 @@
 
 const { pool } = require('../db');
 const nodemailer = require('nodemailer');
+const categoryLetters = require('./category-letters');
 const crypto = require('crypto');
 
 const SMTP_HOST = process.env.SMTP_HOST || 'smtp.gmail.com';
