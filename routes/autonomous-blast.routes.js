@@ -6,7 +6,7 @@
 'use strict';
 
 const express = require('express');
-const brain = require('../services/brain-emitter');
+const brainBus = require('../services/brain-emitter');
 const router = express.Router();
 const { runAgent, handleInboundInquiry, AGENTS } = require('../services/autonomous-blast');
 
@@ -57,7 +57,7 @@ router.post('/run/:agentId', async (req, res) => {
 
   const brain = getBrain(req);
   // Fire async — don't wait
-  (function(){ try { brain.emit('MANUAL_AGENT_TRIGGER', { agent_id: agentId, triggered_at: new Date().toISOString() }, { agent_id: agentId, severity: 1 }); } catch(e){} })(); runAgent(req.app, brain, agentId).catch(e => console.error(`[BLAST-MANUAL] ${agentId}:`, e.message));
+  (function(){ try { brainBus.emit('MANUAL_AGENT_TRIGGER', { agent_id: agentId, triggered_at: new Date().toISOString() }, { agent_id: agentId, severity: 1 }); } catch(_e){} })(); runAgent(req.app, brain, agentId).catch(e => console.error(`[BLAST-MANUAL] ${agentId}:`, e.message));
   res.json({ ok: true, message: `Agent ${agentId} triggered`, agent: AGENTS[agentId].name });
 });
 
