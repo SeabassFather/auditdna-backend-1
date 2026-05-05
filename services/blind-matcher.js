@@ -9,6 +9,7 @@
 
 const { pool } = require('../db');
 const nodemailer = require('nodemailer');
+const brain = require('./brain-emitter');
 const categoryLetters = require('./category-letters');
 const crypto = require('crypto');
 
@@ -511,6 +512,10 @@ async function fireGrowerOutreach(opts) {
     }
   }
   console.log('[grower-outreach] blast complete sent=' + sent + ' failed=' + failed);
+  if (typeof brain !== 'undefined' && brain.emit) {
+    try { brain.setPool(pool); } catch (e) {}
+    brain.emit('GROWER_OUTREACH_FIRED', { sent: sent, failed: failed, recipients: r.rows.length, countries: countries }, { agent_id: 'GROWER_OUTREACH', severity: 1 });
+  }
   return { ok: true, sent, failed, recipients: r.rows.length, countries };
 }
 

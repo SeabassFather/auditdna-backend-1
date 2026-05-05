@@ -4,9 +4,10 @@
 
 const express = require('express');
 const router = express.Router();
+const brain = require('../services/brain-emitter');
 let pool;
 
-function setPool(p) { pool = p; }
+function setPool(p) { pool = p; brain.setPool(p); }
 
 function deriveName(email) {
   if (!email || typeof email !== 'string') return '';
@@ -92,6 +93,7 @@ router.post('/segments-blast', async (req, res) => {
     if (!country || !category) return res.status(400).json({ ok: false, error: 'country and category required' });
     const matcher = require('../services/blind-matcher');
     const r = await matcher.fireGrowerOutreach({ countries: [country], limit: max, language: 'auto' });
+    brain.emit('SEGMENT_BLAST_FIRED', { country: country, category: category, recipients: r.recipients || 0, sent: r.sent || 0, failed: r.failed || 0, commodity_slug: slug }, { agent_id: 'SEGMENTS_BLAST', severity: 1 });
     res.json({ ok: true, ...r });
   } catch (e) {
     res.status(500).json({ ok: false, error: e.message });
