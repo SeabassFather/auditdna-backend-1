@@ -11,6 +11,7 @@
 'use strict';
 
 const crypto = require('crypto');
+const brain = require('./brain-emitter');
 
 // ΓöÇΓöÇΓöÇ AGENT REGISTRY ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
 const AGENTS = {
@@ -169,6 +170,9 @@ async function sendEmail(transporter, to, subject, body, fromName) {
 
 // ΓöÇΓöÇΓöÇ PRODUCTION REPORT ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
 async function runProductionReport(app, brain) {
+  // BRAIN EVENT: production report started
+  try { brain.emit('PRODUCTION_REPORT_GENERATED', { started_at: new Date().toISOString() }, { agent_id: 'PRODUCTION_REPORT', severity: 0 }); } catch(e){}
+
   const pool = app.get('pool');
   const ai = app.get('ai');
   const transporter = app.get('smtp');
@@ -238,6 +242,12 @@ Include: operational status, email blast performance, pipeline health, recommend
 
 // ΓöÇΓöÇΓöÇ MAIN AGENT RUNNER ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
 async function runAgent(app, brain, agentId) {
+  // BRAIN EVENT: agent run started
+  try { brain.emit('AGENT_RUN_STARTED', { agent_id: agentId, agent_name: AGENTS[agentId] && AGENTS[agentId].name, started_at: new Date().toISOString() }, { agent_id: agentId, severity: 0 }); } catch(e){
+    // BRAIN EVENT: agent run failed
+    try { brain.emit('AGENT_RUN_FAILED', { agent_id: agentId, run_id: typeof runId !== 'undefined' ? runId : null, error: e.message, failed_at: new Date().toISOString() }, { agent_id: agentId, severity: 3 }); } catch(_){}
+}
+
   const pool = app.get('pool');
   const ai = app.get('ai');
   const transporter = app.get('smtp');
@@ -261,7 +271,9 @@ async function runAgent(app, brain, agentId) {
 
     if (contacts.length === 0) {
       console.log(`[AGENT-${agentId}] No contacts found ΓÇö skipping blast`);
-      await logRun(pool, runId, agentId, 'skipped', stats, 'No contacts available');
+      // BRAIN EVENT: agent run completed
+    try { brain.emit('AGENT_RUN_COMPLETED', { agent_id: agentId, run_id: runId, contacts_targeted: stats && stats.targeted, emails_sent: stats && stats.sent, emails_failed: stats && stats.failed, completed_at: new Date().toISOString() }, { agent_id: agentId, severity: 1 }); } catch(e){}
+    await logRun(pool, runId, agentId, 'skipped', stats, 'No contacts available');
       return;
     }
 
@@ -336,6 +348,9 @@ Make it specific, actionable, and professional. No emojis.`;
 // ΓöÇΓöÇΓöÇ INCOMING EMAIL INQUIRY HANDLER ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
 // Handles inbound inquiries ΓÇö routes to correct agent, generates AI reply, logs
 async function handleInboundInquiry(app, brain, { from, subject, body, agent_hint }) {
+  // BRAIN EVENT: inbound inquiry received
+  try { brain.emit('INBOUND_INQUIRY_RECEIVED', { from: inquiry && inquiry.from, subject: inquiry && inquiry.subject, received_at: new Date().toISOString() }, { agent_id: 'INBOUND_TRIAGE', severity: 2 }); } catch(e){}
+
   const pool = app.get('pool');
   const ai = app.get('ai');
   const transporter = app.get('smtp');
