@@ -12,6 +12,10 @@
 const { pool } = require('../db');
 const nodemailer = require('nodemailer');
 
+let runPipeline = null;
+try { ({ runPipeline } = require('../swarm/gatekeepers/orchestrator')); }
+catch (e) { console.error('[plastpac] gatekeeper orchestrator unavailable:', e.message); }
+
 let notifier = null;
 try { notifier = require('./swarm-notifier.js'); } catch (e) { /* notifier optional */ }
 
@@ -232,6 +236,21 @@ async function handleInquiry(data) {
   // 1. Persist
   const saved = await saveInquiry(data);
   const fullInquiry = { ...data, id: saved.id, created_at: saved.created_at };
+
+  // Fire 11-stage gatekeeper pipeline (fire-and-forget; does not block HTTP response)
+  if (runPipeline) {
+    setImmediate(() => {
+      runPipeline({
+        request_type: 'plastpac.inquiry',
+        source: 'loaf',
+        payload: { ...fullInquiry, _meta: { fired_from: 'plastpac-inquiry.handleInquiry', fired_at: new Date().toISOString() } }
+      }).then(r => {
+        console.log('[plastpac] gatekeeper run inquiry=' + saved.id + ' ok=' + (r && r.ok) + ' run_id=' + (r && r.run_id));
+      }).catch(e => {
+        console.error('[plastpac] gatekeeper failed inquiry=' + saved.id + ' err=' + e.message);
+      });
+    });
+  }
 
   // 2. Route by source: EcoCrate-related = Hector + Saul. LOAF advertising/ops = Saul only.
   const src  = String(data.source || '').toLowerCase();
