@@ -74,6 +74,51 @@ const CATEGORY_PITCH = {
       'Reach out for a fresh price sheet and revised credit terms'
     ]
   },
+  GROWER_INVITATION_ES: {
+    subjectSuffix: 'Crece Tu Cosecha | Acceso Directo a Buyers USA via LOAF Marketplace | Registro Gratis',
+    opening: 'Estimado productor: Mexausa Food Group le invita formalmente a unirse a LOAF Marketplace, la plataforma GRATUITA que conecta su cosecha directamente con 115+ buyers verificados en USA. Sin cuotas. Sin contratos exclusivos. Registro en 14 pasos via WhatsApp con ENRIQUE (nuestro agente IA), suba su inventario, y nuestro motor 81 Niner Miners hace match automatico con necesidades activas de cadenas (Walmart, Costco, Kroger), wholesalers (Sysco, USF, GFS), distribuidores y foodservice.',
+    valueProps: [
+      'LOAF Marketplace: registro 100 por ciento GRATIS, sin cuota mensual ni anual',
+      'Acceso a 115+ buyers USA segmentados en 9 categorias verificadas',
+      'ENRIQUE AI: registro completo en 14 pasos via WhatsApp en ESPANOL',
+      'Sus loads disparan correos automaticos a buyers USA con interes en su commodity',
+      'Factoraje hasta 95 por ciento sobre AR, fondeo en 24 horas, sin garantias personales',
+      'Cobertura PACA #20241168, proteccion de pago en cada transaccion',
+      'Documentos FSMA 204, GlobalGAP, PrimusGFS gestionados por la plataforma',
+      'TraceSafe: tracking de lots con QR + blockchain anchoring',
+      'Visite loaf.mexausafg.com/grower-register o WhatsApp ENRIQUE +52-646-340-2686 enviando HOLA'
+    ]
+  },
+  GROWER_INVITATION_EN: {
+    subjectSuffix: 'Grow Your Harvest | Direct Access to USA Buyers via LOAF Marketplace | Free Registration',
+    opening: 'Dear grower: Mexausa Food Group formally invites you to join LOAF Marketplace, the no-cost platform connecting your harvest directly to 115+ vetted USA buyers. No fees. No exclusive contracts. 14-step WhatsApp registration with our AI agent ENRIQUE, upload your inventory, and our 81 Niner Miners engine auto-matches your loads to active demand from chain stores (Walmart, Costco, Kroger), wholesalers (Sysco, USF, GFS), distributors, and foodservice operators.',
+    valueProps: [
+      'LOAF Marketplace: 100 percent FREE registration, no monthly or annual fee',
+      'Access to 115+ segmented USA buyers across 9 verified categories',
+      'ENRIQUE AI: complete 14-step registration via WhatsApp in English',
+      'Your loads automatically trigger emails to buyers interested in your commodity',
+      'Factoring up to 95 percent of AR, 24-hour funding, no personal guarantees',
+      'PACA #20241168 protection, payment guaranteed on every transaction',
+      'FSMA 204, GlobalGAP, PrimusGFS docs managed by the platform',
+      'TraceSafe: lot tracking with QR + blockchain anchoring',
+      'Visit loaf.mexausafg.com/grower-register or WhatsApp ENRIQUE +1-831-251-3116 with HELLO'
+    ]
+  },
+  GROWER_INVITATION_PT: {
+    subjectSuffix: 'Cresca Sua Colheita | Acesso Direto a Compradores EUA via LOAF Marketplace | Registro Gratis',
+    opening: 'Caro produtor: Mexausa Food Group convida formalmente voce a se juntar ao LOAF Marketplace, a plataforma SEM CUSTO conectando sua colheita diretamente a 115+ compradores americanos verificados. Sem taxas. Sem contratos exclusivos. Registro em 14 passos via WhatsApp com ENRIQUE (nosso agente IA), faca upload do inventario, e nosso motor 81 Niner Miners conecta automaticamente suas cargas com demanda ativa de redes (Walmart, Costco), atacadistas (Sysco, USF), distribuidores e foodservice.',
+    valueProps: [
+      'LOAF Marketplace: registro 100 por cento GRATIS, sem mensalidade ou anuidade',
+      'Acesso a 115+ compradores americanos segmentados em 9 categorias verificadas',
+      'ENRIQUE AI: registro completo em 14 passos via WhatsApp em PORTUGUES',
+      'Suas cargas disparam emails automaticos para compradores americanos interessados',
+      'Factoring ate 95 por cento sobre AR, financiamento em 24 horas, sem garantias pessoais',
+      'Protecao PACA #20241168, pagamento garantido em cada transacao',
+      'Documentos FSMA 204, GlobalGAP, PrimusGFS gerenciados pela plataforma',
+      'TraceSafe: rastreamento de lotes com QR + blockchain',
+      'Visite loaf.mexausafg.com/grower-register ou WhatsApp ENRIQUE +52-646-340-2686 enviando OLA'
+    ]
+  },
   CHAIN_STORE: {
     subjectSuffix: 'Year-Round Program | FSMA 204 + Full Traceability',
     opening: 'For chain retail operators sourcing produce at scale, Mexausa Food Group delivers year-round programs backed by FSMA 204 traceability, GlobalGAP and PrimusGFS audits, and lot-level blockchain anchoring. We support category managers with weekly volume commitments, ESG-grade documentation, and recall-ready chain-of-custody on every load.',

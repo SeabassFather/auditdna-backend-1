@@ -465,9 +465,75 @@ function buildDailyBlastHtml(buyerCategory) {
 </body></html>`;
 }
 
+
+// ============================================================
+// GROWER OUTREACH - Trilingual EN/ES/PT invitation blast
+// ============================================================
+async function fireGrowerOutreach(opts) {
+  const countries = opts.countries || ['MX'];
+  const limit = Math.min(parseInt(opts.limit) || 100, 500);
+  const m = buildMailer();
+  if (!m) return { ok: false, error: 'mailer not configured' };
+  const r = await pool.query(
+    `SELECT email, country, detected_category FROM crm_contacts
+       WHERE detected_category IN ('GROWER_INVITATION_ES','GROWER_INVITATION_EN','GROWER_INVITATION_PT')
+         AND country = ANY($1) AND is_active = TRUE AND COALESCE(opt_out, FALSE) = FALSE
+         AND id NOT IN (SELECT DISTINCT recipient_email::TEXT::INTEGER FROM grower_outreach_log WHERE sent_at > NOW() - INTERVAL '7 days' AND recipient_email ~ '^[0-9]+$')
+       ORDER BY RANDOM() LIMIT $2`,
+    [countries, limit]
+  ).catch(async () => {
+    return await pool.query(
+      `SELECT email, country, detected_category FROM crm_contacts
+         WHERE detected_category IN ('GROWER_INVITATION_ES','GROWER_INVITATION_EN','GROWER_INVITATION_PT')
+           AND country = ANY($1) AND is_active = TRUE AND COALESCE(opt_out, FALSE) = FALSE
+           AND email NOT IN (SELECT recipient_email FROM grower_outreach_log WHERE sent_at > NOW() - INTERVAL '7 days')
+         ORDER BY RANDOM() LIMIT $2`,
+      [countries, limit]
+    );
+  });
+  const item = { commodity_slug: 'loaf-marketplace', commodity_name: 'LOAF Marketplace', origin_country: 'MX', origin_state: 'All Regions', pack_style: 'Platform Registration', fob_price: 0, available_from: 'now', available_thru: 'open', available_loads: 'unlimited' };
+  let sent = 0, failed = 0;
+  for (const row of r.rows) {
+    const cat = row.detected_category || 'GROWER_INVITATION_ES';
+    const blind = blindId();
+    const subj = categoryLetters.buildSubject(cat, 'loaf-marketplace', 'LOAF Marketplace');
+    const html = categoryLetters.buildLetter(cat, item, blind);
+    try {
+      const result = await m.sendMail({ from: '"Saul Garcia" <sgarcia1911@gmail.com>', to: row.email, replyTo: 'sgarcia1911@gmail.com', subject: subj, html: html });
+      await pool.query(
+        'INSERT INTO grower_outreach_log (recipient_email, country, language, email_subject, blind_match_id, brevo_message_id) VALUES ($1, $2, $3, $4, $5, $6)',
+        [row.email, row.country, cat.split('_').pop(), subj, blind, result.messageId || null]
+      );
+      sent++;
+    } catch (e) {
+      console.error('[grower-outreach] fail:', row.email, e.message);
+      failed++;
+    }
+  }
+  console.log('[grower-outreach] blast complete sent=' + sent + ' failed=' + failed);
+  return { ok: true, sent, failed, recipients: r.rows.length, countries };
+}
+
+// Weekly auto-blast: every Wed 17:00 UTC (per Saul email config)
+function scheduleGrowerOutreach() {
+  setInterval(async () => {
+    const now = new Date();
+    if (now.getUTCDay() === 3 && now.getUTCHours() === 17 && now.getUTCMinutes() < 5) {
+      console.log('[grower-outreach] Wed 17:00 UTC - firing weekly blast');
+      try {
+        await fireGrowerOutreach({ countries: ['MX','PE','CL','CO','EC','AR','BR','CR','GT','HN','NI','SV','PA','DO','UY','BO','US'], limit: 500, language: 'auto' });
+      } catch (e) { console.error('[grower-outreach] cron fail:', e.message); }
+    }
+  }, 60000);
+  console.log('[grower-outreach] weekly cron scheduled - Wed 17:00 UTC');
+}
+
+// Auto-start scheduler
+setTimeout(scheduleGrowerOutreach, 8000);
+
 module.exports = {
   notifyBuyersOfNewInventory,
   notifyGrowersOfNewNeed,
   dailyBuyerBlast,
   blindId
-};
+, fireGrowerOutreach, scheduleGrowerOutreach };

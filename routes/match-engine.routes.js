@@ -314,4 +314,42 @@ router.get('/debug/brevo-fire', async (req, res) => {
   }
 });
 
+
+// ============================================================
+// GROWER OUTREACH - Invitation blast to LATAM growers
+// ============================================================
+router.post('/grower-outreach/blast', async (req, res) => {
+  const { country_filter, limit, language } = req.body || {};
+  try {
+    const result = await blindMatcher.fireGrowerOutreach({
+      countries: country_filter || ['MX','PE','CL','CO','EC','AR','BR','CR','GT','HN','NI','SV','PA','DO','UY','BO','VE','PY','US'],
+      limit: parseInt(limit) || 100,
+      language: language || 'auto'
+    });
+    res.json({ ok: true, ...result });
+  } catch (e) {
+    console.error('[grower-outreach] blast fail:', e.message);
+    res.status(500).json({ ok: false, error: e.message });
+  }
+});
+
+router.get('/grower-outreach/status', async (req, res) => {
+  try {
+    const r = await pool.query('SELECT country, COUNT(*) AS sent FROM grower_outreach_log WHERE sent_at > NOW() - INTERVAL \'7 days\' GROUP BY country ORDER BY sent DESC');
+    res.json({ ok: true, last7days: r.rows });
+  } catch (e) {
+    res.status(500).json({ ok: false, error: e.message });
+  }
+});
+
+router.post('/grower-outreach/usda-geo-refresh', async (req, res) => {
+  try {
+    const usdaGeo = require('../services/usda-grower-geography');
+    const r = await usdaGeo.populateGeography(pool, req.body.year);
+    res.json({ ok: true, ...r });
+  } catch (e) {
+    res.status(500).json({ ok: false, error: e.message });
+  }
+});
+
 module.exports = router;
