@@ -21,27 +21,29 @@ const REPLY_TO  = SMTP_USER;
 const PLATFORM  = 'https://loaf.mexausafg.com';
 
 function buildMailer() {
-  // Gmail API path (port 443, bypasses Railway SMTP egress block)
-  let gmailApiSend = null;
-  try { gmailApiSend = require('../routes/gmail').gmailApiSend; } catch (e) {}
-  if (!gmailApiSend) {
-    console.error('[blind-matcher] gmailApiSend unavailable, falling back to SMTP (likely will timeout)');
-    if (!SMTP_PASS) return null;
-    return nodemailer.createTransport({
-      host: SMTP_HOST, port: SMTP_PORT, secure: false,
-      auth: { user: SMTP_USER, pass: SMTP_PASS }
-    });
-  }
+  const BREVO_API_KEY = process.env.BREVO_API_KEY || '';
+  if (!BREVO_API_KEY) { console.error('[blind-matcher] BREVO_API_KEY not set'); return null; }
   return {
     sendMail: async (msg) => {
-      const result = await gmailApiSend({
-        from: msg.from || ('"Mexausa Food Group" <' + SMTP_USER + '>'),
-        to: msg.to,
-        subject: msg.subject,
-        html: msg.html,
-        text: msg.text || ''
+      const fetch = global.fetch || require('node-fetch');
+      const resp = await fetch('https://api.brevo.com/v3/smtp/email', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'api-key': BREVO_API_KEY, 'accept': 'application/json' },
+        body: JSON.stringify({
+          sender: { name: 'Mexausa Food Group', email: 'sgarcia1911@gmail.com' },
+          to: [{ email: msg.to }],
+          replyTo: { email: 'sgarcia1911@gmail.com', name: 'Saul Garcia' },
+          subject: msg.subject,
+          htmlContent: msg.html,
+          textContent: msg.text || ''
+        })
       });
-      return { messageId: (result && result.id) || ('gmail-api-' + Date.now()), accepted: [msg.to], rejected: [] };
+      if (!resp.ok) {
+        const errText = await resp.text();
+        throw new Error('brevo ' + resp.status + ': ' + errText.slice(0, 200));
+      }
+      const result = await resp.json();
+      return { messageId: result.messageId || ('brevo-' + Date.now()), accepted: [msg.to], rejected: [] };
     }
   };
 }
