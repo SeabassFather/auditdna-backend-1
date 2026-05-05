@@ -82,8 +82,9 @@ async function notifyBuyersOfNewInventory(inventoryId) {
   let sent = 0, failed = 0;
   for (const row of buyers.rows) {
     const blind = blindId();
-    const subj  = `[Mexausa Food Group] New Supply Available: ${item.commodity_name} from ${item.origin_country}`;
-    const html  = buildBuyerInventoryEmail(item, blind);
+    const cat   = (row.buyer_category || 'WHOLESALER').toUpperCase();
+    const subj  = categoryLetters.buildSubject(cat, item.commodity_slug, item.commodity_name);
+    const html  = categoryLetters.buildLetter(cat, item, blind);
     try {
       await m.sendMail({
         from: `"${FROM_NAME}" <${FROM_ADDR}>`,
