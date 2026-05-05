@@ -438,7 +438,8 @@ try {
   app.use('/api/crm', crmRoutes);
   try { app.use('/api/match', require('./routes/match-engine.routes')); console.log('[OK] match-engine routes loaded'); } catch (e) { console.error('[FAIL] match-engine:', e.message); }
   try { app.use('/api/crm-contacts', require('./routes/crm-contacts.routes')); console.log('[OK] crm-contacts.routes: mounted at /api/crm-contacts'); } catch(e) { console.warn('[WARN] crm-contacts.routes mount failed:', e.message); }
-  try { app.use('/api/user', require('./routes/user')); console.log('[OK] user.js: mounted at /api/user'); } catch(e) { console.warn('[WARN] user.js mount failed:', e.message); }
+
+try { const segRoutes = require('./routes/crm-segments'); if (segRoutes.setPool) segRoutes.setPool(pool); app.use('/api/crm', segRoutes); console.log('[OK] crm-segments mounted at /api/crm'); } catch (e) { console.error('[crm-segments] mount fail:', e.message); }  try { app.use('/api/user', require('./routes/user')); console.log('[OK] user.js: mounted at /api/user'); } catch(e) { console.warn('[WARN] user.js mount failed:', e.message); }
   try { app.use('/api/buyers', require('./routes/buyers.routes')); console.log('[OK] buyers.routes: mounted at /api/buyers'); } catch(e) { console.warn('[WARN] buyers.routes mount failed:', e.message); }
   try { app.use('/api/hot-leads', require('./routes/hot-leads.routes')); console.log('[OK] hot-leads.routes: mounted at /api/hot-leads'); } catch(e) { console.warn('[WARN] hot-leads.routes mount failed:', e.message); }
 // === Factoring waterfall routes (financing partner disclosure is gated) ===
