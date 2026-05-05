@@ -191,4 +191,48 @@ router.get('/buyer/:email/interests', async (req, res) => {
   } catch (e) { res.status(500).json({ ok: false, error: e.message }); }
 });
 
+
+// ─── DEBUG: Synchronous blast test - returns full error stack if it fails ──
+router.get('/debug/inv-blast/:id', async (req, res) => {
+  try {
+    console.log('[debug] inv-blast start id=' + req.params.id);
+    const result = await matcher.notifyBuyersOfNewInventory(parseInt(req.params.id, 10));
+    console.log('[debug] inv-blast end', result);
+    res.json({ ok: true, result });
+  } catch (e) {
+    console.error('[debug] inv-blast THREW:', e.message, e.stack);
+    res.status(500).json({ ok: false, error: e.message, stack: e.stack });
+  }
+});
+
+router.get('/debug/env', async (req, res) => {
+  res.json({
+    ok: true,
+    smtp_user: process.env.SMTP_USER || '<unset>',
+    smtp_pass_len: (process.env.SMTP_PASS || '').length,
+    smtp_host: process.env.SMTP_HOST || '<unset>',
+    smtp_port: process.env.SMTP_PORT || '<unset>',
+    db_url_starts: (process.env.DATABASE_URL || '').slice(0, 30)
+  });
+});
+
+router.get('/debug/buyers/:slug', async (req, res) => {
+  try {
+    const r = await pool.query(
+      `SELECT DISTINCT b.buyer_email, b.buyer_category
+         FROM buyer_commodity_interest b
+         JOIN crm_contacts c ON LOWER(c.email) = LOWER(b.buyer_email)
+        WHERE b.commodity_slug = $1
+          AND b.active = TRUE
+          AND c.is_active = TRUE
+          AND c.opt_out = FALSE
+          AND (b.last_contacted IS NULL OR b.last_contacted < NOW() - INTERVAL '24 hours')
+        LIMIT 5`, [req.params.slug]
+    );
+    res.json({ ok: true, count: r.rows.length, sample: r.rows });
+  } catch (e) {
+    res.status(500).json({ ok: false, error: e.message });
+  }
+});
+
 module.exports = router;
