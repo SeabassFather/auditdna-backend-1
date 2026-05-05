@@ -8,6 +8,7 @@ const express = require('express');
 const router  = express.Router();
 const { pool } = require('../db');
 const matcher = require('../services/blind-matcher');
+const blindMatcher = matcher;
 
 router.use(express.json({ limit: '256kb' }));
 
