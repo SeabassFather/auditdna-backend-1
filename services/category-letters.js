@@ -18,6 +18,20 @@ const C = {
 };
 
 const CATEGORY_PITCH = {
+  MX_EXPORTER: {
+    subjectSuffix: 'Factoring + PO Advance for Mexico Exporters | 24-Hour Funding',
+    opening: 'Para exportadores mexicanos enviando producto al mercado USA, Mexausa Food Group ofrece factoraje y anticipo de PO directos. Tu vendes a buyers USA, nosotros te pagamos en 24 horas hasta el 95 por ciento del valor de la factura. Sin garantias personales en facturas calificadas. Tu sigues con tu cliente, nosotros asumimos el riesgo de pago. For Mexican exporters shipping to USA buyers, Mexausa Food Group offers direct factoring and PO advance. You ship, we pay 24 hours, up to 95 percent of invoice value, 1.5-3.5 percent fee.',
+    valueProps: [
+      'Factoraje hasta 95 por ciento sobre cuentas por cobrar / Factoring up to 95 percent of AR',
+      'Fondeo en 24 horas / 24-hour funding once invoice verified',
+      'Comision 1.5-3.5 por ciento por factura / 1.5-3.5 percent fee per invoice',
+      'Sin garantias personales en facturas calificadas / No personal guarantees on qualifying invoices',
+      'Anticipo de PO antes de embarque / PO advance before shipment',
+      'Cobertura de credito comercial / Trade credit insurance available',
+      'Mantienes tu relacion con el buyer / You keep your buyer relationship',
+      'PACA #20241168 + EIN 88-1698129 garantia de pago'
+    ]
+  },
   CHAIN_STORE: {
     subjectSuffix: 'Year-Round Program | FSMA 204 + Full Traceability',
     opening: 'For chain retail operators sourcing produce at scale, Mexausa Food Group delivers year-round programs backed by FSMA 204 traceability, GlobalGAP and PrimusGFS audits, and lot-level blockchain anchoring. We support category managers with weekly volume commitments, ESG-grade documentation, and recall-ready chain-of-custody on every load.',
