@@ -235,4 +235,55 @@ router.get('/debug/buyers/:slug', async (req, res) => {
   }
 });
 
+
+// ─── DEBUG: Single-email send with 30s hard timeout - returns actual error ──
+router.get('/debug/test-send', async (req, res) => {
+  const nodemailer = require('nodemailer');
+  const SMTP_USER = process.env.SMTP_USER || 'sgarcia1911@gmail.com';
+  const SMTP_PASS = process.env.SMTP_PASS || '';
+  const start = Date.now();
+
+  if (!SMTP_PASS) {
+    return res.json({ ok: false, error: 'SMTP_PASS env var is empty', smtp_user: SMTP_USER, smtp_pass_len: 0 });
+  }
+
+  console.log('[debug-test-send] starting, smtp_user=' + SMTP_USER + ' pass_len=' + SMTP_PASS.length);
+
+  try {
+    const transport = nodemailer.createTransport({
+      host: 'smtp.gmail.com',
+      port: 587,
+      secure: false,
+      auth: { user: SMTP_USER, pass: SMTP_PASS },
+      connectionTimeout: 15000,
+      greetingTimeout: 10000,
+      socketTimeout: 15000
+    });
+
+    const verifyResult = await Promise.race([
+      transport.verify(),
+      new Promise((_, rej) => setTimeout(() => rej(new Error('VERIFY_TIMEOUT_15S')), 15000))
+    ]);
+    console.log('[debug-test-send] verify ok=' + verifyResult);
+
+    const sendResult = await Promise.race([
+      transport.sendMail({
+        from: '"Mexausa Food Group" <sgarcia1911@gmail.com>',
+        to: 'sgarcia1911@gmail.com',
+        subject: 'BLIND MATCHER SMTP TEST - ' + new Date().toISOString(),
+        text: 'Single-shot SMTP test from /api/match/debug/test-send. If you see this in your inbox, the blind matcher SMTP path is working and the issue is throughput, not auth.'
+      }),
+      new Promise((_, rej) => setTimeout(() => rej(new Error('SEND_TIMEOUT_15S')), 15000))
+    ]);
+
+    const elapsed = Date.now() - start;
+    console.log('[debug-test-send] sent ms=' + elapsed + ' messageId=' + sendResult.messageId);
+    res.json({ ok: true, elapsed_ms: elapsed, messageId: sendResult.messageId, accepted: sendResult.accepted, rejected: sendResult.rejected });
+  } catch (e) {
+    const elapsed = Date.now() - start;
+    console.error('[debug-test-send] FAILED ms=' + elapsed + ' error=' + e.message);
+    res.status(500).json({ ok: false, elapsed_ms: elapsed, error: e.message, code: e.code, command: e.command, stack: (e.stack || '').slice(0, 500) });
+  }
+});
+
 module.exports = router;
