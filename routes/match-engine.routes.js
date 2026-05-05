@@ -1,0 +1,194 @@
+// File: C:\AuditDNA\backend\routes\match-engine.routes.js
+// Match engine API: grower upload, buyer need post, daily blast trigger,
+// commission lookup, and notification log retrieval.
+
+'use strict';
+
+const express = require('express');
+const router  = express.Router();
+const { pool } = require('../db');
+const matcher = require('../services/blind-matcher');
+
+router.use(express.json({ limit: '256kb' }));
+
+// ─── COMMODITY CATALOG ───────────────────────────────────────────────────
+router.get('/commodities', async (req, res) => {
+  try {
+    const r = await pool.query(
+      `SELECT slug, name_en, name_es, origin_pref, year_round, peak_months, active
+         FROM commodity_categories WHERE active = TRUE ORDER BY name_en`
+    );
+    res.json({ ok: true, count: r.rows.length, commodities: r.rows });
+  } catch (e) { res.status(500).json({ ok: false, error: e.message }); }
+});
+
+// ─── COMMISSION TABLE ────────────────────────────────────────────────────
+router.get('/commissions', async (req, res) => {
+  try {
+    const r = await pool.query(
+      `SELECT cs.commodity_slug, cc.name_en, cs.buy_side_pct, cs.sell_side_pct,
+              cs.total_pct, cs.min_dollar_per_load, cs.market_basis, cs.notes,
+              cs.effective_from
+         FROM commission_schedule cs
+         JOIN commodity_categories cc ON cc.slug = cs.commodity_slug
+        ORDER BY cc.name_en`
+    );
+    res.json({ ok: true, count: r.rows.length, commissions: r.rows });
+  } catch (e) { res.status(500).json({ ok: false, error: e.message }); }
+});
+
+router.get('/commissions/:slug', async (req, res) => {
+  try {
+    const r = await pool.query(
+      `SELECT cs.*, cc.name_en, cc.name_es
+         FROM commission_schedule cs
+         JOIN commodity_categories cc ON cc.slug = cs.commodity_slug
+        WHERE cs.commodity_slug = $1`, [req.params.slug]
+    );
+    if (!r.rows[0]) return res.status(404).json({ ok: false, error: 'commodity not found' });
+    res.json({ ok: true, commission: r.rows[0] });
+  } catch (e) { res.status(500).json({ ok: false, error: e.message }); }
+});
+
+// ─── GROWER UPLOAD INVENTORY ─────────────────────────────────────────────
+router.post('/grower/inventory', async (req, res) => {
+  try {
+    const b = req.body || {};
+    if (!b.grower_email || !b.commodity_slug) {
+      return res.status(400).json({ ok: false, error: 'grower_email and commodity_slug required' });
+    }
+    const r = await pool.query(
+      `INSERT INTO grower_inventory
+        (grower_email, grower_name, commodity_slug, origin_country, origin_state,
+         pack_style, available_loads, fob_price, available_from, available_thru,
+         certifications, notes)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12)
+       RETURNING id, created_at`,
+      [b.grower_email, b.grower_name || null, b.commodity_slug,
+       b.origin_country || 'MX', b.origin_state || null, b.pack_style || null,
+       b.available_loads || 1, b.fob_price || null,
+       b.available_from || null, b.available_thru || null,
+       b.certifications || [], b.notes || null]
+    );
+    const inventoryId = r.rows[0].id;
+
+    // Fire-and-forget blind buyer blast
+    setImmediate(() => {
+      matcher.notifyBuyersOfNewInventory(inventoryId)
+        .then(x => console.log('[match-engine] inv-to-buyers id=' + inventoryId + ' sent=' + x.sent + ' failed=' + x.failed))
+        .catch(e => console.error('[match-engine] inv blast fail:', e.message));
+    });
+
+    res.json({ ok: true, inventory_id: inventoryId, created_at: r.rows[0].created_at });
+  } catch (e) {
+    console.error('[match-engine] inventory POST error:', e.message);
+    res.status(500).json({ ok: false, error: e.message });
+  }
+});
+
+// ─── BUYER POST NEED ─────────────────────────────────────────────────────
+router.post('/buyer/need', async (req, res) => {
+  try {
+    const b = req.body || {};
+    if (!b.buyer_email || !b.commodity_slug) {
+      return res.status(400).json({ ok: false, error: 'buyer_email and commodity_slug required' });
+    }
+    const r = await pool.query(
+      `INSERT INTO buyer_needs
+        (buyer_email, buyer_name, commodity_slug, needed_loads, target_price,
+         needed_by, delivery_state, notes)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8)
+       RETURNING id, created_at`,
+      [b.buyer_email, b.buyer_name || null, b.commodity_slug,
+       b.needed_loads || 1, b.target_price || null,
+       b.needed_by || null, b.delivery_state || null, b.notes || null]
+    );
+    const needId = r.rows[0].id;
+
+    setImmediate(() => {
+      matcher.notifyGrowersOfNewNeed(needId)
+        .then(x => console.log('[match-engine] need-to-growers id=' + needId + ' sent=' + x.sent + ' failed=' + x.failed))
+        .catch(e => console.error('[match-engine] need blast fail:', e.message));
+    });
+
+    res.json({ ok: true, need_id: needId, created_at: r.rows[0].created_at });
+  } catch (e) {
+    console.error('[match-engine] need POST error:', e.message);
+    res.status(500).json({ ok: false, error: e.message });
+  }
+});
+
+// ─── DAILY BLAST TRIGGER (manual + cron) ────────────────────────────────
+router.post('/blast/daily', async (req, res) => {
+  try {
+    const result = await matcher.dailyBuyerBlast();
+    res.json(result);
+  } catch (e) {
+    console.error('[match-engine] daily blast error:', e.message);
+    res.status(500).json({ ok: false, error: e.message });
+  }
+});
+
+// ─── NOTIFICATION LOG ────────────────────────────────────────────────────
+router.get('/notifications', async (req, res) => {
+  try {
+    const limit = Math.min(parseInt(req.query.limit) || 50, 500);
+    const type  = req.query.type || null;
+    const where = []; const args = [];
+    if (type) { args.push(type); where.push('match_type = $' + args.length); }
+    const sql = where.length ? `WHERE ${where.join(' AND ')}` : '';
+    args.push(limit);
+    const r = await pool.query(
+      `SELECT id, match_type, commodity_slug, recipient_email, recipient_role,
+              source_id, email_subject, blind_match_id, sent_at
+         FROM match_notifications ${sql}
+        ORDER BY sent_at DESC LIMIT $${args.length}`, args
+    );
+    res.json({ ok: true, count: r.rows.length, notifications: r.rows });
+  } catch (e) { res.status(500).json({ ok: false, error: e.message }); }
+});
+
+router.get('/blast/log', async (req, res) => {
+  try {
+    const r = await pool.query(
+      `SELECT * FROM daily_blast_log ORDER BY blast_date DESC, started_at DESC LIMIT 50`
+    );
+    res.json({ ok: true, count: r.rows.length, blasts: r.rows });
+  } catch (e) { res.status(500).json({ ok: false, error: e.message }); }
+});
+
+// ─── BUYER INTEREST MGMT ─────────────────────────────────────────────────
+router.post('/buyer/interest', async (req, res) => {
+  try {
+    const b = req.body || {};
+    if (!b.buyer_email || !Array.isArray(b.commodity_slugs)) {
+      return res.status(400).json({ ok: false, error: 'buyer_email and commodity_slugs[] required' });
+    }
+    let added = 0;
+    for (const slug of b.commodity_slugs) {
+      await pool.query(
+        `INSERT INTO buyer_commodity_interest (buyer_email, commodity_slug, buyer_category, priority)
+         VALUES ($1,$2,$3,$4)
+         ON CONFLICT (buyer_email, commodity_slug) DO UPDATE SET active = TRUE`,
+        [b.buyer_email, slug, b.buyer_category || null, b.priority || 1]
+      );
+      added++;
+    }
+    res.json({ ok: true, added });
+  } catch (e) { res.status(500).json({ ok: false, error: e.message }); }
+});
+
+router.get('/buyer/:email/interests', async (req, res) => {
+  try {
+    const r = await pool.query(
+      `SELECT b.commodity_slug, c.name_en, b.priority, b.last_contacted, b.active
+         FROM buyer_commodity_interest b
+         JOIN commodity_categories c ON c.slug = b.commodity_slug
+        WHERE b.buyer_email = $1 ORDER BY b.priority DESC, c.name_en`,
+      [req.params.email]
+    );
+    res.json({ ok: true, interests: r.rows });
+  } catch (e) { res.status(500).json({ ok: false, error: e.message }); }
+});
+
+module.exports = router;
