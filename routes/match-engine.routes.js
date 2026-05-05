@@ -212,7 +212,9 @@ router.get('/debug/env', async (req, res) => {
     smtp_pass_len: (process.env.SMTP_PASS || '').length,
     smtp_host: process.env.SMTP_HOST || '<unset>',
     smtp_port: process.env.SMTP_PORT || '<unset>',
-    db_url_starts: (process.env.DATABASE_URL || '').slice(0, 30)
+    db_url_starts: (process.env.DATABASE_URL || '').slice(0, 30),
+    brevo_key_len: (process.env.BREVO_API_KEY || '').length,
+    brevo_key_starts: (process.env.BREVO_API_KEY || '').slice(0, 12)
   });
 });
 
@@ -283,6 +285,32 @@ router.get('/debug/test-send', async (req, res) => {
     const elapsed = Date.now() - start;
     console.error('[debug-test-send] FAILED ms=' + elapsed + ' error=' + e.message);
     res.status(500).json({ ok: false, elapsed_ms: elapsed, error: e.message, code: e.code, command: e.command, stack: (e.stack || '').slice(0, 500) });
+  }
+});
+
+
+router.get('/debug/brevo-fire', async (req, res) => {
+  const start = Date.now();
+  try {
+    const KEY = process.env.BREVO_API_KEY || '';
+    if (!KEY) return res.json({ ok: false, error: 'BREVO_API_KEY env var missing on Railway' });
+    const fetch = global.fetch || require('node-fetch');
+    const resp = await fetch('https://api.brevo.com/v3/smtp/email', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'api-key': KEY, 'accept': 'application/json' },
+      body: JSON.stringify({
+        sender: { name: 'Mexausa Food Group', email: 'sgarcia1911@gmail.com' },
+        to: [{ email: 'sgarcia1911@gmail.com' }],
+        subject: 'BREVO DIRECT TEST - ' + new Date().toISOString(),
+        htmlContent: '<h2>Brevo HTTP API path is working</h2><p>If you see this in your inbox, the blind matcher Brevo wire is live and the 31K blast can fire.</p>',
+        textContent: 'Brevo HTTP API working. Blast can fire.'
+      })
+    });
+    const elapsed = Date.now() - start;
+    const text = await resp.text();
+    res.json({ ok: resp.ok, status: resp.status, elapsed_ms: elapsed, body: text.slice(0, 400) });
+  } catch (e) {
+    res.status(500).json({ ok: false, elapsed_ms: Date.now() - start, error: e.message });
   }
 });
 
