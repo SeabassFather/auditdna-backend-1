@@ -19,8 +19,8 @@ const C = {
 
 const CATEGORY_PITCH = {
   MX_EXPORTER: {
-    subjectSuffix: 'Factoring + PO Advance for Mexico Exporters | 24-Hour Funding',
-    opening: 'Para exportadores mexicanos enviando producto al mercado USA, Mexausa Food Group ofrece factoraje y anticipo de PO directos. Tu vendes a buyers USA, nosotros te pagamos en 24 horas hasta el 95 por ciento del valor de la factura. Sin garantias personales en facturas calificadas. Tu sigues con tu cliente, nosotros asumimos el riesgo de pago. For Mexican exporters shipping to USA buyers, Mexausa Food Group offers direct factoring and PO advance. You ship, we pay 24 hours, up to 95 percent of invoice value, 1.5-3.5 percent fee.',
+    subjectSuffix: 'Factoring + PO Advance for Mexico Exporters | 24-Hour Funding | Bilingue',
+    opening: 'Para exportadores mexicanos enviando producto al mercado USA: Mexausa Food Group ofrece factoraje y anticipo de PO directos. Tu vendes a buyers USA, nosotros te pagamos en 24 horas hasta el 95 por ciento del valor de la factura. Sin garantias personales en facturas calificadas. Tu sigues con tu cliente, nosotros asumimos el riesgo de pago. // For Mexican exporters shipping product to USA buyers: Mexausa Food Group offers direct factoring and PO advance. You ship, we pay 24 hours, up to 95 percent of invoice value, 1.5 to 3.5 percent fee, no personal guarantees on qualifying invoices.',
     valueProps: [
       'Factoraje hasta 95 por ciento sobre cuentas por cobrar / Factoring up to 95 percent of AR',
       'Fondeo en 24 horas / 24-hour funding once invoice verified',
@@ -28,8 +28,50 @@ const CATEGORY_PITCH = {
       'Sin garantias personales en facturas calificadas / No personal guarantees on qualifying invoices',
       'Anticipo de PO antes de embarque / PO advance before shipment',
       'Cobertura de credito comercial / Trade credit insurance available',
-      'Mantienes tu relacion con el buyer / You keep your buyer relationship',
-      'PACA #20241168 + EIN 88-1698129 garantia de pago'
+      'Mantienes tu relacion con el buyer / You keep your USA buyer relationship',
+      'PACA #20241168 + EIN 88-1698129 garantia de pago / PACA-protected payment guarantee'
+    ]
+  },
+  GROWER_PITCH: {
+    subjectSuffix: 'Onboard to LOAF Marketplace | Factoring + Buyer Network | ENRIQUE AI Registration',
+    opening: 'Para growers en Mexico, Centroamerica y Sudamerica: Mexausa Food Group conecta tu produccion directamente con buyers USA via la plataforma LOAF. Registro en 14 pasos via WhatsApp con ENRIQUE (nuestro agente IA). Una vez aprobado, tu inventario aparece en match-engine y dispara correos automaticos a 115+ buyers USA segmentados. // For growers in Mexico, Central and South America: Mexausa Food Group connects your production directly to USA buyers via the LOAF marketplace. 14-step WhatsApp registration with ENRIQUE AI agent. Once approved, your inventory hits the match engine and auto-fires letters to 115+ segmented USA buyers.',
+    valueProps: [
+      'Onboarding via WhatsApp con ENRIQUE en 14 pasos / 14-step WhatsApp onboarding with ENRIQUE AI',
+      'TraceSafe FSMA 204 + GlobalGAP + PrimusGFS docs verificados / certifications verified upfront',
+      'Tu inventario dispara emails segmentados automaticos a buyers USA / Your inventory auto-blasts to 115+ USA buyers',
+      'Factoraje hasta 95 por ciento al ser pagado / Factoring up to 95 percent when invoice paid',
+      'PACA #20241168 protege tu pago / PACA-protected counterparty',
+      'Acceso a 26+ commodity programs / Access to 26+ commodity programs',
+      'Sin cuota de membresia / No membership fee',
+      'Soporte bilingue 24/7 via ntfy.sh / 24/7 bilingual support'
+    ]
+  },
+  PO_FINANCE_PROSPECT: {
+    subjectSuffix: 'PO Finance Net-30/45/60 Lines $50K-$5M | 48-Hour Approval | T1/T2 Programs',
+    opening: 'For procurement, finance, and AP teams at chain retailers, wholesalers, and distributors: Mexausa Food Group offers Purchase Order Finance lines from $50K to $5M with 48-hour approval. Pay your standard Net-30/45/60 terms while we pay our growers up front. Frees up working capital, removes counterparty risk, and unlocks Mexico-and-Peru supply at terminal-minus-15-percent FOB pricing.',
+    valueProps: [
+      'PO Finance Net-30/45/60 lines from $50K to $5M',
+      '48-hour approval, no PG required on T1/T2 buyers',
+      'You pay standard terms, your growers get paid up front',
+      'Tier 1 (Chain/Large Distributor) $50K-$250K Net 30 priority',
+      'Tier 2 (Wholesaler/Mid Distributor) $10K-$50K Net 30 priority',
+      'FOB pricing 15-20 percent below USDA terminal markets',
+      'PACA #20241168 + EIN 88-1698129 on every transaction',
+      'Volume tiers from 1 pallet to truckload+ across 26 commodities'
+    ]
+  },
+  REACTIVATION: {
+    subjectSuffix: 'New Programs Active Since Last Order | Hass + Berry + 26 Commodities',
+    opening: 'Its been a while. Mexausa Food Group has restructured pricing, traceability, and finance terms since your last order. New: 9-category buyer programs, FSMA 204 lot tracking via QR, PO Finance Net-30/45/60 lines, factoring up to 95 percent advance, and direct grower allocation across 26+ commodities. Our 81 Niner Miners AI layer now matches your historical buying patterns to live inventory automatically.',
+    valueProps: [
+      'Restructured pricing 15-20 percent below USDA terminal markets',
+      '26+ commodities live with weekly volume commitments',
+      'PO Finance Net-30/45/60 with 48-hour approval',
+      'FSMA 204 lot traceability with QR-coded pallets',
+      '81 Niner Miners AI matches your historical patterns to live inventory',
+      'Direct-from-grower with PACA #20241168 protection',
+      'Cold chain telemetry on every reefer load',
+      'Reach out for a fresh price sheet and revised credit terms'
     ]
   },
   CHAIN_STORE: {

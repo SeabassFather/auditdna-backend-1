@@ -93,7 +93,8 @@ async function notifyBuyersOfNewInventory(inventoryId) {
   let sent = 0, failed = 0;
   for (const row of buyers.rows) {
     const blind = blindId();
-    const cat   = (row.buyer_category || 'WHOLESALER').toUpperCase();
+    let cat = (row.buyer_category || 'WHOLESALER').toUpperCase();
+    if (cat === 'GROWER') cat = 'GROWER_PITCH';
     const subj  = categoryLetters.buildSubject(cat, item.commodity_slug, item.commodity_name);
     const html  = categoryLetters.buildLetter(cat, item, blind);
     try {
