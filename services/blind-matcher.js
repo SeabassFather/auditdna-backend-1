@@ -27,6 +27,19 @@ function buildMailer() {
   return {
     sendMail: async (msg) => {
       const fetch = global.fetch || require('node-fetch');
+      let plainText = (msg.text && msg.text.trim()) || '';
+      if (!plainText && msg.html) {
+        plainText = msg.html
+          .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '')
+          .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, '')
+          .replace(/<[^>]+>/g, ' ')
+          .replace(/&nbsp;/g, ' ')
+          .replace(/&amp;/g, '&')
+          .replace(/\s+/g, ' ')
+          .trim()
+          .slice(0, 5000);
+      }
+      if (!plainText) plainText = 'See HTML version of this email.';
       const resp = await fetch('https://api.brevo.com/v3/smtp/email', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'api-key': BREVO_API_KEY, 'accept': 'application/json' },
@@ -36,7 +49,7 @@ function buildMailer() {
           replyTo: { email: 'sgarcia1911@gmail.com', name: 'Saul Garcia' },
           subject: msg.subject,
           htmlContent: msg.html,
-          textContent: (msg.text && msg.text.trim()) || (msg.html ? msg.html.replace(/<style[^>]*>[\\s\\S]*?<\\/style>/gi,'').replace(/<[^>]+>/g,' ').replace(/\\s+/g,' ').trim().slice(0, 5000) : 'See HTML version.')
+          textContent: plainText
         })
       });
       if (!resp.ok) {
