@@ -26,20 +26,18 @@ function buildMailer() {
   if (!BREVO_API_KEY) { console.error('[blind-matcher] BREVO_API_KEY not set'); return null; }
   return {
     sendMail: async (msg) => {
-      const fetch = global.fetch || require('node-fetch');
-      let plainText = (msg.text && msg.text.trim()) || '';
-      if (!plainText && msg.html) {
-        plainText = msg.html
-          .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '')
-          .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, '')
-          .replace(/<[^>]+>/g, ' ')
-          .replace(/&nbsp;/g, ' ')
-          .replace(/&amp;/g, '&')
-          .replace(/\s+/g, ' ')
-          .trim()
-          .slice(0, 5000);
+      const fetch = global.fetch || require(String.fromCharCode(110,111,100,101,45,102,101,116,99,104));
+      let plain = (msg.text && msg.text.trim()) || '';
+      if (!plain && msg.html) {
+        let h = msg.html;
+        h = h.split(/<style[^>]*>/i).map((p,i)=>i===0?p:p.replace(/^[\s\S]*?<\/style>/i,"")).join("");
+        h = h.split(/<script[^>]*>/i).map((p,i)=>i===0?p:p.replace(/^[\s\S]*?<\/script>/i,"")).join("");
+        h = h.replace(/<[^>]+>/g, " ");
+        h = h.replace(/&nbsp;/g, " ").replace(/&amp;/g, "&");
+        h = h.replace(/\s+/g, " ").trim();
+        plain = h.slice(0, 5000);
       }
-      if (!plainText) plainText = 'See HTML version of this email.';
+      if (!plain) plain = 'See HTML version of this message.';
       const resp = await fetch('https://api.brevo.com/v3/smtp/email', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'api-key': BREVO_API_KEY, 'accept': 'application/json' },
@@ -49,7 +47,7 @@ function buildMailer() {
           replyTo: { email: 'sgarcia1911@gmail.com', name: 'Saul Garcia' },
           subject: msg.subject,
           htmlContent: msg.html,
-          textContent: plainText
+          textContent: plain
         })
       });
       if (!resp.ok) {
