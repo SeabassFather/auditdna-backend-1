@@ -7,6 +7,27 @@
 // ============================================================
 const express = require('express');
 const router = express.Router();
+
+// BREVO_HTTP_FALLBACK_v1 - May 5 2026 - Gmail SMTP capped, route through Brevo
+const BREVO_API_KEY = process.env.BREVO_API_KEY;
+async function sendViaBrevo(to, toName, subject, html, fromEmail, fromName) {
+  if (!BREVO_API_KEY) throw new Error('BREVO_API_KEY env var not set on Railway');
+  const payload = {
+    sender: { email: fromEmail || 'sgarcia1911@gmail.com', name: fromName || 'Saul Garcia - Mexausa Food Group' },
+    to: [{ email: to, name: toName || to }],
+    subject: subject,
+    htmlContent: html
+  };
+  const res = await fetch('https://api.brevo.com/v3/smtp/email', {
+    method: 'POST',
+    headers: { 'api-key': BREVO_API_KEY, 'Content-Type': 'application/json', 'Accept': 'application/json' },
+    body: JSON.stringify(payload)
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error('Brevo HTTP ' + res.status + ': ' + JSON.stringify(data));
+  return { messageId: data.messageId, brevo: true };
+}
+
 const { google } = require('googleapis');
 const nodemailer = require('nodemailer');
 const crypto = require('crypto');
@@ -531,10 +552,17 @@ router.post('/send-bulk', async (req, res) => {
           info = await gmailApiSend(sendArgs);
           console.log(`[GMAIL-API] Bulk sent -> ${email} | MsgID: ${info.messageId}`);
         } catch (apiErr) {
-          console.warn(`[GMAIL-API] Bulk failed for ${email}, falling back to SMTP: ${apiErr.message}`);
-          if (!SMTP_PASS) throw new Error(`Gmail API failed and SMTP fallback unavailable: ${apiErr.message}`);
-          info = await smtpSend(sendArgs);
-          console.log(`[SMTP] Bulk sent (fallback) -> ${email} | MsgID: ${info.messageId}`);
+          // BREVO_FALLBACK_CHAIN_v1 - Gmail API failed, try Brevo HTTP API before SMTP
+          console.warn(`[GMAIL-API] Bulk failed for ${email}, falling back to BREVO: ${apiErr.message}`);
+          try {
+            info = await sendViaBrevo(email, name, subject, personalizedHtml || personalizedText, 'sgarcia1911@gmail.com', 'Saul Garcia - Mexausa Food Group');
+            console.log(`[BREVO] Bulk sent -> ${email} | MsgID: ${info.messageId}`);
+          } catch (brevoErr) {
+            console.warn(`[BREVO] Failed for ${email}, falling back to SMTP: ${brevoErr.message}`);
+            if (!SMTP_PASS) throw new Error(`Gmail API + Brevo failed and SMTP unavailable: ${brevoErr.message}`);
+            info = await smtpSend(sendArgs);
+            console.log(`[SMTP] Bulk sent (fallback) -> ${email} | MsgID: ${info.messageId}`);
+          }
         }
 
         results.push({ email, success: true, messageId: info.messageId });
