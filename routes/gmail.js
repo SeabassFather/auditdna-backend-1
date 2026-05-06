@@ -34,6 +34,7 @@ const crypto = require('crypto');
 const fs = require('fs');
 const path = require('path');
 const { Pool } = require('pg');
+const { writeAuditRow } = require('../services/send-audit-writer');
 
 // ============================================================
 // SMTP CONFIG ΓÇö sends from saul@mexausafg.com directly
@@ -566,6 +567,20 @@ router.post('/send-bulk', async (req, res) => {
         }
 
         results.push({ email, success: true, messageId: info.messageId });
+        // SEND AUDIT - log every successful send to email_activity_log (non-blocking)
+        writeAuditRow({
+          senderEmail: req.body.senderEmail || (req.user && req.user.email) || 'sgarcia1911@gmail.com',
+          recipientEmail: email,
+          recipientName: name,
+          subject,
+          body: html || body,
+          attachmentCount: (attachments || []).length,
+          recipientCount: recipients.length,
+          blastId: req.body.blastId || null,
+          gmailMessageId: info.messageId,
+          agentId: req.body.agentId || 'human',
+          intent: req.body.intent || 'outreach'
+        }).catch(() => {});
         if (delayMs > 0) await new Promise(r => setTimeout(r, delayMs));
 
       } catch (err) {
