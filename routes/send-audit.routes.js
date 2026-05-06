@@ -17,8 +17,11 @@ const router = express.Router();
 const { Pool } = require('pg');
 
 const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
-  ssl: { rejectUnauthorized: false }
+  host:     process.env.DB_HOST     || 'localhost',
+  port:     parseInt(process.env.DB_PORT || '5432'),
+  database: process.env.DB_NAME     || 'auditdna',
+  user:     process.env.DB_USER     || 'postgres',
+  password: process.env.DB_PASSWORD || 'auditdna2026',
 });
 
 // Helper - "today in PT" since the company runs on Pacific time
@@ -57,7 +60,7 @@ router.get('/today', async (req, res) => {
     res.json({ ok: true, today: r.rows[0], range: { start, end } });
   } catch (e) {
     console.error('[send-audit/today]', e);
-    res.status(500).json({ ok: false, error: e.message });
+    res.status(500).json({ ok: false, error: e.message || String(e), code: e.code });
   }
 });
 
@@ -91,7 +94,7 @@ router.get('/recent', async (req, res) => {
     res.json({ ok: true, sends: r.rows });
   } catch (e) {
     console.error('[send-audit/recent]', e);
-    res.status(500).json({ ok: false, error: e.message });
+    res.status(500).json({ ok: false, error: e.message || String(e), code: e.code });
   }
 });
 
@@ -153,7 +156,7 @@ router.get('/digest', async (req, res) => {
     });
   } catch (e) {
     console.error('[send-audit/digest]', e);
-    res.status(500).json({ ok: false, error: e.message });
+    res.status(500).json({ ok: false, error: e.message || String(e), code: e.code });
   }
 });
 
@@ -178,7 +181,7 @@ router.get('/by-sender', async (req, res) => {
     `, [days]);
     res.json({ ok: true, days, leaderboard: r.rows });
   } catch (e) {
-    res.status(500).json({ ok: false, error: e.message });
+    res.status(500).json({ ok: false, error: e.message || String(e), code: e.code });
   }
 });
 
@@ -202,7 +205,7 @@ router.get('/by-industry', async (req, res) => {
     `, [days]);
     res.json({ ok: true, days, by_industry: r.rows });
   } catch (e) {
-    res.status(500).json({ ok: false, error: e.message });
+    res.status(500).json({ ok: false, error: e.message || String(e), code: e.code });
   }
 });
 
@@ -218,7 +221,7 @@ router.get('/full/:id', async (req, res) => {
     if (r.rows.length === 0) return res.status(404).json({ ok: false, error: 'not_found' });
     res.json({ ok: true, row: r.rows[0] });
   } catch (e) {
-    res.status(500).json({ ok: false, error: e.message });
+    res.status(500).json({ ok: false, error: e.message || String(e), code: e.code });
   }
 });
 
