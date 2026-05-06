@@ -1,29 +1,29 @@
 // ============================================================================
-// loaf-intelligence.js — LOAF Autonomous Intelligence Engine v3
-// MexaUSA Food Group, Inc. — AuditDNA Agriculture Intelligence Platform
+// loaf-intelligence.js â€” LOAF Autonomous Intelligence Engine v3
+// MexaUSA Food Group, Inc. â€” AuditDNA Agriculture Intelligence Platform
 // Save to: C:\AuditDNA\backend\services\loaf-intelligence.js
 //
 // COMMODITY-PRECISE MATCHING:
 //   Buyers/Wholesalers/Distributors/Retailers/Chain Stores:
-//     → STRICT match — only contacts who explicitly buy that commodity/family
+//     â†’ STRICT match â€” only contacts who explicitly buy that commodity/family
 //   Shippers/Packers/Logistics:
-//     → OPEN match — they move all produce, always notified
+//     â†’ OPEN match â€” they move all produce, always notified
 //
 // COMMODITY FAMILIES (a blueberry buyer also gets blackberry alerts):
-//   BERRIES     — strawberry, blueberry, blackberry, raspberry, boysenberry
-//   LEAFY       — spinach, lettuce, romaine, iceberg, arugula, kale, radicchio, chard, mixed greens
-//   BRASSICAS   — broccoli, cauliflower, cabbage, brussels sprouts
-//   TROPICALS   — avocado, mango, papaya, pineapple, coconut
-//   CITRUS      — lime, lemon, orange, grapefruit, tangerine, mandarin
-//   ROOT_VEG    — potato, carrot, beet, radish, turnip, yam
-//   ALLIUMS     — onion, garlic, green onion, leek, shallot
-//   NIGHTSHADES — tomato, pepper, jalapeño, chile, eggplant
-//   CUCURBITS   — cucumber, zucchini, squash, pumpkin, melon
-//   MELONS      — watermelon, cantaloupe, honeydew
-//   STONE_FRUIT — peach, plum, nectarine, cherry, apricot
-//   GRAPES      — table grape, wine grape, raisin
-//   HERBS       — cilantro, basil, parsley, mint, dill, epazote
-//   ASPARAGUS   — asparagus, esparrago
+//   BERRIES     â€” strawberry, blueberry, blackberry, raspberry, boysenberry
+//   LEAFY       â€” spinach, lettuce, romaine, iceberg, arugula, kale, radicchio, chard, mixed greens
+//   BRASSICAS   â€” broccoli, cauliflower, cabbage, brussels sprouts
+//   TROPICALS   â€” avocado, mango, papaya, pineapple, coconut
+//   CITRUS      â€” lime, lemon, orange, grapefruit, tangerine, mandarin
+//   ROOT_VEG    â€” potato, carrot, beet, radish, turnip, yam
+//   ALLIUMS     â€” onion, garlic, green onion, leek, shallot
+//   NIGHTSHADES â€” tomato, pepper, jalapeÃ±o, chile, eggplant
+//   CUCURBITS   â€” cucumber, zucchini, squash, pumpkin, melon
+//   MELONS      â€” watermelon, cantaloupe, honeydew
+//   STONE_FRUIT â€” peach, plum, nectarine, cherry, apricot
+//   GRAPES      â€” table grape, wine grape, raisin
+//   HERBS       â€” cilantro, basil, parsley, mint, dill, epazote
+//   ASPARAGUS   â€” asparagus, esparrago
 // ============================================================================
 
 const nodemailer = require('nodemailer');
@@ -34,9 +34,9 @@ const getTransport = () => nodemailer.createTransport({
   secure: false,
   auth: { user: process.env.SMTP_USER, pass: process.env.SMTP_PASS },
 });
-const FROM = `"MexaUSA Food Group — LOAF Intelligence" <${process.env.SMTP_USER || 'sgarcia1911@gmail.com'}>`;
+const FROM = `"MexaUSA Food Group â€” LOAF Intelligence" <${process.env.SMTP_USER || 'saul@mexausafg.com'}>`;
 
-// ── COMMODITY TAXONOMY ────────────────────────────────────────────────────────
+// â”€â”€ COMMODITY TAXONOMY â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 const COMMODITY_FAMILIES = {
   BERRIES:      ['strawberry','blueberry','blackberry','raspberry','boysenberry','cranberry','gooseberry','fresa','arandano','mora','frambuesa','zarzamora','berry','berries','baya'],
   LEAFY:        ['spinach','lettuce','romaine','iceberg','arugula','kale','radicchio','chard','mixed greens','spring mix','baby spinach','baby kale','escarole','endive','watercress','espinaca','lechuga','acelga','berros','greens','leafy'],
@@ -45,7 +45,7 @@ const COMMODITY_FAMILIES = {
   CITRUS:       ['lime','lemon','orange','grapefruit','tangerine','mandarin','clementine','citrus','limon','naranja','toronja','mandarina'],
   ROOT_VEG:     ['potato','carrot','beet','radish','turnip','yam','sweet potato','parsnip','papa','zanahoria','betabel','rabano','nabo','camote'],
   ALLIUMS:      ['onion','garlic','green onion','leek','shallot','scallion','chive','cebolla','ajo','cebollita','puerro','chalote'],
-  NIGHTSHADES:  ['tomato','roma','vine ripe','cherry tomato','pepper','bell pepper','jalapeño','jalapeno','chile','chili','serrano','poblano','habanero','eggplant','tomate','jitomate','pimiento','berenjena','nightshade'],
+  NIGHTSHADES:  ['tomato','roma','vine ripe','cherry tomato','pepper','bell pepper','jalapeÃ±o','jalapeno','chile','chili','serrano','poblano','habanero','eggplant','tomate','jitomate','pimiento','berenjena','nightshade'],
   CUCURBITS:    ['cucumber','zucchini','squash','calabaza','pepino','chayote','bitter melon','calabacita','cucurbit'],
   MELONS:       ['watermelon','cantaloupe','honeydew','melon','sandia','melon','cantaloup'],
   STONE_FRUIT:  ['peach','plum','nectarine','cherry','apricot','durazno','ciruela','cereza','chabacano','stone fruit','drupe'],
@@ -86,7 +86,7 @@ function getCommoditySearchTerms(commodity) {
   return { exact, familyTerms, family };
 }
 
-// ── CONTACT TYPE CLASSIFIERS ──────────────────────────────────────────────────
+// â”€â”€ CONTACT TYPE CLASSIFIERS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 const SHIPPER_PATTERNS    = ['ship','freight','carrier','trucking','logistics','transport','forwarding','customs broker','freight broker','camion','flete','transportista','aduanal'];
 const PACKER_PATTERNS     = ['pack','packing','packinghouse','empaque','cooling','precool','cold storage','shed','envase'];
 const CHAINSTORE_PATTERNS = ['walmart','costco','kroger','whole foods','trader joe','safeway','albertsons','sprouts','target','publix','heb','aldi','wegmans','giant','stop shop','chain store','grocery chain','supermarket chain','retail chain'];
@@ -105,7 +105,7 @@ function classifyContact(contact) {
   return 'buyer';
 }
 
-// ── SCORING ───────────────────────────────────────────────────────────────────
+// â”€â”€ SCORING â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function scoreContact(contact, quantity, unit, region) {
   let score = 0;
   const qtyNum = parseFloat(quantity) || 0;
@@ -125,13 +125,13 @@ function scoreContact(contact, quantity, unit, region) {
   return Math.round(score);
 }
 
-// ── MULTI-TABLE CONTACT FETCH ─────────────────────────────────────────────────
+// â”€â”€ MULTI-TABLE CONTACT FETCH â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 async function fetchAllMatchedContacts(db, commodity, quantity, unit, region) {
   const { exact, familyTerms, family } = getCommoditySearchTerms(commodity);
 
   // STRICT terms for commercial buyers (exact commodity + family only)
   const strictTerms = [...new Set([...exact, ...familyTerms])];
-  // Build SQL conditions for strict match — ONLY commodity fields, NOT company name
+  // Build SQL conditions for strict match â€” ONLY commodity fields, NOT company name
   const strictConditions = strictTerms.map((_, i) => `(
     LOWER(COALESCE(commodity,'')) LIKE $${i+1} OR
     LOWER(COALESCE(commodities,'')) LIKE $${i+1} OR
@@ -153,7 +153,7 @@ async function fetchAllMatchedContacts(db, commodity, quantity, unit, region) {
     });
   }
 
-  // ── buyers — STRICT commodity match ──────────────────────────────────────────
+  // â”€â”€ buyers â€” STRICT commodity match â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   try {
     const r = await db.query(`
       SELECT id, company, contact_name, email, phone,
@@ -173,7 +173,7 @@ async function fetchAllMatchedContacts(db, commodity, quantity, unit, region) {
     console.log(`[LOAF-INTEL] buyers strict match: ${r.rows.length} for ${commodity} (family: ${family})`);
   } catch (e) { console.warn('[LOAF-INTEL] buyers:', e.message); }
 
-  // ── buyer_segments — STRICT commodity match ───────────────────────────────────
+  // â”€â”€ buyer_segments â€” STRICT commodity match â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   try {
     const r = await db.query(`
       SELECT id, company, contact_name, email, phone,
@@ -190,7 +190,7 @@ async function fetchAllMatchedContacts(db, commodity, quantity, unit, region) {
     console.log(`[LOAF-INTEL] buyer_segments strict match: ${r.rows.length}`);
   } catch (e) { console.warn('[LOAF-INTEL] buyer_segments:', e.message); }
 
-  // ── shipper_contacts — OPEN match (logistics handles all produce) ─────────────
+  // â”€â”€ shipper_contacts â€” OPEN match (logistics handles all produce) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   // Shippers/packers/logistics get notified regardless of commodity
   // ONLY contact_type-classified logistics contacts get open match
   try {
@@ -223,12 +223,12 @@ async function fetchAllMatchedContacts(db, commodity, quantity, unit, region) {
   // include them only if commodity matches OR they have no commodity specified
   const filteredScored = scored.filter(c => {
     if (c.source_table === 'shipper_contacts') {
-      // Logistics — include if no commodity or commodity matches
+      // Logistics â€” include if no commodity or commodity matches
       if (!c.commodity || c.commodity === '') return true;
       const contactCommodity = (c.commodity || '').toLowerCase();
       return strictTerms.some(t => contactCommodity.includes(t.replace('%','')));
     }
-    // Buyers — already filtered by strict SQL query, include all
+    // Buyers â€” already filtered by strict SQL query, include all
     return true;
   });
 
@@ -244,13 +244,13 @@ async function fetchAllMatchedContacts(db, commodity, quantity, unit, region) {
   };
 
   const total = Object.values(segments).reduce((s, a) => s + a.length, 0);
-  console.log(`[LOAF-INTEL] ${commodity} (${family}) — Total contacts: ${total}`);
+  console.log(`[LOAF-INTEL] ${commodity} (${family}) â€” Total contacts: ${total}`);
   Object.entries(segments).forEach(([type, arr]) => { if (arr.length) console.log(`  ${type}: ${arr.length}`); });
 
   return { segments, family, total };
 }
 
-// ── EMAIL BUILDERS ────────────────────────────────────────────────────────────
+// â”€â”€ EMAIL BUILDERS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 const TYPE_CONFIG = {
   buyer:       { accent:'#3B6D11', label:'BUYER ALERT',       cta:'First confirmed response gets priority contact with the grower. Reply YES.' },
   wholesaler:  { accent:'#854F0B', label:'WHOLESALE ALERT',   cta:'First wholesale buyer to confirm gets direct grower pricing. Reply YES.' },
@@ -264,13 +264,13 @@ const TYPE_CONFIG = {
 function buildSubject(action, type, commodity, quantity, unit, family) {
   const familyLabel = family ? ` [${family}]` : '';
   const typeLabels = {
-    buyer:       action === 'ALTRUISTIC' ? `[ALTRUISTIC${familyLabel}] ${commodity} Surplus — ${quantity} ${unit}` : `[LAUNCH${familyLabel}] ${commodity} Available — ${quantity} ${unit}`,
-    wholesaler:  action === 'ALTRUISTIC' ? `[WHOLESALE${familyLabel}] ${commodity} Surplus — ${quantity} ${unit}` : `[WHOLESALE${familyLabel}] ${commodity} — ${quantity} ${unit}`,
-    chain_store: action === 'ALTRUISTIC' ? `[ESG ALERT${familyLabel}] ${commodity} Surplus — Waste Prevention` : `[CHAIN PROCUREMENT${familyLabel}] ${commodity} — ${quantity} ${unit}`,
-    distributor: action === 'ALTRUISTIC' ? `[DISTRIBUTION${familyLabel}] ${commodity} Surplus — ${quantity} ${unit}` : `[DISTRIBUTION${familyLabel}] ${commodity} Available`,
-    retailer:    action === 'ALTRUISTIC' ? `[RETAIL${familyLabel}] ${commodity} Surplus` : `[RETAIL${familyLabel}] ${commodity} — ${quantity} ${unit}`,
-    packer:      `[PACKING${familyLabel}] ${commodity} — ${quantity} ${unit} — Capacity Needed`,
-    shipper:     `[FREIGHT${familyLabel}] ${commodity} — ${quantity} ${unit} — Ready to Move`,
+    buyer:       action === 'ALTRUISTIC' ? `[ALTRUISTIC${familyLabel}] ${commodity} Surplus â€” ${quantity} ${unit}` : `[LAUNCH${familyLabel}] ${commodity} Available â€” ${quantity} ${unit}`,
+    wholesaler:  action === 'ALTRUISTIC' ? `[WHOLESALE${familyLabel}] ${commodity} Surplus â€” ${quantity} ${unit}` : `[WHOLESALE${familyLabel}] ${commodity} â€” ${quantity} ${unit}`,
+    chain_store: action === 'ALTRUISTIC' ? `[ESG ALERT${familyLabel}] ${commodity} Surplus â€” Waste Prevention` : `[CHAIN PROCUREMENT${familyLabel}] ${commodity} â€” ${quantity} ${unit}`,
+    distributor: action === 'ALTRUISTIC' ? `[DISTRIBUTION${familyLabel}] ${commodity} Surplus â€” ${quantity} ${unit}` : `[DISTRIBUTION${familyLabel}] ${commodity} Available`,
+    retailer:    action === 'ALTRUISTIC' ? `[RETAIL${familyLabel}] ${commodity} Surplus` : `[RETAIL${familyLabel}] ${commodity} â€” ${quantity} ${unit}`,
+    packer:      `[PACKING${familyLabel}] ${commodity} â€” ${quantity} ${unit} â€” Capacity Needed`,
+    shipper:     `[FREIGHT${familyLabel}] ${commodity} â€” ${quantity} ${unit} â€” Ready to Move`,
   };
   return typeLabels[type] || typeLabels.buyer;
 }
@@ -282,11 +282,11 @@ function buildEmail(contact, type, action, data, family) {
   const familyLine = family ? `<div style="font-size:10px;color:#64748b;letter-spacing:1px;margin-top:2px;">Commodity Group: ${family}</div>` : '';
 
   const introByType = {
-    buyer:       action==='ALTRUISTIC' ? `A grower in the MexaUSA network has <strong>${quantity} ${unit} of ${commodity}</strong> surplus — offered to buyers who may have a shortfall or weather gap.` : `A verified grower has <strong>${quantity} ${unit} of ${commodity}</strong> available on the open market.`,
+    buyer:       action==='ALTRUISTIC' ? `A grower in the MexaUSA network has <strong>${quantity} ${unit} of ${commodity}</strong> surplus â€” offered to buyers who may have a shortfall or weather gap.` : `A verified grower has <strong>${quantity} ${unit} of ${commodity}</strong> available on the open market.`,
     wholesaler:  action==='ALTRUISTIC' ? `Wholesale opportunity: <strong>${quantity} ${unit} of ${commodity}</strong> surplus available at favorable terms to move quickly.` : `<strong>${quantity} ${unit} of ${commodity}</strong> is available for wholesale through the MexaUSA network.`,
     chain_store: action==='ALTRUISTIC' ? `ESG opportunity: <strong>${quantity} ${unit} of ${commodity}</strong> surplus available. Purchasing this prevents food waste and qualifies for your sustainability reporting metrics.` : `<strong>${quantity} ${unit} of ${commodity}</strong> is available for chain procurement through the MexaUSA Food Group network.`,
     distributor: action==='ALTRUISTIC' ? `Distribution needed: <strong>${quantity} ${unit} of ${commodity}</strong> surplus requires a distribution partner.` : `<strong>${quantity} ${unit} of ${commodity}</strong> is available for distribution.`,
-    retailer:    action==='ALTRUISTIC' ? `Fresh produce available: <strong>${quantity} ${unit} of ${commodity}</strong> surplus from a verified MexaUSA grower.` : `<strong>${quantity} ${unit} of ${commodity}</strong> available for retail — direct from grower.`,
+    retailer:    action==='ALTRUISTIC' ? `Fresh produce available: <strong>${quantity} ${unit} of ${commodity}</strong> surplus from a verified MexaUSA grower.` : `<strong>${quantity} ${unit} of ${commodity}</strong> available for retail â€” direct from grower.`,
     packer:      `Packing capacity needed: <strong>${quantity} ${unit} of ${commodity}</strong> in field and ready for harvest. If you have capacity, we want to connect you with the grower.`,
     shipper:     `Freight opportunity: <strong>${quantity} ${unit} of ${commodity}</strong> is ready to move from the US-Mexico corridor. Origin: ${origin}.`,
   };
@@ -331,13 +331,13 @@ function buildEmail(contact, type, action, data, family) {
     <a href="mailto:saul@mexausafg.com" style="color:${cfg.accent};">saul@mexausafg.com</a> &nbsp;|&nbsp; <a href="https://mexausafg.com" style="color:${cfg.accent};">mexausafg.com</a></p>
 </td></tr>
 <tr><td style="background:#0F1419;padding:8px 22px;text-align:center;">
-  <div style="font-size:8px;color:#334155;letter-spacing:1px;">MexaUSA Food Group, Inc. · AuditDNA Agriculture Intelligence · LOAF Autonomous System</div>
+  <div style="font-size:8px;color:#334155;letter-spacing:1px;">MexaUSA Food Group, Inc. Â· AuditDNA Agriculture Intelligence Â· LOAF Autonomous System</div>
   <div style="font-size:8px;color:#1e293b;margin-top:2px;">Reducing food waste in the US-Mexico corridor. Trust. Transparency. Intelligence.</div>
 </td></tr>
 </table></td></tr></table></body></html>`;
 }
 
-// ── LOG OUTREACH ──────────────────────────────────────────────────────────────
+// â”€â”€ LOG OUTREACH â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 async function logOutreach(db, action, commodity, email, type, submissionId, status) {
   try {
     await db.query(
@@ -347,12 +347,12 @@ async function logOutreach(db, action, commodity, email, type, submissionId, sta
   } catch(e){}
 }
 
-// ── MAIN INTELLIGENCE FUNCTION ────────────────────────────────────────────────
+// â”€â”€ MAIN INTELLIGENCE FUNCTION â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 async function runLOAFIntelligence(db, action, submissionId, data) {
   const { commodity, quantity, unit, user } = data;
   if (!commodity) return { sent:0, chainStores:0, total:0 };
 
-  console.log(`[LOAF-INTEL] ${action} — "${commodity}" ${quantity} ${unit}`);
+  console.log(`[LOAF-INTEL] ${action} â€” "${commodity}" ${quantity} ${unit}`);
 
   const { segments, family, total } = await fetchAllMatchedContacts(db, commodity, quantity, unit, user?.region);
 
@@ -410,7 +410,7 @@ async function runLOAFIntelligence(db, action, submissionId, data) {
   }
 
   const totalSent = Object.values(results).reduce((s,n)=>s+n,0);
-  console.log(`[LOAF-INTEL] ${action} "${commodity}" (${family}) — ${totalSent} total sent`);
+  console.log(`[LOAF-INTEL] ${action} "${commodity}" (${family}) â€” ${totalSent} total sent`);
 
   return {
     sent:         results.buyers||0,

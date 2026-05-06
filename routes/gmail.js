@@ -13,7 +13,7 @@ const BREVO_API_KEY = process.env.BREVO_API_KEY;
 async function sendViaBrevo(to, toName, subject, html, fromEmail, fromName) {
   if (!BREVO_API_KEY) throw new Error('BREVO_API_KEY env var not set on Railway');
   const payload = {
-    sender: { email: fromEmail || 'sgarcia1911@gmail.com', name: fromName || 'Saul Garcia - Mexausa Food Group' },
+    sender: { email: fromEmail || 'saul@mexausafg.com', name: fromName || 'Saul Garcia - Mexausa Food Group' },
     to: [{ email: to, name: toName || to }],
     subject: subject,
     htmlContent: html
@@ -38,7 +38,7 @@ const { writeAuditRow } = require('../services/send-audit-writer');
 const { filterSuppressed } = require('../services/email-suppression-check');
 
 // ============================================================
-// SMTP CONFIG ΓÇö sends from saul@mexausafg.com directly
+// SMTP CONFIG Î“Ã‡Ã¶ sends from saul@mexausafg.com directly
 // Set these in C:\AuditDNA\backend\.env
 // ============================================================
 const SMTP_HOST     = process.env.SMTP_HOST     || 'smtp.mexausafg.com';
@@ -50,7 +50,7 @@ const FROM_NAME     = process.env.FROM_NAME     || process.env.SMTP_FROM_NAME ||
 const FROM_ADDRESS  = process.env.FROM_ADDRESS  || process.env.SMTP_FROM     || 'Saul@mexausafg.com';
 const FROM_HEADER   = `${FROM_NAME} <${FROM_ADDRESS}>`;
 
-// Build nodemailer transporter ΓÇö reused for all sends
+// Build nodemailer transporter Î“Ã‡Ã¶ reused for all sends
 function createTransport() {
   return nodemailer.createTransport({
     host:   SMTP_HOST,
@@ -74,13 +74,13 @@ function createTransport() {
     return;
   }
   if (!SMTP_PASS) {
-    console.warn('[SMTP] WARNING: SMTP_PASS not set in .env ΓÇö email sending will fail');
+    console.warn('[SMTP] WARNING: SMTP_PASS not set in .env Î“Ã‡Ã¶ email sending will fail');
     return;
   }
   try {
     const t = createTransport();
     await t.verify();
-    console.log(`[SMTP] Connected ΓÇö sending as ${FROM_HEADER}`);
+    console.log(`[SMTP] Connected Î“Ã‡Ã¶ sending as ${FROM_HEADER}`);
   } catch (err) {
     console.error(`[SMTP] Connection failed: ${err.message}`);
     console.error(`[SMTP] Check SMTP_HOST/SMTP_PORT/SMTP_USER/SMTP_PASS in .env`);
@@ -88,7 +88,7 @@ function createTransport() {
 })();
 
 // ============================================================
-// OAUTH2 ΓÇö used ONLY for contacts, labels, reading messages
+// OAUTH2 Î“Ã‡Ã¶ used ONLY for contacts, labels, reading messages
 // ============================================================
 const CLIENT_ID     = process.env.GOOGLE_CLIENT_ID || '694423905775-v24ckb7b7gr5qj8kh78m0svmisi3a4i9.apps.googleusercontent.com';
 const CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET || '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';
@@ -116,7 +116,7 @@ const SCOPES = [
   'https://www.googleapis.com/auth/contacts.other.readonly',
   'https://www.googleapis.com/auth/userinfo.email',
   'https://www.googleapis.com/auth/userinfo.profile',
-  // NOTE: gmail.send scope removed ΓÇö we send via SMTP, not Gmail API
+  // NOTE: gmail.send scope removed Î“Ã‡Ã¶ we send via SMTP, not Gmail API
 ];
 
 // ============================================================
@@ -322,7 +322,7 @@ router.post('/refresh', async (req, res) => {
   const ok = await ensureFreshTokens();
   ok
     ? res.json({ success: true, expiresAt: new Date(storedTokens.expiry_date).toISOString() })
-    : res.status(401).json({ error: 'Refresh failed ΓÇö re-authenticate at /api/gmail/auth' });
+    : res.status(401).json({ error: 'Refresh failed Î“Ã‡Ã¶ re-authenticate at /api/gmail/auth' });
 });
 
 // ============================================================
@@ -349,7 +349,7 @@ router.get('/callback', async (req, res) => {
     await saveAuth(tokens, data);
     console.log(`[Gmail] OAuth connected: ${data.email}`);
 
-    // AUTO-SYNC ALL CONTACTS IMMEDIATELY ΓÇö no extra steps needed
+    // AUTO-SYNC ALL CONTACTS IMMEDIATELY Î“Ã‡Ã¶ no extra steps needed
     res.send(`
       <html><body style="background:#0f172a;color:#fff;font-family:sans-serif;display:flex;align-items:center;justify-content:center;height:100vh;margin:0;">
         <div style="text-align:center;max-width:500px;">
@@ -369,7 +369,7 @@ router.get('/callback', async (req, res) => {
                 setTimeout(()=>{ try{window.close();}catch(e){} }, 3000);
               })
               .catch(e=>{
-                document.getElementById('status').textContent = 'Sync failed ΓÇö try again';
+                document.getElementById('status').textContent = 'Sync failed Î“Ã‡Ã¶ try again';
                 document.getElementById('msg').textContent = e.message;
               });
           </script>
@@ -382,17 +382,17 @@ router.get('/callback', async (req, res) => {
 });
 
 // ============================================================
-// SMTP SEND HELPER ΓÇö builds and sends via nodemailer
+// SMTP SEND HELPER Î“Ã‡Ã¶ builds and sends via nodemailer
 // Supports: to, cc, bcc, subject, html body, attachments
 // ============================================================
 // ============================================================
-// GMAIL API SEND (OAuth) — bypasses SMTP, works on Railway
+// GMAIL API SEND (OAuth) â€” bypasses SMTP, works on Railway
 // Uses the same oauth2Client + storedTokens already used for /messages
 // ============================================================
 async function gmailApiSend({ to, cc, bcc, subject, html, text, attachments = [] }) {
   const tokenOk = await ensureFreshTokens();
   if (!tokenOk || !storedTokens) {
-    throw new Error('Gmail OAuth not authenticated — visit /api/gmail/auth');
+    throw new Error('Gmail OAuth not authenticated â€” visit /api/gmail/auth');
   }
   oauth2Client.setCredentials(storedTokens);
   const gmail = google.gmail({ version: 'v1', auth: oauth2Client });
@@ -483,7 +483,7 @@ router.post('/send', async (req, res) => {
       return res.status(400).json({ error: 'Missing required fields: to, subject, body/html' });
     }
     if (!SMTP_PASS) {
-      return res.status(500).json({ error: 'SMTP_PASS not configured in .env ΓÇö see setup instructions' });
+      return res.status(500).json({ error: 'SMTP_PASS not configured in .env Î“Ã‡Ã¶ see setup instructions' });
     }
 
     let info;
@@ -569,7 +569,7 @@ router.post('/send-bulk', async (req, res) => {
           // BREVO_FALLBACK_CHAIN_v1 - Gmail API failed, try Brevo HTTP API before SMTP
           console.warn(`[GMAIL-API] Bulk failed for ${email}, falling back to BREVO: ${apiErr.message}`);
           try {
-            info = await sendViaBrevo(email, name, subject, personalizedHtml || personalizedText, 'sgarcia1911@gmail.com', 'Saul Garcia - Mexausa Food Group');
+            info = await sendViaBrevo(email, name, subject, personalizedHtml || personalizedText, 'saul@mexausafg.com', 'Saul Garcia - Mexausa Food Group');
             console.log(`[BREVO] Bulk sent -> ${email} | MsgID: ${info.messageId}`);
           } catch (brevoErr) {
             console.warn(`[BREVO] Failed for ${email}, falling back to SMTP: ${brevoErr.message}`);
@@ -582,7 +582,7 @@ router.post('/send-bulk', async (req, res) => {
         results.push({ email, success: true, messageId: info.messageId });
         // SEND AUDIT - log every successful send to email_activity_log (non-blocking)
         writeAuditRow({
-          senderEmail: req.body.senderEmail || (req.user && req.user.email) || 'sgarcia1911@gmail.com',
+          senderEmail: req.body.senderEmail || (req.user && req.user.email) || 'saul@mexausafg.com',
           recipientEmail: email,
           recipientName: name,
           subject,
@@ -614,7 +614,7 @@ router.post('/send-bulk', async (req, res) => {
 });
 
 // ============================================================
-// GET /api/gmail/messages  (OAuth read ΓÇö unchanged)
+// GET /api/gmail/messages  (OAuth read Î“Ã‡Ã¶ unchanged)
 // ============================================================
 router.get('/messages', async (req, res) => {
   const tokenOk = await ensureFreshTokens();
@@ -641,7 +641,7 @@ router.get('/messages', async (req, res) => {
 });
 
 // ============================================================
-// GET /api/gmail/contacts  (OAuth ΓÇö full sync, unchanged)
+// GET /api/gmail/contacts  (OAuth Î“Ã‡Ã¶ full sync, unchanged)
 // ============================================================
 let cachedContacts  = null;
 let cacheTimestamp  = 0;
@@ -650,9 +650,9 @@ const CACHE_TTL     = 5 * 60 * 1000;
 router.get('/contacts', async (req, res) => {
   const tokenOk = await ensureFreshTokens();
   if (!tokenOk || !storedTokens) {
-    // Return cached contacts if available ΓÇö no auth dance needed
+    // Return cached contacts if available Î“Ã‡Ã¶ no auth dance needed
     if (cachedContacts && cachedContacts.length > 0) {
-      return res.json({ contacts: cachedContacts, total: cachedContacts.length, cached: true, warning: 'Using cached contacts ΓÇö Gmail re-auth needed to refresh' });
+      return res.json({ contacts: cachedContacts, total: cachedContacts.length, cached: true, warning: 'Using cached contacts Î“Ã‡Ã¶ Gmail re-auth needed to refresh' });
     }
     // Load from PostgreSQL as fallback
     try {
@@ -768,13 +768,13 @@ router.post('/calendar-event', async (req, res) => {
 });
 
 // ============================================================
-// POST /api/gmail/smtp-test ΓÇö verify SMTP creds on demand
+// POST /api/gmail/smtp-test Î“Ã‡Ã¶ verify SMTP creds on demand
 // ============================================================
 router.post('/smtp-test', async (req, res) => {
   try {
     const t = createTransport();
     await t.verify();
-    res.json({ success: true, message: `SMTP verified ΓÇö sending as ${FROM_HEADER}`, host: SMTP_HOST, port: SMTP_PORT });
+    res.json({ success: true, message: `SMTP verified Î“Ã‡Ã¶ sending as ${FROM_HEADER}`, host: SMTP_HOST, port: SMTP_PORT });
   } catch (err) {
     res.status(500).json({ success: false, error: err.message, hint: 'Check SMTP_HOST/SMTP_PORT/SMTP_USER/SMTP_PASS in .env' });
   }

@@ -28,7 +28,7 @@ function getMailer() {
     port: parseInt(process.env.SMTP_PORT || '465', 10),
     secure: true,
     auth: {
-      user: process.env.SMTP_USER || 'sgarcia1911@gmail.com',
+      user: process.env.SMTP_USER || 'saul@mexausafg.com',
       pass: process.env.SMTP_PASS
     }
   });
@@ -275,11 +275,11 @@ async function executeOutreach({ pool, deal_id, partner_id, draft, dryRun = fals
   }
 
   const mailer = getMailer();
-  const fromAddr = '"AuditDNA Factoring Desk" <' + (process.env.SMTP_USER || 'sgarcia1911@gmail.com') + '>';
+  const fromAddr = '"AuditDNA Factoring Desk" <' + (process.env.SMTP_USER || 'saul@mexausafg.com') + '>';
   const sendResult = await mailer.sendMail({
     from: fromAddr,
     to: partner.email,
-    bcc: 'sgarcia1911@gmail.com',
+    bcc: 'saul@mexausafg.com',
     replyTo: 'factoring@mexausafg.com',
     subject: draft.subject,
     text: draft.body_text,

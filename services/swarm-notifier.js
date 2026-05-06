@@ -24,7 +24,7 @@ console.log('[notifier] module loaded - SMTP_PASS len at load:', (process.env.SM
 // ----------------------------------------------------------------------------
 function buildMailer() {
   const pass = env('SMTP_PASS');
-  const user = env('SMTP_USER', 'sgarcia1911@gmail.com');
+  const user = env('SMTP_USER', 'saul@mexausafg.com');
   if (!pass) {
     console.error('[notifier] buildMailer: SMTP_PASS is empty - cannot build transporter');
     return null;
@@ -148,7 +148,7 @@ async function sendToEmail({ agent, severity, summary, context }) {
     lines.push(JSON.stringify(context, null, 2));
   }
   const text = lines.join('\n');
-  const to = env('ALERT_EMAIL', 'sgarcia1911@gmail.com');
+  const to = env('ALERT_EMAIL', 'saul@mexausafg.com');
 
   // Path 1: Gmail API via routes/gmail.js (HTTPS port 443 - works on Railway)
   try {
@@ -179,7 +179,7 @@ async function sendToEmail({ agent, severity, summary, context }) {
 
   try {
     const info = await m.sendMail({
-      from: 'Saul Garcia | Mexausa Food Group <sgarcia1911@gmail.com>',
+      from: 'Saul Garcia | Mexausa Food Group <saul@mexausafg.com>',
       to,
       subject,
       text: text

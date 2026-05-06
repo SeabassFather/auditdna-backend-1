@@ -1,4 +1,4 @@
-﻿// loaf-routes.js â€” FULL REBUILD â€” Save to: C:\AuditDNA\backend\routes\loaf-routes.js
+// loaf-routes.js â€” FULL REBUILD â€” Save to: C:\AuditDNA\backend\routes\loaf-routes.js
 const express  = require('express');
 const router   = express.Router();
 const nodemailer = require('nodemailer');
@@ -12,8 +12,8 @@ catch (e) { console.warn('[loaf-routes] data engine not found:', e.message); dat
 
 const getDb = () => pool || require('../db');
 const getTransport = () => nodemailer.createTransport({ host: process.env.SMTP_HOST||'smtp.gmail.com', port: parseInt(process.env.SMTP_PORT||'587'), secure:false, auth:{ user:process.env.SMTP_USER, pass:process.env.SMTP_PASS } });
-const FROM = `"MexaUSA Food Group â€” LOAF" <${process.env.SMTP_USER||'sgarcia1911@gmail.com'}>`;
-const ADMIN_EMAILS = ['saul@mexausafg.com','sgarcia1911@gmail.com','palt@mfginc.com'];
+const FROM = `"MexaUSA Food Group â€” LOAF" <${process.env.SMTP_USER||'saul@mexausafg.com'}>`;
+const ADMIN_EMAILS = ['saul@mexausafg.com','saul@mexausafg.com','palt@mfginc.com'];
 
 async function notifyAdmins(action, data, intel) {
   const { commodity, quantity, unit, user, gps } = data;

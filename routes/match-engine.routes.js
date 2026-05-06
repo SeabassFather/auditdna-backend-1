@@ -12,7 +12,7 @@ const blindMatcher = matcher;
 
 router.use(express.json({ limit: '256kb' }));
 
-// ─── COMMODITY CATALOG ───────────────────────────────────────────────────
+// â”€â”€â”€ COMMODITY CATALOG â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 router.get('/commodities', async (req, res) => {
   try {
     const r = await pool.query(
@@ -23,7 +23,7 @@ router.get('/commodities', async (req, res) => {
   } catch (e) { res.status(500).json({ ok: false, error: e.message }); }
 });
 
-// ─── COMMISSION TABLE ────────────────────────────────────────────────────
+// â”€â”€â”€ COMMISSION TABLE â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 router.get('/commissions', async (req, res) => {
   try {
     const r = await pool.query(
@@ -51,7 +51,7 @@ router.get('/commissions/:slug', async (req, res) => {
   } catch (e) { res.status(500).json({ ok: false, error: e.message }); }
 });
 
-// ─── GROWER UPLOAD INVENTORY ─────────────────────────────────────────────
+// â”€â”€â”€ GROWER UPLOAD INVENTORY â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 router.post('/grower/inventory', async (req, res) => {
   try {
     const b = req.body || {};
@@ -87,7 +87,7 @@ router.post('/grower/inventory', async (req, res) => {
   }
 });
 
-// ─── BUYER POST NEED ─────────────────────────────────────────────────────
+// â”€â”€â”€ BUYER POST NEED â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 router.post('/buyer/need', async (req, res) => {
   try {
     const b = req.body || {};
@@ -119,7 +119,7 @@ router.post('/buyer/need', async (req, res) => {
   }
 });
 
-// ─── DAILY BLAST TRIGGER (manual + cron) ────────────────────────────────
+// â”€â”€â”€ DAILY BLAST TRIGGER (manual + cron) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 router.post('/blast/daily', async (req, res) => {
   try {
     const result = await matcher.dailyBuyerBlast();
@@ -130,7 +130,7 @@ router.post('/blast/daily', async (req, res) => {
   }
 });
 
-// ─── NOTIFICATION LOG ────────────────────────────────────────────────────
+// â”€â”€â”€ NOTIFICATION LOG â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 router.get('/notifications', async (req, res) => {
   try {
     const limit = Math.min(parseInt(req.query.limit) || 50, 500);
@@ -158,7 +158,7 @@ router.get('/blast/log', async (req, res) => {
   } catch (e) { res.status(500).json({ ok: false, error: e.message }); }
 });
 
-// ─── BUYER INTEREST MGMT ─────────────────────────────────────────────────
+// â”€â”€â”€ BUYER INTEREST MGMT â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 router.post('/buyer/interest', async (req, res) => {
   try {
     const b = req.body || {};
@@ -193,7 +193,7 @@ router.get('/buyer/:email/interests', async (req, res) => {
 });
 
 
-// ─── DEBUG: Synchronous blast test - returns full error stack if it fails ──
+// â”€â”€â”€ DEBUG: Synchronous blast test - returns full error stack if it fails â”€â”€
 router.get('/debug/inv-blast/:id', async (req, res) => {
   try {
     console.log('[debug] inv-blast start id=' + req.params.id);
@@ -239,10 +239,10 @@ router.get('/debug/buyers/:slug', async (req, res) => {
 });
 
 
-// ─── DEBUG: Single-email send with 30s hard timeout - returns actual error ──
+// â”€â”€â”€ DEBUG: Single-email send with 30s hard timeout - returns actual error â”€â”€
 router.get('/debug/test-send', async (req, res) => {
   const nodemailer = require('nodemailer');
-  const SMTP_USER = process.env.SMTP_USER || 'sgarcia1911@gmail.com';
+  const SMTP_USER = process.env.SMTP_USER || 'saul@mexausafg.com';
   const SMTP_PASS = process.env.SMTP_PASS || '';
   const start = Date.now();
 
@@ -271,8 +271,8 @@ router.get('/debug/test-send', async (req, res) => {
 
     const sendResult = await Promise.race([
       transport.sendMail({
-        from: '"Mexausa Food Group" <sgarcia1911@gmail.com>',
-        to: 'sgarcia1911@gmail.com',
+        from: '"Mexausa Food Group" <saul@mexausafg.com>',
+        to: 'saul@mexausafg.com',
         subject: 'BLIND MATCHER SMTP TEST - ' + new Date().toISOString(),
         text: 'Single-shot SMTP test from /api/match/debug/test-send. If you see this in your inbox, the blind matcher SMTP path is working and the issue is throughput, not auth.'
       }),
@@ -300,8 +300,8 @@ router.get('/debug/brevo-fire', async (req, res) => {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'api-key': KEY, 'accept': 'application/json' },
       body: JSON.stringify({
-        sender: { name: 'Mexausa Food Group', email: 'sgarcia1911@gmail.com' },
-        to: [{ email: 'sgarcia1911@gmail.com' }],
+        sender: { name: 'Mexausa Food Group', email: 'saul@mexausafg.com' },
+        to: [{ email: 'saul@mexausafg.com' }],
         subject: 'BREVO DIRECT TEST - ' + new Date().toISOString(),
         htmlContent: '<h2>Brevo HTTP API path is working</h2><p>If you see this in your inbox, the blind matcher Brevo wire is live and the 31K blast can fire.</p>',
         textContent: 'Brevo HTTP API working. Blast can fire.'

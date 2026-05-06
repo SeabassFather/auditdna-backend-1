@@ -1,18 +1,18 @@
 // ============================================================================
-// brain-commerce.js — Brain Commerce Intelligence Engine
-// MexaUSA Food Group, Inc. — AuditDNA Agriculture
+// brain-commerce.js â€” Brain Commerce Intelligence Engine
+// MexaUSA Food Group, Inc. â€” AuditDNA Agriculture
 // Save to: C:\AuditDNA\backend\routes\brain-commerce.js
 //
 // WHAT THIS DOES:
-//   1. Demand-Match: Buyer needs lettuce → Brain finds lettuce growers in CRM
-//      → fires autonomous emails to matched growers → returns deal economics
-//   2. Price Table: Commodity + quantity → predictive FOB/wholesale/margin table
+//   1. Demand-Match: Buyer needs lettuce â†’ Brain finds lettuce growers in CRM
+//      â†’ fires autonomous emails to matched growers â†’ returns deal economics
+//   2. Price Table: Commodity + quantity â†’ predictive FOB/wholesale/margin table
 //   3. Deal Monitor: Logs all demand signals for USDA data resale
 //
 // ENDPOINTS:
-//   POST /api/brain/commerce/demand-match  — buyer need → grower alert + economics
-//   POST /api/brain/commerce/price-table   — commodity → margin/profit table
-//   GET  /api/brain/commerce/signals       — recent demand signals (JWT required)
+//   POST /api/brain/commerce/demand-match  â€” buyer need â†’ grower alert + economics
+//   POST /api/brain/commerce/price-table   â€” commodity â†’ margin/profit table
+//   GET  /api/brain/commerce/signals       â€” recent demand signals (JWT required)
 // ============================================================================
 
 const express   = require('express');
@@ -30,14 +30,14 @@ const getTransport = () => nodemailer.createTransport({
   auth: { user: process.env.SMTP_USER, pass: process.env.SMTP_PASS },
 });
 
-const FROM = `"MexaUSA Food Group — Brain Intelligence" <${process.env.SMTP_USER || 'sgarcia1911@gmail.com'}>`;
+const FROM = `"MexaUSA Food Group â€” Brain Intelligence" <${process.env.SMTP_USER || 'saul@mexausafg.com'}>`;
 
 const ADMIN = [
-  process.env.SMTP_USER || 'sgarcia1911@gmail.com',
+  process.env.SMTP_USER || 'saul@mexausafg.com',
   'saul@mexausafg.com',
 ];
 
-// ── COMMODITY ALIASES (match growers to buyer commodity terms) ─────────────
+// â”€â”€ COMMODITY ALIASES (match growers to buyer commodity terms) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 const COMMODITY_MAP = {
   'lettuce':    ['lettuce','lechuga','romaine','iceberg','butter lettuce','mixed greens','leafy','greens'],
   'spinach':    ['spinach','espinaca','baby spinach'],
@@ -50,7 +50,7 @@ const COMMODITY_MAP = {
   'broccoli':   ['broccoli','brocoli','broccolini'],
   'cauliflower':['cauliflower','coliflor'],
   'cabbage':    ['cabbage','col','repollo'],
-  'jalapeño':   ['jalapeño','jalapeno','chile','pepper','chili'],
+  'jalapeÃ±o':   ['jalapeÃ±o','jalapeno','chile','pepper','chili'],
   'cucumber':   ['cucumber','pepino'],
   'zucchini':   ['zucchini','calabacita','squash'],
   'lime':       ['lime','limon','persian lime','lemon'],
@@ -72,7 +72,7 @@ function getCommodityTerms(commodity) {
   return [lower, lower + 's'];
 }
 
-// ── FIND MATCHED GROWERS ───────────────────────────────────────────────────
+// â”€â”€ FIND MATCHED GROWERS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 async function findMatchedGrowers(db, commodity, region) {
   const terms = getCommodityTerms(commodity);
   const conditions = terms.map((_, i) => `(
@@ -124,7 +124,7 @@ async function findMatchedGrowers(db, commodity, region) {
   return growers;
 }
 
-// ── GROWER ALERT EMAIL ─────────────────────────────────────────────────────
+// â”€â”€ GROWER ALERT EMAIL â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function buildGrowerAlertEmail(grower, data) {
   const {
     commodity, quantity, unit, deliveryWindow, urgency, buyerRegion,
@@ -142,11 +142,11 @@ function buildGrowerAlertEmail(grower, data) {
 <tr><td style="background:#0F1419;padding:0;">
   <table width="100%" cellpadding="0" cellspacing="0">
     <tr><td style="padding:16px 22px 12px;">
-      <div style="font-size:9px;letter-spacing:4px;color:#475569;text-transform:uppercase;">MexaUSA Food Group — Brain Intelligence</div>
+      <div style="font-size:9px;letter-spacing:4px;color:#475569;text-transform:uppercase;">MexaUSA Food Group â€” Brain Intelligence</div>
       <div style="font-size:16px;font-weight:700;color:#ffffff;letter-spacing:3px;margin-top:3px;">BUYER DEMAND ALERT</div>
     </td></tr>
     <tr><td style="background:${urgencyColor};padding:7px 22px;">
-      <div style="font-size:9px;font-weight:700;color:#ffffff;letter-spacing:3px;text-transform:uppercase;">${urgency || 'STANDARD'} DEMAND — ${commodity.toUpperCase()}</div>
+      <div style="font-size:9px;font-weight:700;color:#ffffff;letter-spacing:3px;text-transform:uppercase;">${urgency || 'STANDARD'} DEMAND â€” ${commodity.toUpperCase()}</div>
     </td></tr>
   </table>
 </td></tr>
@@ -177,22 +177,22 @@ function buildGrowerAlertEmail(grower, data) {
   </p>
 </td></tr>
 <tr><td style="background:#0F1419;padding:9px 22px;text-align:center;">
-  <div style="font-size:8px;color:#334155;letter-spacing:1px;">MexaUSA Food Group, Inc. · AuditDNA Agriculture Intelligence · Brain Commerce Engine</div>
+  <div style="font-size:8px;color:#334155;letter-spacing:1px;">MexaUSA Food Group, Inc. Â· AuditDNA Agriculture Intelligence Â· Brain Commerce Engine</div>
 </td></tr>
 </table></td></tr></table>
 </body></html>`;
 }
 
-// ── PREDICTIVE PRICING ENGINE ──────────────────────────────────────────────
+// â”€â”€ PREDICTIVE PRICING ENGINE â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 async function generatePriceTable(commodity, quantity, unit) {
   const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
-  const prompt = `You are a produce market analyst and pricing expert for MexaUSA Food Group, Inc. — a US-Mexico corridor wholesale importer.
+  const prompt = `You are a produce market analyst and pricing expert for MexaUSA Food Group, Inc. â€” a US-Mexico corridor wholesale importer.
 
 Commodity: ${commodity}
 Requested quantity: ${quantity} ${unit || 'cases'}
 Date: ${new Date().toLocaleDateString('en-US', { weekday:'long', year:'numeric', month:'long', day:'numeric' })}
-Corridor: US-Mexico (Baja California, Michoacan, Sinaloa → California, Arizona, Texas)
+Corridor: US-Mexico (Baja California, Michoacan, Sinaloa â†’ California, Arizona, Texas)
 
 Generate a comprehensive pricing and margin analysis table. Return ONLY valid JSON (no markdown, no explanation):
 
@@ -259,7 +259,7 @@ Generate a comprehensive pricing and margin analysis table. Return ONLY valid JS
   }
 }
 
-// ── LOG DEMAND SIGNAL ─────────────────────────────────────────────────────
+// â”€â”€ LOG DEMAND SIGNAL â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 async function logDemandSignal(db, data, growerCount, priceTable) {
   try {
     await db.query(`
@@ -307,7 +307,7 @@ async function logDemandSignal(db, data, growerCount, priceTable) {
   }
 }
 
-// ── ENDPOINT: DEMAND MATCH ─────────────────────────────────────────────────
+// â”€â”€ ENDPOINT: DEMAND MATCH â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 router.post('/demand-match', async (req, res) => {
   const {
     commodity, quantity, unit, deliveryWindow, urgency,
@@ -319,7 +319,7 @@ router.post('/demand-match', async (req, res) => {
     return res.status(400).json({ success: false, error: 'commodity required' });
   }
 
-  console.log(`[BRAIN-COMMERCE] DEMAND MATCH: ${commodity} — ${quantity} ${unit} — ${urgency || 'STANDARD'}`);
+  console.log(`[BRAIN-COMMERCE] DEMAND MATCH: ${commodity} â€” ${quantity} ${unit} â€” ${urgency || 'STANDARD'}`);
 
   const db = getDb();
 
@@ -350,7 +350,7 @@ router.post('/demand-match', async (req, res) => {
           await transport.sendMail({
             from: FROM,
             to: email,
-            subject: `[BRAIN DEMAND ALERT] ${commodity} — ${quantity} ${unit || 'loads'} needed — ${deliveryWindow || 'ASAP'}`,
+            subject: `[BRAIN DEMAND ALERT] ${commodity} â€” ${quantity} ${unit || 'loads'} needed â€” ${deliveryWindow || 'ASAP'}`,
             html: buildGrowerAlertEmail(g, emailData),
             headers: {
               'X-Brain-Action':    'DEMAND_MATCH',
@@ -377,7 +377,7 @@ router.post('/demand-match', async (req, res) => {
     await transport.sendMail({
       from: FROM,
       to: ADMIN.join(','),
-      subject: `[BRAIN COMMERCE] ${commodity} demand matched — ${emailsSent} growers alerted`,
+      subject: `[BRAIN COMMERCE] ${commodity} demand matched â€” ${emailsSent} growers alerted`,
       text: [
         `Commodity: ${commodity}`,
         `Quantity: ${quantity} ${unit}`,
@@ -398,7 +398,7 @@ router.post('/demand-match', async (req, res) => {
   // 6. Log demand signal
   await logDemandSignal(db, req.body, emailsSent, priceTable);
 
-  console.log(`[BRAIN-COMMERCE] COMPLETE — ${emailsSent}/${growers.length} growers alerted`);
+  console.log(`[BRAIN-COMMERCE] COMPLETE â€” ${emailsSent}/${growers.length} growers alerted`);
 
   res.json({
     success: true,
@@ -416,7 +416,7 @@ router.post('/demand-match', async (req, res) => {
   });
 });
 
-// ── ENDPOINT: PRICE TABLE ONLY ─────────────────────────────────────────────
+// â”€â”€ ENDPOINT: PRICE TABLE ONLY â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 router.post('/price-table', async (req, res) => {
   const { commodity, quantity, unit } = req.body;
   if (!commodity) return res.status(400).json({ success: false, error: 'commodity required' });
@@ -425,7 +425,7 @@ router.post('/price-table', async (req, res) => {
   res.json(result);
 });
 
-// ── ENDPOINT: DEMAND SIGNALS (protected) ──────────────────────────────────
+// â”€â”€ ENDPOINT: DEMAND SIGNALS (protected) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 const jwt = require('jsonwebtoken');
 function requireAuth(req, res, next) {
   const token = req.headers.authorization?.replace('Bearer ', '');

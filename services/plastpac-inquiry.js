@@ -21,7 +21,7 @@ try { notifier = require('./swarm-notifier.js'); } catch (e) { /* notifier optio
 
 const SMTP_HOST = process.env.SMTP_HOST || 'smtp.gmail.com';
 const SMTP_PORT = parseInt(process.env.SMTP_PORT || '587', 10);
-const SMTP_USER = process.env.SMTP_USER || 'sgarcia1911@gmail.com';
+const SMTP_USER = process.env.SMTP_USER || 'saul@mexausafg.com';
 const SMTP_PASS = process.env.SMTP_PASS || '';
 const FROM_NAME = 'Mexausa Food Group';
 const FROM_ADDR = SMTP_USER;
@@ -186,7 +186,7 @@ async function fireEmails(inquiry, notifyEmails) {
 
   // 1) Sales rep + Saul
   const repMsg = emailToSalesRep(inquiry);
-  for (const to of (notifyEmails || ['h11mariscal@gmail.com', 'sgarcia1911@gmail.com'])) {
+  for (const to of (notifyEmails || ['h11mariscal@gmail.com', 'saul@mexausafg.com'])) {
     try {
       await m.sendMail({
         from: `"${FROM_NAME}" <${FROM_ADDR}>`,
@@ -195,7 +195,7 @@ async function fireEmails(inquiry, notifyEmails) {
         text: repMsg.text
       });
       if (to === 'h11mariscal@gmail.com') result.hector = true;
-      if (to === 'sgarcia1911@gmail.com') result.saul = true;
+      if (to === 'saul@mexausafg.com') result.saul = true;
     } catch (err) {
       console.error(`[plastpac] failed to send to ${to}:`, err.message);
     }
@@ -290,8 +290,8 @@ async function handleInquiry(data) {
     src === 'loaf-quick-contact' || src === 'loaf';
 
   let notifyEmails = isEcoCrateLead
-    ? ['h11mariscal@gmail.com', 'sgarcia1911@gmail.com']
-    : ['sgarcia1911@gmail.com'];
+    ? ['h11mariscal@gmail.com', 'saul@mexausafg.com']
+    : ['saul@mexausafg.com'];
 
   // Per-product override only applies to EcoCrate-style leads
   if (isEcoCrateLead) {

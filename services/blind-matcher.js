@@ -2,7 +2,7 @@
 // BLIND MATCH ENGINE
 // - Grower uploads inventory -> matches notify buyers in commodity (NO grower contact info)
 // - Buyer posts need -> matches notify growers in commodity (NO buyer contact info)
-// - All replies route through Mexausa Food Group (sgarcia1911@gmail.com) - we are the broker
+// - All replies route through Mexausa Food Group (saul@mexausafg.com) - we are the broker
 // - Daily blast goes to all USA + MX buyer categories with active program flyer
 
 'use strict';
@@ -15,7 +15,7 @@ const crypto = require('crypto');
 
 const SMTP_HOST = process.env.SMTP_HOST || 'smtp.gmail.com';
 const SMTP_PORT = parseInt(process.env.SMTP_PORT || '587', 10);
-const SMTP_USER = process.env.SMTP_USER || 'sgarcia1911@gmail.com';
+const SMTP_USER = process.env.SMTP_USER || 'saul@mexausafg.com';
 const SMTP_PASS = process.env.SMTP_PASS || '';
 const FROM_NAME = 'Mexausa Food Group';
 const FROM_ADDR = SMTP_USER;
@@ -43,9 +43,9 @@ function buildMailer() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'api-key': BREVO_API_KEY, 'accept': 'application/json' },
         body: JSON.stringify({
-          sender: { name: 'Mexausa Food Group', email: 'sgarcia1911@gmail.com' },
+          sender: { name: 'Mexausa Food Group', email: 'saul@mexausafg.com' },
           to: [{ email: msg.to }],
-          replyTo: { email: 'sgarcia1911@gmail.com', name: 'Saul Garcia' },
+          replyTo: { email: 'saul@mexausafg.com', name: 'Saul Garcia' },
           subject: msg.subject,
           htmlContent: msg.html,
           textContent: plain
@@ -65,7 +65,7 @@ function blindId() {
   return 'MFG-' + crypto.randomBytes(6).toString('hex').toUpperCase();
 }
 
-// ─── BUYER NOTIFICATION (when grower uploads inventory) ──────────────────
+// â”€â”€â”€ BUYER NOTIFICATION (when grower uploads inventory) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 async function notifyBuyersOfNewInventory(inventoryId) {
   const inv = await pool.query(
     `SELECT i.*, c.name_en AS commodity_name, c.name_es AS commodity_name_es
@@ -125,7 +125,7 @@ async function notifyBuyersOfNewInventory(inventoryId) {
   return { ok: true, commodity: item.commodity_slug, sent, failed, recipients: buyers.rows.length };
 }
 
-// ─── GROWER NOTIFICATION (when buyer posts need) ─────────────────────────
+// â”€â”€â”€ GROWER NOTIFICATION (when buyer posts need) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 async function notifyGrowersOfNewNeed(needId) {
   const nd = await pool.query(
     `SELECT n.*, c.name_en AS commodity_name
@@ -175,7 +175,7 @@ async function notifyGrowersOfNewNeed(needId) {
   return { ok: true, commodity: need.commodity_slug, sent, failed, recipients: growers.rows.length };
 }
 
-// ─── EMAIL TEMPLATES (BLIND - never expose counterparty contact) ────────
+// â”€â”€â”€ EMAIL TEMPLATES (BLIND - never expose counterparty contact) â”€â”€â”€â”€â”€â”€â”€â”€
 function buildBuyerInventoryEmail(item, blindRef) {
   const fobLine = item.fob_price ? `<tr><td>FOB Price (indicative)</td><td><b>$${Number(item.fob_price).toFixed(2)}</b></td></tr>` : '';
   const certLine = (item.certifications && item.certifications.length)
@@ -202,7 +202,7 @@ function buildBuyerInventoryEmail(item, blindRef) {
       <div style="margin-top:20px;padding:14px;border-left:4px solid #C9A55C;background:#FFF8E7">
         <div style="font-size:11px;letter-spacing:1.5px;color:#7A5C1C;font-weight:700">HOW TO RESPOND</div>
         <p style="margin:6px 0 0;font-size:14px">
-          Reply to this email or contact <b>sgarcia1911@gmail.com</b> referencing <b>${blindRef}</b>.
+          Reply to this email or contact <b>saul@mexausafg.com</b> referencing <b>${blindRef}</b>.
           Mexausa Food Group brokers the trade, handles factoring, and protects both parties through escrow-first workflow.
         </p>
       </div>
@@ -241,7 +241,7 @@ function buildGrowerNeedEmail(need, blindRef) {
       <div style="margin-top:20px;padding:14px;border-left:4px solid #C9A55C;background:#FFF8E7">
         <div style="font-size:11px;letter-spacing:1.5px;color:#7A5C1C;font-weight:700">HOW TO RESPOND</div>
         <p style="margin:6px 0 0;font-size:14px">
-          Reply to this email or contact <b>sgarcia1911@gmail.com</b> referencing <b>${blindRef}</b> with your FOB price, available volume, and shipping window.
+          Reply to this email or contact <b>saul@mexausafg.com</b> referencing <b>${blindRef}</b> with your FOB price, available volume, and shipping window.
           Mexausa Food Group brokers the trade and offers PO finance + factoring to qualifying growers.
         </p>
       </div>
@@ -257,7 +257,7 @@ function buildGrowerNeedEmail(need, blindRef) {
 </body></html>`;
 }
 
-// ─── DAILY MARKETING BLAST (LOAF + program flyer) ───────────────────────
+// â”€â”€â”€ DAILY MARKETING BLAST (LOAF + program flyer) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 async function dailyBuyerBlast() {
   const today = new Date().toISOString().slice(0, 10);
   const start = new Date();
@@ -453,7 +453,7 @@ function buildDailyBlastHtml(buyerCategory) {
     <div style="padding:24px 28px;border-top:1px solid #D4DBD3;font-size:13px;color:#0F1419">
       <p style="margin:0 0 8px"><b>Saul Garcia, Owner</b></p>
       <p style="margin:0 0 4px"><b>Mexausa Food Group, Inc.</b> &middot; Salinas, CA</p>
-      <p style="margin:0 0 4px"><a href="mailto:sgarcia1911@gmail.com" style="color:#0F7B41">sgarcia1911@gmail.com</a> &middot; +1 831-251-3116 &middot; +52 646-340-2686 (MX)</p>
+      <p style="margin:0 0 4px"><a href="mailto:saul@mexausafg.com" style="color:#0F7B41">saul@mexausafg.com</a> &middot; +1 831-251-3116 &middot; +52 646-340-2686 (MX)</p>
       <p style="margin:8px 0 0"><a href="https://loaf.mexausafg.com" style="color:#0F7B41">loaf.mexausafg.com</a> &middot; <a href="https://mexausafg.com" style="color:#0F7B41">mexausafg.com</a></p>
     </div>
 
@@ -500,7 +500,7 @@ async function fireGrowerOutreach(opts) {
     const subj = categoryLetters.buildSubject(cat, 'loaf-marketplace', 'LOAF Marketplace');
     const html = categoryLetters.buildLetter(cat, item, blind);
     try {
-      const result = await m.sendMail({ from: '"Saul Garcia" <sgarcia1911@gmail.com>', to: row.email, replyTo: 'sgarcia1911@gmail.com', subject: subj, html: html });
+      const result = await m.sendMail({ from: '"Saul Garcia" <saul@mexausafg.com>', to: row.email, replyTo: 'saul@mexausafg.com', subject: subj, html: html });
       await pool.query(
         'INSERT INTO grower_outreach_log (recipient_email, country, language, email_subject, blind_match_id, brevo_message_id) VALUES ($1, $2, $3, $4, $5, $6)',
         [row.email, row.country, cat.split('_').pop(), subj, blind, result.messageId || null]
