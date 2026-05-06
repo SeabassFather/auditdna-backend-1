@@ -1617,6 +1617,20 @@ try {
   console.warn('[WARN] Scheduler not loaded:', e.message);
 }
 
+// BOUNCE HARVEST CRON -- every 6 hours, auto-quarantine Gmail bounces
+try {
+  const cron = require('node-cron');
+  cron.schedule('0 */6 * * *', () => {
+    fetch(`http://localhost:${process.env.PORT || 5050}/api/gmail/harvest-bounces`)
+      .then(r => r.json())
+      .then(d => console.log('[bounce-cron] harvested:', d.harvested, 'quarantined'))
+      .catch(e => console.error('[bounce-cron] failed:', e.message));
+  });
+  console.log('[OK] BOUNCE HARVEST CRON: every 6 hours');
+} catch (e) {
+  console.warn('[WARN] bounce-cron not loaded:', e.message);
+}
+
 // CAMPAIGNS ENGINE + INTERNAL INBOX (Phase 1 - mounted BEFORE export so they actually load)
 try { app.use('/api/campaigns', require('./routes/campaigns-engine')); console.log('[OK] campaigns-engine mounted at /api/campaigns'); } catch(e) { console.error('[FAIL] campaigns-engine mount:', e.message); }
 try { app.use('/api/inbox', require('./routes/internal-inbox')); console.log('[OK] internal-inbox mounted at /api/inbox'); } catch(e) { console.error('[FAIL] internal-inbox mount:', e.message); }
@@ -1635,6 +1649,7 @@ module.exports.pool = pool; module.exports.app = app;
 
 // COMMODITY SEARCH ENGINE
 try { const gm = require('./routes/gmail'); app.use('/api/gmail', gm); app.set('gmailRoute', gm); console.log('[OK] gmail routes loaded'); } catch(e) { console.error('[FAIL] gmail routes:', e.message); }
+try { const bh = require('./routes/gmailBounceHarvester'); app.use('/api/gmail', bh); console.log('[OK] gmailBounceHarvester mounted at /api/gmail/harvest-bounces'); } catch(e) { console.error('[FAIL] gmailBounceHarvester:', e.message); }
 
 try { const cs = require('./routes/commodity-search'); app.use('/api/commodity', cs); console.log('[OK] commodity-search mounted at /api/commodity'); } catch(e) { console.warn('[WARN] commodity:', e.message); }
 
