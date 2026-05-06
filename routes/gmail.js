@@ -10,22 +10,19 @@ const router = express.Router();
 
 // BREVO_HTTP_FALLBACK_v1 - May 5 2026 - Gmail SMTP capped, route through Brevo
 const BREVO_API_KEY = process.env.BREVO_API_KEY;
+// JET_ENGINE_v2 - delegate to brevo-universal
+const { sendBrevo: __sendBrevoUniversal } = require('../services/brevo-universal');
 async function sendViaBrevo(to, toName, subject, html, fromEmail, fromName) {
-  if (!BREVO_API_KEY) throw new Error('BREVO_API_KEY env var not set on Railway');
-  const payload = {
-    sender: { email: fromEmail || 'saul@mexausafg.com', name: fromName || 'Saul Garcia - Mexausa Food Group' },
-    to: [{ email: to, name: toName || to }],
-    subject: subject,
-    htmlContent: html
-  };
-  const res = await fetch('https://api.brevo.com/v3/smtp/email', {
-    method: 'POST',
-    headers: { 'api-key': BREVO_API_KEY, 'Content-Type': 'application/json', 'Accept': 'application/json' },
-    body: JSON.stringify(payload)
+  const r = await __sendBrevoUniversal({
+    to, toName, subject, html,
+    fromEmail: fromEmail || 'saul@mexausafg.com',
+    fromName:  fromName  || 'Saul Garcia - Mexausa Food Group',
+    senderEmail: fromEmail || 'saul@mexausafg.com',
+    agentId: 'GMAIL_BREVO_FALLBACK',
+    skipSuppressionCheck: false
   });
-  const data = await res.json();
-  if (!res.ok) throw new Error('Brevo HTTP ' + res.status + ': ' + JSON.stringify(data));
-  return { messageId: data.messageId, brevo: true };
+  if (r.suppressed) throw new Error('Recipient is suppressed: ' + to);
+  return { messageId: r.messageId, brevo: true };
 }
 
 const { google } = require('googleapis');

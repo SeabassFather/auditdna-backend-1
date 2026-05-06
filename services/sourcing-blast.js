@@ -82,34 +82,18 @@ To stop receiving sourcing inquiries, reply with UNSUBSCRIBE.`;
   return { subject, html, text };
 }
 
+// JET_ENGINE_v2 - delegate to brevo-universal
+const { sendBrevo: __sendBrevoUniversal } = require('./brevo-universal');
 async function sendViaBrevoApi(to, name, subject, html, text) {
-  const apiKey = process.env.BREVO_API_KEY;
-  if (!apiKey) throw new Error('BREVO_API_KEY env var not set');
-
-  const body = {
-    sender: { name: FROM_NAME, email: FROM_EMAIL },
-    to: [{ email: to, name: name || to }],
-    subject: subject,
-    htmlContent: html,
-    textContent: text
-  };
-
-  const r = await fetch(BREVO_API, {
-    method: 'POST',
-    headers: {
-      'accept': 'application/json',
-      'api-key': apiKey,
-      'content-type': 'application/json'
-    },
-    body: JSON.stringify(body)
+  const r = await __sendBrevoUniversal({
+    to, toName: name, subject, html, text,
+    fromEmail: FROM_EMAIL, fromName: FROM_NAME,
+    senderEmail: FROM_EMAIL,
+    agentId: 'SOURCING_BLAST',
+    skipSuppressionCheck: false
   });
-
-  if (!r.ok) {
-    const errText = await r.text().catch(() => '<no body>');
-    throw new Error(`Brevo API ${r.status}: ${errText}`);
-  }
-  const data = await r.json().catch(() => ({}));
-  return data.messageId || 'sent';
+  if (r.suppressed) throw new Error('Recipient is suppressed: ' + to);
+  return r.messageId || 'sent';
 }
 
 async function sendSourcingBlast(pool, commodity, regionList) {

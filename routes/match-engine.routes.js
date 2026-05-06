@@ -291,25 +291,22 @@ router.get('/debug/test-send', async (req, res) => {
 
 
 router.get('/debug/brevo-fire', async (req, res) => {
+  // JET_ENGINE_v2 - delegate to brevo-universal
+  const { sendBrevo: __sendBrevoUniversal } = require('../services/brevo-universal');
   const start = Date.now();
   try {
-    const KEY = process.env.BREVO_API_KEY || '';
-    if (!KEY) return res.json({ ok: false, error: 'BREVO_API_KEY env var missing on Railway' });
-    const fetch = global.fetch || require('node-fetch');
-    const resp = await fetch('https://api.brevo.com/v3/smtp/email', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'api-key': KEY, 'accept': 'application/json' },
-      body: JSON.stringify({
-        sender: { name: 'Mexausa Food Group', email: 'saul@mexausafg.com' },
-        to: [{ email: 'saul@mexausafg.com' }],
-        subject: 'BREVO DIRECT TEST - ' + new Date().toISOString(),
-        htmlContent: '<h2>Brevo HTTP API path is working</h2><p>If you see this in your inbox, the blind matcher Brevo wire is live and the 31K blast can fire.</p>',
-        textContent: 'Brevo HTTP API working. Blast can fire.'
-      })
+    const r = await __sendBrevoUniversal({
+      to: 'saul@mexausafg.com',
+      subject: 'BREVO DIRECT TEST - ' + new Date().toISOString(),
+      html: '<h2>Brevo HTTP API path is working</h2><p>Universal helper test fired. Audit row should be in email_activity_log.</p>',
+      text: 'Brevo HTTP API via universal helper.',
+      fromEmail: 'saul@mexausafg.com', fromName: 'Mexausa Food Group',
+      senderEmail: 'saul@mexausafg.com',
+      agentId: 'DEBUG_BREVO_FIRE',
+      skipSuppressionCheck: true
     });
     const elapsed = Date.now() - start;
-    const text = await resp.text();
-    res.json({ ok: resp.ok, status: resp.status, elapsed_ms: elapsed, body: text.slice(0, 400) });
+    res.json({ ok: r.ok, messageId: r.messageId, suppressed: r.suppressed, elapsed_ms: elapsed, transport: r.transport });
   } catch (e) {
     res.status(500).json({ ok: false, elapsed_ms: Date.now() - start, error: e.message });
   }

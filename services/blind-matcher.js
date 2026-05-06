@@ -23,40 +23,31 @@ const REPLY_TO  = SMTP_USER;
 const PLATFORM  = 'https://loaf.mexausafg.com';
 
 function buildMailer() {
-  const BREVO_API_KEY = process.env.BREVO_API_KEY || '';
-  if (!BREVO_API_KEY) { console.error('[blind-matcher] BREVO_API_KEY not set'); return null; }
+  // JET_ENGINE_v2 - delegate to brevo-universal
+  const { sendBrevo: __sendBrevoUniversal } = require('./brevo-universal');
   return {
     sendMail: async (msg) => {
-      const fetch = global.fetch || require(String.fromCharCode(110,111,100,101,45,102,101,116,99,104));
       let plain = (msg.text && msg.text.trim()) || '';
       if (!plain && msg.html) {
         let h = msg.html;
-        h = h.split(/<style[^>]*>/i).map((p,i)=>i===0?p:p.replace(/^[\s\S]*?<\/style>/i,"")).join("");
-        h = h.split(/<script[^>]*>/i).map((p,i)=>i===0?p:p.replace(/^[\s\S]*?<\/script>/i,"")).join("");
-        h = h.replace(/<[^>]+>/g, " ");
-        h = h.replace(/&nbsp;/g, " ").replace(/&amp;/g, "&");
-        h = h.replace(/\s+/g, " ").trim();
+        h = h.replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '');
+        h = h.replace(/<script[^>]*>[\s\S]*?<\/script>/gi, '');
+        h = h.replace(/<[^>]+>/g, ' ');
+        h = h.replace(/&nbsp;/g, ' ').replace(/&amp;/g, '&');
+        h = h.replace(/\s+/g, ' ').trim();
         plain = h.slice(0, 5000);
       }
       if (!plain) plain = 'See HTML version of this message.';
-      const resp = await fetch('https://api.brevo.com/v3/smtp/email', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'api-key': BREVO_API_KEY, 'accept': 'application/json' },
-        body: JSON.stringify({
-          sender: { name: 'Mexausa Food Group', email: 'saul@mexausafg.com' },
-          to: [{ email: msg.to }],
-          replyTo: { email: 'saul@mexausafg.com', name: 'Saul Garcia' },
-          subject: msg.subject,
-          htmlContent: msg.html,
-          textContent: plain
-        })
+      const r = await __sendBrevoUniversal({
+        to: msg.to, subject: msg.subject, html: msg.html, text: plain,
+        fromEmail: 'saul@mexausafg.com', fromName: 'Mexausa Food Group',
+        replyTo: { email: 'saul@mexausafg.com', name: 'Saul Garcia' },
+        senderEmail: 'saul@mexausafg.com',
+        agentId: 'BLIND_MATCHER',
+        skipSuppressionCheck: false
       });
-      if (!resp.ok) {
-        const errText = await resp.text();
-        throw new Error('brevo ' + resp.status + ': ' + errText.slice(0, 200));
-      }
-      const result = await resp.json();
-      return { messageId: result.messageId || ('brevo-' + Date.now()), accepted: [msg.to], rejected: [] };
+      if (r.suppressed) return { messageId: 'suppressed-' + Date.now(), accepted: [], rejected: [msg.to] };
+      return { messageId: r.messageId || ('brevo-' + Date.now()), accepted: [msg.to], rejected: [] };
     }
   };
 }
