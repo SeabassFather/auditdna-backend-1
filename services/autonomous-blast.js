@@ -264,7 +264,17 @@ async function runAgent(app, brain, agentId) {
   try {
     // Get contacts
     const result = await getContacts(pool, agentId, 200);
-    const contacts = result.rows || [];
+    let contacts = result.rows || [];
+    // SUPPRESSION GUARD - filter dead/bouncing addresses before send
+    try {
+      const __sup = await __filterSuppressed(contacts);
+      if (__sup.skippedCount > 0) {
+        console.log(`[AGENT-${agentId}] suppression: skipped ${__sup.skippedCount} dead addresses`);
+      }
+      contacts = __sup.allowed;
+    } catch (e) {
+      console.error(`[AGENT-${agentId}] suppression check failed (allowing all through):`, e.message);
+    }
     stats.targeted = contacts.length;
 
     if (contacts.length === 0) {
