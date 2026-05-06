@@ -35,6 +35,7 @@ const fs = require('fs');
 const path = require('path');
 const { Pool } = require('pg');
 const { writeAuditRow } = require('../services/send-audit-writer');
+const { filterSuppressed } = require('../services/email-suppression-check');
 
 // ============================================================
 // SMTP CONFIG ΓÇö sends from saul@mexausafg.com directly
@@ -523,6 +524,18 @@ router.post('/send-bulk', async (req, res) => {
       return res.status(400).json({ error: 'Missing: recipients (array), subject, body/html' });
     }
 
+    // SUPPRESSION GUARD - filter dead/bouncing addresses before send
+    let suppressedCount = 0;
+    try {
+      const __sup = await filterSuppressed(recipients);
+      suppressedCount = __sup.skippedCount;
+      if (suppressedCount > 0) {
+        console.log('[gmail/send-bulk] suppression: skipped ' + suppressedCount + ' addresses (' + __sup.skipped.map(r => typeof r === 'string' ? r : r.email).join(', ') + ')');
+      }
+      recipients = __sup.allowed;
+    } catch (e) {
+      console.error('[gmail/send-bulk] suppression check failed (allowing all through):', e.message);
+    }
     const results = [];
 
     for (const recipient of recipients) {

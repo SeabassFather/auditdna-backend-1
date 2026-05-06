@@ -10,6 +10,7 @@
 
 'use strict';
 const brainBus = require('./brain-emitter');
+const { filterSuppressed: __filterSuppressed } = require('./email-suppression-check');
 
 const crypto = require('crypto');
 
