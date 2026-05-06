@@ -1,24 +1,24 @@
 // ===============================================================
-// AUDITDNA BACKEND SERVER v4.1 ???????? SECURED
+// AUDITDNA BACKEND SERVER v4.1 -- SECURED
 // ===============================================================
 // CHANGES FROM v4.0:
-//   ??????? EBEM Email Marketing Command Center routes added
-//   ??????? /api/scraper         ???????? internal DB scraper (requireAdmin)
-//   ??????? /api/email/send-campaign  ???????? GoDaddy SMTP bulk send w/ batching
-//   ??????? /api/email/analytics      ???????? open/click/sent stats from DB
-//   ??????? /api/claude/generate-email ???????? AI Niner Miner content generation
-//   ??????? emailScraper.js added to SKIP_AUTO (explicit mount)
-//   ??????? multer memory storage for attachment uploads
+//   -- EBEM Email Marketing Command Center routes added
+//   -- /api/scraper         -- internal DB scraper (requireAdmin)
+//   -- /api/email/send-campaign  -- GoDaddy SMTP bulk send w/ batching
+//   -- /api/email/analytics      -- open/click/sent stats from DB
+//   -- /api/claude/generate-email -- AI Niner Miner content generation
+//   -- emailScraper.js added to SKIP_AUTO (explicit mount)
+//   -- multer memory storage for attachment uploads
 // CHANGES FROM v3.3 (v4.0):
-//   ??????? CORS restricted to known origins (not '*')
-//   ??????? /metrics, /api/routes ???????? owner-only (JWT required)
-//   ??????? /health sanitized (no AI model name, no internal details)
-//   ??????? Brain endpoints require auth (except /api/brain/status)
-//   ??????? express.json limit reduced to 12mb (was 50mb)
-//   ??????? Helmet CSP enabled with sensible defaults
-//   ??????? Rate limiter on credential recovery
-//   ??????? Auth middleware loaded globally
-//   ??????? JWT_SECRET enforced (fatal in production if default)
+//   -- CORS restricted to known origins (not '*')
+//   -- /metrics, /api/routes -- owner-only (JWT required)
+//   -- /health sanitized (no AI model name, no internal details)
+//   -- Brain endpoints require auth (except /api/brain/status)
+//   -- express.json limit reduced to 12mb (was 50mb)
+//   -- Helmet CSP enabled with sensible defaults
+//   -- Rate limiter on credential recovery
+//   -- Auth middleware loaded globally
+//   -- JWT_SECRET enforced (fatal in production if default)
 // ===============================================================
 
 const express = require('express');
@@ -140,7 +140,7 @@ setTimeout(function(){ try { const is=require('./services/inbox-sorter'); is.sta
 
 const app = express();
 
-// === CORS preflight ???????? MUST be first, before helmet/other middleware ===
+// === CORS preflight -- MUST be first, before helmet/other middleware ===
 app.use((req, res, next) => {
   const origin = req.headers.origin;
   const isDev = (process.env.NODE_ENV || 'development') === 'development';
@@ -195,10 +195,10 @@ if (typeof brain?.setAI   === 'function') brain.setAI(aiHelper);
 if (typeof brain?.setPool === 'function') brain.setPool(pool);
 
 // ===============================================================
-// CORE MIDDLEWARE ???????? SECURED
+// CORE MIDDLEWARE -- SECURED
 // ===============================================================
 
-// Helmet with CSP ???????? no longer disabled
+// Helmet with CSP -- no longer disabled
 app.use(helmet({
   contentSecurityPolicy: {
     directives: {
@@ -215,7 +215,7 @@ app.use(helmet({
 
 app.use(compression());
 
-// RAW CORS PREFLIGHT ???????? must be first, before all middleware
+// RAW CORS PREFLIGHT -- must be first, before all middleware
 app.use((req, res, next) => {
   const origin = req.headers.origin;
   const allowed = [
@@ -239,7 +239,7 @@ app.use((req, res, next) => {
   next();
 });
 
-// CORS ???????? restricted to known origins
+// CORS -- restricted to known origins
 const ALLOWED_ORIGINS = [
   'http://localhost:3000',
   'http://localhost:3001',
@@ -269,7 +269,7 @@ app.use(cors({
 
 app.use(morgan(NODE_ENV === 'development' ? 'dev' : 'combined'));
 
-// Body limits ???????? 12MB for property photo uploads, 1MB for everything else
+// Body limits -- 12MB for property photo uploads, 1MB for everything else
 app.use('/api/properties', express.json({ limit: '12mb' }));
 app.use('/api/properties', require('./routes/properties'));
 // LOAF Stripe webhook needs RAW body BEFORE express.json
@@ -280,7 +280,7 @@ app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 
 // ===============================================================
-// REQUEST METRICS (internal only ???????? not exposed publicly)
+// REQUEST METRICS (internal only -- not exposed publicly)
 // ===============================================================
 
 const requestStats = { total: 0, success: 0, errors: 0, startedAt: new Date() };
@@ -294,7 +294,7 @@ app.use((req, res, next) => {
 });
 
 // ===============================================================
-// AUTH MIDDLEWARE ???????? load shared JWT verifier
+// AUTH MIDDLEWARE -- load shared JWT verifier
 // ===============================================================
 
 const { requireOwner, requireAdmin, requireAuth, attachUser } = require('./middleware/auth-middleware');
@@ -331,7 +331,7 @@ try { require('./services/send-audit-digest-cron').start(); } catch(e) { console
 app.use('/api/loaf/agent', require('./routes/loaf-chat.routes'));
 app.use('/api/gatekeeper', require('./routes/gatekeeper.routes'));
 
-// ?????? AUTONOMOUS INVENTORY NOTIFICATION PIPELINE ???????????????????????????????????????????????????????????????????????????
+// -- AUTONOMOUS INVENTORY NOTIFICATION PIPELINE --
 try {
   const inventoryRoutes = require('./routes/inventory');
   app.use('/api/inventory', inventoryRoutes);
@@ -340,7 +340,7 @@ try {
   console.warn('[WARN] inventory route failed to mount:', e.message);
 }
 
-// ?????? UNIFIED CRM DEAL FLOOR ???????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????
+// -- UNIFIED CRM DEAL FLOOR --
 // Anonymous deal rooms, DD vault, PO + factoring cascade, compliance,
 // commodity channels. Phase 1 backbone for the full deal floor.
 try {
@@ -437,16 +437,16 @@ try {
   explicitMounts.push({ file: 'admin-notifications.js', path: '/api/admin/notifications' });
 } catch(e) { console.warn('[WARN] admin-notifications not found:', e.message); }
 
-// -- CRM --> /api/crm  (growers + buyers + shippers ???????? frontend expects this exact path)
+// -- CRM --> /api/crm  (growers + buyers + shippers -- frontend expects this exact path)
 try {
   const crmRoutes = require('./routes/crm.routes');
   app.use('/api/crm', crmRoutes);
   try { app.use('/api/match', require('./routes/match-engine.routes')); console.log('[OK] match-engine routes loaded'); } catch (e) { console.error('[FAIL] match-engine:', e.message); }
   try { app.use('/api/crm-contacts', require('./routes/crm-contacts.routes')); console.log('[OK] crm-contacts.routes: mounted at /api/crm-contacts'); } catch(e) { console.warn('[WARN] crm-contacts.routes mount failed:', e.message); }
-
-try { const segRoutes = require('./routes/crm-segments'); if (segRoutes.setPool) segRoutes.setPool(pool); app.use('/api/crm', segRoutes); console.log('[OK] crm-segments mounted at /api/crm'); } catch (e) { console.error('[crm-segments] mount fail:', e.message); }  try { app.use('/api/user', require('./routes/user')); console.log('[OK] user.js: mounted at /api/user'); } catch(e) { console.warn('[WARN] user.js mount failed:', e.message); }
-
-try { const brevoRoutes = require('./routes/brevo-webhook'); if (brevoRoutes.setPool) brevoRoutes.setPool(pool); app.use('/api/brevo', brevoRoutes); console.log('[OK] brevo-webhook mounted at /api/brevo'); } catch (e) { console.error('[brevo-webhook] mount fail:', e.message); }  try { app.use('/api/buyers', require('./routes/buyers.routes')); console.log('[OK] buyers.routes: mounted at /api/buyers'); } catch(e) { console.warn('[WARN] buyers.routes mount failed:', e.message); }
+  try { const segRoutes = require('./routes/crm-segments'); if (segRoutes.setPool) segRoutes.setPool(pool); app.use('/api/crm', segRoutes); console.log('[OK] crm-segments mounted at /api/crm'); } catch (e) { console.error('[crm-segments] mount fail:', e.message); }
+  try { app.use('/api/user', require('./routes/user')); console.log('[OK] user.js: mounted at /api/user'); } catch(e) { console.warn('[WARN] user.js mount failed:', e.message); }
+  try { const brevoRoutes = require('./routes/brevo-webhook'); if (brevoRoutes.setPool) brevoRoutes.setPool(pool); app.use('/api/brevo', brevoRoutes); console.log('[OK] brevo-webhook mounted at /api/brevo'); } catch (e) { console.error('[brevo-webhook] mount fail:', e.message); }
+  try { app.use('/api/buyers', require('./routes/buyers.routes')); console.log('[OK] buyers.routes: mounted at /api/buyers'); } catch(e) { console.warn('[WARN] buyers.routes mount failed:', e.message); }
   try { app.use('/api/hot-leads', require('./routes/hot-leads.routes')); console.log('[OK] hot-leads.routes: mounted at /api/hot-leads'); } catch(e) { console.warn('[WARN] hot-leads.routes mount failed:', e.message); }
 // === Factoring waterfall routes (financing partner disclosure is gated) ===
 try {
@@ -457,6 +457,7 @@ try {
   try { app.use('/api/factor', require('./routes/factor-matchmaker')); console.log('[OK] factor-matchmaker mounted'); } catch(e) { console.error('[FAIL] factor-matchmaker mount:', e.message); }
   try { const fi = require('./routes/factor-intake'); app.use('/api/factor/intake', fi); console.log('[OK] factor-intake mounted at /api/factor/intake', typeof fi); } catch(e) { console.error('[FAIL] factor-intake mount:', e.message, e.stack); }
   try { const brainEvents = require('./routes/brain-events'); app.use('/api/brain/events', brainEvents); app.use('/api/brain/emit', (req,res,next)=>{ req.url='/emit'; brainEvents(req,res,next); }); app.use('/api/brain/deploy-webhook', (req,res,next)=>{ req.url='/deploy-webhook'; brainEvents(req,res,next); }); app.use('/api/brain/health', (req,res,next)=>{ req.url='/health'; brainEvents(req,res,next); }); console.log('[OK] brain-events SSE + health + webhook mounted'); } catch(e) { console.error('[FAIL] brain-events:', e.message); }
+  try { app.use('/api/omega/kernel', require('./routes/omegaKernel')); console.log('[OK] omega-kernel mounted at /api/omega/kernel'); } catch(e) { console.error('[FAIL] omega-kernel mount:', e.message); }
 try { app.use('/api/brain', require('./routes/brain-stream')); console.log('[OK] brain-stream mounted at /api/brain'); } catch(e) { console.error('[FAIL] brain-stream mount:', e.message); }
   try { app.use('/api/grower', require('./routes/grower-pipeline')); console.log('[OK] grower-pipeline.js: mounted at /api/grower (Sprint C)'); } catch(e) { console.error('[FAIL] grower-pipeline mount:', e.message); }
   try { const matchEngine = require('./services/rfq-match-engine'); app.use('/api/rfq', matchEngine.router); console.log('[OK] rfq-match-engine mounted at /api/rfq (Phase 1 Day 3)'); } catch(e) { console.error('[FAIL] rfq-match-engine mount:', e.message); }
@@ -503,7 +504,7 @@ try {
 } catch(e) { console.error('[FAIL] compliance-center mount:', e.message); }
 
 // ===============================================================
-// CREDENTIAL RECOVERY ???????? /api/auth/recover-credentials
+// CREDENTIAL RECOVERY -- /api/auth/recover-credentials
 // Rate limited: 3 per hour per IP
 // ===============================================================
 const recoveryBuckets = new Map();
@@ -566,7 +567,7 @@ app.post('/api/auth/recover-credentials', async (req, res) => {
         from: `"EnjoyBaja Platform" <${process.env.SMTP_USER}>`,
         to: 'sg01@eb.com',
         subject: `[EnjoyBaja] Credential Recovery: ${lookupEmail}`,
-        text: `CREDENTIAL RECOVERY REQUEST\n\nEmail: ${lookupEmail}\nFound: ${found ? 'YES ???????? ' + (found.name || found.email) : 'NOT IN DB'}\nSource: ${found?.source || 'N/A'}\nTime: ${requestedAt || new Date().toISOString()}\nIP: ${req.ip}\n\n-- EnjoyBaja Platform`,
+        text: `CREDENTIAL RECOVERY REQUEST\n\nEmail: ${lookupEmail}\nFound: ${found ? 'YES -- ' + (found.name || found.email) : 'NOT IN DB'}\nSource: ${found?.source || 'N/A'}\nTime: ${requestedAt || new Date().toISOString()}\nIP: ${req.ip}\n\n-- EnjoyBaja Platform`,
       });
     }
   } catch (err) {
@@ -584,10 +585,10 @@ app.post('/api/auth/recover-credentials', async (req, res) => {
 explicitMounts.push({ file: 'server.js (inline)', path: '/api/auth/recover-credentials' });
 
 // ===============================================================
-// EBEM ???????? EMAIL MARKETING COMMAND CENTER
-// /api/email/send-campaign  ???????? bulk send via GoDaddy SMTP
-// /api/email/analytics       ???????? open/click/sent stats from DB
-// /api/claude/generate-email ???????? AI Niner Miner content generation
+// EBEM -- EMAIL MARKETING COMMAND CENTER
+// /api/email/send-campaign  -- bulk send via GoDaddy SMTP
+// /api/email/analytics       -- open/click/sent stats from DB
+// /api/claude/generate-email -- AI Niner Miner content generation
 // ===============================================================
 
 // Multer for multipart (attachments + blobs from EBEM)
@@ -615,7 +616,7 @@ app.post('/api/email/send-campaign', requireAdmin, ebemUpload.any(), async (req,
       return res.status(400).json({ success: false, error: 'No recipients provided' });
     }
 
-    // ???????????????? Check suppression list (unsubscribes + bounces) ????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????
+    // -- Check suppression list (unsubscribes + bounces) --
     let suppressedEmails = new Set();
     try {
       const [unsub, bounce] = await Promise.all([
@@ -624,7 +625,7 @@ app.post('/api/email/send-campaign', requireAdmin, ebemUpload.any(), async (req,
       ]);
       unsub.rows.forEach(r  => suppressedEmails.add(r.email.toLowerCase()));
       bounce.rows.forEach(r => suppressedEmails.add(r.email.toLowerCase()));
-    } catch { /* tables may not exist yet ???????? continue */ }
+    } catch { /* tables may not exist yet -- continue */ }
 
     const filteredRecipients = recipients.filter(r => r.email && !suppressedEmails.has(r.email.toLowerCase()));
     const suppressedCount    = recipients.length - filteredRecipients.length;
@@ -632,14 +633,14 @@ app.post('/api/email/send-campaign', requireAdmin, ebemUpload.any(), async (req,
       console.log(`[EBEM] Suppressed ${suppressedCount} unsubscribed/bounced addresses`);
     }
 
-    // ???????????????? Attachments from multer ????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????
+    // -- Attachments from multer --
     const attachments = (req.files || []).map(f => ({
       filename:    f.originalname,
       content:     f.buffer,
       contentType: f.mimetype,
     }));
 
-    // ???????????????? SMTP transporter ????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????
+    // -- SMTP transporter --
     const transporter = sharedTransporter;
 
     const fromAddress  = process.env.EMAIL_FROM      || process.env.SMTP_USER || 'saul@mexausafg.com';
@@ -648,7 +649,7 @@ app.post('/api/email/send-campaign', requireAdmin, ebemUpload.any(), async (req,
     const BATCH_SIZE   = parseInt(process.env.EMAIL_BATCH_SIZE  || '10');
     const BATCH_DELAY  = parseInt(process.env.EMAIL_BATCH_DELAY || '1200');
 
-    // ???????????????? HTML email builder v2.0 ???????? Bilingual styled templates ????????????????????????????????????????????????????????????????????????????????????????????????????????????????
+    // -- HTML email builder v2.0 -- Bilingual styled templates --
     const buildHtml = (personalBody, personalSubject, recipientEmail, trackingId, campaignType) => {
       // Wrap links with click tracking
       const wrappedBody = personalBody.replace(
@@ -669,8 +670,8 @@ app.post('/api/email/send-campaign', requireAdmin, ebemUpload.any(), async (req,
             return `<div style="font-size:11px;font-weight:700;color:#cba658;letter-spacing:1.5px;text-transform:uppercase;margin:20px 0 8px 0;padding-bottom:4px;border-bottom:1px solid #e2e8f0;">${lines[0]}</div>`;
           }
           // Bullet points
-          if (lines[0].startsWith('???????') || lines[0].startsWith('-')) {
-            const items = lines.map(l => `<li style="margin-bottom:6px;color:#1e293b;">${l.replace(/^[???????\-]\s*/, '')}</li>`).join('');
+          if (lines[0].startsWith('--') || lines[0].startsWith('-')) {
+            const items = lines.map(l => `<li style="margin-bottom:6px;color:#1e293b;">${l.replace(/^[--\-]\s*/, '')}</li>`).join('');
             return `<ul style="margin:0 0 16px 0;padding-left:20px;line-height:1.7;">${items}</ul>`;
           }
           const html = lines.join('<br>');
@@ -683,7 +684,7 @@ app.post('/api/email/send-campaign', requireAdmin, ebemUpload.any(), async (req,
       // Tracking pixel
       const pixel = `<img src="${BASE_URL}/api/track/open?tid=${trackingId}" width="1" height="1" style="display:none" alt="" />`;
 
-      // Unsubscribe URL ???????? CAN-SPAM + LFPDPPP compliant
+      // Unsubscribe URL -- CAN-SPAM + LFPDPPP compliant
       const unsubUrl = `${BASE_URL}/api/unsubscribe?email=${encodeURIComponent(recipientEmail)}&tid=${trackingId}`;
 
       // Campaign-type accent colors and badges
@@ -696,8 +697,8 @@ app.post('/api/email/send-campaign', requireAdmin, ebemUpload.any(), async (req,
         market_update:{ accent: '#3b82f6', badge: 'MARKET UPDATE / ACTUALIZACION',    badgeBg: '#1e3a5f' },
         mortgage_intro:{ accent: '#cba658', badge: 'MORTGAGE INFO / HIPOTECA',        badgeBg: '#1a1200' },
         follow_up:    { accent: '#94a3b8', badge: 'FOLLOW-UP / SEGUIMIENTO',          badgeBg: '#0f172a' },
-        loi_pipeline: { accent: '#f59e0b', badge: 'LOI PIPELINE / CARTA DE INTENCI?????N', badgeBg: '#451a03' },
-        drip:         { accent: '#cba658', badge: 'CAMPAIGN / CAMPA?????A',               badgeBg: '#1a1200' },
+        loi_pipeline: { accent: '#f59e0b', badge: 'LOI PIPELINE / CARTA DE INTENCI--N', badgeBg: '#451a03' },
+        drip:         { accent: '#cba658', badge: 'CAMPAIGN / CAMPA--A',               badgeBg: '#1a1200' },
       };
       const style = CAMPAIGN_STYLES[campaignType] || CAMPAIGN_STYLES['drip'];
 
@@ -717,7 +718,7 @@ app.post('/api/email/send-campaign', requireAdmin, ebemUpload.any(), async (req,
 <tr><td align="center">
 <table width="600" cellpadding="0" cellspacing="0" border="0" role="presentation" style="max-width:600px;width:100%;">
 
-  <!-- ????????????????????? HEADER ????????????????????? -->
+  <!-- -- HEADER -- -->
   <tr>
     <td style="background:#0f172a;padding:0;">
       <table width="100%" cellpadding="0" cellspacing="0" border="0">
@@ -749,14 +750,14 @@ app.post('/api/email/send-campaign', requireAdmin, ebemUpload.any(), async (req,
     </td>
   </tr>
 
-  <!-- ????????????????????? SUBJECT BAR ????????????????????? -->
+  <!-- -- SUBJECT BAR -- -->
   <tr>
     <td style="background:#1e293b;padding:16px 32px;border-left:4px solid ${style.accent};">
       <div style="font-size:16px;color:#f1f5f9;font-weight:600;line-height:1.4;">${personalSubject}</div>
     </td>
   </tr>
 
-  <!-- ????????????????????? BODY ????????????????????? -->
+  <!-- -- BODY -- -->
   <tr>
     <td style="background:#ffffff;padding:32px 32px 24px;">
       <div style="font-size:14px;color:#1e293b;line-height:1.8;font-family:'Helvetica Neue',Arial,sans-serif;">
@@ -765,14 +766,14 @@ app.post('/api/email/send-campaign', requireAdmin, ebemUpload.any(), async (req,
     </td>
   </tr>
 
-  <!-- ????????????????????? DIVIDER ????????????????????? -->
+  <!-- -- DIVIDER -- -->
   <tr>
     <td style="background:#ffffff;padding:0 32px;">
       <div style="height:2px;background:linear-gradient(90deg,${style.accent},transparent);"></div>
     </td>
   </tr>
 
-  <!-- ????????????????????? CONTACT CARD ????????????????????? -->
+  <!-- -- CONTACT CARD -- -->
   <tr>
     <td style="background:#f8fafc;padding:20px 32px;border-top:1px solid #e2e8f0;">
       <table cellpadding="0" cellspacing="0" border="0" width="100%">
@@ -797,7 +798,7 @@ app.post('/api/email/send-campaign', requireAdmin, ebemUpload.any(), async (req,
     </td>
   </tr>
 
-  <!-- ????????????????????? LEGAL DISCLAIMER ????????????????????? -->
+  <!-- -- LEGAL DISCLAIMER -- -->
   <tr>
     <td style="background:#f1f5f9;padding:12px 32px;border-top:1px solid #e2e8f0;">
       <div style="font-size:9px;color:#94a3b8;line-height:1.6;text-align:center;">
@@ -810,7 +811,7 @@ app.post('/api/email/send-campaign', requireAdmin, ebemUpload.any(), async (req,
     </td>
   </tr>
 
-  <!-- ????????????????????? FOOTER ????????????????????? -->
+  <!-- -- FOOTER -- -->
   <tr>
     <td style="background:#0f172a;padding:14px 32px;text-align:center;">
       <table cellpadding="0" cellspacing="0" border="0" width="100%">
@@ -845,7 +846,7 @@ ${pixel}
 </html>`;
     };
 
-    // ???????????????? Send loop ????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????
+    // -- Send loop --
     let sent = 0, failed = 0;
 
     // Insert campaign record first to get campaign_id
@@ -979,7 +980,7 @@ app.get('/api/email/analytics', requireAdmin, async (req, res) => {
       opened    = parseInt(logRes.rows[0].opened      || 0);
       clicked   = parseInt(logRes.rows[0].clicked     || 0);
       campaigns = parseInt(campRes.rows[0].campaigns  || 0);
-    } catch { /* tables not yet created ???????? return zeros */ }
+    } catch { /* tables not yet created -- return zeros */ }
 
     res.json({
       totalSent,
@@ -997,7 +998,7 @@ app.get('/api/email/analytics', requireAdmin, async (req, res) => {
 
 explicitMounts.push({ file: 'server.js (inline)', path: '/api/email/analytics' });
 
-// ???????????????? Init email_tracking table ????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????
+// -- Init email_tracking table --
 pool.query(`
   CREATE TABLE IF NOT EXISTS email_tracking (
     id             SERIAL PRIMARY KEY,
@@ -1012,7 +1013,7 @@ pool.query(`
   )
 `).catch(() => {});
 
-// GET /api/track/open?tid=xxx ???????? 1x1 transparent pixel, records open
+// GET /api/track/open?tid=xxx -- 1x1 transparent pixel, records open
 app.get('/api/track/open', async (req, res) => {
   const { tid } = req.query;
   // Respond immediately with transparent pixel
@@ -1049,7 +1050,7 @@ app.get('/api/track/open', async (req, res) => {
   }
 });
 
-// GET /api/track/click?tid=xxx&url=xxx ???????? redirect + record click
+// GET /api/track/click?tid=xxx&url=xxx -- redirect + record click
 app.get('/api/track/click', async (req, res) => {
   const { tid, url } = req.query;
   const dest = url ? decodeURIComponent(url) : 'https://enjoybaja.com';
@@ -1076,7 +1077,7 @@ app.get('/api/track/click', async (req, res) => {
   }
 });
 
-// GET /api/unsubscribe?email=xxx ???????? one-click unsubscribe (CAN-SPAM + LFPDPPP)
+// GET /api/unsubscribe?email=xxx -- one-click unsubscribe (CAN-SPAM + LFPDPPP)
 app.get('/api/unsubscribe', async (req, res) => {
   const { email } = req.query;
   if (!email || !email.includes('@')) {
@@ -1117,7 +1118,7 @@ app.get('/api/unsubscribe', async (req, res) => {
   }
 });
 
-// POST /api/unsubscribe ???????? one-click unsubscribe header support (RFC 8058)
+// POST /api/unsubscribe -- one-click unsubscribe header support (RFC 8058)
 app.post('/api/unsubscribe', async (req, res) => {
   const email = req.body.email || req.query.email;
   if (!email) return res.status(400).json({ error: 'Email required' });
@@ -1136,7 +1137,7 @@ app.post('/api/unsubscribe', async (req, res) => {
 explicitMounts.push({ file: 'server.js (inline)', path: '/api/track/open + /api/track/click + /api/unsubscribe' });
 
 // POST /api/claude/generate-email
-// AI Niner Miner ???????? content generation for EBEM compose + AI Brain panel
+// AI Niner Miner -- content generation for EBEM compose + AI Brain panel
 app.post('/api/claude/generate-email', attachUser, async (req, res) => {
   try {
     const { prompt, miner, context = {} } = req.body;
@@ -1153,7 +1154,7 @@ app.post('/api/claude/generate-email', attachUser, async (req, res) => {
       calendar:   'You are a scheduling assistant for a cross-border real estate firm. Write professional meeting invitations and scheduling emails for property showings, mortgage consultations, and LOI reviews.',
       si_letter:  'You are AuditDNA SI (Synthetic Intelligence), a compliance letter specialist for CM Products International (NMLS #337526). Write formal, legally precise letters including: Letters of Intent (LOI), Letters of Commitment (LOC), Term Sheets, CFPB complaint letters, RESPA violation notices, and mortgage dispute correspondence. Always include proper legal headings, NMLS #337526, and Saul Garcia as signatory. Bilingual EN/ES when requested.',
       bilingual:  'You are a bilingual EN/ES email template specialist for EnjoyBaja and USAMortgage. Create full dual-language email templates with English and Spanish side by side or clearly separated. Format: English paragraph, then Spanish translation of the same paragraph. Professional, luxury real estate tone. Always include NMLS #337526 in mortgage content.',
-      loi:        'You are an LOI (Letter of Intent) drafter for EnjoyBaja cross-border real estate transactions. Write formal, professional Letters of Intent for property purchases in Baja California. Include: buyer/seller info placeholders, property description, offer price, financing type (cash/USA mortgage/developer terms), fideicomiso note for restricted zones, LOI????????LOC????????Term Sheet sequence, escrow-first workflow, lender identity confidentiality clause. Signatory: Saul Garcia | CM Products International | NMLS #337526.',
+      loi:        'You are an LOI (Letter of Intent) drafter for EnjoyBaja cross-border real estate transactions. Write formal, professional Letters of Intent for property purchases in Baja California. Include: buyer/seller info placeholders, property description, offer price, financing type (cash/USA mortgage/developer terms), fideicomiso note for restricted zones, LOI--LOC--Term Sheet sequence, escrow-first workflow, lender identity confidentiality clause. Signatory: Saul Garcia | CM Products International | NMLS #337526.',
       compliance: 'You are a compliance copywriter for CM Products International (NMLS #337526). Write RESPA-compliant, CFPB-compliant, and Mexican LFPDPPP-compliant email content. For US mortgage content: include required disclosures, equal housing language, NMLS number. For Mexican content: include privacy notice references and proper Spanish-language disclosures. Never make specific rate promises. Always include: "This is not a commitment to lend."',
     };
 
@@ -1167,7 +1168,7 @@ app.post('/api/claude/generate-email', attachUser, async (req, res) => {
 
     const text = await aiHelper.ask(fullPrompt, systemPrompt);
 
-    // Subject Sniper ???????? return all 3 options as JSON
+    // Subject Sniper -- return all 3 options as JSON
     if (miner === 'subject') {
       try {
         const parsed = JSON.parse(text.replace(/```json|```/g, '').trim());
@@ -1175,19 +1176,19 @@ app.post('/api/claude/generate-email', attachUser, async (req, res) => {
       } catch { /* fall through */ }
     }
 
-    // SMS ???????? trim to 160
+    // SMS -- trim to 160
     if (miner === 'sms') {
       return res.json({ success: true, content: text.substring(0, 160) });
     }
 
-    // SI Letter / LOI / Compliance / Bilingual ???????? return full letter as content
+    // SI Letter / LOI / Compliance / Bilingual -- return full letter as content
     if (['si_letter', 'loi', 'compliance', 'bilingual'].includes(miner)) {
       const subjectMatch = text.match(/^(?:Subject|RE|SUBJECT):\s*(.+)/im);
       const subject = subjectMatch ? subjectMatch[1].trim() : null;
       return res.json({ success: true, subject, content: text, text, isLetter: true });
     }
 
-    // Standard ???????? split subject from body
+    // Standard -- split subject from body
     const subjectMatch = text.match(/^Subject:\s*(.+)/im);
     const subject      = subjectMatch ? subjectMatch[1].trim() : null;
     const body         = subject ? text.replace(/^Subject:\s*.+\n?/im, '').trim() : text;
@@ -1202,13 +1203,13 @@ app.post('/api/claude/generate-email', attachUser, async (req, res) => {
 
 explicitMounts.push({ file: 'server.js (inline)', path: '/api/claude/generate-email' });
 
-// ?????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????
+// --
 // POST /api/ai/generate  ???  Anthropic-SDK-compatible passthrough
 // Accepts native Anthropic messages format from EmailMarketing.jsx and
 // SaulIntelCRM.jsx AI Subject/Body/Full Email generators.
 // Body: { model, max_tokens, messages: [{role, content}], system? }
 // Returns: native Anthropic response { content: [{type:'text', text:'...'}], ... }
-// ?????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????
+// --
 app.post('/api/ai/generate', attachUser, async (req, res) => {
   try {
     const { model, max_tokens, messages, system } = req.body || {};
@@ -1231,10 +1232,10 @@ app.post('/api/ai/generate', attachUser, async (req, res) => {
 explicitMounts.push({ file: 'server.js (inline)', path: '/api/ai/generate' });
 
 // ===============================================================
-// BRAIN API ???????? status is public (moved above Ownermetrics), everything else requires auth
+// BRAIN API -- status is public (moved above Ownermetrics), everything else requires auth
 // ===============================================================
 
-// Auth required ???????? event ingestion
+// Auth required -- event ingestion
 app.post('/api/brain/events', attachUser, async (req, res) => {
   try {
     const { events } = req.body;
@@ -1247,7 +1248,7 @@ app.post('/api/brain/events', attachUser, async (req, res) => {
   }
 });
 
-// Auth required ???????? logging
+// Auth required -- logging
 app.post('/api/brain/log', attachUser, async (req, res) => {
   try {
     const { module: mod = 'frontend', event, data = {}, source = 'frontend', timestamp } = req.body;
@@ -1262,7 +1263,7 @@ app.post('/api/brain/log', attachUser, async (req, res) => {
   }
 });
 
-// Owner only ???????? workflow trigger
+// Owner only -- workflow trigger
 app.post('/api/brain/workflow', requireAdmin, async (req, res) => {
   try {
     const { type, payload } = req.body;
@@ -1275,7 +1276,7 @@ app.post('/api/brain/workflow', requireAdmin, async (req, res) => {
   }
 });
 
-// Owner only ???????? full brain status with metrics
+// Owner only -- full brain status with metrics
 // /api/brain/query -- called by SaulIntelCRM.jsx for AI-assisted contact/deal enrichment
 app.post('/api/brain/query', attachUser, async (req, res) => {
   try {
@@ -1388,7 +1389,7 @@ function loadRoutes(dir, base = '/api') {
 }
 
 // ===============================================================
-// INTERNAL MESSENGER ???????? soft auth on presence/channels (stops 401 flood)
+// INTERNAL MESSENGER -- soft auth on presence/channels (stops 401 flood)
 // ===============================================================
 try {
   const messengerRoutes = require('./routes/Internal-messenger');
@@ -1410,7 +1411,7 @@ console.log('\n[SCAN] Discovering routes...\n');
 loadRoutes(routesDir);
 
 // ===============================================================
-// HEALTH ???????? sanitized (no internal details)
+// HEALTH -- sanitized (no internal details)
 // ===============================================================
 
 app.get('/health', (req, res) => {
@@ -1422,7 +1423,7 @@ app.get('/health', (req, res) => {
 });
 
 // ===============================================================
-// METRICS & ROUTES ???????? OWNER ONLY (JWT required)
+// METRICS & ROUTES -- OWNER ONLY (JWT required)
 // ===============================================================
 
 app.get('/metrics', requireOwner, (req, res) => {
@@ -1451,7 +1452,7 @@ app.get('/api/routes', requireOwner, (req, res) => {
 // START SERVER
 // ===============================================================
 
-const server = 
+const server =
 // SPRINT D - Price Prediction Engine
 app.use('/api/ai/predict-price', require('./routes/ai-price-predict'));
 
@@ -1608,7 +1609,7 @@ try { require('./complianceCleaner')(pool); }
 catch (e) { console.warn('[WARN] complianceCleaner not loaded:', e.message); }
 
 // ===============================================================
-// SCHEDULER ???????? cron jobs for cooling-off, aging alerts, daily digest
+// SCHEDULER -- cron jobs for cooling-off, aging alerts, daily digest
 // ===============================================================
 try {
   require('./scheduler');
@@ -1650,8 +1651,7 @@ module.exports.pool = pool; module.exports.app = app;
 // COMMODITY SEARCH ENGINE
 try { const gm = require('./routes/gmail'); app.use('/api/gmail', gm); app.set('gmailRoute', gm); console.log('[OK] gmail routes loaded'); } catch(e) { console.error('[FAIL] gmail routes:', e.message); }
 try { const bh = require('./routes/gmailBounceHarvester'); app.use('/api/gmail', bh); console.log('[OK] gmailBounceHarvester mounted at /api/gmail/harvest-bounces'); } catch(e) { console.error('[FAIL] gmailBounceHarvester:', e.message); }
-
-try { const cs = require('./routes/commodity-search'); app.use('/api/commodity', cs); console.log('[OK] commodity-search mounted at /api/commodity'); } catch(e) { console.warn('[WARN] commodity:', e.message); }
+  try { const cs = require('./routes/commodity-search'); app.use('/api/commodity', cs); console.log('[OK] commodity-search mounted at /api/commodity'); } catch(e) { console.warn('[WARN] commodity:', e.message); }
 
 // MOBILE WORKSPACE v2 - Run 13e
 try { const mw = require('./routes/mobileWorkspace'); app.use('/api/mobile', mw); console.log('[OK] mobileWorkspace mounted at /api/mobile'); } catch(e) { console.error('[FAIL] mobileWorkspace mount:', e.message); }
