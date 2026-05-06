@@ -232,7 +232,36 @@ async function fireEmails(inquiry, notifyEmails) {
 // ----------------------------------------------------------------------------
 // Public: handle a fresh inquiry from the LOAF page
 // ----------------------------------------------------------------------------
+// Test-traffic detector - keeps Hector & Saul from getting spammed by SMTP/gatekeeper test posts
+function isTestTraffic(data) {
+  const haystack = [
+    data && data.company,
+    data && data.contact_name,
+    data && data.notes,
+    data && data.utm_campaign
+  ].filter(Boolean).join(' ').toUpperCase();
+  // Trip if ANY of these markers appear
+  return /\b(TEST|VERIFY|GATEKEEPER|CONFIRM|LOCALHOST|STAGING|DEBUG|SMOKE)\b/.test(haystack);
+}
+
 async function handleInquiry(data) {
+  // GUARD: short-circuit on test traffic - save row, stamp notified_at, skip emails
+  if (isTestTraffic(data)) {
+    console.log('[plastpac] TEST traffic detected - saving but skipping notifications. company=' + (data && data.company));
+    const saved = await saveInquiry(data);
+    try {
+      await pool.query('UPDATE plastpac_inquiries SET notified_at = NOW(), notes = COALESCE(notes,$1) || $2 WHERE id = $3', ['', '\n[auto-skip] test traffic detected', saved.id]);
+    } catch (e) {
+      console.error('[plastpac] test-traffic stamp failed:', e.message);
+    }
+    return {
+      ok: true,
+      inquiry_id: saved.id,
+      test_traffic: true,
+      emails: { hector: false, saul: false, auto: false, skipped: 'test_traffic' }
+    };
+  }
+  
   // 1. Persist
   const saved = await saveInquiry(data);
   const fullInquiry = { ...data, id: saved.id, created_at: saved.created_at };
