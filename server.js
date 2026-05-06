@@ -324,6 +324,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/plastpac', require('./routes/plastpac.routes'));
 app.use('/api/blast', require('./routes/autonomous-blast.routes'));
 app.use('/api/send-audit', require('./routes/send-audit.routes'));
+app.use('/api/ai-letter', require('./routes/ai-letter.routes'));
 
 // Daily 6 AM PT digest cron
 try { require('./services/send-audit-digest-cron').start(); } catch(e) { console.error('[send-audit-digest] init failed:', e.message); }
