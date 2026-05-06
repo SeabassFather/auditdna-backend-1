@@ -11,18 +11,27 @@ function setPool(p) { pool = p; brain.setPool(p); }
 
 // Brevo event names normalized
 const NORMALIZE = {
+  'request': 'request',
   'delivered': 'delivered',
-  'request': 'unknown',
   'opened': 'opened',
+  'unique_opened': 'opened',
+  'first_opening': 'opened',
   'click': 'clicked',
+  'clicked': 'clicked',
   'soft_bounce': 'soft_bounce',
+  'softbounces': 'soft_bounce',
   'hard_bounce': 'hard_bounce',
+  'hardbounces': 'hard_bounce',
   'invalid_email': 'invalid',
+  'invalid': 'invalid',
   'deferred': 'deferred',
   'spam': 'spam',
+  'complaint': 'spam',
   'blocked': 'blocked',
   'unsubscribed': 'unsubscribed',
-  'complaint': 'complained'
+  'unsubscribe': 'unsubscribed',
+  'error': 'error',
+  'loaded_by_proxy': 'opened'
 };
 
 router.post('/webhook', async (req, res) => {
@@ -39,7 +48,7 @@ router.post('/webhook', async (req, res) => {
     );
 
     // Critical events: emit to Brain so Niner Miners can react
-    const critical = ['opened','clicked','hard_bounce','unsubscribed','spam','complained'];
+    const critical = ['request','delivered','opened','clicked','hard_bounce','soft_bounce','deferred','blocked','unsubscribed','spam','invalid'];
     if (critical.includes(evt)) {
       brain.emit('EMAIL_' + evt.toUpperCase(), {
         message_id: messageId,
@@ -49,7 +58,7 @@ router.post('/webhook', async (req, res) => {
     }
 
     // Auto-update opt_out for unsubscribes + hard bounces + spam
-    if (email && (evt === 'unsubscribed' || evt === 'hard_bounce' || evt === 'spam' || evt === 'complained')) {
+    if (email && (evt === 'unsubscribed' || evt === 'hard_bounce' || evt === 'spam' || evt === 'invalid')) {
       await pool.query(
         'UPDATE crm_contacts SET opt_out = TRUE, opt_out_reason = $1, opt_out_at = NOW() WHERE email = $2',
         [evt, email]
