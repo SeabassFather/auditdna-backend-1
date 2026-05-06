@@ -323,6 +323,7 @@ app.use('/api/margie', margieRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/plastpac', require('./routes/plastpac.routes'));
 app.use('/api/blast', require('./routes/autonomous-blast.routes'));
+app.use('/api/send-audit', require('./routes/send-audit.routes'));
 app.use('/api/loaf/agent', require('./routes/loaf-chat.routes'));
 app.use('/api/gatekeeper', require('./routes/gatekeeper.routes'));
 
