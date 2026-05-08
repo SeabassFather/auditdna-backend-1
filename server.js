@@ -1,4 +1,4 @@
-﻿// ===============================================================
+// ===============================================================
 // AUDITDNA BACKEND SERVER v4.1 -- SECURED
 // ===============================================================
 // CHANGES FROM v4.0:
@@ -130,6 +130,7 @@ module.exports.brain = brain;
 // START AUTONOMOUS BLAST ENGINE
 // START ENRIQUE - HEAD AI COMMAND AGENT
 setTimeout(function(){ try { const enrique=require('./services/enrique'); enrique.startEnrique(app,brain); } catch(e){ console.error('[ENRIQUE] Start failed:',e.message); } }, 12000);
+setTimeout(function(){ try { const oak=require('./services/oakland-agents'); oak.init(app,brain,global.db||pool); } catch(e){ console.error('[OAKLAND] Start failed:',e.message); } }, 16000);
 setTimeout(function(){ try { const ab=require('./services/autonomous-blast'); ab.startAutonomousAgents(app,brain); } catch(e){ console.error('[AUTONOMOUS] Start failed:',e.message); } }, 8000);
 // START INBOX SORTER - classifies replies, logs to email_activity_log, ntfy hot-lead alerts
 setTimeout(function(){ try { const is=require('./services/inbox-sorter'); is.startInboxSorter(app); } catch(e){ console.error('[INBOX-SORTER] Start failed:',e.message); } }, 60000);
