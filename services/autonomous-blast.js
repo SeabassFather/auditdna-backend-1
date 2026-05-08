@@ -67,11 +67,11 @@ async function getContacts(pool, agentId, limit = 50) {
         );
       case 'BUYER_OUTREACH':
         return await pool.query(
-          `SELECT b.email, b.legal_name AS name, t.commodity, b.state_region AS state, b.country FROM buyers b JOIN contact_commodity_tags t ON t.contact_id = b.id AND t.contact_type = 'buyer' WHERE b.email IS NOT NULL AND b.email != '' ORDER BY random() LIMIT $1`, [limit]
+          `SELECT b.email, b.legal_name AS name, t.commodity, b.state_region AS state, b.country FROM buyers b JOIN contact_commodity_tags t ON t.contact_id::text = b.id::text AND t.contact_type = 'buyer' WHERE b.email IS NOT NULL AND b.email != '' ORDER BY random() LIMIT $1`, [limit]
         );
       case 'GROWER_TENDER':
         return await pool.query(
-          `SELECT g.email, COALESCE(g.contact_name, g.legal_name) AS name, t.commodity, g.state_province AS state, g.country FROM growers g JOIN contact_commodity_tags t ON t.contact_id = g.id AND t.contact_type = 'grower' WHERE g.email IS NOT NULL AND g.email != '' ORDER BY random() LIMIT $1`, [limit]
+          `SELECT g.email, COALESCE(g.contact_name, g.legal_name) AS name, t.commodity, g.state_province AS state, g.country FROM growers g JOIN contact_commodity_tags t ON t.contact_id::text = g.id::text AND t.contact_type = 'grower' WHERE g.email IS NOT NULL AND g.email != '' ORDER BY random() LIMIT $1`, [limit]
         );
       case 'LOGISTICS':
         return await pool.query(
@@ -79,15 +79,15 @@ async function getContacts(pool, agentId, limit = 50) {
         );
       case 'FOOD_SAFETY':
         return await pool.query(
-          `SELECT g.email, COALESCE(g.contact_name, g.legal_name) AS name, t.commodity, g.state_province AS state, g.country FROM growers g JOIN contact_commodity_tags t ON t.contact_id = g.id AND t.contact_type = 'grower' WHERE g.email IS NOT NULL AND g.email != '' ORDER BY random() LIMIT $1`, [limit]
+          `SELECT g.email, COALESCE(g.contact_name, g.legal_name) AS name, t.commodity, g.state_province AS state, g.country FROM growers g JOIN contact_commodity_tags t ON t.contact_id::text = g.id::text AND t.contact_type = 'grower' WHERE g.email IS NOT NULL AND g.email != '' ORDER BY random() LIMIT $1`, [limit]
         );
       case 'FINANCE':
         return await pool.query(
-          `SELECT * FROM (SELECT g.email, COALESCE(g.contact_name, g.legal_name) AS name, t.commodity, g.state_province AS state, g.country FROM growers g JOIN contact_commodity_tags t ON t.contact_id = g.id AND t.contact_type = 'grower' WHERE g.email IS NOT NULL AND g.email != '' UNION ALL SELECT b.email, b.legal_name AS name, t.commodity, b.state_region AS state, b.country FROM buyers b JOIN contact_commodity_tags t ON t.contact_id = b.id AND t.contact_type = 'buyer' WHERE b.email IS NOT NULL AND b.email != '') x ORDER BY random() LIMIT $1`, [limit]
+          `SELECT * FROM (SELECT g.email, COALESCE(g.contact_name, g.legal_name) AS name, t.commodity, g.state_province AS state, g.country FROM growers g JOIN contact_commodity_tags t ON t.contact_id::text = g.id::text AND t.contact_type = 'grower' WHERE g.email IS NOT NULL AND g.email != '' UNION ALL SELECT b.email, b.legal_name AS name, t.commodity, b.state_region AS state, b.country FROM buyers b JOIN contact_commodity_tags t ON t.contact_id::text = b.id::text AND t.contact_type = 'buyer' WHERE b.email IS NOT NULL AND b.email != '') x ORDER BY random() LIMIT $1`, [limit]
         );
       case 'MARKET_INTEL':
         return await pool.query(
-          `SELECT b.email, b.legal_name AS name, t.commodity, b.state_region AS state, b.country FROM buyers b JOIN contact_commodity_tags t ON t.contact_id = b.id AND t.contact_type = 'buyer' WHERE b.email IS NOT NULL AND b.email != '' ORDER BY random() LIMIT $1`, [limit]
+          `SELECT b.email, b.legal_name AS name, t.commodity, b.state_region AS state, b.country FROM buyers b JOIN contact_commodity_tags t ON t.contact_id::text = b.id::text AND t.contact_type = 'buyer' WHERE b.email IS NOT NULL AND b.email != '' ORDER BY random() LIMIT $1`, [limit]
         );
       default:
         return { rows: [] };
@@ -136,15 +136,31 @@ async function triggerGatekeeper(pool, agentId, runId, stats) {
 // ΓöÇΓöÇΓöÇ LOG RUN TO DB ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
 async function logRun(pool, runId, agentId, status, stats, reportText) {
   try {
+    // Try INSERT first; if duplicate runId, fall back to UPDATE.
+    // Avoids ON CONFLICT requirement for a UNIQUE constraint that may not exist.
     await pool.query(
       `INSERT INTO autonomous_agent_runs
         (run_id, agent_id, status, contacts_targeted, emails_sent, emails_failed, report_text, created_at)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,NOW())
-       ON CONFLICT (run_id) DO UPDATE SET status=$3, emails_sent=$5, emails_failed=$6, updated_at=NOW()`,
+       VALUES ($1,$2,$3,$4,$5,$6,$7,NOW())`,
       [runId, agentId, status, stats.targeted || 0, stats.sent || 0, stats.failed || 0, reportText || null]
     );
-  } catch (e) {
-    console.error(`[LOG-${agentId}] DB log failed:`, e.message);
+  } catch (insertErr) {
+    // Postgres unique violation is code 23505. Any insert failure -> try update.
+    try {
+      await pool.query(
+        `UPDATE autonomous_agent_runs
+            SET status = $2,
+                contacts_targeted = $3,
+                emails_sent = $4,
+                emails_failed = $5,
+                report_text = COALESCE($6, report_text),
+                updated_at = NOW()
+          WHERE run_id = $1`,
+        [runId, status, stats.targeted || 0, stats.sent || 0, stats.failed || 0, reportText || null]
+      );
+    } catch (updateErr) {
+      console.error(`[LOG-${agentId}] DB log failed (insert + update):`, updateErr.message);
+    }
   }
 }
 

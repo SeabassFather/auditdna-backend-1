@@ -120,11 +120,28 @@ async function processInbox(app) {
   try {
     const pool = app.get('pool');
     const gmailRoute = app.get('gmailRoute');
-    if (!gmailRoute) { console.log('[INBOX-SORTER] gmailRoute not ready'); return; }
+    if (!gmailRoute) { console.log('[INBOX-SORTER] gmailRoute not ready - skipping run'); return; }
 
     const { oauth2Client, ensureFreshTokens } = gmailRoute;
-    if (!oauth2Client) return;
-    await ensureFreshTokens();
+    if (!oauth2Client) { console.log('[INBOX-SORTER] oauth2Client not initialized - skipping run'); return; }
+
+    // Try to refresh tokens but don't crash if it fails (DB timeout, network, etc.)
+    if (typeof ensureFreshTokens === 'function') {
+      try {
+        await ensureFreshTokens();
+      } catch (refreshErr) {
+        console.warn('[INBOX-SORTER] token refresh failed - skipping run:', refreshErr.message);
+        return;
+      }
+    }
+
+    // Validate credentials are actually populated BEFORE calling Gmail API
+    const creds = oauth2Client.credentials || {};
+    if (!creds.access_token && !creds.refresh_token) {
+      console.warn('[INBOX-SORTER] no oauth credentials available - skipping run');
+      return;
+    }
+
     const gmail = google.gmail({ version: 'v1', auth: oauth2Client });
 
     // Skip bounces (bounce-handler owns those); scan unread inbox last 1d
