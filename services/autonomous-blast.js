@@ -75,7 +75,7 @@ async function getContacts(pool, agentId, limit = 50) {
         );
       case 'LOGISTICS':
         return await pool.query(
-          `SELECT email, COALESCE(name, company) AS name, company AS commodity, state, address_country AS country FROM shipper_contacts WHERE email IS NOT NULL AND email != '' ORDER BY random() LIMIT $1`, [limit]
+          `SELECT email, COALESCE(name, company) AS name, company AS commodity, COALESCE(region, state, address_city, '') AS state, COALESCE(address_country, 'USA') AS country FROM public.shipper_contacts WHERE email IS NOT NULL AND email != '' ORDER BY random() LIMIT $1`, [limit]
         );
       case 'FOOD_SAFETY':
         return await pool.query(
