@@ -63,7 +63,7 @@ async function getContacts(pool, agentId, limit = 50) {
     switch (agentId) {
       case 'AVOCADO':
         return await pool.query(
-          `SELECT * FROM (SELECT email, COALESCE(contact_name, legal_name) AS name, 'avocado' AS commodity, state_province AS state, country FROM growers WHERE (crops_grown::text ILIKE '%avocado%' OR notes ILIKE '%avocado%' OR primary_products::text ILIKE '%avocado%') AND email IS NOT NULL AND email != '' UNION ALL SELECT email, legal_name AS name, 'avocado' AS commodity, state_region AS state, country FROM buyers WHERE product_specialties ILIKE '%avocado%' AND email IS NOT NULL AND email != '') t ORDER BY random() LIMIT $1`, [limit]
+          `SELECT * FROM (SELECT g.email, COALESCE(g.contact_name, g.legal_name) AS name, t.commodity, g.state_province AS state, g.country FROM growers g JOIN contact_commodity_tags t ON t.contact_id::text = g.id::text AND t.contact_type = 'grower' WHERE LOWER(t.commodity) LIKE '%avocado%' AND g.email IS NOT NULL AND g.email != '' UNION ALL SELECT b.email, b.legal_name AS name, t.commodity, b.state_region AS state, b.country FROM buyers b JOIN contact_commodity_tags t ON t.contact_id::text = b.id::text AND t.contact_type = 'buyer' WHERE LOWER(t.commodity) LIKE '%avocado%' AND b.email IS NOT NULL AND b.email != '') x ORDER BY random() LIMIT $1`, [limit]
         );
       case 'BUYER_OUTREACH':
         return await pool.query(
