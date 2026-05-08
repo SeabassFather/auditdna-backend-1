@@ -602,6 +602,14 @@ router.post('/send-bulk', async (req, res) => {
     const sent   = results.filter(r => r.success).length;
     const failed = results.filter(r => !r.success).length;
     console.log(`[BULK] complete: ${sent} sent, ${failed} failed, FROM: ${FROM_ADDRESS}`);
+  try {
+    const brainUser = req.user || {};
+    const pool = global.db || pgPool;
+    pool.query('INSERT INTO mortgage_brain_log (module, event, data, source) VALUES ($1,$2,$3,$4)',
+      ['gmail','GMAIL_BULK_SENT', JSON.stringify({ user: brainUser.username||brainUser.email||req.body.senderEmail||'unknown', role: brainUser.role||'unknown', sent, failed, subject: req.body.subject||'', recipientCount: recipients.length, timestamp: Date.now() }), 'gmail_bulk']
+    ).catch(()=>{});
+  } catch(e) {}
+
 
     res.json({ success: true, from: FROM_ADDRESS, total: recipients.length, sent, failed, results });
 
@@ -715,6 +723,14 @@ router.get('/contacts', async (req, res) => {
       console.log(`[Gmail] Contacts persisted to PostgreSQL: ${allContacts.length}`);
     } catch (e) { console.warn('[Gmail] Could not persist contacts to PG:', e.message); }
     console.log(`[Gmail] Contacts synced: ${allContacts.length} (saved: ${allContacts.filter(c=>c.source==='contacts').length}, other: ${otherCount})`);
+  try {
+    const brainUser = req.user || {};
+    const pool = global.db || pgPool;
+    pool.query('INSERT INTO mortgage_brain_log (module, event, data, source) VALUES ($1,$2,$3,$4)',
+      ['gmail','GMAIL_CONTACTS_SYNCED', JSON.stringify({ user: brainUser.username||brainUser.email||'unknown', role: brainUser.role||'unknown', contactCount: allContacts.length, breakdown:{ saved: allContacts.filter(cx=>cx.source==='contacts').length, other: otherCount }, timestamp: Date.now() }), 'gmail_sync']
+    ).catch(()=>{});
+  } catch(e) {}
+
     res.json({ contacts: allContacts, total: allContacts.length, cached: false, breakdown: { saved: allContacts.filter(c => c.source === 'contacts').length, other: otherCount } });
   } catch (err) {
     console.error('Contacts Error:', err.message);
