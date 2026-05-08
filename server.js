@@ -4,7 +4,7 @@
 // CHANGES FROM v4.0:
 //   -- EBEM Email Marketing Command Center routes added
 //   -- /api/scraper         -- internal DB scraper (requireAdmin)
-//   -- /api/email/send-campaign  -- GoDaddy SMTP bulk send w/ batching
+//   -- /api/email/send-campaign  -- Brevo SMTP bulk send w/ batching
 //   -- /api/email/analytics      -- open/click/sent stats from DB
 //   -- /api/claude/generate-email -- AI Niner Miner content generation
 //   -- emailScraper.js added to SKIP_AUTO (explicit mount)
@@ -174,8 +174,8 @@ app.set('pool', pool);
 
 // =============================================================================
 // GG SHARED SMTP TRANSPORTER - 2026-05-01
-// Single Gmail-only transporter. Used by ALL inline send sites + GG medic.
-// Standing rule: smtp.gmail.com:587, secure=false, sgarcia1911@gmail.com
+// Brevo primary transporter. Used by ALL inline send sites + GG medic.
+// Standing rule: smtp-relay.brevo.com:587, env SMTP_USER/SMTP_PASS
 // =============================================================================
 const __ggNodemailer = require('nodemailer');
 const sharedTransporter = __ggNodemailer.createTransport({
@@ -588,7 +588,7 @@ explicitMounts.push({ file: 'server.js (inline)', path: '/api/auth/recover-crede
 
 // ===============================================================
 // EBEM -- EMAIL MARKETING COMMAND CENTER
-// /api/email/send-campaign  -- bulk send via GoDaddy SMTP
+// /api/email/send-campaign  -- bulk send via Brevo SMTP
 // /api/email/analytics       -- open/click/sent stats from DB
 // /api/claude/generate-email -- AI Niner Miner content generation
 // ===============================================================
@@ -1454,7 +1454,6 @@ app.get('/api/routes', requireOwner, (req, res) => {
 // START SERVER
 // ===============================================================
 
-const server =
 // SPRINT D - Price Prediction Engine
 app.use('/api/ai/predict-price', require('./routes/ai-price-predict'));
 
@@ -1595,7 +1594,7 @@ ${failedRoutes.length ? ` FAILED: ${failedRoutes.length}\n${failedRoutes.map(r =
 
 function shutdown(signal) {
   console.log(`\n${signal} received. Shutting down...`);
-  server.close(() => {
+  __server.close(() => {
     pool.end(() => {
       console.log('[OK] PostgreSQL closed');
       process.exit(0);
@@ -1646,9 +1645,9 @@ try {
 } catch (e) { console.error('[FAIL] diego cron:', e.message); }
 try { app.use('/api/campaign-recipes', require('./routes/campaign-recipes.routes')); console.log('[OK] campaign-recipes mounted at /api/campaign-recipes'); } catch (e) { console.error('[FAIL] campaign-recipes:', e.message); }
 
-module.exports = app; global.db = pool;
-console.log('[DB] global.db assigned -> pool accessible to all routes');
-module.exports.pool = pool; module.exports.app = app;
+module.exports = app;
+module.exports.pool = pool;
+module.exports.app = app;
 
 // COMMODITY SEARCH ENGINE
 try { const gm = require('./routes/gmail'); app.use('/api/gmail', gm); app.set('gmailRoute', gm); console.log('[OK] gmail routes loaded'); } catch(e) { console.error('[FAIL] gmail routes:', e.message); }
