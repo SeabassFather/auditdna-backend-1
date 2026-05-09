@@ -1,76 +1,139 @@
-'use strict';
-const express = require('express');
-const router  = express.Router();
-const crypto  = require('crypto');
-const { AGENT_CONFIGS, routeInquiry, logAgentEvent, escalateToHuman } = require('../agents/loaf-agents');
+"use strict";
+const express = require("express");
+const router = express.Router();
+const crypto = require("crypto");
+const { AGENT_CONFIGS, routeInquiry, logAgentEvent, escalateToHuman } = require("../agents/loaf-agents");
 
-router.post('/chat', async (req, res) => {
+router.post("/chat", async (req, res) => {
   try {
     const { message, agent: requestedAgent, session_id } = req.body || {};
-    if (!message || !message.trim()) return res.status(400).json({ ok: false, error: 'message required' });
-    const ai = req.app.get('ai');
-    const pool = req.app.get('pool');
+    if (!message || !message.trim()) return res.status(400).json({ ok: false, error: "message required" });
+    const ai = req.app.get("ai");
+    const pool = req.app.get("pool");
     const sessionId = session_id || crypto.randomUUID();
-    const agentName = requestedAgent && AGENT_CONFIGS[requestedAgent.toUpperCase()] ? requestedAgent.toUpperCase() : routeInquiry(message);
+    const agentName =
+      requestedAgent && AGENT_CONFIGS[requestedAgent.toUpperCase()]
+        ? requestedAgent.toUpperCase()
+        : routeInquiry(message);
     const agent = AGENT_CONFIGS[agentName];
     const response = await ai.ask(message, agent.system_prompt);
-    await logAgentEvent(agentName, sessionId, message, response, { source: 'loaf-chat' });
-    const esc = ['urgent','recall','fda investigation','lawsuit','talk to someone','call me'];
-    if (esc.some(k => message.toLowerCase().includes(k))) await escalateToHuman(agentName, sessionId, { message }, 'high');
-    if (pool) pool.query('INSERT INTO loaf_chat_log (session_id,agent,user_message,agent_response,created_at) VALUES ($1,$2,$3,$4,NOW())', [sessionId, agentName, message, response]).catch(()=>{});
+    await logAgentEvent(agentName, sessionId, message, response, { source: "loaf-chat" });
+    const esc = ["urgent", "recall", "fda investigation", "lawsuit", "talk to someone", "call me"];
+    if (esc.some((k) => message.toLowerCase().includes(k)))
+      await escalateToHuman(agentName, sessionId, { message }, "high");
+    if (pool)
+      pool
+        .query(
+          "INSERT INTO loaf_chat_log (session_id,agent,user_message,agent_response,created_at) VALUES ($1,$2,$3,$4,NOW())",
+          [sessionId, agentName, message, response],
+        )
+        .catch(() => {});
     return res.json({ ok: true, session_id: sessionId, agent: agentName, agent_display: agent.display_name, response });
-  } catch (e) { return res.status(500).json({ ok: false, error: e.message }); }
+  } catch (e) {
+    return res.status(500).json({ ok: false, error: e.message });
+  }
 });
 
-router.get('/agents', (req, res) => {
-  res.json({ ok: true, agents: Object.entries(AGENT_CONFIGS).map(([k,v]) => ({ id: k, name: v.display_name, opening: v.opening_message })) });
+router.get("/agents", (req, res) => {
+  res.json({
+    ok: true,
+    agents: Object.entries(AGENT_CONFIGS).map(([k, v]) => ({
+      id: k,
+      name: v.display_name,
+      opening: v.opening_message,
+    })),
+  });
 });
 
-
-
-router.post('/submit', async (req, res) => {
+router.post("/submit", async (req, res) => {
   try {
     const { action, lot_id, name, email, phone, notes, gps, ts } = req.body;
     const pool = global.db;
 
-    if (action === 'colonet_inquiry') {
+    if (action === "colonet_inquiry") {
       if (pool) {
-        await pool.query(
-          'INSERT INTO mortgage_brain_log (module, event, data, source) VALUES ($1,$2,$3,$4)',
-          ['loaf', 'COLONET_INQUIRY', JSON.stringify({ lot_id, name, email, phone, notes, gps, ts }), 'colonet_lot_map']
-        ).catch(() => {});
+        await pool
+          .query("INSERT INTO mortgage_brain_log (module, event, data, source) VALUES ($1,$2,$3,$4)", [
+            "loaf",
+            "COLONET_INQUIRY",
+            JSON.stringify({ lot_id, name, email, phone, notes, gps, ts }),
+            "colonet_lot_map",
+          ])
+          .catch(() => {});
       }
       // Email Ariel + Saul
-      const transporter = require('nodemailer').createTransport({
-        host: 'smtp.gmail.com', port: 587, secure: false,
-        auth: { user: 'sgarcia1911@gmail.com', pass: process.env.GMAIL_APP_PASS || 'emgptqrmqdbxrpil' }
+      const transporter = require("nodemailer").createTransport({
+        host: "smtp.gmail.com",
+        port: 587,
+        secure: false,
+        auth: { user: "sgarcia1911@gmail.com", pass: process.env.GMAIL_APP_PASS || "emgptqrmqdbxrpil" },
       });
-      await transporter.sendMail({
-        from: '"LOAF Colonet" <sgarcia1911@gmail.com>',
-        to: 'sgarcia1911@gmail.com, ariel@enjoybaja.com',
-        subject: 'COLONET LOT INQUIRY - Lot #' + lot_id,
-        text: 'Name: ' + name + '
-Email: ' + email + '
-Phone: ' + phone + '
-Lot: #' + lot_id + '
-Notes: ' + (notes||'') + '
-GPS: ' + JSON.stringify(gps||{}) + '
-Time: ' + new Date(ts).toISOString()
-      }).catch(() => {});
+      await transporter
+        .sendMail({
+          from: '"LOAF Colonet" <sgarcia1911@gmail.com>',
+          to: "sgarcia1911@gmail.com, ariel@enjoybaja.com",
+          subject: "COLONET LOT INQUIRY - Lot #" + lot_id,
+          text:
+            "Name: " +
+            name +
+            "\nEmail: " +
+            email +
+            "\nPhone: " +
+            phone +
+            "\nLot: #" +
+            lot_id +
+            "\nNotes: " +
+            (notes || "") +
+            "\nGPS: " +
+            JSON.stringify(gps || {}) +
+            "\nTime: " +
+            new Date(ts).toISOString(),
+        })
+        .catch(() => {});
       return res.json({ ok: true });
     }
 
-    
-    if(action==='bachicha_inquiry'){
-      if(pool){await pool.query('INSERT INTO mortgage_brain_log(module,event,data,source)VALUES($1,$2,$3,$4)',['loaf','BACHICHA_INQUIRY',JSON.stringify({name,email,phone,notes,ts}),'bachicha_card']).catch(()=>{});}
-      const t=require('nodemailer').createTransport({host:'smtp.gmail.com',port:587,secure:false,auth:{user:'sgarcia1911@gmail.com',pass:process.env.GMAIL_APP_PASS||'emgptqrmqdbxrpil'}});
-      await t.sendMail({from:'"LOAF Bachicha" <sgarcia1911@gmail.com>',to:'sgarcia1911@gmail.com,ariel@enjoybaja.com',subject:'RANCHO EL BACHICHA INQUIRY',text:'Name: '+name+'\nEmail: '+email+'\nPhone: '+phone+'\nNotes: '+(notes||'')+'\nTime: '+new Date(ts).toISOString()}).catch(()=>{});
-      return res.json({ok:true});
+    if (action === "bachicha_inquiry") {
+      if (pool) {
+        await pool
+          .query("INSERT INTO mortgage_brain_log(module,event,data,source)VALUES($1,$2,$3,$4)", [
+            "loaf",
+            "BACHICHA_INQUIRY",
+            JSON.stringify({ name, email, phone, notes, ts }),
+            "bachicha_card",
+          ])
+          .catch(() => {});
+      }
+      const t = require("nodemailer").createTransport({
+        host: "smtp.gmail.com",
+        port: 587,
+        secure: false,
+        auth: { user: "sgarcia1911@gmail.com", pass: process.env.GMAIL_APP_PASS || "emgptqrmqdbxrpil" },
+      });
+      await t
+        .sendMail({
+          from: '"LOAF Bachicha" <sgarcia1911@gmail.com>',
+          to: "sgarcia1911@gmail.com,ariel@enjoybaja.com",
+          subject: "RANCHO EL BACHICHA INQUIRY",
+          text:
+            "Name: " +
+            name +
+            "\nEmail: " +
+            email +
+            "\nPhone: " +
+            phone +
+            "\nNotes: " +
+            (notes || "") +
+            "\nTime: " +
+            new Date(ts).toISOString(),
+        })
+        .catch(() => {});
+      return res.json({ ok: true });
     }
 
     res.json({ ok: true });
   } catch (e) {
-    console.error('[loaf/submit]', e.message);
+    console.error("[loaf/submit]", e.message);
     res.status(500).json({ error: e.message });
   }
 });
