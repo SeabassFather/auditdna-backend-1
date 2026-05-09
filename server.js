@@ -400,6 +400,10 @@ try {
   explicitMounts.push({ file: 'unsubscribe.js', path: '/api/unsubscribe' });
 } catch(e) { console.warn('[WARN] unsubscribe not found:', e.message); }
 
+// -- letters --> /api/letters
+try {
+  app.use('/api/letters', require('./routes/letters'));
+  explicitMounts.push({ file: 'letters.js', path: '/api/letters' });
 } catch(e) { console.warn('[WARN] letters not found:', e.message); }
 
 // -- LOAF chat agent (re-mount outside main try block to ensure availability)
