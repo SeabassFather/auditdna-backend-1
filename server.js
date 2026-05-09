@@ -400,13 +400,18 @@ try {
   explicitMounts.push({ file: 'unsubscribe.js', path: '/api/unsubscribe' });
 } catch(e) { console.warn('[WARN] unsubscribe not found:', e.message); }
 
-// -- letters --> /api/letters
-try {
-  app.use('/api/letters', require('./routes/letters'));
-  explicitMounts.push({ file: 'letters.js', path: '/api/letters' });
 } catch(e) { console.warn('[WARN] letters not found:', e.message); }
 
+// -- LOAF chat agent (re-mount outside main try block to ensure availability)
+try {
+  const loafChat = require('./routes/loaf-chat.routes');
+  app.use('/api/loaf/agent', loafChat);
+  app.use('/api/loaf', loafChat);
+  console.log('[OK] loaf-chat: mounted at /api/loaf/agent and /api/loaf');
+} catch(e) { console.error('[FAIL] loaf-chat mount:', e.message); }
+
 // -- audits --> /api/audits
+
 try {
   app.use('/api/audits', require('./routes/audits'));
   explicitMounts.push({ file: 'audits.js', path: '/api/audits' });
