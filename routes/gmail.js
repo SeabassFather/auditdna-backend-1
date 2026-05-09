@@ -47,6 +47,104 @@ const FROM_NAME     = process.env.FROM_NAME     || process.env.SMTP_FROM_NAME ||
 const FROM_ADDRESS  = process.env.FROM_ADDRESS  || process.env.SMTP_FROM     || 'Saul@mexausafg.com';
 const FROM_HEADER   = `${FROM_NAME} <${FROM_ADDRESS}>`;
 
+// ============================================================
+// PER-USER SENDER IDENTITY (Phase 2A - May 2026)
+// Loads sender identity from auth_users table based on JWT.
+// When user logs in, JWT carries their userId. On send, we load:
+//   display_name, company_name, title, phone, reply_to_email,
+//   bcc_emails, signature_block
+// And use those to override From header, set Reply-To, merge BCC,
+// and append signature to email body.
+//
+// Hector (id 45)  -> "Hector G. Mariscal | DEVAN, INC." Reply-To his Gmail
+// Saul   (id 32)  -> default Mexausa FG identity
+// Anyone else     -> falls back to module FROM_HEADER (Saul's default)
+//
+// SMTP envelope From stays as Saul@mexausafg.com always (server-auth).
+// Display From header changes per user.
+// ============================================================
+const jwt = require('jsonwebtoken');
+
+async function getSenderIdentity(req) {
+  try {
+    const authHeader = req && req.headers && req.headers.authorization || '';
+    const token = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : null;
+    if (!token) return null;
+
+    const secret = process.env.JWT_SECRET;
+    if (!secret) return null;
+
+    let payload;
+    try { payload = jwt.verify(token, secret); }
+    catch (e) { return null; }
+
+    const userId = payload.userId || payload.id || payload.user_id || payload.uid;
+    if (!userId) return null;
+
+    const q = await pgPool.query(
+      `SELECT id, username, display_name, company_name, title, phone,
+              reply_to_email, bcc_emails, signature_block
+         FROM auth_users
+        WHERE id = $1 AND COALESCE(is_active, true) = true
+        LIMIT 1`,
+      [userId]
+    );
+    if (!q.rows.length) return null;
+
+    const r = q.rows[0];
+    // Build display From header. If user has company_name, use it.
+    // Format: "Display Name | COMPANY" <FROM_ADDRESS>
+    // SMTP envelope From always stays as FROM_ADDRESS (Saul@mexausafg.com)
+    const displayPart = r.company_name
+      ? `${r.display_name || r.username} | ${r.company_name}`
+      : (r.display_name || r.username || FROM_NAME);
+    const fromHeader = `${displayPart} <${FROM_ADDRESS}>`;
+
+    return {
+      userId:        r.id,
+      username:      r.username,
+      displayName:   r.display_name,
+      companyName:   r.company_name,
+      title:         r.title,
+      phone:         r.phone,
+      replyTo:       r.reply_to_email || null,
+      bccList:       r.bcc_emails ? String(r.bcc_emails).split(',').map(s => s.trim()).filter(Boolean) : [],
+      signature:     r.signature_block || null,
+      fromHeader:    fromHeader,
+    };
+  } catch (err) {
+    console.warn('[getSenderIdentity] failed:', err.message);
+    return null;
+  }
+}
+
+// Helper: append signature to body (text/html aware)
+function applySignature(html, text, identity) {
+  if (!identity || !identity.signature) {
+    return { html: html, text: text };
+  }
+  const sigText = '\n\n--\n' + identity.signature;
+  const sigHtml = '<br><br><div style="border-top:1px solid #cbd5e1;margin-top:24px;padding-top:12px;color:#475569;font-size:12px;font-family:Arial,sans-serif;white-space:pre-line">' +
+                  identity.signature.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;') +
+                  '</div>';
+  return {
+    html: (html || '') + sigHtml,
+    text: (text || '') + sigText,
+  };
+}
+
+// Helper: merge user's BCC list with caller-provided BCC
+function mergeBcc(callerBcc, identity) {
+  if (!identity || !identity.bccList || !identity.bccList.length) {
+    return callerBcc || undefined;
+  }
+  const callerList = callerBcc
+    ? String(callerBcc).split(',').map(s => s.trim()).filter(Boolean)
+    : [];
+  const merged = [...new Set([...callerList, ...identity.bccList])];
+  return merged.length ? merged.join(', ') : undefined;
+}
+
 // Build nodemailer transporter Î“Ã‡Ã¶ reused for all sends
 function createTransport() {
   return nodemailer.createTransport({
@@ -386,7 +484,7 @@ router.get('/callback', async (req, res) => {
 // GMAIL API SEND (OAuth) â€” bypasses SMTP, works on Railway
 // Uses the same oauth2Client + storedTokens already used for /messages
 // ============================================================
-async function gmailApiSend({ to, cc, bcc, subject, html, text, attachments = [] }) {
+async function gmailApiSend({ to, cc, bcc, subject, html, text, attachments = [], identity = null }) {
   const tokenOk = await ensureFreshTokens();
   if (!tokenOk || !storedTokens) {
     throw new Error('Gmail OAuth not authenticated â€” visit /api/gmail/auth');
@@ -394,12 +492,21 @@ async function gmailApiSend({ to, cc, bcc, subject, html, text, attachments = []
   oauth2Client.setCredentials(storedTokens);
   const gmail = google.gmail({ version: 'v1', auth: oauth2Client });
 
+  // Per-user identity overrides (Phase 2A)
+  const fromHdr  = (identity && identity.fromHeader) || FROM_HEADER;
+  const replyTo  = identity && identity.replyTo;
+  const bccFinal = mergeBcc(bcc, identity);
+  const sigOut   = applySignature(html, text, identity);
+  html = sigOut.html;
+  text = sigOut.text;
+
   const boundary = '__BOUND_' + Date.now();
   const headers = [
-    `From: ${FROM_HEADER}`,
+    `From: ${fromHdr}`,
+    replyTo ? `Reply-To: ${replyTo}` : null,
     `To: ${Array.isArray(to) ? to.join(', ') : to}`,
     cc ? `Cc: ${cc}` : null,
-    bcc ? `Bcc: ${bcc}` : null,
+    bccFinal ? `Bcc: ${bccFinal}` : null,
     `Subject: =?UTF-8?B?${Buffer.from(subject || '').toString('base64')}?=`,
     'MIME-Version: 1.0',
     attachments.length
@@ -445,8 +552,16 @@ async function gmailApiSend({ to, cc, bcc, subject, html, text, attachments = []
   return { messageId: result.data.id, threadId: result.data.threadId };
 }
 
-async function smtpSend({ to, cc, bcc, subject, html, text, attachments = [] }) {
+async function smtpSend({ to, cc, bcc, subject, html, text, attachments = [], identity = null }) {
   const transport = createTransport();
+
+  // Per-user identity overrides (Phase 2A)
+  const fromHdr  = (identity && identity.fromHeader) || FROM_HEADER;
+  const replyTo  = identity && identity.replyTo;
+  const bccFinal = mergeBcc(bcc, identity);
+  const sigOut   = applySignature(html, text, identity);
+  html = sigOut.html;
+  text = sigOut.text;
 
   // Build attachments array for nodemailer
   const mailAttachments = attachments.map(a => ({
@@ -456,10 +571,11 @@ async function smtpSend({ to, cc, bcc, subject, html, text, attachments = [] }) 
   }));
 
   const info = await transport.sendMail({
-    from:        FROM_HEADER,   // always saul@mexausafg.com
+    from:        fromHdr,         // per-user display From (envelope still SMTP_USER)
+    replyTo:     replyTo || undefined,
     to,
-    cc:          cc  || undefined,
-    bcc:         bcc || undefined,
+    cc:          cc       || undefined,
+    bcc:         bccFinal || undefined,
     subject,
     html:        html || text || '',
     text:        text || undefined,
@@ -483,6 +599,11 @@ router.post('/send', async (req, res) => {
       return res.status(500).json({ error: 'SMTP_PASS not configured in .env Î“Ã‡Ã¶ see setup instructions' });
     }
 
+    // Load per-user sender identity from JWT (Phase 2A).
+    // Hector -> DEVAN identity. Saul -> Mexausa FG. Anyone else -> default.
+    const identity = await getSenderIdentity(req);
+    const fromHdrLog = identity ? identity.fromHeader : FROM_HEADER;
+
     let info;
     try {
       info = await gmailApiSend({
@@ -490,8 +611,9 @@ router.post('/send', async (req, res) => {
         html:        html || body,
         text:        body,
         attachments: attachments || [],
+        identity,
       });
-      console.log(`[GMAIL-API] Sent: ${FROM_ADDRESS} -> ${to} | MsgID: ${info.messageId}`);
+      console.log(`[GMAIL-API] Sent: ${fromHdrLog} -> ${to} | MsgID: ${info.messageId}`);
     } catch (apiErr) {
       console.warn('[GMAIL-API] failed, falling back to SMTP:', apiErr.message);
       info = await smtpSend({
@@ -499,10 +621,11 @@ router.post('/send', async (req, res) => {
         html:        html || body,
         text:        body,
         attachments: attachments || [],
+        identity,
       });
-      console.log(`[SMTP] Sent: ${FROM_ADDRESS} -> ${to} | MsgID: ${info.messageId}`);
+      console.log(`[SMTP] Sent: ${fromHdrLog} -> ${to} | MsgID: ${info.messageId}`);
     }
-    res.json({ success: true, messageId: info.messageId, from: FROM_ADDRESS });
+    res.json({ success: true, messageId: info.messageId, from: fromHdrLog });
 
   } catch (err) {
     console.error('[SMTP] Send error:', err.message);
@@ -520,6 +643,12 @@ router.post('/send-bulk', async (req, res) => {
     if (!recipients || !Array.isArray(recipients) || !subject || (!body && !html)) {
       return res.status(400).json({ error: 'Missing: recipients (array), subject, body/html' });
     }
+
+    // Load per-user sender identity from JWT (Phase 2A).
+    // Hector -> DEVAN identity. Saul -> Mexausa FG. Anyone else -> default.
+    const identity = await getSenderIdentity(req);
+    const fromHdrLog = identity ? identity.fromHeader : FROM_HEADER;
+    if (identity) console.log(`[send-bulk] sender identity: ${identity.username} (${fromHdrLog})`);
 
     // SUPPRESSION GUARD - filter dead/bouncing addresses before send
     let suppressedCount = 0;
@@ -556,6 +685,7 @@ router.post('/send-bulk', async (req, res) => {
           html:        personalizedHtml,
           text:        personalizedText,
           attachments,
+          identity,
         };
 
         let info;
