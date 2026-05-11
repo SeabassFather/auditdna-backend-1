@@ -1510,7 +1510,23 @@ try {
   console.error('[NADINE] init failed:', err.message);
 }
 
-__server.listen(PORT, () => {
+__
+// ── LOAF PULSE — fires every 6 hours, sends actionable brief to Saul ─────────
+(function startLOAFPulse() {
+  const SIX_HOURS = 6 * 60 * 60 * 1000;
+  const firePulse = () => {
+    fetch('http://localhost:' + (process.env.PORT || 5050) + '/api/loaf/pulse', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}'
+    }).then(r => r.json()).then(d => {
+      console.log('[LOAF PULSE] Fired:', d.ok ? 'OK' : 'FAIL');
+    }).catch(e => console.error('[LOAF PULSE] Error:', e.message));
+  };
+  // First fire after 60 seconds (let server fully boot), then every 6 hours
+  setTimeout(() => { firePulse(); setInterval(firePulse, SIX_HOURS); }, 60000);
+  console.log('[OK] LOAF Pulse: scheduled every 6 hours');
+})();
+
+server.listen(PORT, () => {
   // ============================================================
   // 2026-05-01: Auto-start swarm Phase 4 coordinator
   // (start() logs its own status, does not return a Promise)
