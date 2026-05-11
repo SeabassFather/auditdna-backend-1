@@ -1,4 +1,4 @@
-// ============================================================================
+﻿// ============================================================================
 // PRISCILLA - Marketing & Sales Intelligence Agent for LOAF (Mexausa Food Group)
 // ============================================================================
 // Reports to: Saul Garcia <sgarcia1911@gmail.com>
@@ -13,7 +13,7 @@ const SAUL_EMAIL = 'sgarcia1911@gmail.com';
 const AGENT_NAME = 'Priscilla';
 const AGENT_VERSION = '1.0.0';
 const POLL_INTERVAL_MS = 60 * 1000;        // poll every 60s
-const DIGEST_INTERVAL_MS = 60 * 60 * 1000; // hourly digest
+const DIGEST_INTERVAL_MS = 6 * 60 * 60 * 1000; // every 6 hours
 const HOT_LEAD_TOPICS = ['loaf.mini1003.submitted', 'loaf.finance.click', 'loaf.tuntan.click', 'loaf.precio.click'];
 
 const SPONSOR_LABELS = {
@@ -76,7 +76,7 @@ async function pollBrain(pool) {
       });
       _state.lastPolledEventId = row.id;
     }
-    if (r.rows.length > 0) log('polled ' + r.rows.length + ' new event(s) — watermark=' + _state.lastPolledEventId);
+    if (r.rows.length > 0) log('polled ' + r.rows.length + ' new event(s) â€” watermark=' + _state.lastPolledEventId);
   } catch (err) {
     _state.errors++;
     if (_state.errors % 10 === 1) log('poll error: ' + err.message);
@@ -237,3 +237,4 @@ function init(app, pool, smtp) {
 }
 
 module.exports = { init, buildDigest, _state };
+

@@ -1,6 +1,6 @@
-// =============================================================================
+﻿// =============================================================================
 // File: C:\AuditDNA\backend\services\enrique.js
-// ENRIQUE — Head AI Command Agent
+// ENRIQUE â€” Head AI Command Agent
 // Monitors: Brain, Gatekeeper, Autonomous Blast, PM2, SMTP, Anthropic
 // Reports: Email (sgarcia1911@gmail.com) + ntfy.sh smartwatch
 // Schedule: Status report every 60min | Critical alerts immediate
@@ -12,9 +12,9 @@ const crypto = require('crypto');
 const NTFY_TOPIC   = process.env.NTFY_TOPIC   || 'mexausa-saul';
 const NTFY_URL     = `https://ntfy.sh/${NTFY_TOPIC}`;
 const REPORT_EMAIL = process.env.ENRIQUE_EMAIL || 'sgarcia1911@gmail.com';
-const REPORT_EVERY = 60 * 60 * 1000; // 1 hour
+const REPORT_EVERY = 6 * 60 * 60 * 1000; // 1 hour
 
-// ─── SMARTWATCH NOTIFICATION via ntfy.sh ─────────────────────────────────────
+// â”€â”€â”€ SMARTWATCH NOTIFICATION via ntfy.sh â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 async function notify(title, message, priority = 'default') {
   try {
     await fetch(NTFY_URL, {
@@ -28,22 +28,22 @@ async function notify(title, message, priority = 'default') {
     });
     console.log(`[ENRIQUE] Smartwatch ping: ${title}`);
   } catch (e) {
-    // ntfy failure is non-fatal — fallback to email only
+    // ntfy failure is non-fatal â€” fallback to email only
     console.error('[ENRIQUE] ntfy failed:', e.message);
   }
 }
 
-// ─── EMAIL REPORT ─────────────────────────────────────────────────────────────
+// â”€â”€â”€ EMAIL REPORT â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 async function sendReport(transporter, subject, body) {
   try {
     await transporter.sendMail({
-      from: '"ENRIQUE — LOAF Command" <sgarcia1911@gmail.com>',
+      from: '"ENRIQUE â€” LOAF Command" <sgarcia1911@gmail.com>',
       to: REPORT_EMAIL,
       subject,
       text: body,
       html: `<div style="font-family:Arial,sans-serif;font-size:13px;line-height:1.7;max-width:640px;margin:0 auto;padding:20px">
         <div style="background:#0F1419;color:#0F7B41;padding:10px 16px;border-radius:6px 6px 0 0;font-family:monospace;font-size:11px;letter-spacing:3px;text-transform:uppercase;font-weight:700">
-          ENRIQUE — MEXAUSA FOOD GROUP COMMAND CENTER
+          ENRIQUE â€” MEXAUSA FOOD GROUP COMMAND CENTER
         </div>
         <div style="background:#f8fafb;padding:20px;border:1px solid #e2e8f0;border-top:none;border-radius:0 0 6px 6px;white-space:pre-wrap;font-family:monospace;font-size:12px;color:#1a1a1a">
           ${body.replace(/</g,'&lt;').replace(/>/g,'&gt;')}
@@ -59,7 +59,7 @@ async function sendReport(transporter, subject, body) {
   }
 }
 
-// ─── GATHER PLATFORM STATUS ───────────────────────────────────────────────────
+// â”€â”€â”€ GATHER PLATFORM STATUS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 async function gatherStatus(pool, ai) {
   const results = {};
 
@@ -98,7 +98,7 @@ async function gatherStatus(pool, ai) {
   return results;
 }
 
-// ─── GENERATE AI REPORT ───────────────────────────────────────────────────────
+// â”€â”€â”€ GENERATE AI REPORT â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 async function generateReport(ai, status) {
   const prompt = `You are ENRIQUE, the Head AI Command Agent for Mexausa Food Group's LOAF agricultural intelligence platform. Generate a concise executive status report for Saul Garcia (Owner) based on this platform data:
 
@@ -124,7 +124,7 @@ Keep it tight. No emojis. Direct. This goes to Saul's phone and email.`;
   return ai.ask(prompt, 'You are ENRIQUE, Head AI Command Agent for Mexausa Food Group. You write concise, actionable executive reports. No emojis. No fluff. Direct operator tone.');
 }
 
-// ─── CRITICAL ALERT MONITOR ───────────────────────────────────────────────────
+// â”€â”€â”€ CRITICAL ALERT MONITOR â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 async function watchForAlerts(pool, transporter) {
   try {
     // Check for gatekeeper failures in last 10 min
@@ -133,7 +133,7 @@ async function watchForAlerts(pool, transporter) {
     );
     if (parseInt(fails.rows[0].n) >= 3) {
       const msg = `ALERT: ${fails.rows[0].n} gatekeeper failures in last 10 minutes. Check backend logs immediately.`;
-      await notify('LOAF ALERT — Gatekeeper Failures', msg, 'high');
+      await notify('LOAF ALERT â€” Gatekeeper Failures', msg, 'high');
       await sendReport(transporter, '[ENRIQUE ALERT] Gatekeeper Pipeline Failures', msg);
     }
 
@@ -143,14 +143,14 @@ async function watchForAlerts(pool, transporter) {
     );
     if (parseInt(blastFails.rows[0].n) >= 2) {
       const msg = `ALERT: ${blastFails.rows[0].n} blast agent failures in last 30 minutes. Email delivery may be degraded.`;
-      await notify('LOAF ALERT — Blast Agent Failures', msg, 'high');
+      await notify('LOAF ALERT â€” Blast Agent Failures', msg, 'high');
     }
   } catch (e) {
     console.error('[ENRIQUE] Alert watch failed:', e.message);
   }
 }
 
-// ─── START ENRIQUE ────────────────────────────────────────────────────────────
+// â”€â”€â”€ START ENRIQUE â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function startEnrique(app, brain) {
   const pool       = app.get('pool');
   const ai         = app.get('ai');
@@ -164,7 +164,7 @@ function startEnrique(app, brain) {
       console.log('[ENRIQUE] Generating hourly status report...');
       const status = await gatherStatus(pool, ai);
       const report = await generateReport(ai, status);
-      const subject = `[ENRIQUE] LOAF Platform Status — ${new Date().toLocaleString('en-US', {timeZone:'America/Los_Angeles'})} PST`;
+      const subject = `[ENRIQUE] LOAF Platform Status â€” ${new Date().toLocaleString('en-US', {timeZone:'America/Los_Angeles'})} PST`;
 
       await sendReport(transporter, subject, report);
       await notify('LOAF Status Report', report.substring(0, 280), 'default');
@@ -188,7 +188,8 @@ function startEnrique(app, brain) {
     notify('ENRIQUE ONLINE', 'LOAF Command Agent active. Monitoring all systems. First report in 3 min.', 'default');
   }, 15000);
 
-  console.log('[ENRIQUE] Online — reports every 60min, alerts every 10min, smartwatch via ntfy.sh/' + NTFY_TOPIC);
+  console.log('[ENRIQUE] Online â€” reports every 60min, alerts every 10min, smartwatch via ntfy.sh/' + NTFY_TOPIC);
 }
 
 module.exports = { startEnrique, notify, sendReport };
+
