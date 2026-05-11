@@ -518,4 +518,334 @@ router.get("/reports/corridor", requireAuth, async (req, res) => {
   res.json(await dataEngine.generateCorridorIntelligence(db, start, end));
 });
 
+
+// ============================================================================
+// LOAF INVENTORY POST — grower posts floor product, auto-pings matched buyers
+// ============================================================================
+router.post("/inventory-post", async (req, res) => {
+  const { name, phone, commodity, volume, price, location, condition, notes,
+          lat, lng, radius, auto_ping_buyers, country, commission_pct } = req.body;
+  try {
+    const db = getDb();
+    const ts = new Date().toISOString();
+    await db.query(
+      `INSERT INTO loaf_inventory (name,phone,commodity,volume,price,location,condition,notes,lat,lng,radius,country,commission_pct,created_at)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14)
+       ON CONFLICT DO NOTHING`,
+      [name,phone,commodity,volume,price,location,condition,notes||'',
+       lat||null,lng||null,radius||100,country||'MX',commission_pct||'1.5',ts]
+    ).catch(()=>{});
+
+    // Auto-ping matched buyers via gmail route
+    if (auto_ping_buyers) {
+      const commodityClean = (commodity||'').split('/')[0].trim().toLowerCase();
+      const radiusMi = parseInt(radius)||100;
+      const subject = `[LOAF] ${commodity} Available Now — ${volume} @ ${price} | ${location}`;
+      const body = `LOAF INVENTORY ALERT
+
+A grower just posted floor product on the LOAF network:
+
+Commodity: ${commodity}
+Volume: ${volume}
+Price: ${price}
+Location: ${location}
+Condition: ${condition||'Available now'}
+Country: ${country||'Mexico'}
+Radius: ${radiusMi} miles
+${notes?'Notes: '+notes+'
+':''}
+Contact: ${name} — ${phone}
+
+Respond directly to the grower. Deal facilitated by Mexausa Food Group.
+Platform fee: ${commission_pct||1.5}% on closed deals only — never upfront.
+
+mexausafg.com | loaf.mexausafg.com`;
+
+      // Ping Saul immediately
+      try {
+        await fetch(`${process.env.REACT_APP_API_URL||'http://localhost:5050'}/api/gmail/send`, {
+          method:'POST', headers:{'Content-Type':'application/json'},
+          body: JSON.stringify({
+            to: 'sgarcia1911@gmail.com',
+            subject: `[LOAF ACTION] ${commodity} posted — ${volume} @ ${price}`,
+            body: body
+          })
+        });
+      } catch(_) {}
+
+      // Query CRM for matched buyers and ping them
+      try {
+        const buyers = await db.query(
+          `SELECT email, first_name, company_name FROM contacts
+           WHERE (commodities ILIKE $1 OR commodity ILIKE $1 OR company_name ILIKE $2)
+           AND email IS NOT NULL AND email != ''
+           AND (crmtype = 'buyer' OR crm_type = 'buyer' OR role ILIKE '%buyer%' OR role ILIKE '%wholesale%' OR role ILIKE '%distributor%')
+           LIMIT 150`,
+          [`%${commodityClean}%`, `%produce%`]
+        ).catch(()=>({rows:[]}));
+
+        let pinged = 0;
+        for (const buyer of (buyers.rows||[])) {
+          try {
+            await fetch(`${process.env.REACT_APP_API_URL||'http://localhost:5050'}/api/gmail/send`, {
+              method:'POST', headers:{'Content-Type':'application/json'},
+              body: JSON.stringify({
+                to: buyer.email,
+                subject: subject,
+                body: `Hi ${buyer.first_name||buyer.company_name||''},
+
+${body}
+
+This alert was sent because you are registered as a produce buyer on the LOAF network.
+To unsubscribe reply STOP.`
+              })
+            });
+            pinged++;
+          } catch(_) {}
+        }
+        res.json({ ok: true, pinged, commodity, radius: radiusMi, ts });
+      } catch(e) {
+        res.json({ ok: true, pinged: 0, note: 'Posted — buyer ping pending', error: e.message });
+      }
+    } else {
+      res.json({ ok: true, ts });
+    }
+  } catch(e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// ============================================================================
+// LOAF BUYER NEED — buyer posts what they need, auto-pings matched growers
+// ============================================================================
+router.post("/buyer-need", async (req, res) => {
+  const { name, company, phone, email, commodity, volume, max_price,
+          needed_by, location, delivery, radius, auto_ping_growers } = req.body;
+  try {
+    const db = getDb();
+    const commodityClean = (commodity||'').split('/')[0].trim().toLowerCase();
+    const radiusMi = parseInt(radius)||0;
+    const subject = `[LOAF] Buyer Needs ${commodity} — ${volume} | ${location}`;
+
+    // Ping Saul
+    try {
+      await fetch(`${process.env.REACT_APP_API_URL||'http://localhost:5050'}/api/gmail/send`, {
+        method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({
+          to: 'sgarcia1911@gmail.com',
+          subject: `[LOAF ACTION] Buyer needs ${commodity} — ${volume}`,
+          body: `LOAF BUYER NEED
+
+${name} (${company||''})
+Phone: ${phone}
+Email: ${email}
+Needs: ${commodity} — ${volume} @ max $${max_price}
+By: ${needed_by||'ASAP'}
+Location: ${location}
+Delivery: ${delivery}
+Radius: ${radiusMi===0?'Global':radiusMi+' miles'}
+
+Ping all matched growers — mexausafg.com`
+        })
+      });
+    } catch(_) {}
+
+    // Query CRM for matched growers
+    if (auto_ping_growers) {
+      const growers = await db.query(
+        `SELECT email, first_name, company_name FROM contacts
+         WHERE (commodities ILIKE $1 OR commodity ILIKE $1)
+         AND email IS NOT NULL AND email != ''
+         AND (crmtype = 'grower' OR crm_type = 'grower' OR role ILIKE '%grower%' OR role ILIKE '%producer%' OR role ILIKE '%farmer%')
+         LIMIT 200`,
+        [`%${commodityClean}%`]
+      ).catch(()=>({rows:[]}));
+
+      let pinged = 0;
+      for (const grower of (growers.rows||[])) {
+        try {
+          await fetch(`${process.env.REACT_APP_API_URL||'http://localhost:5050'}/api/gmail/send`, {
+            method:'POST', headers:{'Content-Type':'application/json'},
+            body: JSON.stringify({
+              to: grower.email,
+              subject: subject,
+              body: `Hi ${grower.first_name||grower.company_name||''},
+
+A buyer is looking for your product on the LOAF network right now:
+
+Commodity: ${commodity}
+Volume needed: ${volume}
+Max price: $${max_price}
+Needed by: ${needed_by||'ASAP'}
+Buyer location: ${location}
+Delivery: ${delivery}
+
+Contact the buyer directly:
+Name: ${name} (${company||''})
+Phone: ${phone}
+Email: ${email}
+
+Deal facilitated by Mexausa Food Group. Platform fee 1.5% on closed deals only.
+
+mexausafg.com | loaf.mexausafg.com`
+            })
+          });
+          pinged++;
+        } catch(_) {}
+      }
+      res.json({ ok: true, pinged, commodity, radius: radiusMi });
+    } else {
+      res.json({ ok: true });
+    }
+  } catch(e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// ============================================================================
+// LOAF FACTORING INTAKE — routes to Liquid Capital Group
+// ============================================================================
+router.post("/factoring-intake", async (req, res) => {
+  const { name, phone, buyer, commodity, amount, type, factoring_partner } = req.body;
+  try {
+    const advance = (parseFloat(amount)||0) * 0.85;
+    const fee = (parseFloat(amount)||0) * 0.035;
+    const body = `LOAF FACTORING REQUEST
+
+Type: ${type==='po'?'PO Finance':'AR Invoice Factoring'}
+Submitted by: ${name} — ${phone}
+Buyer/Debtor: ${buyer}
+Commodity: ${commodity}
+Invoice Amount: $${parseFloat(amount).toLocaleString()}
+Estimated Advance (85%): $${advance.toLocaleString('en-US',{maximumFractionDigits:0})}
+Estimated Fee (3.5%): $${fee.toLocaleString('en-US',{maximumFractionDigits:0})}
+
+Factoring Partner: ${factoring_partner||'Liquid Capital Group'}
+First Right of Refusal: YES
+
+Action required: Review and contact grower within 1 hour.
+
+mexausafg.com`;
+
+    await fetch(`${process.env.REACT_APP_API_URL||'http://localhost:5050'}/api/gmail/send`, {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({
+        to: 'sgarcia1911@gmail.com',
+        subject: `[LOAF FACTORING] $${parseFloat(amount).toLocaleString()} — ${commodity} — ${name}`,
+        body
+      })
+    }).catch(()=>{});
+
+    res.json({ ok: true, advance: advance.toFixed(2), fee: fee.toFixed(2), partner: 'Liquid Capital Group' });
+  } catch(e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// ============================================================================
+// LOAF EQUIPMENT POST
+// ============================================================================
+router.post("/equipment-post", async (req, res) => {
+  const { name, phone, type, desc, listing, location, market_value, listing_price } = req.body;
+  const maxAllowed = (parseFloat(market_value)||0) * 0.20;
+  if (market_value && listing_price && parseFloat(listing_price) > maxAllowed) {
+    return res.status(400).json({ error: 'Price exceeds 20% of market value. Platform rule violation.' });
+  }
+  try {
+    await fetch(`${process.env.REACT_APP_API_URL||'http://localhost:5050'}/api/gmail/send`, {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({
+        to: 'sgarcia1911@gmail.com',
+        subject: `[LOAF EQUIPMENT] ${listing||'For Sale'}: ${type} — ${name}`,
+        body: `LOAF EQUIPMENT LISTING
+
+${name} — ${phone}
+Type: ${type}
+Listing: ${listing}
+Description: ${desc}
+Location: ${location}
+Market Value: $${market_value}
+Listing Price: $${listing_price} (${((parseFloat(listing_price)/parseFloat(market_value))*100).toFixed(1)}% of value)
+
+mexausafg.com`
+      })
+    }).catch(()=>{});
+    res.json({ ok: true });
+  } catch(e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// ============================================================================
+// LOAF ECOCRATE INQUIRY — routes to Hector Mariscal
+// ============================================================================
+router.post("/ecocrate-inquiry", async (req, res) => {
+  const { name, company, email, phone, product, notes } = req.body;
+  try {
+    await fetch(`${process.env.REACT_APP_API_URL||'http://localhost:5050'}/api/gmail/send`, {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({
+        to: 'sgarcia1911@gmail.com',
+        cc: 'h11mariscal@gmail.com',
+        subject: `[LOAF] EcoCrate Sample Request — ${company||name}`,
+        body: `ECOCRATE / PLASTIPAC INQUIRY via LOAF
+
+Name: ${name}
+Company: ${company||'—'}
+Email: ${email}
+Phone: ${phone||'—'}
+Current box/product: ${product||'—'}
+Notes: ${notes||'—'}
+
+Forwarded to Hector G. Mariscal — DEVAN INC.
+loaf.mexausafg.com`
+      })
+    }).catch(()=>{});
+    res.json({ ok: true });
+  } catch(e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// ============================================================================
+// LOAF PULSE — 3/6hr actionable report to Saul (call from cron or manually)
+// ============================================================================
+router.post("/pulse", async (req, res) => {
+  try {
+    const db = getDb();
+    const since = new Date(Date.now() - 6*60*60*1000).toISOString();
+
+    const [inv, buyers, equip, factor] = await Promise.all([
+      db.query(`SELECT COUNT(*) as n FROM loaf_inventory WHERE created_at > $1`,[since]).catch(()=>({rows:[{n:0}]})),
+      db.query(`SELECT COUNT(*) as n FROM loaf_buyer_needs WHERE created_at > $1`,[since]).catch(()=>({rows:[{n:0}]})),
+      db.query(`SELECT COUNT(*) as n FROM loaf_equipment WHERE created_at > $1`,[since]).catch(()=>({rows:[{n:0}]})),
+      db.query(`SELECT COUNT(*) as n, COALESCE(SUM(amount),0) as total FROM loaf_factoring WHERE created_at > $1`,[since]).catch(()=>({rows:[{n:0,total:0}]}))
+    ]);
+
+    const report = `LOAF 6-HOUR PULSE
+${new Date().toLocaleString()}
+
+ACTIONABLE ITEMS:
+- Inventory posts: ${inv.rows[0].n}
+- Buyer needs posted: ${buyers.rows[0].n}
+- Equipment listings: ${equip.rows[0].n}
+- Factoring requests: ${factor.rows[0].n} ($${parseFloat(factor.rows[0].total).toLocaleString()})
+
+${parseInt(inv.rows[0].n)+parseInt(buyers.rows[0].n)===0?'No new activity.':'Review and follow up on open items at mexausafg.com'}`;
+
+    await fetch(`${process.env.REACT_APP_API_URL||'http://localhost:5050'}/api/gmail/send`, {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({
+        to: 'sgarcia1911@gmail.com',
+        subject: `[LOAF PULSE] ${new Date().toLocaleDateString()} — ${parseInt(inv.rows[0].n)+parseInt(buyers.rows[0].n)} actions`,
+        body: report
+      })
+    }).catch(()=>{});
+
+    res.json({ ok: true, report });
+  } catch(e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
 module.exports = router;
