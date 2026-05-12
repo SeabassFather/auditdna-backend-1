@@ -193,8 +193,8 @@ async function crmClassifier(data, validation) {
       [
         data.companyLegal,
         data.contactEmail,
-        data.contactPhone||''
-        data.state||''
+        data.contactPhone||'',
+        data.state||'',
         validation.role,
         `Tier: ${validation.tier}. Score: ${validation.score}. Type: ${data.entityType}. EIN: ${data.ein||'N/A'}. Registered via mexausafg.com.`
       ]
