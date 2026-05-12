@@ -8,6 +8,7 @@
 // GET    /api/deals/summary (Saul dashboard feed)
 // ============================================================================
 const express = require('express');
+const { calcCommission } = require('../services/commission-engine');
 const router = express.Router();
 const pool = require('../db');
 
@@ -102,9 +103,17 @@ router.post('/create', async (req, res) => {
     commission_pct, factoring_partner, origin, notes
   } = req.body;
 
-  const commPct = parseFloat(commission_pct) || 2.5;
   const tv = parseFloat(total_value) || (parseFloat(price_agreed||price_fob||0) * parseFloat(volume||1));
-  const commAmt = (tv * commPct / 100).toFixed(2);
+  const commCalc = calcCommission({
+    commodity: commodity||'',
+    grower_country: grower_country||'MX',
+    total_value: tv,
+    prior_deals: parseInt(req.body.prior_deals)||0,
+    deal_duration_days: parseInt(req.body.deal_duration_days)||0,
+    sale_type: sale_type||'direct',
+  });
+  const commPct = commCalc.pct;
+  const commAmt = commCalc.amount.toFixed(2);
   const landed = (parseFloat(price_fob||0) + parseFloat(freight_per_ctn||0)).toFixed(2);
 
   try {
@@ -151,7 +160,7 @@ View at mexausafg.com
 Ref: ${ref}`
     );
 
-    res.json({ ok: true, deal_ref: ref, deal });
+    res.json({ ok: true, deal_ref: ref, deal, commission: commCalc });
   } catch(e) {
     res.status(500).json({ error: e.message });
   }
