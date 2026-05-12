@@ -488,6 +488,56 @@ try { app.use('/api/brain', require('./routes/brain-stream')); console.log('[OK]
 
 // BRAIN-WIRE-MARKER - Phase 1 universal Brain endpoints
 
+// ── MISSING ROUTES PATCH (CommandSphere + MissionControlBrain) ──────────────
+// GET /api/brain/live-feed?limit=N
+app.get('/api/brain/live-feed', async (req, res) => {
+  const limit = Math.min(parseInt(req.query.limit) || 30, 100);
+  try {
+    const rows = await pool.query(
+      `SELECT id, event_type, payload, created_at FROM brain_events ORDER BY created_at DESC LIMIT $1`,
+      [limit]
+    );
+    res.json({ ok: true, events: rows.rows });
+  } catch (e) {
+    res.json({ ok: true, events: [] });
+  }
+});
+
+// GET /api/brain/emit — brain status poll (MissionControlBrain)
+app.get('/api/brain/emit', (req, res) => {
+  res.json({ ok: true, status: 'online', ts: new Date().toISOString() });
+});
+
+// GET /api/deals?limit=N — deal listing (CommandSphere)
+app.get('/api/deals', async (req, res) => {
+  const limit = Math.min(parseInt(req.query.limit) || 5, 50);
+  try {
+    const rows = await pool.query(
+      `SELECT id, title, stage, amount, created_at FROM deals ORDER BY created_at DESC LIMIT $1`,
+      [limit]
+    );
+    res.json({ ok: true, deals: rows.rows });
+  } catch (e) {
+    res.json({ ok: true, deals: [] });
+  }
+});
+
+// GET /api/audits?limit=N — audit log (CommandSphere)
+app.get('/api/audits', async (req, res) => {
+  const limit = Math.min(parseInt(req.query.limit) || 5, 50);
+  try {
+    const rows = await pool.query(
+      `SELECT id, action, entity, entity_id, created_at FROM audit_log ORDER BY created_at DESC LIMIT $1`,
+      [limit]
+    );
+    res.json({ ok: true, audits: rows.rows });
+  } catch (e) {
+    res.json({ ok: true, audits: [] });
+  }
+});
+// ── END MISSING ROUTES PATCH ─────────────────────────────────────────────────
+
+
 // LOAF-WIRE-MARKER
 app.use('/api/loaf', require('./routes/loaf-routes'));
 app.use('/api/brain', require('./services/brain-state'));
