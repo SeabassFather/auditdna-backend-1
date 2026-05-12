@@ -46,7 +46,7 @@ async function ensureTable() {
       freight_region  VARCHAR(40),
       freight_per_ctn NUMERIC(8,2),
       landed_cost     NUMERIC(12,2),
-      commission_pct  NUMERIC(5,3) DEFAULT 1.500,
+      commission_pct  NUMERIC(5,3) DEFAULT 2.500,
       commission_amt  NUMERIC(10,2),
       factoring_partner VARCHAR(80) DEFAULT 'Liquid Capital Group',
       factoring_amt   NUMERIC(14,2),
@@ -102,7 +102,7 @@ router.post('/create', async (req, res) => {
     commission_pct, factoring_partner, origin, notes
   } = req.body;
 
-  const commPct = parseFloat(commission_pct) || 1.5;
+  const commPct = parseFloat(commission_pct) || 2.5;
   const tv = parseFloat(total_value) || (parseFloat(price_agreed||price_fob||0) * parseFloat(volume||1));
   const commAmt = (tv * commPct / 100).toFixed(2);
   const landed = (parseFloat(price_fob||0) + parseFloat(freight_per_ctn||0)).toFixed(2);
