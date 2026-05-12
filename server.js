@@ -488,6 +488,11 @@ try { app.use('/api/brain', require('./routes/brain-stream')); console.log('[OK]
 
 // BRAIN-WIRE-MARKER - Phase 1 universal Brain endpoints
 
+// ── USER ACTIVITY + SEED USERS ───────────────────────────────────────────────
+try { app.use('/api/user-activity', require('./routes/user-activity')); console.log('[OK] user-activity mounted'); } catch(e) { console.error('[FAIL] user-activity:', e.message); }
+try { app.use('/api/admin', require('./routes/seed-users')); console.log('[OK] seed-users mounted'); } catch(e) { console.error('[FAIL] seed-users:', e.message); }
+
+
 // ── MISSING ROUTES PATCH (CommandSphere + MissionControlBrain) ──────────────
 // GET /api/brain/live-feed?limit=N
 app.get('/api/brain/live-feed', async (req, res) => {
