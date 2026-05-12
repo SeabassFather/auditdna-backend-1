@@ -497,6 +497,7 @@ app.use('/api/brain', require('./services/brain-subscribe'));
   console.error('[WARN] /api/financing mount failed:', err.message);
 }
 try { app.use('/api/loaf', require('./routes/loaf-blast')); console.log('[OK] loaf-blast'); } catch(e) { console.error('[FAIL] loaf-blast:', e.message); }
+try { app.use('/api/production-declaration', require('./routes/production-declaration')); console.log('[OK] production-declaration'); } catch(e) { console.error('[FAIL] prod-decl:', e.message); }
 try { app.use('/api/blast-templates', require('./routes/blast-templates')); console.log('[OK] blast-templates'); } catch(e) { console.error('[FAIL] blast-templates:', e.message); }
 try { app.use('/api/mexico', require('./routes/mexico-contacts')); console.log('[OK] mexico-contacts'); } catch(e) { console.error('[FAIL] mexico:', e.message); }
   explicitMounts.push({ file: 'crm.routes.js', path: '/api/crm' });
