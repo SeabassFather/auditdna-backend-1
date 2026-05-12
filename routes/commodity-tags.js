@@ -26,7 +26,10 @@ router.post('/backfill', async (req, res) => {
     ).catch(()=>({rows:[]}));
 
     for (const g of growers.rows) {
-      const prods = (g.primary_products||'').split(/[,;|]/).map(p=>p.trim().toLowerCase()).filter(Boolean);
+      const raw = g.primary_products;
+        const prods = Array.isArray(raw)
+          ? raw.map(p=>String(p).trim().toLowerCase()).filter(Boolean)
+          : String(raw||'').split(/[,;|]/).map(p=>p.trim().toLowerCase()).filter(Boolean);
       for (const prod of prods.slice(0,5)) {
         await pool.query(
           `INSERT INTO contact_commodity_tags (contact_id,contact_type,email,commodity,state,country)
@@ -44,7 +47,10 @@ router.post('/backfill', async (req, res) => {
     ).catch(()=>({rows:[]}));
 
     for (const b of buyers.rows) {
-      const prods = (b.commodities_purchased||'').split(/[,;|]/).map(p=>p.trim().toLowerCase()).filter(Boolean);
+      const rawb = b.commodities_purchased;
+        const prods = Array.isArray(rawb)
+          ? rawb.map(p=>String(p).trim().toLowerCase()).filter(Boolean)
+          : String(rawb||'').split(/[,;|]/).map(p=>p.trim().toLowerCase()).filter(Boolean);
       for (const prod of prods.slice(0,5)) {
         await pool.query(
           `INSERT INTO contact_commodity_tags (contact_id,contact_type,email,commodity,state,country)
