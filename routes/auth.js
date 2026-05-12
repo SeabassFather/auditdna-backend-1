@@ -220,7 +220,8 @@ router.get('/verify', (req, res) => {
     if (!secret) return res.status(500).json({ valid: false, error: 'Server auth not configured' });
 
     const payload = jwt.verify(token, secret);
-    return res.json({ valid: true, user: payload });
+    // Return both `valid` and `authenticated` so all frontend versions are happy
+    return res.json({ valid: true, authenticated: true, user: payload });
   } catch (err) {
     return res.status(401).json({ valid: false, error: err.message });
   }
