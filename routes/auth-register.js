@@ -142,6 +142,30 @@ Role assigned: ${role}
 View at mexausafg.com`
     });
 
+    // Auto-enroll in Ping Spot consent pool based on entity type
+    setImmediate(async () => {
+      try {
+        const consensTypes = {
+          grower:['product_available','call_for_tender','price_alert','market_intel','compliance_update'],
+          buyer:['product_available','call_for_tender','price_alert','market_intel','financing_available'],
+          wholesaler:['product_available','call_for_tender','price_alert','market_intel','financing_available'],
+          broker:['product_available','call_for_tender','price_alert','market_intel','deal_opportunity'],
+          shipper:['freight_opportunity','product_available','compliance_update'],
+          retailer:['product_available','call_for_tender','price_alert'],
+          packer:['product_available','call_for_tender','compliance_update'],
+          distributor:['product_available','call_for_tender','price_alert','market_intel'],
+          other:['product_available','market_intel'],
+        };
+        const cTypes = consensTypes[entityType||'other'] || ['product_available','market_intel'];
+        await pool.query(`
+          INSERT INTO ping_consents (email,company_name,entity_type,contact_name,phone,state,consent_types,source)
+          VALUES ($1,$2,$3,$4,$5,$6,$7,'registration')
+          ON CONFLICT (email) DO UPDATE SET entity_type=EXCLUDED.entity_type, consent_types=EXCLUDED.consent_types`,
+          [contactEmail, companyLegal, entityType||'other', contactName||'',
+           contactPhone||'', state||'', cTypes]
+        ).catch(()=>{});
+      } catch(_) {}
+    });
     // Fire all 3 SI registration agents async
     setImmediate(() => {
       runRegistrationAgents(req.body, { password, accessCode, pin }).catch(()=>{});
