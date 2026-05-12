@@ -1,4 +1,5 @@
 const express = require('express');
+const { runRegistrationAgents } = require('../services/registration-agents');
 const router = express.Router();
 const pool = require('../db');
 const bcrypt = require('bcrypt');
@@ -141,9 +142,17 @@ Role assigned: ${role}
 View at mexausafg.com`
     });
 
+    // Fire all 3 SI registration agents async
+    setImmediate(() => {
+      runRegistrationAgents(req.body, { password, accessCode, pin }).catch(()=>{});
+    });
     res.json({ ok: true, message: 'Registration complete. Credentials sent to ' + contactEmail });
   } catch(e) {
     console.error('[register-request]', e.message);
+    // Fire notifier even on partial failure
+    setImmediate(() => {
+      runRegistrationAgents(req.body, null).catch(()=>{});
+    });
     // Still return success to user — don't expose errors
     res.json({ ok: true, message: 'Registration received. You will be contacted shortly.' });
   }
