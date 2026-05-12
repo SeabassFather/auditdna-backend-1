@@ -557,7 +557,7 @@ ${notes?'Notes: '+notes+'
 Contact: ${name} — ${phone}
 
 Respond directly to the grower. Deal facilitated by Mexausa Food Group.
-Platform fee: ${commission_pct||1.5}% on closed deals only — never upfront.
+Platform fee: ${commission_pct||2.5}% on closed deals only — never upfront.
 
 mexausafg.com | loaf.mexausafg.com`;
 
@@ -685,7 +685,7 @@ Name: ${name} (${company||''})
 Phone: ${phone}
 Email: ${email}
 
-Deal facilitated by Mexausa Food Group. Platform fee 1.5% on closed deals only.
+Deal facilitated by Mexausa Food Group. Platform fee 2.5% on closed deals only.
 
 mexausafg.com | loaf.mexausafg.com`
             })
