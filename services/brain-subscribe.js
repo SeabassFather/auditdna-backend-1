@@ -21,7 +21,10 @@ async function pollAndFanout() {
   const pool = getPool();
   try {
     const q = await pool.query(
-      `SELECT id, event_type, rfq_id, actor_id, actor_role, payload, created_at
+      `SELECT id, event_type, rfq_id,
+         payload->>'actor_id' as actor_id,
+         payload->>'actor_role' as actor_role,
+         payload, created_at
        FROM rfq_brain_events WHERE id > $1 ORDER BY id ASC LIMIT 50`,
       [nextEventIdSeen]
     );
