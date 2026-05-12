@@ -490,7 +490,6 @@ try { app.use('/api/brain', require('./routes/brain-stream')); console.log('[OK]
 
 // LOAF-WIRE-MARKER
 app.use('/api/loaf', require('./routes/loaf-routes'));
- console.log('[OK] loaf-blast: mounted'); } catch(e) { console.error('[FAIL] loaf-blast:', e.message); }
 app.use('/api/brain', require('./services/brain-state'));
 app.use('/api/brain', require('./services/brain-subscribe'));
   console.log('[OK] /api/financing mounted');
