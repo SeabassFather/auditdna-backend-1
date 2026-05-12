@@ -523,54 +523,31 @@ router.get("/reports/corridor", requireAuth, async (req, res) => {
 // LOAF INVENTORY POST — grower posts floor product, auto-pings matched buyers
 // ============================================================================
 router.post("/inventory-post", async (req, res) => {
-  const { name, phone, commodity, volume, price, location, condition, notes,
-          lat, lng, radius, auto_ping_buyers, country, commission_pct } = req.body;
+  const {name,phone,commodity,volume,price,location,condition,notes,lat,lng,radius,country,commission_pct,
+         variety,grade,pack_type,pack_size,end_use,harvest_status,certifications,available_from,available_to,grower_username} = req.body;
   try {
-    const db = getDb();
-    const ts = new Date().toISOString();
-    await db.query(
-      `INSERT INTO loaf_inventory (name,phone,commodity,volume,price,location,condition,notes,lat,lng,radius,country,commission_pct,created_at)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14)
-       ON CONFLICT DO NOTHING`,
-      [name,phone,commodity,volume,price,location,condition,notes||'',
-       lat||null,lng||null,radius||100,country||'MX',commission_pct||'1.5',ts]
-    ).catch(()=>{});
+    const db=getDb(), ts=new Date().toISOString(), commodityClean=(commodity||'').split('/')[0].trim().toLowerCase();
+    await db.query('ALTER TABLE loaf_inventory ADD COLUMN IF NOT EXISTS variety VARCHAR(100),ADD COLUMN IF NOT EXISTS grade VARCHAR(80),ADD COLUMN IF NOT EXISTS pack_type VARCHAR(80),ADD COLUMN IF NOT EXISTS pack_size VARCHAR(80),ADD COLUMN IF NOT EXISTS end_use VARCHAR(200),ADD COLUMN IF NOT EXISTS harvest_status VARCHAR(80),ADD COLUMN IF NOT EXISTS certifications TEXT,ADD COLUMN IF NOT EXISTS available_from DATE,ADD COLUMN IF NOT EXISTS available_to DATE,ADD COLUMN IF NOT EXISTS grower_username VARCHAR(100),ADD COLUMN IF NOT EXISTS status VARCHAR(30) DEFAULT 'active'').catch(()=>{});
+    await db.query(`INSERT INTO loaf_inventory (name,phone,commodity,volume,price,location,condition,notes,lat,lng,radius,country,commission_pct,created_at,variety,grade,pack_type,pack_size,end_use,harvest_status,certifications,available_from,available_to,grower_username,status) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23,$24,'active')`,[name,phone,commodity,volume,price,location,condition||'Available',notes||'',lat||null,lng||null,radius||100,country||'MX',commission_pct||'1.5',ts,variety||'',grade||'',pack_type||'',pack_size||'',end_use||'General',harvest_status||'available now',certifications||'',available_from||null,available_to||null,grower_username||name||'']).catch(()=>{});
+    await db.query('INSERT INTO user_activity_log (username,display_name,role,event_type,module,description,meta) VALUES ($1,$2,'grower','INVENTORY_POSTED','LOAF',$3,$4)',[grower_username||name||'loaf_grower',name||'Grower',`Posted: ${commodity}${variety?' '+variety:''} | ${volume} @ ${price} | ${location}`,JSON.stringify({commodity,variety,grade,pack_type,pack_size,end_use,harvest_status})]).catch(()=>{});
+    try{if(global.brain)global.brain.ping('LOAF_INVENTORY_POSTED',{commodity,variety,grade,end_use,volume,price,location});}catch(_){}
+    const subject=`[LOAF] ${commodity}${variety?' — '+variety:''} | ${volume} @ ${price} | ${location}`;
+    const body=`LOAF INVENTORY ALERT\nCOMMODITY: ${commodity}${variety?' — '+variety:''}\nGRADE: ${grade||'Standard'} | PACK: ${pack_type||'N/A'} ${pack_size||''} | END USE: ${end_use||'General'}\nHARVEST: ${harvest_status||'Available now'} | CERTS: ${certifications||'None'}\nVOLUME: ${volume} | PRICE: ${price} FOB | ${location} ${country||'Mexico'}\nAVAIL: ${available_from||'Now'} to ${available_to||'TBD'}\n${notes?'NOTES: '+notes+'\n':''}\nBLIND DEAL — identity protected until NDA. Fee: ${commission_pct||1.5}% closed deals only.\nmexausafg.com`;
+    try{await fetch(`${process.env.REACT_APP_API_URL||'http://localhost:5050'}/api/gmail/send`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({to:'sgarcia1911@gmail.com',subject:`[LOAF] ${commodity} posted`,body})});}catch(_){}
+    const buyers=await db.query(`SELECT DISTINCT email,first_name,company_name FROM contacts WHERE (commodities ILIKE $1 OR commodity ILIKE $1) AND email IS NOT NULL AND email!='' AND (crmtype='buyer' OR crmtype='shipper' OR role ILIKE '%buyer%' OR role ILIKE '%wholesale%' OR role ILIKE '%importer%') LIMIT 200`,[`%${commodityClean}%`]).catch(()=>({rows:[]}));
+    let pinged=0;
+    for(const b of (buyers.rows||[])){try{await fetch(`${process.env.REACT_APP_API_URL||'http://localhost:5050'}/api/gmail/send`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({to:b.email,subject,body:`Hi ${b.first_name||b.company_name||''},\n\n${body}\n\nReply STOP to unsubscribe.`})});pinged++;}catch(_){}}
+    res.json({ok:true,pinged,commodity,variety,grade,end_use,ts});
+  }catch(e){res.status(500).json({error:e.message});}
+});
 
-    // Auto-ping matched buyers via gmail route
-    if (auto_ping_buyers) {
-      const commodityClean = (commodity||'').split('/')[0].trim().toLowerCase();
-      const radiusMi = parseInt(radius)||100;
-      const subject = `[LOAF] ${commodity} Available Now — ${volume} @ ${price} | ${location}`;
-      const body = `LOAF INVENTORY ALERT
+router.get("/inventory",async(req,res)=>{
+  try{const db=getDb();const{commodity,end_use,country,harvest_status,limit}=req.query;let where=["COALESCE(status,'active')='active'"],params=[],p=1;if(commodity){where.push(`commodity ILIKE $${p++}`);params.push(`%${commodity}%`);}if(end_use){where.push(`end_use ILIKE $${p++}`);params.push(`%${end_use}%`);}if(country){where.push(`country ILIKE $${p++}`);params.push(`%${country}%`);}if(harvest_status){where.push(`harvest_status ILIKE $${p++}`);params.push(`%${harvest_status}%`);}const rows=await db.query(`SELECT id,commodity,variety,grade,volume,price,location,country,pack_type,pack_size,end_use,harvest_status,certifications,condition,notes,available_from,available_to,created_at,'VERIFIED GROWER' AS grower_label,commission_pct FROM loaf_inventory WHERE ${where.join(' AND ')} ORDER BY created_at DESC LIMIT $${p}`,[...params,Math.min(parseInt(limit)||50,200)]).catch(()=>({rows:[]}));res.json({ok:true,inventory:rows.rows,total:rows.rows.length});}catch(e){res.status(500).json({ok:false,inventory:[],error:e.message});}
+});
 
-A grower just posted floor product on the LOAF network:
-
-Commodity: ${commodity}
-Volume: ${volume}
-Price: ${price}
-Location: ${location}
-Condition: ${condition||'Available now'}
-Country: ${country||'Mexico'}
-Radius: ${radiusMi} miles
-${notes?'Notes: '+notes+'
-':''}
-Contact: ${name} — ${phone}
-
-Respond directly to the grower. Deal facilitated by Mexausa Food Group.
-Platform fee: ${commission_pct||2.5}% on closed deals only — never upfront.
-
-mexausafg.com | loaf.mexausafg.com`;
-
-      // Ping Saul immediately
-      try {
-        await fetch(`${process.env.REACT_APP_API_URL||'http://localhost:5050'}/api/gmail/send`, {
-          method:'POST', headers:{'Content-Type':'application/json'},
-          body: JSON.stringify({
-            to: 'sgarcia1911@gmail.com',
-            subject: `[LOAF ACTION] ${commodity} posted — ${volume} @ ${price}`,
-            body: body
-          })
-        });
+router.get("/buyer-needs",async(req,res)=>{
+  try{const db=getDb();const rows=await db.query(`SELECT id,commodity,volume,max_price,location,delivery,needed_by,created_at,'VERIFIED BUYER' AS buyer_label FROM loaf_buyer_needs WHERE COALESCE(status,'active')='active' ORDER BY created_at DESC LIMIT 50`).catch(()=>({rows:[]}));res.json({ok:true,needs:rows.rows});}catch(e){res.json({ok:false,needs:[]});}
+});
       } catch(_) {}
 
       // Query CRM for matched buyers and ping them
