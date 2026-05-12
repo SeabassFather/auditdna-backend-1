@@ -173,18 +173,18 @@ app.set('ai', aiHelper);
 app.set('pool', pool);
 
 // =============================================================================
-// GG SHARED SMTP TRANSPORTER - 2026-05-01
-// Brevo primary transporter. Used by ALL inline send sites + GG medic.
-// Standing rule: smtp-relay.brevo.com:587, env SMTP_USER/SMTP_PASS
+// MEXAUSA SMTP — Gmail only, single transporter (May 2026)
+// smtp.gmail.com:587 — sgarcia1911@gmail.com — app password rotated May 7 2026
+// ALL routes use this one transporter. No Brevo. No GoDaddy. No conflicts.
 // =============================================================================
 const __ggNodemailer = require('nodemailer');
 const sharedTransporter = __ggNodemailer.createTransport({
-  host:   process.env.SMTP_HOST || 'smtp-relay.brevo.com',
-  port:   parseInt(process.env.SMTP_PORT || '587'),
-  secure: process.env.SMTP_SECURE === 'true',
+  host:   'smtp.gmail.com',
+  port:   587,
+  secure: false,
   auth: {
-    user: process.env.SMTP_USER,
-    pass: process.env.SMTP_PASS,
+    user: process.env.GMAIL_USER || 'sgarcia1911@gmail.com',
+    pass: process.env.GMAIL_APP_PASSWORD || 'emgptqrmqdbxrpil',
   },
   pool: true,
   maxConnections: 5,
