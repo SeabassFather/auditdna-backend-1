@@ -1742,3 +1742,37 @@ app.use('/api/other-contacts', require('./routes/other-contacts'));
 app.use('/api/swarm', require('./routes/swarm.routes'));
 app.use('/api/gg',    require('./routes/gg.routes'));
 app.use('/api/auth', require('./routes/pin-verify'));
+// ── OWNER: approve/reject pending registrations ──────────────────────────────
+app.get('/api/admin/pending-users', async (req, res) => {
+  try {
+    const result = await global.db.query(
+      "SELECT id, username, display_name, role, created_at FROM auth_users WHERE status='pending_approval' ORDER BY created_at DESC"
+    );
+    res.json({ ok:true, users: result.rows });
+  } catch(e) { res.json({ ok:false, users:[], error:e.message }); }
+});
+
+app.post('/api/admin/approve-user/:id', async (req, res) => {
+  try {
+    await global.db.query("UPDATE auth_users SET status='active' WHERE id=$1", [req.params.id]);
+    // Notify via ntfy
+    try {
+      const user = await global.db.query("SELECT username,display_name FROM auth_users WHERE id=$1", [req.params.id]);
+      const u = user.rows[0];
+      await fetch('https://ntfy.sh/' + (process.env.NTFY_TOPIC||'mfginc-alerts'), {
+        method:'POST',
+        headers:{'Title':'New User Approved','Priority':'default','Tags':'user,approved'},
+        body: `${u?.display_name||u?.username} approved and now has platform access.`
+      });
+    } catch(_){}
+    res.json({ ok:true, message:'User approved' });
+  } catch(e) { res.status(500).json({ ok:false, error:e.message }); }
+});
+
+app.post('/api/admin/reject-user/:id', async (req, res) => {
+  try {
+    const { reason } = req.body;
+    await global.db.query("UPDATE auth_users SET status='rejected' WHERE id=$1", [req.params.id]);
+    res.json({ ok:true });
+  } catch(e) { res.status(500).json({ ok:false, error:e.message }); }
+});
