@@ -490,7 +490,8 @@ try { app.use('/api/brain', require('./routes/brain-stream')); console.log('[OK]
 
 // LOAF-WIRE-MARKER
 app.use('/api/loaf', require('./routes/loaf-routes'));
-try { app.use('/api/loaf', require('./routes/loaf-blast')); console.log('[OK] loaf-blast: mounted'); } catch(e) { console.error('[FAIL] loaf-blast:', e.message); }
+try { app.use('/api/loaf', require('./routes/loaf-blast')); console.log('[OK] loaf-blast'); } catch(e) { console.error('[FAIL] loaf-blast:', e.message); }
+try { app.use('/api/mexico', require('./routes/mexico-contacts')); console.log('[OK] mexico-contacts'); } catch(e) { console.error('[FAIL] mexico:', e.message); } console.log('[OK] loaf-blast: mounted'); } catch(e) { console.error('[FAIL] loaf-blast:', e.message); }
 app.use('/api/brain', require('./services/brain-state'));
 app.use('/api/brain', require('./services/brain-subscribe'));
   console.log('[OK] /api/financing mounted');
