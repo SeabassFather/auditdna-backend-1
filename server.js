@@ -489,6 +489,7 @@ try { app.use('/api/brain', require('./routes/brain-stream')); console.log('[OK]
 // BRAIN-WIRE-MARKER - Phase 1 universal Brain endpoints
 try { app.use('/api/escrow', require('./routes/escrow-engine')); console.log('[OK] escrow-engine mounted'); } catch(e) { console.error('[FAIL] escrow-engine:', e.message); }
 try { app.use('/api/enrich', require('./routes/commodity-enrichment')); console.log('[OK] commodity-enrichment mounted'); } catch(e) { console.error('[FAIL] commodity-enrichment:', e.message); }
+try { app.use('/api/comms', require('./routes/communications-tracker')); console.log('[OK] communications-tracker mounted'); } catch(e) { console.error('[FAIL] communications-tracker:', e.message); }
 try { app.use('/api/manifest', require('./routes/manifest-intake')); console.log('[OK] manifest-intake mounted'); } catch(e) { console.error('[FAIL] manifest-intake:', e.message); }
 
 // ── USER ACTIVITY + SEED USERS ───────────────────────────────────────────────
