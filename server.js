@@ -487,6 +487,7 @@ try { app.use('/api/brain', require('./routes/brain-stream')); console.log('[OK]
   try { const auctionWs = require('./services/auction-ws'); app.use('/api/auction-ws', auctionWs.router); console.log('[OK] auction-ws router mounted at /api/auction-ws'); global.__auctionWs = auctionWs; } catch(e) { console.error('[FAIL] auction-ws router mount:', e.message); }
 
 // BRAIN-WIRE-MARKER - Phase 1 universal Brain endpoints
+try { app.use('/api/escrow', require('./routes/escrow-engine')); console.log('[OK] escrow-engine mounted'); } catch(e) { console.error('[FAIL] escrow-engine:', e.message); }
 try { app.use('/api/manifest', require('./routes/manifest-intake')); console.log('[OK] manifest-intake mounted'); } catch(e) { console.error('[FAIL] manifest-intake:', e.message); }
 
 // ── USER ACTIVITY + SEED USERS ───────────────────────────────────────────────
