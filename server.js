@@ -314,6 +314,7 @@ try {
 try { app.use('/api/freshness', require('./routes/freshness-router')); console.log('[OK] freshness-router at /api/freshness'); } catch(e) { console.error('[FAIL] freshness-router:', e.message); }
 try { app.use('/api/consolidator', require('./routes/loaf-consolidator')); console.log('[OK] loaf-consolidator at /api/consolidator'); } catch(e) { console.error('[FAIL] loaf-consolidator:', e.message); }
 try { app.use('/api/loaf-wa', require('./routes/loaf-whatsapp')); console.log('[OK] loaf-whatsapp at /api/loaf-wa'); } catch(e) { console.error('[FAIL] loaf-whatsapp:', e.message); }
+try { app.use('/api/land-listings', require('./routes/land-listings')); console.log('[OK] land-listings at /api/land-listings'); } catch(e) { console.error('[FAIL] land-listings:', e.message); }
 app.use('/api/swarm', require('./routes/swarm.routes'));
 app.use('/api/gg',    require('./routes/gg.routes'));
 
