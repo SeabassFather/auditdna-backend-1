@@ -1,10 +1,10 @@
 // ===============================================================
-// AUDITDNA BACKEND SERVER v4.1 -- SECURED
+// AUDITDNA BACKEND SERVER v5.0 -- SECURED
 // ===============================================================
 // CHANGES FROM v4.0:
 //   -- EBEM Email Marketing Command Center routes added
 //   -- /api/scraper         -- internal DB scraper (requireAdmin)
-//   -- /api/email/send-campaign  -- Brevo SMTP bulk send w/ batching
+//   -- /api/email/send-campaign  -- Gmail SMTP bulk send w/ batching
 //   -- /api/email/analytics      -- open/click/sent stats from DB
 //   -- /api/claude/generate-email -- AI Niner Miner content generation
 //   -- emailScraper.js added to SKIP_AUTO (explicit mount)
@@ -487,67 +487,6 @@ try { app.use('/api/brain', require('./routes/brain-stream')); console.log('[OK]
   try { const auctionWs = require('./services/auction-ws'); app.use('/api/auction-ws', auctionWs.router); console.log('[OK] auction-ws router mounted at /api/auction-ws'); global.__auctionWs = auctionWs; } catch(e) { console.error('[FAIL] auction-ws router mount:', e.message); }
 
 // BRAIN-WIRE-MARKER - Phase 1 universal Brain endpoints
-try { app.use('/api/escrow', require('./routes/escrow-engine')); console.log('[OK] escrow-engine mounted'); } catch(e) { console.error('[FAIL] escrow-engine:', e.message); }
-try { app.use('/api/enrich', require('./routes/commodity-enrichment')); console.log('[OK] commodity-enrichment mounted'); } catch(e) { console.error('[FAIL] commodity-enrichment:', e.message); }
-try { app.use('/api/comms', require('./routes/communications-tracker')); console.log('[OK] communications-tracker mounted'); } catch(e) { console.error('[FAIL] communications-tracker:', e.message); }
-try { app.use('/api/reps', require('./routes/field-reps')); console.log('[OK] field-reps mounted — MFGINC Network live'); } catch(e) { console.error('[FAIL] field-reps:', e.message); }
-try { app.use('/api/loaf/quality', require('./routes/loaf-quality-guard')); console.log('[OK] loaf-quality-guard mounted'); } catch(e) { console.error('[FAIL] loaf-quality-guard:', e.message); }
-try { app.use('/api/manifest', require('./routes/manifest-intake')); console.log('[OK] manifest-intake mounted'); } catch(e) { console.error('[FAIL] manifest-intake:', e.message); }
-
-// ── USER ACTIVITY + SEED USERS ───────────────────────────────────────────────
-try { app.use('/api/user-activity', require('./routes/user-activity')); console.log('[OK] user-activity mounted'); } catch(e) { console.error('[FAIL] user-activity:', e.message); }
-try { app.use('/api/admin', require('./routes/seed-users')); console.log('[OK] seed-users mounted'); } catch(e) { console.error('[FAIL] seed-users:', e.message); }
-
-
-// ── MISSING ROUTES PATCH (CommandSphere + MissionControlBrain) ──────────────
-// GET /api/brain/live-feed?limit=N
-app.get('/api/brain/live-feed', async (req, res) => {
-  const limit = Math.min(parseInt(req.query.limit) || 30, 100);
-  try {
-    const rows = await pool.query(
-      `SELECT id, event_type, payload, created_at FROM brain_events ORDER BY created_at DESC LIMIT $1`,
-      [limit]
-    );
-    res.json({ ok: true, events: rows.rows });
-  } catch (e) {
-    res.json({ ok: true, events: [] });
-  }
-});
-
-// GET /api/brain/emit — brain status poll (MissionControlBrain)
-app.get('/api/brain/emit', (req, res) => {
-  res.json({ ok: true, status: 'online', ts: new Date().toISOString() });
-});
-
-// GET /api/deals?limit=N — deal listing (CommandSphere)
-app.get('/api/deals', async (req, res) => {
-  const limit = Math.min(parseInt(req.query.limit) || 5, 50);
-  try {
-    const rows = await pool.query(
-      `SELECT id, title, stage, amount, created_at FROM deals ORDER BY created_at DESC LIMIT $1`,
-      [limit]
-    );
-    res.json({ ok: true, deals: rows.rows });
-  } catch (e) {
-    res.json({ ok: true, deals: [] });
-  }
-});
-
-// GET /api/audits?limit=N — audit log (CommandSphere)
-app.get('/api/audits', async (req, res) => {
-  const limit = Math.min(parseInt(req.query.limit) || 5, 50);
-  try {
-    const rows = await pool.query(
-      `SELECT id, action, entity, entity_id, created_at FROM audit_log ORDER BY created_at DESC LIMIT $1`,
-      [limit]
-    );
-    res.json({ ok: true, audits: rows.rows });
-  } catch (e) {
-    res.json({ ok: true, audits: [] });
-  }
-});
-// ── END MISSING ROUTES PATCH ─────────────────────────────────────────────────
-
 
 // LOAF-WIRE-MARKER
 app.use('/api/loaf', require('./routes/loaf-routes'));
@@ -1740,40 +1679,4 @@ try {
   console.log('[OK] Autonomy Phase 2A booted - 15 agents loaded');
 } catch (e) { console.warn('[WARN] Autonomy boot failed:', e.message); }
 app.use('/api/other-contacts', require('./routes/other-contacts'));
-app.use('/api/swarm', require('./routes/swarm.routes'));
-app.use('/api/gg',    require('./routes/gg.routes'));
 app.use('/api/auth', require('./routes/pin-verify'));
-// ── OWNER: approve/reject pending registrations ──────────────────────────────
-app.get('/api/admin/pending-users', async (req, res) => {
-  try {
-    const result = await global.db.query(
-      "SELECT id, username, display_name, role, created_at FROM auth_users WHERE status='pending_approval' ORDER BY created_at DESC"
-    );
-    res.json({ ok:true, users: result.rows });
-  } catch(e) { res.json({ ok:false, users:[], error:e.message }); }
-});
-
-app.post('/api/admin/approve-user/:id', async (req, res) => {
-  try {
-    await global.db.query("UPDATE auth_users SET status='active' WHERE id=$1", [req.params.id]);
-    // Notify via ntfy
-    try {
-      const user = await global.db.query("SELECT username,display_name FROM auth_users WHERE id=$1", [req.params.id]);
-      const u = user.rows[0];
-      await fetch('https://ntfy.sh/' + (process.env.NTFY_TOPIC||'mfginc-alerts'), {
-        method:'POST',
-        headers:{'Title':'New User Approved','Priority':'default','Tags':'user,approved'},
-        body: `${u?.display_name||u?.username} approved and now has platform access.`
-      });
-    } catch(_){}
-    res.json({ ok:true, message:'User approved' });
-  } catch(e) { res.status(500).json({ ok:false, error:e.message }); }
-});
-
-app.post('/api/admin/reject-user/:id', async (req, res) => {
-  try {
-    const { reason } = req.body;
-    await global.db.query("UPDATE auth_users SET status='rejected' WHERE id=$1", [req.params.id]);
-    res.json({ ok:true });
-  } catch(e) { res.status(500).json({ ok:false, error:e.message }); }
-});
