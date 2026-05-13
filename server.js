@@ -1684,6 +1684,8 @@ try {
 } catch (e) { console.warn('[WARN] Autonomy boot failed:', e.message); }
 app.use('/api/other-contacts', require('./routes/other-contacts'));
 app.use('/api/auth', require('./routes/pin-verify'));
+try { app.use('/api/land-listings', require('./routes/land-listings')); console.log('[OK] land-listings mounted'); } catch(e) { console.error('[FAIL] land-listings:', e.message); }
+try { app.use('/api/land-listings/upload', require('./routes/land-listings-upload')); console.log('[OK] land-listings-upload mounted'); } catch(e) { console.error('[FAIL] land-listings-upload:', e.message); }
 
 // ── PLATFORM GUARD — 50 self-healing agents ──────────────────────────────────
 try {
@@ -1692,5 +1694,3 @@ try {
   console.log('[OK] PlatformGuard: 50 health agents armed');
 } catch(e) { console.error('[FAIL] PlatformGuard:', e.message); }
 
-try { app.use('/api/land-listings', require('./routes/land-listings')); console.log('[OK] land-listings mounted'); } catch(e) { console.error('[FAIL] land-listings:', e.message); }
-try { app.use('/api/land-listings', require('./routes/land-listings-upload')); console.log('[OK] land-listings-upload mounted'); } catch(e) { console.error('[FAIL] land-listings-upload:', e.message); }
