@@ -1383,6 +1383,8 @@ const SKIP_AUTO = new Set([
   'emailScraper.js',   // explicitly mounted at /api/scraper (requireAdmin)
   'land-listings.js',
   'land-listings-upload.js',
+  'land-listings.js',
+  'land-listings-upload.js',
   'crm.routes.js',     // explicitly mounted at /api/crm (frontend expects /api/crm/*)
   'compliance-center.js', // explicitly mounted at /api/compliance-center (Sprint D)
   'Crm.js',            // hardcoded bad DB config (host literal string 'process.env.DB_HOST')
