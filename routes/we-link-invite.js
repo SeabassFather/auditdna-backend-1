@@ -49,18 +49,24 @@ router.post('/blast', async (req, res) => {
 
   try {
     // Pull contacts with valid emails — ag_contacts is the Railway master table (33,971 records)
-    const result = await pool.query(`
-      SELECT DISTINCT ON (email)
-        COALESCE(contact_name, company_name, 'Friend') as contact_name,
-        email,
+        const result = await pool.query(`
+      SELECT email,
+        COALESCE(contact_name, full_name, first_name, company_name, 'Friend') as contact_name,
         COALESCE(company_name, '') as company_name,
-        COALESCE(role, commodity, 'Agricultural Partner') as role,
-        COALESCE(state_province, country, '') as region
-      FROM shipper_contacts
-      WHERE email IS NOT NULL
-        AND email != ''
-        AND email LIKE '%@%'
-      ORDER BY email, id DESC
+        COALESCE(role, title, commodity, 'Agricultural Partner') as role
+      FROM (
+        SELECT DISTINCT email, contact_name, company_name, role, commodity, title, full_name, first_name
+        FROM shipper_contacts
+        WHERE email IS NOT NULL AND email != '' AND email LIKE '%@%'
+        UNION
+        SELECT DISTINCT email, contact_name, company_name, role, NULL as commodity, NULL as title, NULL as full_name, NULL as first_name
+        FROM contacts
+        WHERE email IS NOT NULL AND email != '' AND email LIKE '%@%'
+        UNION
+        SELECT DISTINCT email, contact_name, company_name, NULL as role, commodity, NULL as title, NULL as full_name, NULL as first_name
+        FROM grower_contacts
+        WHERE email IS NOT NULL AND email != '' AND email LIKE '%@%'
+      ) combined
       LIMIT $1
     `, [parseInt(limit)]);
 
