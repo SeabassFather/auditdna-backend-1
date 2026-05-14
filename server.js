@@ -1347,6 +1347,14 @@ app.get('/api/brain/full-status', requireOwner, (req, res) => {
 explicitMounts.push({ file: 'Brain.js (inline)', path: '/api/brain/*' });
 
 // ===============================================================
+
+// ── PREVIOUSLY MISSING ROUTES — now created ──────────────────────────────────
+app.use('/api/inventory',     require('./routes/inventory'));
+app.use('/api/mortgage',      require('./routes/mortgage'));
+app.use('/api/owner-metrics', require('./routes/Ownermetrics'));
+app.use('/api/mortgage-leads',require('./routes/mortgage-leads'));
+app.use('/api/user',          require('./routes/user'));
+
 // AUTO ROUTE LOADER
 // ===============================================================
 
@@ -1709,3 +1717,18 @@ try {
   console.log('[OK] PlatformGuard: 50 health agents armed');
 } catch(e) { console.error('[FAIL] PlatformGuard:', e.message); }
 
+
+
+// ── AUTONOMY STATUS endpoint ──────────────────────────────────────────────────
+if (!app._autonomyStatusMounted) {
+  app._autonomyStatusMounted = true;
+  app.get('/api/autonomy/status', (req, res) => {
+    res.json({
+      ok: true,
+      agents: ['A1','A2','A3','A4','A5','A6','A7','A8','A9','A10','A11','A12','A13','A14','A15'],
+      status: 'operational',
+      uptime: process.uptime(),
+      ts: new Date().toISOString()
+    });
+  });
+}
