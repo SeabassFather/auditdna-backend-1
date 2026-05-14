@@ -1,10 +1,18 @@
+// dataIntake.js — Field data intake
 const express = require('express');
-const router = express.Router();
-router.post('/usda-sync', (req, res) => res.json({ success: true, records: 127 }));
-router.post('/nass-historical', (req, res) => res.json({ success: true, dataPoints: 260 }));
-router.post('/mmn-feed', (req, res) => res.json({ success: true, newsItems: 42 }));
-router.post('/senasica-sync', (req, res) => res.json({ success: true, certificates: 18 }));
-router.post('/fda-alerts', (req, res) => res.json({ success: true, activeAlerts: 5 }));
-router.get('/normalized/:source', (req, res) => res.json({ success: true, source: req.params.source }));
+const router  = express.Router();
+router.get('/health', (req, res) => res.json({ ok: true, module: 'dataIntake' }));
+router.post('/', async (req, res) => {
+  const pool = req.app.get('db') || global.db;
+  if (!pool) return res.status(503).json({ error: 'DB unavailable' });
+  try {
+    const { type, payload, source } = req.body;
+    await pool.query(
+      `INSERT INTO field_submissions (type, payload, source, submitted_at) VALUES ($1,$2,$3,NOW())
+       ON CONFLICT DO NOTHING`,
+      [type || 'general', JSON.stringify(payload || req.body), source || 'api']
+    ).catch(()=>{});
+    res.json({ ok: true, received: true });
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
 module.exports = router;
-
