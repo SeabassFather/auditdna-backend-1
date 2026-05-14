@@ -16,7 +16,7 @@ const path    = require('path');
 const fs      = require('fs');
 const crypto  = require('crypto');
 const { Pool } = require('pg');
-const pool = require('../db');
+let pool; try { pool = require('../db'); } catch(e) {} pool = pool || global.db;
 require('dotenv').config({ path: path.join(__dirname, '..', '.env') });
 
 const SALT_ROUNDS = 12;
