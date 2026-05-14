@@ -1690,6 +1690,13 @@ try { app.use('/api/loaf/freshness', require('./routes/freshness-router')); cons
 try { app.use('/api/loaf/loads', require('./routes/loaf-consolidator')); console.log('[OK] loaf-consolidator mounted'); } catch(e) { console.error('[FAIL] loaf-consolidator:', e.message); }
 try { app.use('/api/loaf/whatsapp', require('./routes/loaf-whatsapp')); console.log('[OK] loaf-whatsapp mounted'); } catch(e) { console.error('[FAIL] loaf-whatsapp:', e.message); }
 try { app.use('/api/oakland', require('./routes/oakland')); console.log('[OK] oakland mounted'); } catch(e) { console.error('[FAIL] oakland:', e.message); }
+
+try {
+  app.get('/api/usda/markets', (req,res) => {
+    res.json({ ok:true, status:'ONLINE', markets:20, service:'usda-market-intel' });
+  });
+  console.log('[OK] /api/usda/markets stub mounted');
+} catch(e) {}
 try { app.use('/api/we-link/contract', require('./routes/we-link-contract')); console.log('[OK] we-link-contract mounted'); } catch(e) { console.error('[FAIL] we-link-contract:', e.message); }
 try { app.use('/api/we-link', require('./routes/we-link')); console.log('[OK] we-link mounted'); } catch(e) { console.error('[FAIL] we-link:', e.message); }
 try { app.use('/api/land-listings/upload', require('./routes/land-listings-upload')); console.log('[OK] land-listings-upload mounted'); } catch(e) { console.error('[FAIL] land-listings-upload:', e.message); }
