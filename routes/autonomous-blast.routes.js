@@ -152,4 +152,6 @@ router.get('/report', async (req, res) => {
   }
 });
 
+
+router.get('/status', (req,res) => res.json({ ok:true, status:'ONLINE', service:'autonomous-blast' }));
 module.exports = router;
