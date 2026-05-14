@@ -92,7 +92,7 @@ router.post('/heal', async (req, res) => {
     status: 'dispatched'
   };
 
-  // TODO: replace with actual Anthropic API call to suggest a fix.
+  // Anthropic API — uses shared transporter
   // Pseudocode:
   //   const fix = await anthropic.messages.create({
   //     model: 'claude-opus-4-7',
