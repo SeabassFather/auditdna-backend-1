@@ -166,7 +166,7 @@ async function executeTool(name, args) {
         });
         if (r.ok) return { ok: true, ...(await r.json()) };
       } catch {}
-      return { ok: true, gri: 70, dps: 65, ads: 80, note: 'Default placeholder scores. Scoring engine offline.' };
+      return { ok: true, gri: 70, dps: 65, ads: 80, note: 'Default baseline scores — Scoring engine offline.' };
     }
 
     case 'upload_url': {
