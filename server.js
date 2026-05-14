@@ -1685,6 +1685,7 @@ try {
 app.use('/api/other-contacts', require('./routes/other-contacts'));
 app.use('/api/auth', require('./routes/pin-verify'));
 try { app.use('/api/land-listings', require('./routes/land-listings')); console.log('[OK] land-listings mounted'); } catch(e) { console.error('[FAIL] land-listings:', e.message); }
+try { app.use('/api/we-link/contract', require('./routes/we-link-contract')); console.log('[OK] we-link-contract mounted'); } catch(e) { console.error('[FAIL] we-link-contract:', e.message); }
 try { app.use('/api/we-link', require('./routes/we-link')); console.log('[OK] we-link mounted'); } catch(e) { console.error('[FAIL] we-link:', e.message); }
 try { app.use('/api/land-listings/upload', require('./routes/land-listings-upload')); console.log('[OK] land-listings-upload mounted'); } catch(e) { console.error('[FAIL] land-listings-upload:', e.message); }
 
