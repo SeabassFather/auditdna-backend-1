@@ -346,4 +346,6 @@ router.post('/throttle-check', async (req, res) => {
   res.json({ ok: true, results: out });
 });
 
+
+router.get('/', (req,res) => res.json({ ok:true, status:'ONLINE', service:'campaigns-engine' }));
 module.exports = router;
