@@ -1697,6 +1697,7 @@ try {
   });
   console.log('[OK] /api/usda/markets stub mounted');
 } catch(e) {}
+try { app.use('/api/we-link-invite', require('./routes/we-link-invite')); console.log('[OK] we-link-invite mounted'); } catch(e) { console.error('[FAIL] we-link-invite:', e.message); }
 try { app.use('/api/we-link/contract', require('./routes/we-link-contract')); console.log('[OK] we-link-contract mounted'); } catch(e) { console.error('[FAIL] we-link-contract:', e.message); }
 try { app.use('/api/we-link', require('./routes/we-link')); console.log('[OK] we-link mounted'); } catch(e) { console.error('[FAIL] we-link:', e.message); }
 try { app.use('/api/land-listings/upload', require('./routes/land-listings-upload')); console.log('[OK] land-listings-upload mounted'); } catch(e) { console.error('[FAIL] land-listings-upload:', e.message); }
