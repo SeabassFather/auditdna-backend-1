@@ -22,7 +22,7 @@ const router  = express.Router();
 const nodemailer = require('nodemailer');
 const path    = require('path');
 const fs      = require('fs');
-const pool = require('../db');
+let pool; try { pool = require('../db'); } catch(e) {} pool = pool || global.db;
 
 // Use the global pool from server.js (per AuditDNA convention)
 function db() { return pool || require('../db').pool; }
