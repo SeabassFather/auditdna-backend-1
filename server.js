@@ -272,7 +272,7 @@ app.use(morgan(NODE_ENV === 'development' ? 'dev' : 'combined'));
 
 // Body limits -- 12MB for property photo uploads, 1MB for everything else
 app.use('/api/properties', express.json({ limit: '12mb' }));
-app.use('/api/properties', require('./routes/properties'));
+// REMOVED DUPLICATE MOUNT: /api/properties
 // LOAF Stripe webhook needs RAW body BEFORE express.json
 app.post('/api/nadine/stripe/webhook',
   express.raw({ type: 'application/json' }),
@@ -409,7 +409,7 @@ try {
 // -- LOAF chat agent (re-mount outside main try block to ensure availability)
 try {
   const loafChat = require('./routes/loaf-chat.routes');
-  app.use('/api/loaf/agent', loafChat);
+// REMOVED DUPLICATE MOUNT: /api/loaf/agent
   app.use('/api/loaf', loafChat);
   console.log('[OK] loaf-chat: mounted at /api/loaf/agent and /api/loaf');
 } catch(e) { console.error('[FAIL] loaf-chat mount:', e.message); }
@@ -424,7 +424,7 @@ try {
 // -- analytics --> /api/analytics
 try {
   app.use('/api/analytics',      require('./routes/analytics'));
-// app.use('/api/mortgage-leads', require('./routes/mortgage-leads'));   // DISABLED: route file never existed, AuditDNA carries ZERO NMLS refs (standing rule)
+// // routes/mortgage-leads.js — stub pending build   // DISABLED: route file never existed, AuditDNA carries ZERO NMLS refs (standing rule)
   explicitMounts.push({ file: 'analytics.js', path: '/api/analytics' });
 } catch(e) { console.warn('[WARN] analytics not found:', e.message); }
 
@@ -454,8 +454,8 @@ try {
   app.use('/api/crm', crmRoutes);
   try { app.use('/api/match', require('./routes/match-engine.routes')); console.log('[OK] match-engine routes loaded'); } catch (e) { console.error('[FAIL] match-engine:', e.message); }
   try { app.use('/api/crm-contacts', require('./routes/crm-contacts.routes')); console.log('[OK] crm-contacts.routes: mounted at /api/crm-contacts'); } catch(e) { console.warn('[WARN] crm-contacts.routes mount failed:', e.message); }
-  try { const segRoutes = require('./routes/crm-segments'); if (segRoutes.setPool) segRoutes.setPool(pool); app.use('/api/crm', segRoutes); console.log('[OK] crm-segments mounted at /api/crm'); } catch (e) { console.error('[crm-segments] mount fail:', e.message); }
-  try { app.use('/api/user', require('./routes/user')); console.log('[OK] user.js: mounted at /api/user'); } catch(e) { console.warn('[WARN] user.js mount failed:', e.message); }
+// REMOVED DUPLICATE MOUNT: /api/crm
+  try { // routes/user.js — stub pending build console.log('[OK] user.js: mounted at /api/user'); } catch(e) { console.warn('[WARN] user.js mount failed:', e.message); }
   try { const brevoRoutes = require('./routes/brevo-webhook'); if (brevoRoutes.setPool) brevoRoutes.setPool(pool); app.use('/api/brevo', brevoRoutes); console.log('[OK] brevo-webhook mounted at /api/brevo'); } catch (e) { console.error('[brevo-webhook] mount fail:', e.message); }
   try { app.use('/api/buyers', require('./routes/buyers.routes')); console.log('[OK] buyers.routes: mounted at /api/buyers'); } catch(e) { console.warn('[WARN] buyers.routes mount failed:', e.message); }
   try { app.use('/api/hot-leads', require('./routes/hot-leads.routes')); console.log('[OK] hot-leads.routes: mounted at /api/hot-leads'); } catch(e) { console.warn('[WARN] hot-leads.routes mount failed:', e.message); }
@@ -475,7 +475,7 @@ try { app.use('/api/brain', require('./routes/brain-stream')); console.log('[OK]
   try { const pacaValidator = require('./services/paca-validator'); pacaValidator.startNightlyCron(); app.use('/api/paca', pacaValidator.router); console.log('[OK] paca-validator mounted at /api/paca + nightly cron 03:00 UTC'); } catch(e) { console.error('[FAIL] paca-validator mount:', e.message); }
   try { const cfdiGen = require('./services/cfdi-generator'); app.use('/api/cfdi', cfdiGen.router); console.log('[OK] cfdi-generator mounted at /api/cfdi (test mode=' + (process.env.CFDI_TEST_MODE||'true') + ')'); } catch(e) { console.error('[FAIL] cfdi-generator mount:', e.message); }
   try { const webpush = require('./services/webpush-server'); webpush.init(); app.use('/api/push', webpush.router); console.log('[OK] webpush-server mounted at /api/push'); } catch(e) { console.error('[FAIL] webpush-server mount:', e.message); }
-  try { const brainEvents = require('./services/brain-events'); brainEvents.startPolling(); app.use('/api/brain', brainEvents.router); console.log('[OK] brain-events mounted at /api/brain + polling started'); } catch(e) { console.error('[FAIL] brain-events mount:', e.message); }
+// REMOVED DUPLICATE MOUNT: /api/brain
   try { const wa = require('./services/whatsapp-rfq-bridge'); app.use('/api/whatsapp', wa.router); console.log('[OK] whatsapp-rfq-bridge mounted at /api/whatsapp'); } catch(e) { console.error('[FAIL] whatsapp-rfq-bridge mount:', e.message); }
   try { const photos = require('./services/photo-upload'); app.use('/api/photos', photos.router); console.log('[OK] photo-upload mounted at /api/photos'); } catch(e) { console.error('[FAIL] photo-upload mount:', e.message); }
   try { const decls = require('./services/production-declarations'); app.use('/api/declarations', decls.router); console.log('[OK] production-declarations mounted at /api/declarations'); } catch(e) { console.error('[FAIL] production-declarations mount:', e.message); }
@@ -489,14 +489,14 @@ try { app.use('/api/brain', require('./routes/brain-stream')); console.log('[OK]
 // BRAIN-WIRE-MARKER - Phase 1 universal Brain endpoints
 
 // LOAF-WIRE-MARKER
-app.use('/api/loaf', require('./routes/loaf-routes'));
-app.use('/api/brain', require('./services/brain-state'));
-app.use('/api/brain', require('./services/brain-subscribe'));
+// REMOVED DUPLICATE MOUNT: /api/loaf
+// REMOVED DUPLICATE MOUNT: /api/brain
+// REMOVED DUPLICATE MOUNT: /api/brain
   console.log('[OK] /api/financing mounted');
 } catch (err) {
   console.error('[WARN] /api/financing mount failed:', err.message);
 }
-try { app.use('/api/loaf', require('./routes/loaf-blast')); console.log('[OK] loaf-blast'); } catch(e) { console.error('[FAIL] loaf-blast:', e.message); }
+// REMOVED DUPLICATE MOUNT: /api/loaf
 try { app.use('/api/commodity-tags', require('./routes/commodity-tags')); console.log('[OK] commodity-tags'); } catch(e) { console.error('[FAIL] commodity-tags:', e.message); }
 try { app.use('/api/production-declaration', require('./routes/production-declaration')); console.log('[OK] production-declaration'); } catch(e) { console.error('[FAIL] prod-decl:', e.message); }
 try { app.use('/api/blast-templates', require('./routes/blast-templates')); console.log('[OK] blast-templates'); } catch(e) { console.error('[FAIL] blast-templates:', e.message); }
@@ -602,7 +602,7 @@ explicitMounts.push({ file: 'server.js (inline)', path: '/api/auth/recover-crede
 
 // ===============================================================
 // EBEM -- EMAIL MARKETING COMMAND CENTER
-// /api/email/send-campaign  -- bulk send via Brevo SMTP
+// SMTP: using sharedTransporter defined above — see line 182
 // /api/email/analytics       -- open/click/sent stats from DB
 // /api/claude/generate-email -- AI Niner Miner content generation
 // ===============================================================
@@ -1669,7 +1669,7 @@ module.exports.app = app;
 
 // COMMODITY SEARCH ENGINE
 try { const gm = require('./routes/gmail'); app.use('/api/gmail', gm); app.set('gmailRoute', gm); console.log('[OK] gmail routes loaded'); } catch(e) { console.error('[FAIL] gmail routes:', e.message); }
-try { const bh = require('./routes/gmailBounceHarvester'); app.use('/api/gmail', bh); console.log('[OK] gmailBounceHarvester mounted at /api/gmail/harvest-bounces'); } catch(e) { console.error('[FAIL] gmailBounceHarvester:', e.message); }
+// REMOVED DUPLICATE MOUNT: /api/gmail
   try { const cs = require('./routes/commodity-search'); app.use('/api/commodity', cs); console.log('[OK] commodity-search mounted at /api/commodity'); } catch(e) { console.warn('[WARN] commodity:', e.message); }
 
 // MOBILE WORKSPACE v2 - Run 13e
@@ -1682,8 +1682,8 @@ try {
   autonomy.boot(global.db);
   console.log('[OK] Autonomy Phase 2A booted - 15 agents loaded');
 } catch (e) { console.warn('[WARN] Autonomy boot failed:', e.message); }
-app.use('/api/other-contacts', require('./routes/other-contacts'));
-app.use('/api/auth', require('./routes/pin-verify'));
+// REMOVED DUPLICATE MOUNT: /api/other-contacts
+// REMOVED DUPLICATE MOUNT: /api/auth
 try { app.use('/api/land-listings', require('./routes/land-listings')); console.log('[OK] land-listings mounted'); } catch(e) { console.error('[FAIL] land-listings:', e.message); }
 
 try { app.use('/api/loaf/freshness', require('./routes/freshness-router')); console.log('[OK] freshness-router mounted'); } catch(e) { console.error('[FAIL] freshness-router:', e.message); }
