@@ -214,4 +214,6 @@ router.get('/unread-count', async (req, res) => {
   }
 });
 
+
+router.get('/', (req,res) => res.json({ ok:true, status:'ONLINE', service:'internal-inbox' }));
 module.exports = router;
