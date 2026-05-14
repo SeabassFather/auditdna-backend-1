@@ -112,7 +112,16 @@ router.post('/profiles', async (req, res) => {
        f.hectares,f.commodities||[],f.infrastructure||{},f.water_source,f.certifications||[],
        f.equipment||[],f.labor_capacity,f.seeking,f.description,f.contact_name,f.contact_phone,f.contact_email]
     );
-    res.json({ ok: true, profile: r.rows[0], blind_id });
+    const profile = r.rows[0];
+    // Notify admin
+    ntfyPing('WE LINK New Registration', profile.blind_id + ' — ' + (f.display_name||'Unknown') + ' — ' + f.profile_type + ' — ' + (f.region||''));
+    sendAdminEmail(
+      'WE LINK — New ' + f.profile_type.replace('_',' ').toUpperCase() + ' Registered: ' + (f.display_name||profile.blind_id),
+      '<h2>New WE LINK Registration</h2><p><b>ID:</b> ' + profile.blind_id + '</p><p><b>Type:</b> ' + f.profile_type + '</p><p><b>Name:</b> ' + (f.display_name||'—') + '</p><p><b>Region:</b> ' + (f.region||'—') + '</p><p><b>Hectares:</b> ' + (f.hectares||'—') + '</p><p><b>Contact:</b> ' + (f.contact_name||'—') + ' | ' + (f.contact_phone||'—') + ' | ' + (f.contact_email||'—') + '</p><p><a href="https://mexausafg.com">View in AuditDNA</a></p>',
+      pool
+    ).catch(()=>{});
+    fireWeLinkEvent(pool, 'WE_LINK_PROFILE_CREATED', { blind_id: profile.blind_id, type: f.profile_type, region: f.region });
+    res.json({ ok: true, profile, blind_id });
   } catch(e) { res.status(500).json({ error: e.message }); }
 });
 
@@ -159,7 +168,15 @@ router.post('/propose', async (req, res) => {
        VALUES ($1,$2,$3,$4,$5,'proposed') RETURNING *`,
       [land_profile_id, grower_profile_id, partnership_type||'co-op', split_percent||50, notes]
     );
-    res.json({ ok: true, match: r.rows[0] });
+    const proposedMatch = r.rows[0];
+    ntfyPing('WE LINK Partnership Proposed', 'Deal #' + proposedMatch.id + ' — Land ' + land_profile_id + ' + Grower ' + grower_profile_id, 'high');
+    sendAdminEmail(
+      'WE LINK — New Partnership Proposed: Deal #' + proposedMatch.id,
+      '<h2>New WE LINK Partnership Proposal</h2><p><b>Deal #:</b> ' + proposedMatch.id + '</p><p><b>Type:</b> ' + (partnership_type||'co-op') + '</p><p><b>Split:</b> ' + (split_percent||50) + '%</p><p><b>Notes:</b> ' + (notes||'—') + '</p><p><a href="https://mexausafg.com">Manage in AuditDNA → WE LINK</a></p>',
+      pool
+    ).catch(()=>{});
+    fireWeLinkEvent(pool, 'WE_LINK_PARTNERSHIP_PROPOSED', { match_id: proposedMatch.id, land_profile_id, grower_profile_id });
+    res.json({ ok: true, match: proposedMatch });
   } catch(e) { res.status(500).json({ error: e.message }); }
 });
 
@@ -181,7 +198,17 @@ router.post('/advance/:id', async (req, res) => {
     q += ' WHERE id = $3 RETURNING *';
     params.push(req.params.id);
     const r = await pool.query(q, params);
-    res.json({ ok: true, match: r.rows[0], stage: next, bank_disclosed: bankDisclosed });
+    const advancedDeal = r.rows[0];
+    ntfyPing('WE LINK Deal Advanced', 'Deal #' + req.params.match_id + ' → ' + next.replace('_',' ').toUpperCase(), next === 'active' ? 'high' : 'default');
+    if (next === 'active' || next === 'disclosed') {
+      sendAdminEmail(
+        'WE LINK Deal #' + req.params.match_id + ' Advanced to ' + next.toUpperCase(),
+        '<h2>WE LINK Deal Update</h2><p><b>Deal:</b> #' + req.params.match_id + '</p><p><b>New Stage:</b> ' + next.toUpperCase() + '</p>' + (bankDisclosed ? '<p><b>BANK PARTNER NOW DISCLOSED</b></p>' : '') + '<p><a href="https://mexausafg.com">View in AuditDNA</a></p>',
+        pool
+      ).catch(()=>{});
+    }
+    fireWeLinkEvent(pool, 'WE_LINK_DEAL_ADVANCED', { match_id: req.params.match_id, stage: next, bank_disclosed: bankDisclosed });
+    res.json({ ok: true, match: advancedDeal, stage: next, bank_disclosed: bankDisclosed });
   } catch(e) { res.status(500).json({ error: e.message }); }
 });
 
@@ -368,4 +395,43 @@ router.get('/stats', async (req, res) => {
     });
   } catch(e) { res.status(500).json({ error: e.message }); }
 });
+
+// ── NOTIFICATION HELPERS ─────────────────────────────────────────────────────
+async function ntfyPing(title, message, priority = 'default') {
+  const topic = process.env.NTFY_TOPIC || 'auditdna-agro-saul2026';
+  try {
+    const https = require('https');
+    const body = JSON.stringify({ topic, title, message, priority });
+    const opts = { hostname:'ntfy.sh', port:443, path:'/'+topic, method:'POST',
+      headers:{'Content-Type':'application/json','Title':title,'Priority':priority} };
+    const req = https.request(opts);
+    req.write(message);
+    req.end();
+  } catch(e) {}
+}
+
+async function sendAdminEmail(subject, html, pool) {
+  try {
+    const nodemailer = require('nodemailer');
+    const transporter = nodemailer.createTransport({
+      host: process.env.SMTP_HOST || 'smtp.gmail.com', port: 587, secure: false,
+      auth: { user: process.env.SMTP_USER || process.env.GMAIL_USER || 'sgarcia1911@gmail.com',
+              pass: process.env.SMTP_PASS || process.env.GMAIL_PASS }
+    });
+    await transporter.sendMail({
+      from: '"WE LINK | Mexausa Food Group" <sgarcia1911@gmail.com>',
+      to: 'sgarcia1911@gmail.com',
+      subject, html
+    });
+  } catch(e) { console.error('[WE-LINK notify]', e.message); }
+}
+
+async function fireWeLinkEvent(pool, eventType, payload) {
+  try {
+    await pool.query(
+      "INSERT INTO brain_events (event_type, payload, created_at) VALUES ($1,$2,NOW())",
+      [eventType, JSON.stringify(payload)]
+    ).catch(()=>{});
+  } catch(e) {}
+}
 module.exports = router;
