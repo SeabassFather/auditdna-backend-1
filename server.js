@@ -1735,6 +1735,16 @@ try {
   })();
 } catch(e) { console.warn('[WARN] ag_intel_cache:', e.message); }
 
+
+// ── PHASE 2 ROUTES — all 8 priorities ────────────────────────────────────────
+try { app.use('/api/fda',              require('./routes/fda-prior-notice'));  console.log('[OK] /api/fda — FDA Prior Notice + contamination risk'); } catch(e) { console.error('[FAIL] fda:', e.message); }
+try { app.use('/api/global-compliance',require('./routes/globalCompliance'));   console.log('[OK] /api/global-compliance — SENASICA crosswalk + border docs'); } catch(e) { console.error('[FAIL] global-compliance:', e.message); }
+try { app.use('/api/harvest-risk',     require('./routes/harvest-risk'));       console.log('[OK] /api/harvest-risk — Harvest Risk Score engine'); } catch(e) { console.error('[FAIL] harvest-risk:', e.message); }
+try { app.use('/api/payments',         require('./routes/payment-rails'));      console.log('[OK] /api/payments — Wise + ACH + CFDI + revenue dashboard'); } catch(e) { console.error('[FAIL] payments:', e.message); }
+try { app.use('/api/investor',         require('./routes/investor-pipeline'));  console.log('[OK] /api/investor — SAM.gov + SBIR + investor CRM'); } catch(e) { console.error('[FAIL] investor:', e.message); }
+try { app.use('/api/team',             require('./routes/team-ops'));           console.log('[OK] /api/team — team tasks + border digital twin + cold chain'); } catch(e) { console.error('[FAIL] team:', e.message); }
+
+try { app.use('/api/grower-compliance', require('./routes/grower-compliance')); console.log('[OK] /api/grower-compliance — Grower Trust Score + GlobalGAP umbrella + APHIS'); } catch(e) { console.error('[FAIL] grower-compliance:', e.message); }
 // ── PLATFORM GUARD — 50 self-healing agents ──────────────────────────────────
 try {
   const PlatformGuard = require('./agents/PlatformGuard');
