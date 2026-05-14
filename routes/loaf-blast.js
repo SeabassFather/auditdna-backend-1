@@ -107,7 +107,7 @@ router.post('/commodity-blast', async (req, res) => {
   // Fire after delay (async — response already sent)
   setTimeout(async () => {
     try {
-      const pool = require('../db');
+      let pool; try { pool = require('../db'); } catch(e) {} pool = pool || global.db;
       const stateList = targetRegions.flatMap(r => REGIONS[r] || []);
       const whereState = stateList.length > 0
         ? `AND (state = ANY($2) OR state IS NULL)`
