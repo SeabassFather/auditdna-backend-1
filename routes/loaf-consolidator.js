@@ -158,4 +158,6 @@ router.post('/disclose', (req, res) => {
   });
 });
 
+
+router.get('/', (req,res) => res.json({ ok:true, status:'ONLINE', service:'loaf-consolidator', sessions: Object.keys(sessions).length }));
 module.exports = router;
