@@ -1714,6 +1714,27 @@ try { app.use('/api/land-listings/upload', require('./routes/land-listings-uploa
 // ── TRACEABILITY + GLOBAL INTEL (FSMA 204 KDE/CTE + international data) ──────
 try { app.use('/api/traceability', require('./routes/traceabilityWorkflow')); console.log('[OK] traceability: FSMA 204 KDE/CTE engine mounted'); } catch(e) { console.error('[FAIL] traceability:', e.message); }
 try { app.use('/api/global-intel', require('./routes/global-intel')); console.log('[OK] global-intel: FAO/USDA-NASS/OpenFDA/WorldBank aggregator mounted'); } catch(e) { console.error('[FAIL] global-intel:', e.message); }
+
+// ── ag_intel_cache — international data cache for global-intel routes ─────────
+try {
+  (async () => {
+    const pool = global.db || app.get('db');
+    if (!pool) return;
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS ag_intel_cache (
+        id SERIAL PRIMARY KEY,
+        commodity VARCHAR(100),
+        source VARCHAR(100),
+        country_code VARCHAR(20),
+        payload JSONB,
+        created_at TIMESTAMPTZ DEFAULT NOW()
+      )
+    `);
+    await pool.query(`CREATE INDEX IF NOT EXISTS idx_ag_intel_commodity ON ag_intel_cache(commodity, source, created_at DESC)`);
+    console.log('[OK] ag_intel_cache table ready');
+  })();
+} catch(e) { console.warn('[WARN] ag_intel_cache:', e.message); }
+
 // ── PLATFORM GUARD — 50 self-healing agents ──────────────────────────────────
 try {
   const PlatformGuard = require('./agents/PlatformGuard');
