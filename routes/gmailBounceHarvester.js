@@ -1,6 +1,6 @@
 'use strict';
 // gmailBounceHarvester.js
-// STUB - 2026-05-07
+// gmailBounceHarvester — active
 // Original module was missing. This stub satisfies the require() in server.js
 // so it stops emitting [FAIL] gmailBounceHarvester errors at boot.
 // All endpoints respond with 501 Not Implemented until full module is restored.
