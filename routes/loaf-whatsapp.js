@@ -242,5 +242,7 @@ router.post('/finance-response', async (req, res) => {
   res.json({ ok: true, ref, type: response_type });
 });
 
+
+router.get('/status', (req,res) => res.json({ ok:true, status:'ONLINE', service:'loaf-whatsapp' }));
 module.exports = router;
 module.exports.sendWA = sendWA;
