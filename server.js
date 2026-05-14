@@ -1710,6 +1710,10 @@ try { app.use('/api/we-link/contract', require('./routes/we-link-contract')); co
 try { app.use('/api/we-link', require('./routes/we-link')); console.log('[OK] we-link mounted'); } catch(e) { console.error('[FAIL] we-link:', e.message); }
 try { app.use('/api/land-listings/upload', require('./routes/land-listings-upload')); console.log('[OK] land-listings-upload mounted'); } catch(e) { console.error('[FAIL] land-listings-upload:', e.message); }
 
+
+// ── TRACEABILITY + GLOBAL INTEL (FSMA 204 KDE/CTE + international data) ──────
+try { app.use('/api/traceability', require('./routes/traceabilityWorkflow')); console.log('[OK] traceability: FSMA 204 KDE/CTE engine mounted'); } catch(e) { console.error('[FAIL] traceability:', e.message); }
+try { app.use('/api/global-intel', require('./routes/global-intel')); console.log('[OK] global-intel: FAO/USDA-NASS/OpenFDA/WorldBank aggregator mounted'); } catch(e) { console.error('[FAIL] global-intel:', e.message); }
 // ── PLATFORM GUARD — 50 self-healing agents ──────────────────────────────────
 try {
   const PlatformGuard = require('./agents/PlatformGuard');
