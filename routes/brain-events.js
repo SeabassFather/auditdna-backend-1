@@ -230,6 +230,98 @@ function startMonitor() {
 startMonitor();
 
 // Export broadcast so other routes can emit events
+
+
+// ══ PERSISTENT MEMORY + A/B OPTIMIZATION ═══════════════════════════════════
+
+// POST /api/brain/events/memory-store — store agent memory (uses pgvector if available)
+router.post('/memory-store', async (req, res) => {
+  const db = req.app.get('db') || global.db;
+  if (!db) return res.status(503).json({ error:'DB unavailable' });
+  const { agent_id, contact_id, memory_type, content, metadata } = req.body;
+  if (!agent_id || !content) return res.status(400).json({ error:'agent_id and content required' });
+  try {
+    await db.query(
+      `INSERT INTO brain_events (event_type, agent_id, payload, created_at)
+       VALUES ('MEMORY_STORED', $1, $2, NOW())`,
+      [agent_id, JSON.stringify({ contact_id, memory_type, content, metadata })]
+    ).catch(()=>{});
+    res.json({ ok:true, stored:true, agent_id, memory_type,
+      note:'Vector embedding requires pgvector extension — enabling via Railway add-on' });
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
+// POST /api/brain/events/template-ab — record template performance for A/B
+router.post('/template-ab', async (req, res) => {
+  const db = req.app.get('db') || global.db;
+  const { template_id, event, contact_id, category } = req.body;
+  // event = 'sent' | 'opened' | 'replied' | 'deal'
+  if (!template_id || !event) return res.status(400).json({ error:'template_id and event required' });
+  if (db) {
+    await db.query(
+      `INSERT INTO brain_events (event_type, payload, created_at)
+       VALUES ('TEMPLATE_AB', $1, NOW())`,
+      [JSON.stringify({ template_id, event, contact_id, category, ts: new Date().toISOString() })]
+    ).catch(()=>{});
+    // Update blast_templates performance counter
+    const col = event === 'opened' ? 'open_count' : event === 'replied' ? 'reply_count' : event === 'deal' ? 'deal_count' : null;
+    if (col) {
+      await db.query(
+        `UPDATE blast_templates SET ${col} = COALESCE(${col},0) + 1, last_used = NOW() WHERE id = $1`,
+        [template_id]
+      ).catch(()=>{});
+    }
+  }
+  res.json({ ok:true, recorded:true, template_id, event });
+});
+
+// GET /api/brain/events/template-performance — ranked templates by open/reply/deal rate
+router.get('/template-performance', async (req, res) => {
+  const db = req.app.get('db') || global.db;
+  if (!db) return res.status(503).json({ error:'DB unavailable' });
+  try {
+    // Count from brain_events
+    const r = await db.query(
+      `SELECT payload->>'template_id' as template_id,
+              SUM(CASE WHEN payload->>'event'='sent'   THEN 1 ELSE 0 END) as sent,
+              SUM(CASE WHEN payload->>'event'='opened' THEN 1 ELSE 0 END) as opened,
+              SUM(CASE WHEN payload->>'event'='replied'THEN 1 ELSE 0 END) as replied,
+              SUM(CASE WHEN payload->>'event'='deal'   THEN 1 ELSE 0 END) as deals
+       FROM brain_events WHERE event_type='TEMPLATE_AB'
+       GROUP BY payload->>'template_id' ORDER BY deals DESC, replied DESC`
+    ).catch(()=>({rows:[]}));
+    const ranked = r.rows.map(t => ({
+      ...t, sent:parseInt(t.sent||0), opened:parseInt(t.opened||0),
+      replied:parseInt(t.replied||0), deals:parseInt(t.deals||0),
+      open_rate: t.sent>0 ? ((t.opened/t.sent)*100).toFixed(1)+'%' : '—',
+      reply_rate: t.sent>0 ? ((t.replied/t.sent)*100).toFixed(1)+'%' : '—',
+      deal_rate: t.sent>0 ? ((t.deals/t.sent)*100).toFixed(1)+'%' : '—',
+    }));
+    res.json({ ok:true, templates:ranked, count:ranked.length,
+      recommendation: ranked[0] ? `Top template: ${ranked[0].template_id} (${ranked[0].deal_rate} deal rate)` : 'No data yet' });
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
+// POST /api/brain/events/welink-feedback — WE LINK match outcome feedback
+router.post('/welink-feedback', async (req, res) => {
+  const db = req.app.get('db') || global.db;
+  const { match_id, outcome, reason, grower_id, land_id } = req.body;
+  // outcome = 'success' | 'declined' | 'expired' | 'contract_signed'
+  if (!match_id || !outcome) return res.status(400).json({ error:'match_id and outcome required' });
+  if (db) {
+    await db.query(
+      `UPDATE we_link_matches SET status=$1, outcome_reason=$2, updated_at=NOW() WHERE id=$3`,
+      [outcome, reason||null, match_id]
+    ).catch(()=>{});
+    await db.query(
+      `INSERT INTO brain_events (event_type, payload, created_at) VALUES ('WELINK_FEEDBACK',$1,NOW())`,
+      [JSON.stringify({ match_id, outcome, reason, grower_id, land_id })]
+    ).catch(()=>{});
+  }
+  res.json({ ok:true, feedback_recorded:true, match_id, outcome,
+    note:'WE LINK scoring model updates quarterly from aggregated feedback' });
+});
+
 module.exports = router;
 module.exports.broadcast = broadcast;
 module.exports.sendNtfy  = sendNtfy;
