@@ -49,21 +49,28 @@ router.post('/blast', async (req, res) => {
 
   try {
     // Pull contacts with valid emails — ag_contacts is the Railway master table (33,971 records)
-        const result = await pool.query(`
-      SELECT email,
-        COALESCE(contact_name, full_name, first_name, company_name, 'Friend') as contact_name,
-        COALESCE(company_name, '') as company_name,
-        COALESCE(role, title, commodity, 'Agricultural Partner') as role
-      FROM (
-        SELECT DISTINCT email, contact_name, company_name, role, commodity, title, full_name, first_name
+            const result = await pool.query(`
+      SELECT email, contact_name, company_name, role FROM (
+        SELECT email,
+          COALESCE(name, contact, 'Friend') as contact_name,
+          COALESCE(company, '') as company_name,
+          'shipper' as role
         FROM shipper_contacts
         WHERE email IS NOT NULL AND email != '' AND email LIKE '%@%'
         UNION
-        SELECT DISTINCT email, contact_name, company_name, role, NULL as commodity, NULL as title, NULL as full_name, NULL as first_name
+        SELECT email,
+          COALESCE(contact_first_name || ' ' || contact_last_name, contact_first_name, 'Friend') as contact_name,
+          COALESCE(company_name, '') as company_name,
+          'contact' as role
         FROM contacts
         WHERE email IS NOT NULL AND email != '' AND email LIKE '%@%'
+          AND (email_opt_out IS NULL OR email_opt_out = false)
+          AND (do_not_contact IS NULL OR do_not_contact = false)
         UNION
-        SELECT DISTINCT email, contact_name, company_name, NULL as role, commodity, NULL as title, NULL as full_name, NULL as first_name
+        SELECT email,
+          COALESCE(first_name || ' ' || last_name, first_name, 'Friend') as contact_name,
+          COALESCE(trade_name, legal_name, '') as company_name,
+          'grower' as role
         FROM grower_contacts
         WHERE email IS NOT NULL AND email != '' AND email LIKE '%@%'
       ) combined
