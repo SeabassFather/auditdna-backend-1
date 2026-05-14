@@ -48,18 +48,19 @@ router.post('/blast', async (req, res) => {
   const { categories, limit = 50, dry_run = false } = req.body;
 
   try {
-    // Pull contacts that look like suppliers/distributors/shippers
-    const roleFilter = categories && categories.length
-      ? categories.map(c => `'${c}'`).join(',')
-      : "'shipper','distributor','supplier','packer','broker','input_supplier'";
-
+    // Pull contacts with valid emails — ag_contacts is the Railway master table (33,971 records)
     const result = await pool.query(`
-      SELECT DISTINCT ON (email) contact_name, email, company_name, role, commodity, state_province, country
+      SELECT DISTINCT ON (email)
+        COALESCE(contact_name, company_name, 'Friend') as contact_name,
+        email,
+        COALESCE(company_name, '') as company_name,
+        COALESCE(role, commodity, 'Agricultural Partner') as role,
+        COALESCE(state_province, country, '') as region
       FROM ag_contacts
-      WHERE email IS NOT NULL AND email != ''
-        AND role IN (${roleFilter})
-        AND (unsubscribed IS NULL OR unsubscribed = false)
-      ORDER BY email, created_at DESC
+      WHERE email IS NOT NULL
+        AND email != ''
+        AND email LIKE '%@%'
+      ORDER BY email, id DESC
       LIMIT $1
     `, [parseInt(limit)]);
 
