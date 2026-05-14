@@ -21,7 +21,7 @@
 // =============================================================================
 
 const express = require('express');
-const pool = require('../db');
+let pool; try { pool = require('../db'); } catch(e) {} pool = pool || global.db;
 const router = express.Router();
 
 const db = () => pool || null;
