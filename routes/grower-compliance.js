@@ -129,5 +129,94 @@ router.get('/admin/pending-docs', adminRequired, async (req, res) => {
   } catch(e) { res.status(500).json({ error: e.message }); }
 });
 
+
+
+// ══ GROWER TRUST SCORE ENGINE ══════════════════════════════════════════════
+
+// GET /grower-trust-score/:growerId
+router.get('/grower-trust-score/:growerId', async (req, res) => {
+  const db = req.app.get('db') || global.db;
+  if (!db) return res.status(503).json({ error: 'DB unavailable' });
+  const { growerId } = req.params;
+  try {
+    const [certs, ctes, water, soil, alerts] = await Promise.all([
+      db.query(`SELECT * FROM compliance_certs WHERE grower_id=$1`, [growerId]).catch(()=>({rows:[]})),
+      db.query(`SELECT COUNT(*) as n, MAX(event_date) as last_event FROM production_declarations WHERE grower_id=$1`, [growerId]).catch(()=>({rows:[{n:0}]})),
+      db.query(`SELECT COUNT(*) as n, SUM(CASE WHEN ecoli>0 THEN 1 ELSE 0 END) as violations FROM intake_water_tests WHERE grower_id=$1`, [growerId]).catch(()=>({rows:[{n:0,violations:0}]})),
+      db.query(`SELECT COUNT(*) as n FROM intake_soil_reports WHERE grower_id=$1`, [growerId]).catch(()=>({rows:[{n:0}]})),
+      db.query(`SELECT COUNT(*) as n FROM compliance_alerts WHERE grower_id=$1 AND created_at > NOW() - INTERVAL '12 months'`, [growerId]).catch(()=>({rows:[{n:0}]})),
+    ]);
+    const activeCerts = certs.rows.filter(c => !c.expiry_date || new Date(c.expiry_date) > new Date());
+    const expiredCerts = certs.rows.filter(c => c.expiry_date && new Date(c.expiry_date) <= new Date());
+    const cteCount = parseInt(ctes.rows[0]?.n||0);
+    const waterTests = parseInt(water.rows[0]?.n||0);
+    const waterViolations = parseInt(water.rows[0]?.violations||0);
+    const soilReports = parseInt(soil.rows[0]?.n||0);
+    const alertCount = parseInt(alerts.rows[0]?.n||0);
+    // Score components (max 100)
+    const certScore     = Math.min(activeCerts.length * 15, 30);
+    const traceScore    = Math.min(cteCount * 2, 25);
+    const waterScore    = waterTests > 0 ? (waterViolations === 0 ? 20 : 5) : 0;
+    const soilScore     = Math.min(soilReports * 5, 10);
+    const penaltyScore  = Math.max(0, (expiredCerts.length * -5) + (alertCount * -8));
+    const baseScore     = 15; // registered grower baseline
+    const total = Math.max(0, Math.min(100, baseScore + certScore + traceScore + waterScore + soilScore + penaltyScore));
+    const tier = total >= 80 ? 'PLATINUM' : total >= 60 ? 'GOLD' : total >= 40 ? 'SILVER' : 'BRONZE';
+    res.json({ ok:true, grower_id:growerId, trust_score:total, tier,
+      breakdown:{ base:baseScore, certs:certScore, traceability:traceScore, water:waterScore, soil:soilScore, penalties:penaltyScore },
+      active_certs: activeCerts.map(c=>c.cert_type), expired_certs: expiredCerts.length,
+      cte_events: cteCount, water_tests: waterTests, water_violations: waterViolations,
+      buyer_access: total >= 60 ? ['Walmart','Kroger','Whole Foods','Costco','Target'] : total >= 40 ? ['Regional distributors','Food service'] : ['Direct sales only'],
+      bank_eligible: total >= 50,
+      note:'Score powers buyer marketplace visibility + factoring eligibility + export certification',
+    });
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
+// GET /globalgap-umbrella — umbrella certification cost-share program
+router.get('/globalgap-umbrella', (req, res) => {
+  res.json({ ok:true,
+    program:'GlobalGAP Umbrella Certification — Mexausa Food Group, Inc.',
+    description:'MFG pools small growers under one umbrella cert. Individual growers share the cost and get GlobalGAP certified without the full audit burden.',
+    certs_covered:['GlobalGAP IFA v6','Primus GFS','USDA Organic','FSMA 204','GAP/GHP'],
+    cost_share:{ individual_audit:'$3,500-$8,000/year', umbrella_share:'$299-$799/year', savings:'85-92% cost reduction' },
+    benefits:['Access Walmart, Costco, Whole Foods supplier programs','Export to EU, Canada, Japan','USDA SBIR grant eligibility','Bank loan collateral (Grower Trust Score)'],
+    eligibility:['Registered in LOAF platform','Minimum 2 CTE events recorded','Active water test on file'],
+    apply: 'POST /api/grower-compliance/globalgap-umbrella/apply',
+    contact:'Mexausa Food Group — Pablo Alatorre, pablo@mexausafg.com',
+  });
+});
+
+// POST /globalgap-umbrella/apply
+router.post('/globalgap-umbrella/apply', async (req, res) => {
+  const db = req.app.get('db') || global.db;
+  const { grower_id, cert_type, contact_name, email, commodities } = req.body;
+  if (!grower_id || !cert_type) return res.status(400).json({ error:'grower_id and cert_type required' });
+  if (db) {
+    await db.query(
+      `INSERT INTO compliance_certs (grower_id, cert_type, status, notes, created_at)
+       VALUES ($1,$2,'PENDING_UMBRELLA','Applied via MFG umbrella program',NOW())
+       ON CONFLICT DO NOTHING`,
+      [grower_id, cert_type]
+    ).catch(()=>{});
+  }
+  res.json({ ok:true, status:'APPLIED', grower_id, cert_type,
+    next_steps:['MFG team will contact within 2 business days','Prepare field records and water test results','Assign field inspector visit'],
+    timeline:'6-8 weeks to certification',
+  });
+});
+
+// GET /aphis-eligibility/:commodity — export eligibility check
+router.get('/aphis-eligibility/:commodity', (req, res) => {
+  const APHIS = {
+    avocado: { permit_required:true, treatment:'Hot water: 46.1°C for 65-90 min (Hass <350g)', markets:['USA','Canada','Japan'], restricted:['EU (Anthracnose protocols)'], source:'https://www.aphis.usda.gov/permits' },
+    mango:   { permit_required:true, treatment:'Hot water or vapor heat required', markets:['USA','Canada'], restricted:[], source:'https://www.aphis.usda.gov/permits' },
+    default: { permit_required:false, treatment:'Inspection at POE only', markets:['USA','Canada','Japan','EU'], restricted:[], source:'https://www.aphis.usda.gov' },
+  };
+  const c = req.params.commodity.toLowerCase();
+  const info = APHIS[c] || APHIS.default;
+  res.json({ ok:true, commodity:c, ...info, note:'Verify current requirements at https://www.aphis.usda.gov/import_export/plants' });
+});
+
 module.exports = router;
 
