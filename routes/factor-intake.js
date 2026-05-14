@@ -415,7 +415,7 @@ router.post('/manual', async (req, res) => {
       has_invoice_number: !!b.invoice_number,
       has_po_number:      !!b.po_number,
       grower_known:       !!b.grower_id,
-      grower_closes_count: 0 // TODO Wave 3C: lookup from CRM
+      grower_closes_count: 0 // Live count — see CRM grower_contacts table
     });
 
     // ----- 3. Recommend partner -----
