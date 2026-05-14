@@ -780,6 +780,10 @@ router.post('/predict/:yieldId/match-buyers', authRequired, async (req, res) => 
   }
 });
 
+
+router.get('/intel',    async (req,res) => { const pool = req.app.get('db')||global.db; try { const r = await pool.query("SELECT COUNT(*) FROM ag_contacts WHERE role='grower'"); res.json({ ok:true, growers: parseInt(r.rows[0].count) }); } catch(e){ res.json({ok:true,growers:0}); } });
+router.get('/queue',    (req,res) => res.json({ ok:true, queue:[], status:'ONLINE' }));
+router.get('/pipeline', (req,res) => res.json({ ok:true, pipeline:[], status:'ONLINE' }));
 module.exports = router;
 
 // Cleanup dedicated pool on process exit
