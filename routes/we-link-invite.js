@@ -56,7 +56,7 @@ router.post('/blast', async (req, res) => {
         COALESCE(company_name, '') as company_name,
         COALESCE(role, commodity, 'Agricultural Partner') as role,
         COALESCE(state_province, country, '') as region
-      FROM ag_contacts
+      FROM shipper_contacts
       WHERE email IS NOT NULL
         AND email != ''
         AND email LIKE '%@%'
