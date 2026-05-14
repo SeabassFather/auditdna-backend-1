@@ -46,7 +46,7 @@ async function loadContacts(){
   if (!db) return [];
   let rows = [];
   try {
-    const crm = await db.query("SELECT id, first_name, last_name, email, phone, company, city, state, country, notes, category FROM ag_contacts WHERE email IS NOT NULL AND email != ''");
+    const crm = await db.query("SELECT id, first_name, last_name, email, phone, company, city, state, country, notes, category FROM shipper_contacts WHERE email IS NOT NULL AND email != ''");
     rows = crm.rows.map(r => ({ ...r, name:[r.first_name,r.last_name].filter(Boolean).join(' ').trim()||r.company||r.email, source:'CRM' }));
   } catch(e) { console.warn('[commodity-search] crm query failed:', e.message); }
   return classifyBatch(rows).results;
