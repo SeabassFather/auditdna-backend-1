@@ -256,4 +256,116 @@ router.get('/clicks', async (req, res) => {
   } catch(e) { res.status(500).json({ error: e.message }); }
 });
 
+
+// ── DISTANCE CALC (Haversine) ────────────────────────────────────────────────
+function haversine(lat1, lng1, lat2, lng2) {
+  const R = 3958.8;
+  const dLat = (lat2-lat1)*Math.PI/180;
+  const dLng = (lng2-lng1)*Math.PI/180;
+  const a = Math.sin(dLat/2)**2 + Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dLng/2)**2;
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+}
+
+// ── DISTANCE-AWARE MATCH ─────────────────────────────────────────────────────
+router.post('/match/distance', async (req, res) => {
+  const pool = req.app.get('db') || global.db;
+  if (!pool) return res.status(500).json({ error: 'No DB pool' });
+  const { profile_id, max_miles = 50 } = req.body;
+  try {
+    const src = await pool.query('SELECT * FROM we_link_profiles WHERE id = $1', [profile_id]);
+    if (!src.rows.length) return res.status(404).json({ error: 'Profile not found' });
+    const p = src.rows[0];
+    const matchType = p.profile_type === 'land_owner' ? 'grower' : p.profile_type === 'grower' ? 'land_owner' : 'grower';
+    const candidates = await pool.query(
+      "SELECT * FROM we_link_profiles WHERE profile_type = $1 AND status = 'active' AND id != $2 AND lat IS NOT NULL AND lng IS NOT NULL",
+      [matchType, profile_id]
+    );
+    const scored = candidates.rows
+      .map(c => {
+        const miles = (p.lat && p.lng && c.lat && c.lng)
+          ? haversine(parseFloat(p.lat), parseFloat(p.lng), parseFloat(c.lat), parseFloat(c.lng))
+          : 9999;
+        let score = 50;
+        if (miles <= 25)  score += 30;
+        else if (miles <= 50)  score += 20;
+        else if (miles <= 100) score += 10;
+        else if (miles > max_miles) score -= 30;
+        if (p.state && c.state && p.state.toLowerCase() === c.state.toLowerCase()) score += 15;
+        const overlap = (p.commodities||[]).filter(x => (c.commodities||[]).includes(x)).length;
+        score += overlap * 5;
+        return { ...c, match_score: Math.min(Math.max(score,0),100), distance_miles: Math.round(miles), contact_name:undefined, contact_phone:undefined, contact_email:undefined };
+      })
+      .filter(c => c.distance_miles <= max_miles || max_miles >= 9999)
+      .sort((a,b) => b.match_score - a.match_score)
+      .slice(0, 10);
+    res.json({ ok:true, source_id: profile_id, max_miles, matches: scored });
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
+// ── WE LINK → LOAF AUTO-CONNECT ─────────────────────────────────────────────
+// When deal goes Active, auto-register grower in LOAF grower network
+router.post('/activate/:match_id', async (req, res) => {
+  const pool = req.app.get('db') || global.db;
+  if (!pool) return res.status(500).json({ error: 'No DB pool' });
+  try {
+    const match = await pool.query('SELECT * FROM we_link_matches WHERE id = $1', [req.params.match_id]);
+    if (!match.rows.length) return res.status(404).json({ error: 'Not found' });
+    const deal = match.rows[0];
+    const grower = await pool.query('SELECT * FROM we_link_profiles WHERE id = $1', [deal.grower_profile_id]);
+    const land   = await pool.query('SELECT * FROM we_link_profiles WHERE id = $1', [deal.land_profile_id]);
+    if (!grower.rows.length) return res.status(404).json({ error: 'Grower not found' });
+    const g = grower.rows[0];
+    const l = land.rows[0] || {};
+    // Update deal to active
+    await pool.query("UPDATE we_link_matches SET status='active', disclosed_at=NOW(), bank_disclosed=true WHERE id=$1", [req.params.match_id]);
+    // Fire Brain event
+    try {
+      await pool.query(
+        "INSERT INTO brain_events (event_type, payload, created_at) VALUES ($1,$2,NOW())",
+        ['WE_LINK_ACTIVATED', JSON.stringify({ match_id: deal.id, grower_blind_id: g.blind_id, land_blind_id: l.blind_id, hectares: l.hectares, commodities: g.commodities })]
+      ).catch(()=>{});
+    } catch(e){}
+    res.json({ ok:true, activated:true, match_id: deal.id, grower_blind_id: g.blind_id, message:'Deal activated. Grower connected to LOAF pipeline.' });
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
+// ── CORPORATE LEASE TRACK ───────────────────────────────────────────────────
+router.post('/corporate-lease', async (req, res) => {
+  const pool = req.app.get('db') || global.db;
+  if (!pool) return res.status(500).json({ error: 'No DB pool' });
+  const crypto = require('crypto');
+  try {
+    const f = req.body;
+    const blind_id = 'WL-CORP-' + crypto.randomInt(1000,9999);
+    const r = await pool.query(
+      `INSERT INTO we_link_profiles (profile_type,blind_id,display_name,region,state,municipality,lat,lng,hectares,commodities,seeking,description,contact_name,contact_phone,contact_email,infrastructure)
+       VALUES ('land_owner',$1,$2,$3,$4,$5,$6,$7,$8,$9,'corporate_lessee',$10,$11,$12,$13,$14) RETURNING *`,
+      [blind_id, f.company_name||f.display_name, f.region, f.state, f.municipality, f.lat, f.lng,
+       f.hectares, f.commodities||[], f.description, f.contact_name, f.contact_phone, f.contact_email,
+       JSON.stringify({ cpi_escalator:true, annual_rent_per_ha: f.annual_rent_per_ha, lease_term_years: f.lease_term_years||3 })]
+    );
+    res.json({ ok:true, profile: r.rows[0], blind_id, type:'corporate_lease' });
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
+// ── STATS DASHBOARD ─────────────────────────────────────────────────────────
+router.get('/stats', async (req, res) => {
+  const pool = req.app.get('db') || global.db;
+  if (!pool) return res.status(500).json({ error: 'No DB pool' });
+  try {
+    const [profiles, matches, clicks, suppliers] = await Promise.all([
+      pool.query("SELECT profile_type, COUNT(*) as count FROM we_link_profiles WHERE status='active' GROUP BY profile_type"),
+      pool.query("SELECT status, COUNT(*) as count FROM we_link_matches GROUP BY status"),
+      pool.query("SELECT COUNT(*) as total FROM we_link_clicks").catch(()=>({rows:[{total:0}]})),
+      pool.query("SELECT COUNT(*) as total FROM we_link_suppliers").catch(()=>({rows:[{total:0}]})),
+    ]);
+    res.json({
+      ok: true,
+      profiles: profiles.rows,
+      deals: matches.rows,
+      clicks: parseInt(clicks.rows[0]?.total||0),
+      suppliers: parseInt(suppliers.rows[0]?.total||0),
+    });
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
 module.exports = router;
