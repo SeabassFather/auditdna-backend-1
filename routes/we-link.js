@@ -226,4 +226,34 @@ router.get('/matches', async (req, res) => {
   } catch(e) { res.status(500).json({ error: e.message }); }
 });
 
+
+// ── CLICK TRACKING ───────────────────────────────────────────────────────────
+router.post('/click', async (req, res) => {
+  const pool = req.app.get('db') || global.db;
+  const { source, ts, ua } = req.body || {};
+  try {
+    if (pool) {
+      await pool.query(
+        `CREATE TABLE IF NOT EXISTS we_link_clicks (id SERIAL PRIMARY KEY, source VARCHAR(50), clicked_at TIMESTAMPTZ DEFAULT NOW(), user_agent TEXT)`,
+      ).catch(()=>{});
+      await pool.query(
+        'INSERT INTO we_link_clicks (source, clicked_at, user_agent) VALUES ($1, $2, $3)',
+        [source||'unknown', ts||new Date().toISOString(), ua||'']
+      ).catch(()=>{});
+    }
+    res.json({ ok: true });
+  } catch(e) { res.json({ ok: true }); }
+});
+
+// ── CLICK STATS ──────────────────────────────────────────────────────────────
+router.get('/clicks', async (req, res) => {
+  const pool = req.app.get('db') || global.db;
+  if (!pool) return res.status(500).json({ error: 'No DB pool' });
+  try {
+    const r = await pool.query('SELECT source, clicked_at, user_agent FROM we_link_clicks ORDER BY clicked_at DESC LIMIT 100');
+    const total = await pool.query('SELECT COUNT(*) FROM we_link_clicks');
+    res.json({ ok: true, total: parseInt(total.rows[0].count), clicks: r.rows });
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
 module.exports = router;
