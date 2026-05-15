@@ -1718,10 +1718,11 @@ try { app.use('/api/traceability', require('./routes/traceabilityWorkflow')); co
 try { app.use('/api/global-intel', require('./routes/global-intel')); console.log('[OK] global-intel: FAO/USDA-NASS/OpenFDA/WorldBank aggregator mounted'); } catch(e) { console.error('[FAIL] global-intel:', e.message); }
 
 // ── ag_intel_cache — international data cache for global-intel routes ─────────
-try {
-  (async () => {
+(async () => {
+  try {
     const pool = global.db || app.get('db');
     if (!pool) return;
+    // Create table if missing
     await pool.query(`
       CREATE TABLE IF NOT EXISTS ag_intel_cache (
         id SERIAL PRIMARY KEY,
@@ -1732,10 +1733,21 @@ try {
         created_at TIMESTAMPTZ DEFAULT NOW()
       )
     `);
+    // Add missing columns to existing table (ALTER TABLE is safe if col already exists)
+    const alterCols = [
+      "ALTER TABLE ag_intel_cache ADD COLUMN IF NOT EXISTS commodity VARCHAR(100)",
+      "ALTER TABLE ag_intel_cache ADD COLUMN IF NOT EXISTS source VARCHAR(100)",
+      "ALTER TABLE ag_intel_cache ADD COLUMN IF NOT EXISTS country_code VARCHAR(20)",
+      "ALTER TABLE ag_intel_cache ADD COLUMN IF NOT EXISTS payload JSONB",
+    ];
+    for (const sql of alterCols) {
+      try { await pool.query(sql); } catch(_) {}
+    }
+    // Create index — safe now that column guaranteed to exist
     await pool.query(`CREATE INDEX IF NOT EXISTS idx_ag_intel_commodity ON ag_intel_cache(commodity, source, created_at DESC)`);
     console.log('[OK] ag_intel_cache table ready');
-  })();
-} catch(e) { console.warn('[WARN] ag_intel_cache:', e.message); }
+  } catch(e) { console.warn('[WARN] ag_intel_cache (non-fatal):', e.message); }
+})();
 
 
 // ── PHASE 2 ROUTES — all 8 priorities ────────────────────────────────────────
