@@ -1747,11 +1747,47 @@ try { app.use('/api/investor',         require('./routes/investor-pipeline'));  
 try { app.use('/api/team',             require('./routes/team-ops'));           console.log('[OK] /api/team — team tasks + border digital twin + cold chain'); } catch(e) { console.error('[FAIL] team:', e.message); }
 
 try { app.use('/api/grower-compliance', require('./routes/grower-compliance')); console.log('[OK] /api/grower-compliance — Grower Trust Score + GlobalGAP umbrella + APHIS'); } catch(e) { console.error('[FAIL] grower-compliance:', e.message); }
+// ── MEXAUSA FOOD GROUP — New Platform Routes (TraceSafe / Certifications / Lab / Border / Partners) ──
+try {
+  const { registerTraceSafeRoutes, createTraceSafeTable } = require('./routes/tracesafe');
+  registerTraceSafeRoutes(app, global.db || app.get('db') || pool);
+  createTraceSafeTable(global.db || app.get('db') || pool).catch(e => console.warn('[WARN] tracesafe table:', e.message));
+  console.log('[OK] TraceSafe Small Grower Program routes mounted');
+} catch(e) { console.error('[FAIL] tracesafe routes:', e.message); }
+
+try {
+  const { registerCertificationRoutes, createCertificationsTable } = require('./routes/certifications');
+  registerCertificationRoutes(app, global.db || app.get('db') || pool);
+  createCertificationsTable(global.db || app.get('db') || pool).catch(e => console.warn('[WARN] cert table:', e.message));
+  console.log('[OK] Re:Collect Certification Exchange routes mounted');
+} catch(e) { console.error('[FAIL] certifications routes:', e.message); }
+
+try {
+  const { registerTraceabilityRoutes, createTraceabilityTables } = require('./routes/traceability');
+  registerTraceabilityRoutes(app, global.db || app.get('db') || pool);
+  createTraceabilityTables(global.db || app.get('db') || pool).catch(e => console.warn('[WARN] traceability tables:', e.message));
+  console.log('[OK] Lab Reports + Border Compliance + Traceability Events routes mounted');
+} catch(e) { console.error('[FAIL] traceability routes:', e.message); }
+
+try {
+  const { registerPartnerRoutes, createPartnerTables } = require('./routes/partners');
+  registerPartnerRoutes(app, global.db || app.get('db') || pool);
+  createPartnerTables(global.db || app.get('db') || pool).catch(e => console.warn('[WARN] partner tables:', e.message));
+  console.log('[OK] Partner Portal — Gov/Agency/Network partner routes mounted');
+} catch(e) { console.error('[FAIL] partners routes:', e.message); }
+
 // ── PLATFORM GUARD — 50 self-healing agents ──────────────────────────────────
 try {
   const PlatformGuard = require('./agents/PlatformGuard');
-  PlatformGuard.start(app, pool);
-  console.log('[OK] PlatformGuard: 50 health agents armed');
+  // Memory guard — only start agents if sufficient memory available
+  const memMB = Math.round(process.memoryUsage().rss / 1024 / 1024);
+  console.log('[INFO] Memory before PlatformGuard:', memMB, 'MB');
+  if (memMB < 400) {
+    PlatformGuard.start(app, pool);
+    console.log('[OK] PlatformGuard: 50 health agents armed');
+  } else {
+    console.warn('[SKIP] PlatformGuard: memory', memMB, 'MB — skipping to prevent OOM');
+  }
 } catch(e) { console.error('[FAIL] PlatformGuard:', e.message); }
 
 
