@@ -184,7 +184,7 @@ const sharedTransporter = __ggNodemailer.createTransport({
   secure: false,
   auth: {
     user: process.env.GMAIL_USER || 'sgarcia1911@gmail.com',
-    pass: process.env.GMAIL_APP_PASSWORD || 'emgptqrmqdbxrpil',
+    pass: process.env.GMAIL_APP_PASSWORD || process.env.GMAIL_APP_PASSWORD,
   },
   pool: true,
   maxConnections: 5,
