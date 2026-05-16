@@ -10,7 +10,7 @@ const bcrypt  = require('bcryptjs');
 const jwt     = require('jsonwebtoken');
 const nodemailer = require('nodemailer');
 
-const JWT_SECRET  = process.env.JWT_SECRET || 'auditdna-gov-jwt';
+const JWT_SECRET  = process.env.JWT_SECRET || process.env.JWT_SECRET || 'auditdna-gov-jwt';
 const OWNER_EMAIL = 'sgarcia1911@gmail.com';
 const NTFY_TOPIC  = process.env.NTFY_TOPIC || 'auditdna-gov-alerts';
 const SMTP_PASS   = process.env.GMAIL_APP_PASSWORD || process.env.GMAIL_APP_PASSWORD;
@@ -117,7 +117,7 @@ async function govAuth(req, res, next) {
   const token = (req.headers.authorization || '').replace('Bearer ', '');
   if (!token) return res.status(401).json({ error: 'No token' });
   try {
-    const payload = jwt.verify(token, JWT_SECRET + '_gov');
+    const payload = jwt.verify(token, (process.env.JWT_SECRET || 'auditdna-gov-jwt') + '_gov');
     const pool    = getPool(req);
     const { rows } = await pool.query(
       'SELECT * FROM gov_accounts WHERE id=$1 AND is_active=true', [payload.id]);
@@ -189,7 +189,7 @@ router.post('/login', async (req, res) => {
 
     // ── SUCCESS ──────────────────────────────────────────────────────────────
     const expiresAt = new Date(Date.now() + 4 * 60 * 60 * 1000);
-    const token = jwt.sign({ id: acct.id, agency: acct.agency, tier: acct.tier }, JWT_SECRET + '_gov', { expiresIn: '4h' });
+    const token = jwt.sign({ id: acct.id, agency: acct.agency, tier: acct.tier }, (process.env.JWT_SECRET || 'auditdna-gov-jwt') + '_gov', { expiresIn: '4h' });
 
     await pool.query(
       `UPDATE gov_accounts SET failed_attempts=0, locked_until=NULL, last_login=NOW(), last_ip=$1 WHERE id=$2`,
@@ -255,7 +255,7 @@ router.get('/grower-compliance/:id', govAuth, async (req, res) => {
 router.post('/create-account', async (req, res) => {
   const pool = getPool(req);
   const ownerKey = req.headers['x-owner-key'];
-  if (ownerKey !== (process.env.OWNER_MASTER_KEY || 'MFG-SAUL-MASTER-2026')) {
+  if (ownerKey !== (process.env.OWNER_MASTER_KEY || process.env.GOV_OWNER_KEY)) {
     return res.status(403).json({ error: 'Forbidden' });
   }
   const { agency, user_id, password, access_code, tier, allowed_modules } = req.body || {};
