@@ -1758,6 +1758,7 @@ try { app.use('/api/payments',         require('./routes/payment-rails'));      
 try { app.use('/api/investor',         require('./routes/investor-pipeline'));  console.log('[OK] /api/investor — SAM.gov + SBIR + investor CRM'); } catch(e) { console.error('[FAIL] investor:', e.message); }
 try { app.use('/api/team',             require('./routes/team-ops'));           console.log('[OK] /api/team — team tasks + border digital twin + cold chain'); } catch(e) { console.error('[FAIL] team:', e.message); }
 
+try { app.use('/api/gov-access', require('./routes/gov-access')); console.log('[OK] /api/gov-access — Government/Agency Read-Only Portal'); } catch(e) { console.error('[FAIL] gov-access:', e.message); }
 try { app.use('/api/grower-compliance', require('./routes/grower-compliance')); console.log('[OK] /api/grower-compliance — Grower Trust Score + GlobalGAP umbrella + APHIS'); } catch(e) { console.error('[FAIL] grower-compliance:', e.message); }
 // ── MEXAUSA FOOD GROUP — New Platform Routes (TraceSafe / Certifications / Lab / Border / Partners) ──
 try {
