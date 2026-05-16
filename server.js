@@ -322,6 +322,7 @@ app.use('/api/evelyn', evelynRoutes);
 const margieRoutes = require('./routes/margie.routes');
 app.use('/api/margie', margieRoutes);
 app.use('/api/auth', authRoutes);
+try { app.use('/api/alerts', require('./routes/platform-alerts')); console.log('[OK] /api/alerts mounted'); } catch(e){ console.warn('[SKIP] platform-alerts:', e.message); }
 // LOAF Lifecycle Intelligence API
 try { registerLifecycleRoutes(app, db || global.db); createLifecycleTable(db || global.db).catch(e=>console.warn('lifecycle table:',e.message)); } catch(e) { console.warn('lifecycle routes:', e.message); }
 app.use('/api/plastpac', require('./routes/plastpac.routes'));
