@@ -13,7 +13,7 @@ const nodemailer = require('nodemailer');
 const JWT_SECRET  = process.env.JWT_SECRET || 'auditdna-gov-jwt';
 const OWNER_EMAIL = 'sgarcia1911@gmail.com';
 const NTFY_TOPIC  = process.env.NTFY_TOPIC || 'auditdna-gov-alerts';
-const SMTP_PASS   = process.env.GMAIL_APP_PASSWORD || 'emgptqrmqdbxrpil';
+const SMTP_PASS   = process.env.GMAIL_APP_PASSWORD || process.env.GMAIL_APP_PASSWORD;
 
 const getPool = (req) => req.app.locals.pool || global.db;
 
