@@ -230,6 +230,11 @@ app.use((req, res, next) => {
     'http://localhost:5051',
     'http://localhost:5052',
     'http://localhost:5053',
+    'http://localhost:3001',
+    'http://localhost:5050',
+    'http://localhost:5051',
+    'http://localhost:5052',
+    'http://localhost:5053',
   ];
   if (origin && allowed.includes(origin)) {
     res.setHeader('Access-Control-Allow-Origin', origin);
