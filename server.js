@@ -330,6 +330,7 @@ app.use('/api/evelyn', evelynRoutes);
 const margieRoutes = require('./routes/margie.routes');
 app.use('/api/margie', margieRoutes);
 app.use('/api/auth', authRoutes);
+try { app.use('/api', require('./routes/stub-routes')); console.log('[OK] stub-routes mounted'); } catch(e){ console.warn('[WARN] stub-routes:', e.message); }
 try { app.use('/api/alerts', require('./routes/platform-alerts')); console.log('[OK] /api/alerts mounted'); } catch(e){ console.warn('[SKIP] platform-alerts:', e.message); }
 // LOAF Lifecycle Intelligence API
 try { registerLifecycleRoutes(app, db || global.db); createLifecycleTable(db || global.db).catch(e=>console.warn('lifecycle table:',e.message)); } catch(e) { console.warn('lifecycle routes:', e.message); }
@@ -1673,8 +1674,8 @@ try {
 // CAMPAIGNS ENGINE + INTERNAL INBOX (Phase 1 - mounted BEFORE export so they actually load)
 try { app.use('/api/campaigns', require('./routes/campaigns-engine')); console.log('[OK] campaigns-engine mounted at /api/campaigns'); } catch(e) { console.error('[FAIL] campaigns-engine mount:', e.message); }
 try { app.use('/api/inbox', require('./routes/internal-inbox')); console.log('[OK] internal-inbox mounted at /api/inbox'); } catch(e) { console.error('[FAIL] internal-inbox mount:', e.message); }
-try { app.use('/api/wesource', require('./routes/wesource.routes')); console.log('[OK] wesource routes mounted at /api/wesource'); } catch (e) { console.error('[FAIL] wesource routes:', e.message); }
-try { app.use('/api/agents', require('./routes/agents.routes')); console.log('[OK] agents mounted at /api/agents'); } catch (e) { console.error('[FAIL] agents:', e.message); }
+try { app.use('/api/wesource', require('./routes/wesource.routes')); console.log('[OK] wesource routes mounted at /api/wesource'); } catch(e){ console.error('[ERR] wesource:',e.message); app.get('/api/wesource',(req,res)=>res.json({results:[]})); } //esource'); } catch (e) { console.error('[FAIL] wesource routes:', e.message); }
+try { const ar=require('./routes/agents.routes'); app.use('/api/agents', ar); console.log('[OK] agents mounted at /api/agents'); } catch(e){ console.error('[ERR] agents.routes failed to load:',e.message); app.get('/api/agents',(req,res)=>res.json({agents:[],total:0})); } //catch (e) { console.error('[FAIL] agents:', e.message); }
 try {
   const diego = require('./services/diego-si');
   diego.startCron();
