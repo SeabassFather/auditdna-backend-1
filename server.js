@@ -236,8 +236,9 @@ app.use((req, res, next) => {
     'http://localhost:5052',
     'http://localhost:5053',
   ];
-  if (origin && allowed.includes(origin)) {
+  if (origin && (allowed.includes(origin) || /^http:\/\/localhost(:\d+)?$/.test(origin))) {
     res.setHeader('Access-Control-Allow-Origin', origin);
+    res.setHeader('Access-Control-Allow-Credentials', 'true');
   }
   res.setHeader('Access-Control-Allow-Methods', 'GET,POST,PUT,DELETE,PATCH,OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type,Authorization,X-Requested-With,x-user-email,x-access-level,x-admin');
