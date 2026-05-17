@@ -1826,8 +1826,6 @@ try {
 
 
 // ONE-TIME MIGRATION PATCH — fix Osvaldo + cleanup
-app.get('/api/admin/run-migration-92dc536', async (req, res) => {
-  if (req.query.secret !== 'MFG2026migrate') return res.status(403).json({error:'forbidden'});
   try {
     const bcrypt = require('bcryptjs');
     const results = [];
