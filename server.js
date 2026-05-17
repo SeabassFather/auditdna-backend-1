@@ -216,7 +216,7 @@ app.use(helmet({
 
 app.use(compression());
 
-// RAW CORS PREFLIGHT -- must be first, before all middleware
+// RAW CORS PREFLIGHT -- must be first, before all middleware -- updated 1779000488215
 app.use((req, res, next) => {
   const origin = req.headers.origin;
   const allowed = [
