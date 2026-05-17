@@ -1823,8 +1823,42 @@ try {
 
 
 
-// ONE-TIME MIGRATION — remove after running
+
+
+// ONE-TIME MIGRATION PATCH — fix Osvaldo + cleanup
 app.get('/api/admin/run-migration-92dc536', async (req, res) => {
+  if (req.query.secret !== 'MFG2026migrate') return res.status(403).json({error:'forbidden'});
+  try {
+    const bcrypt = require('bcryptjs');
+    const results = [];
+
+    // Fix Osvaldo — exists as ogut@mfginc.com (id:41) — update password + add osvaldo username alias
+    const hashOsv = await bcrypt.hash('Osvaldo2026#', 10);
+    const rOsv = await pool.query(
+      'UPDATE auth_users SET password_hash=$1, access_code=$2, pin=$3, is_active=true, updated_at=NOW() WHERE id=41 RETURNING id,username',
+      [hashOsv, '2C08BBCE', '7211']
+    );
+    results.push({action:'fixed_osvaldo_by_id', id:41, found:rOsv.rows.length>0});
+
+    // Also create osvaldo as clean username entry if not exists
+    const exOsv = await pool.query("SELECT id FROM auth_users WHERE username='osvaldo'");
+    if(!exOsv.rows.length){
+      const r=await pool.query(
+        'INSERT INTO auth_users(username,password_hash,access_code,pin,display_name,role,is_active,login_count,created_at,updated_at) VALUES($1,$2,$3,$4,$5,$6,true,0,NOW(),NOW()) RETURNING id',
+        ['osvaldo', hashOsv, '2C08BBCE', '7211', 'Osvaldo', 'admin']
+      );
+      results.push({action:'created_osvaldo_clean', id:r.rows[0].id});
+    } else {
+      results.push({action:'osvaldo_already_exists'});
+    }
+
+    const all=await pool.query("SELECT id,username,display_name,role,is_active FROM auth_users WHERE is_active=true ORDER BY id");
+    res.json({success:true, results, active_users:all.rows});
+  } catch(e){res.status(500).json({error:e.message});}
+});
+
+// REPLACED
+app.get('/api/admin/run-migration-92dc536-old', async (req, res) => {
   if (req.query.secret !== 'MFG2026migrate') return res.status(403).json({error:'forbidden'});
   try {
     const bcrypt = require('bcryptjs');
@@ -1861,6 +1895,40 @@ app.get('/api/admin/run-migration-92dc536', async (req, res) => {
     }
     const all=await pool.query('SELECT id,username,display_name,role,is_active FROM auth_users ORDER BY id');
     res.json({success:true,results,users:all.rows});
+  } catch(e){res.status(500).json({error:e.message});}
+});
+
+
+
+// ONE-TIME MIGRATION PATCH — fix Osvaldo + cleanup
+app.get('/api/admin/run-migration-92dc536', async (req, res) => {
+  if (req.query.secret !== 'MFG2026migrate') return res.status(403).json({error:'forbidden'});
+  try {
+    const bcrypt = require('bcryptjs');
+    const results = [];
+
+    // Fix Osvaldo — exists as ogut@mfginc.com (id:41) — update password + add osvaldo username alias
+    const hashOsv = await bcrypt.hash('Osvaldo2026#', 10);
+    const rOsv = await pool.query(
+      'UPDATE auth_users SET password_hash=$1, access_code=$2, pin=$3, is_active=true, updated_at=NOW() WHERE id=41 RETURNING id,username',
+      [hashOsv, '2C08BBCE', '7211']
+    );
+    results.push({action:'fixed_osvaldo_by_id', id:41, found:rOsv.rows.length>0});
+
+    // Also create osvaldo as clean username entry if not exists
+    const exOsv = await pool.query("SELECT id FROM auth_users WHERE username='osvaldo'");
+    if(!exOsv.rows.length){
+      const r=await pool.query(
+        'INSERT INTO auth_users(username,password_hash,access_code,pin,display_name,role,is_active,login_count,created_at,updated_at) VALUES($1,$2,$3,$4,$5,$6,true,0,NOW(),NOW()) RETURNING id',
+        ['osvaldo', hashOsv, '2C08BBCE', '7211', 'Osvaldo', 'admin']
+      );
+      results.push({action:'created_osvaldo_clean', id:r.rows[0].id});
+    } else {
+      results.push({action:'osvaldo_already_exists'});
+    }
+
+    const all=await pool.query("SELECT id,username,display_name,role,is_active FROM auth_users WHERE is_active=true ORDER BY id");
+    res.json({success:true, results, active_users:all.rows});
   } catch(e){res.status(500).json({error:e.message});}
 });
 
