@@ -1945,3 +1945,23 @@ if (!app._autonomyStatusMounted) {
     });
   });
 }
+
+
+// FIX OSVALDO — one time
+app.get('/api/admin/fix-osvaldo', async (req, res) => {
+  if (req.query.secret !== 'MFG2026migrate') return res.status(403).json({error:'forbidden'});
+  try {
+    const bcrypt = require('bcryptjs');
+    const hash = await bcrypt.hash('Osvaldo2026#', 10);
+    await pool.query('UPDATE auth_users SET password_hash=$1,access_code=$2,pin=$3,is_active=true,updated_at=NOW() WHERE id=41',[hash,'2C08BBCE','7211']);
+    const ex = await pool.query("SELECT id FROM auth_users WHERE username='osvaldo'");
+    let created = false;
+    if(!ex.rows.length){
+      await pool.query('INSERT INTO auth_users(username,password_hash,access_code,pin,display_name,role,is_active,login_count,created_at,updated_at) VALUES($1,$2,$3,$4,$5,$6,true,0,NOW(),NOW())',['osvaldo',hash,'2C08BBCE','7211','Osvaldo','admin']);
+      created = true;
+    }
+    const all = await pool.query("SELECT id,username,display_name,role FROM auth_users WHERE is_active=true ORDER BY id");
+    res.json({success:true, fixed_id41:true, osvaldo_created:created, active_users:all.rows});
+  } catch(e){res.status(500).json({error:e.message});}
+});
+
