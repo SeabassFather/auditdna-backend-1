@@ -475,7 +475,44 @@ try {
 // REMOVED DUPLICATE MOUNT: /api/crm
   try { app.use('/api/user', require('./routes/user')); } catch(e) { console.warn('[WARN] user:', e.message); }
   try { const brevoRoutes = require('./routes/brevo-webhook'); if (brevoRoutes.setPool) brevoRoutes.setPool(pool); app.use('/api/brevo', brevoRoutes); console.log('[OK] brevo-webhook mounted at /api/brevo'); } catch (e) { console.error('[brevo-webhook] mount fail:', e.message); }
-  try { app.use('/api/buyers', require('./routes/buyers.routes')); console.log('[OK] buyers.routes: mounted at /api/buyers'); } catch(e) { console.warn('[WARN] buyers.routes mount failed:', e.message); }
+  
+// ── BUYER REGISTRATION — inline (before buyers.routes to ensure it fires) ────
+app.post('/api/buyers/register', async (req, res) => {
+  const b = req.body || {};
+  const legal_name = (b.legal_name || b.companyLegal || '').trim();
+  const country    = (b.country || 'USA').trim();
+  if (!legal_name) return res.status(400).json({ success:false, error:'legal_name required' });
+  try {
+    const r = await pool.query(
+      `INSERT INTO secure_buyers
+         (legal_name, trade_name, country, state_region, city, buyer_type,
+          paca_license, product_specialties, payment_terms, status)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,'PENDING')
+       RETURNING id, legal_name, country, status`,
+      [
+        legal_name,
+        b.trade_name || b.dba || '',
+        country,
+        b.state_region || b.state_province || b.state || '',
+        b.city || '',
+        b.buyer_type || b.business_type || 'BUYER',
+        b.paca_license || '',
+        Array.isArray(b.commodities_preferred)
+          ? b.commodities_preferred.join(',')
+          : (b.commodities_preferred || b.product_specialties || ''),
+        b.payment_terms_requested || b.payment_terms || 'NET30'
+      ]
+    );
+    const buyer = r.rows[0];
+    console.log('[BUYER REG INLINE] Created:', buyer.legal_name, buyer.id);
+    res.status(201).json({ success:true, buyer, message:'Welcome to the Mexausa network.' });
+  } catch(err) {
+    console.error('[BUYER REG ERR]', err.message, err.code);
+    res.status(500).json({ success:false, error:err.message, code:err.code });
+  }
+});
+
+try { app.use('/api/buyers', require('./routes/buyers.routes')); console.log('[OK] buyers.routes: mounted at /api/buyers'); } catch(e) { console.warn('[WARN] buyers.routes mount failed:', e.message); }
   try { app.use('/api/hot-leads', require('./routes/hot-leads.routes')); console.log('[OK] hot-leads.routes: mounted at /api/hot-leads'); } catch(e) { console.warn('[WARN] hot-leads.routes mount failed:', e.message); }
 // === Factoring waterfall routes (financing partner disclosure is gated) ===
 try {
