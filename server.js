@@ -2131,6 +2131,31 @@ app.get('/api/rfq/:id', (req, res) => {
 });
 
 
+
+// ── BRAIN EVENTS TABLE INIT ───────────────────────────────────────────────────
+(async()=>{
+  try{
+    await pool.query(`CREATE TABLE IF NOT EXISTS brain_events (
+      id SERIAL PRIMARY KEY,
+      event_type VARCHAR(100) NOT NULL,
+      payload JSONB,
+      created_at TIMESTAMPTZ DEFAULT NOW()
+    )`);
+    await pool.query(`CREATE TABLE IF NOT EXISTS brain_log (
+      id SERIAL PRIMARY KEY,
+      event_type VARCHAR(100) NOT NULL,
+      payload JSONB,
+      created_at TIMESTAMPTZ DEFAULT NOW()
+    )`);
+    // Seed initial event
+    await pool.query(
+      "INSERT INTO brain_events(event_type,payload,created_at) VALUES($1,$2,NOW()) ON CONFLICT DO NOTHING",
+      ['PLATFORM_BOOT', JSON.stringify({version:'2.0',platform:'AuditDNA Agriculture',ts:new Date().toISOString()})]
+    ).catch(()=>{});
+    console.log('[BRAIN] Tables ready');
+  }catch(e){console.warn('[BRAIN] Init warn:',e.message);}
+})();
+
 // ── DEAL FLOOR DB INIT ────────────────────────────────────────────────────────
 (async()=>{
   try{
