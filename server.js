@@ -2198,6 +2198,42 @@ const SMTP_CONFIG = {
 
 app.locals.pool = pool; // campaign trigger + USDA routes access pool via req.app.locals.pool
 
+
+// ── OSCAR MEJIA — MISSION PROGRAM ASSIGNMENT ─────────────────────────────────
+// Programs: Broccoli | Berries (Strawberry/Blueberry/Raspberry) | Avocado
+// Territory: Midwest + East Coast wholesale buyers
+app.get('/api/agents/oscar-mejia/programs', (req, res) => {
+  res.json({
+    agent: { name:'Oscar Mejia', email:'oscar@mexausafg.com', role:'sales', territory:'Midwest + East Coast' },
+    programs: [
+      { id:'OM-001', name:'Broccoli Program', commodity:'Broccoli Crown', origin:'Salinas CA + Yuma AZ + Mexico',
+        packSpec:'20lb carton', targetBuyers:'Midwest wholesale + restaurant groups',
+        priceRef:'USDA Salinas shipping point', status:'ACTIVE', campaign:'2x/week + 45-day drip' },
+      { id:'OM-002', name:'Berry Program', commodity:'Strawberry | Blueberry | Raspberry',
+        origin:'Baja CA + Michoacan + Sinaloa', packSpec:'8x1lb clamshell | 12x6oz clamshell',
+        targetBuyers:'East Coast wholesale + chain distribution', priceRef:'USDA AMS terminal',
+        status:'ACTIVE', campaign:'2x/week + 45-day drip' },
+      { id:'OM-003', name:'Avocado Program', commodity:'Hass Avocado 48ct-60ct',
+        origin:'Michoacan MX', packSpec:'25lb 48ct or 60ct',
+        targetBuyers:'Midwest wholesale + foodservice', priceRef:'USDA Hass index',
+        status:'ACTIVE', campaign:'2x/week + 45-day drip' }
+    ],
+    emailTemplates: ['avocado-midwest-intro','berry-eastcoast-intro','broccoli-midwest-intro'],
+    drip: { frequency:'2x/week', duration:'45 days', totalTouchpoints:13 },
+    ts: new Date().toISOString()
+  });
+});
+app.get('/api/agents/oscar-mejia/buyers', async (req, res) => {
+  try {
+    const states=['IL','OH','MI','IN','WI','MN','MO','IA','NY','NJ','PA','MA','CT','MD','VA','NC','GA'];
+    const r=await pool.query(
+      "SELECT id,company_name,email,state,country,commodity FROM growers WHERE state=ANY($1) LIMIT 200",
+      [states]
+    ).catch(()=>({rows:[]}));
+    res.json({agent:'Oscar Mejia',territory:'Midwest + East Coast',count:r.rows.length,buyers:r.rows});
+  } catch(e){ res.json({agent:'Oscar Mejia',territory:'Midwest + East Coast',count:0,buyers:[]}); }
+});
+
 // ── AUTONOMY STATUS endpoint // redeploy 1779113140344 ───────────────────���──────────────────────────────
 if (!app._autonomyStatusMounted) {
   app._autonomyStatusMounted = true;
