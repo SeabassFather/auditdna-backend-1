@@ -2084,20 +2084,12 @@ app.post('/api/buyers/register', async (req, res) => {
   }
   try {
     let result;
-    try {
-      result = await pool.query(
-        `INSERT INTO secure_buyers (legal_name, country, email, state_province, city, business_type, created_at)
-         VALUES ($1,$2,$3,$4,$5,$6,NOW())
-         RETURNING id, legal_name, email, country`,
-        [legal_name, country, email||'', state_province||'', city||'', business_type||'buyer']
-      );
-    } catch(e) {
-      // Fallback minimal
-      result = await pool.query(
-        `INSERT INTO secure_buyers (legal_name, country, email) VALUES ($1,$2,$3) RETURNING id, legal_name, email`,
-        [legal_name, country, email||'']
-      );
-    }
+    result = await pool.query(
+      `INSERT INTO secure_buyers (legal_name, country)
+       VALUES ($1,$2)
+       RETURNING id, legal_name, country`,
+      [legal_name, country]
+    );
     const buyer = result.rows[0];
     console.log('[BUYER REGISTER] New buyer:', buyer.legal_name, buyer.id);
     res.status(201).json({ success: true, buyer, message: 'Registration received. Welcome to the Mexausa network.' });
@@ -2109,7 +2101,7 @@ app.post('/api/buyers/register', async (req, res) => {
 
 // ── REGISTRATION ROUTES — correct mount paths ──────────────────────────────
 // Grower public registration: POST /api/growers/register-public
-try { app.use('/api/growers', require('./routes/grower-public-register')); console.log('[OK] grower-public-register at /api/growers'); } catch(e){ console.warn('[WARN] grower-public-register:', e.message); }
+// grower-public-register disabled — inline safe version below
 // Small grower program
 try { app.use('/api/small-grower', require('./routes/smallGrowerRoutes')); console.log('[OK] smallGrowerRoutes at /api/small-grower'); } catch(e){ console.warn('[WARN] smallGrowerRoutes:', e.message); }
 // Grower workflow engine
