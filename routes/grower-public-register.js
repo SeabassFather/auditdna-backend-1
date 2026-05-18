@@ -23,6 +23,17 @@ router.post('/register-public', async (req, res) => {
     return res.status(400).json({ error: 'Company name and contact email are required' });
   }
 
+
+// Ensure columns exist before inserting
+  try {
+    await pool.query("ALTER TABLE growers ADD COLUMN IF NOT EXISTS risk_tier VARCHAR(20) DEFAULT 'TIER_0'");
+    await pool.query("ALTER TABLE growers ADD COLUMN IF NOT EXISTS compliance_status VARCHAR(50) DEFAULT 'pending_review'");
+    await pool.query("ALTER TABLE growers ADD COLUMN IF NOT EXISTS region VARCHAR(100)");
+    await pool.query("ALTER TABLE growers ADD COLUMN IF NOT EXISTS commodities TEXT[]");
+  } catch(altErr) {
+    console.warn('[GROWER REGISTER] Column migration warning:', altErr.message);
+  }
+
   const client = await pool.connect();
   try {
     await client.query('BEGIN');
