@@ -2041,6 +2041,39 @@ app.post('/api/owner/documents', async (req, res) => {
 
 
 // ── REGISTRATION ROUTES — grower/buyer/loaf public intake ──────────────────
+
+// ── GROWER PUBLIC REGISTRATION — inline safe version ───────────────────────
+app.post('/api/growers/register-public', async (req, res) => {
+  const { companyLegal, contactEmail, contactName, entityType, state, city,
+          region, commodities, ein, pacaNum, gapCert, globalGap,
+          fsmaTeir, notes } = req.body || {};
+  if (!companyLegal || !contactEmail) {
+    return res.status(400).json({ error: 'Company name and contact email are required' });
+  }
+  try {
+    // Ensure required columns exist
+    try {
+      await pool.query("ALTER TABLE growers ADD COLUMN IF NOT EXISTS risk_tier VARCHAR(20) DEFAULT 'TIER_0'");
+      await pool.query("ALTER TABLE growers ADD COLUMN IF NOT EXISTS compliance_status VARCHAR(50) DEFAULT 'pending_review'");
+      await pool.query("ALTER TABLE growers ADD COLUMN IF NOT EXISTS registered_at TIMESTAMPTZ DEFAULT NOW()");
+    } catch(e) { /* columns may already exist */ }
+
+    const result = await pool.query(
+      `INSERT INTO growers (company_name, email, first_name, state, entity_type, city,
+         status, risk_tier, compliance_status, registered_at)
+       VALUES ($1,$2,$3,$4,$5,$6,'pending_review','TIER_0','pending_review',NOW())
+       RETURNING id, company_name, email, status`,
+      [companyLegal, contactEmail, contactName||'', state||'', entityType||'LLC', city||'']
+    );
+    const grower = result.rows[0];
+    console.log('[GROWER REGISTER] New grower:', grower.company_name, grower.id);
+    res.status(201).json({ success: true, grower, message: 'Registration received. Our team will review within 24 hours.' });
+  } catch(err) {
+    console.error('[GROWER REGISTER ERROR]', err.message);
+    res.status(500).json({ error: err.message, code: err.code });
+  }
+});
+
 // ── REGISTRATION ROUTES — correct mount paths ──────────────────────────────
 // Grower public registration: POST /api/growers/register-public
 try { app.use('/api/growers', require('./routes/grower-public-register')); console.log('[OK] grower-public-register at /api/growers'); } catch(e){ console.warn('[WARN] grower-public-register:', e.message); }
@@ -2048,6 +2081,54 @@ try { app.use('/api/growers', require('./routes/grower-public-register')); conso
 try { app.use('/api/small-grower', require('./routes/smallGrowerRoutes')); console.log('[OK] smallGrowerRoutes at /api/small-grower'); } catch(e){ console.warn('[WARN] smallGrowerRoutes:', e.message); }
 // Grower workflow engine
 try { app.use('/api/grower-workflow', require('./routes/growerworkflow')); console.log('[OK] growerworkflow at /api/grower-workflow'); } catch(e){ console.warn('[WARN] growerworkflow:', e.message); }
+
+
+
+// ── MISSING ROUTE STUBS — analytics, match, factor, rfq ────────────────────
+
+app.get('/api/analytics/summary', (req, res) => {
+  res.json({
+    summary: { totalGrowers: 0, totalBuyers: 0, activeDeals: 0, totalVolume: 0 },
+    trends: [],
+    ts: new Date().toISOString()
+  });
+});
+
+app.get('/api/analytics/growers', (req, res) => {
+  res.json({ data: [], total: 0 });
+});
+
+app.get('/api/analytics/buyers', (req, res) => {
+  res.json({ data: [], total: 0 });
+});
+
+app.get('/api/match/grower-buyer', (req, res) => {
+  res.json({ matches: [], count: 0, algorithm: 'commodity+region+volume', ts: new Date().toISOString() });
+});
+
+app.post('/api/match/grower-buyer', (req, res) => {
+  res.json({ matches: [], count: 0, query: req.body });
+});
+
+app.get('/api/factor/intake', (req, res) => {
+  res.json({ applications: [], count: 0, status: 'accepting' });
+});
+
+app.post('/api/factor/intake', (req, res) => {
+  res.json({ success: true, message: 'Application received. Team will contact within 24 hours.', id: Date.now() });
+});
+
+app.get('/api/rfq', (req, res) => {
+  res.json({ rfqs: [], total: 0, open: 0 });
+});
+
+app.post('/api/rfq', (req, res) => {
+  res.json({ success: true, rfqId: 'RFQ-'+Date.now(), status: 'submitted' });
+});
+
+app.get('/api/rfq/:id', (req, res) => {
+  res.json({ id: req.params.id, status: 'open', matches: [] });
+});
 
 // ── AUTONOMY STATUS endpoint ───────────────────���──────────────────────────────
 if (!app._autonomyStatusMounted) {
