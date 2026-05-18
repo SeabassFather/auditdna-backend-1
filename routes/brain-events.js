@@ -371,4 +371,24 @@ router.post('/welink-feedback', async (req, res) => {
 
 module.exports = router;
 module.exports.broadcast = broadcast;
+
+// ── BRAIN LIVE FEED — real DB query ──────────────────────────────────────────
+router.get('/live-feed', async (req, res) => {
+  const db = req.app.get('pool') || req.app.locals.pool;
+  if (!db) return res.json({ events:[], count:0, error:'no pool', ts:new Date().toISOString() });
+  try {
+    const limit = Math.min(parseInt(req.query.limit)||50, 200);
+    const [r1,r2] = await Promise.all([
+      db.query('SELECT id,event_type,payload,created_at FROM brain_events ORDER BY created_at DESC LIMIT $1',[limit]).catch(()=>({rows:[]})),
+      db.query('SELECT id,event_type,payload,created_at FROM brain_log ORDER BY created_at DESC LIMIT $1',[limit]).catch(()=>({rows:[]}))
+    ]);
+    const all = [...r1.rows,...r2.rows]
+      .sort((a,b)=>new Date(b.created_at)-new Date(a.created_at))
+      .slice(0,limit);
+    res.json({ events:all, count:all.length, sources:['brain_events','brain_log'], ts:new Date().toISOString() });
+  } catch(e) {
+    res.json({ events:[], count:0, error:e.message, ts:new Date().toISOString() });
+  }
+});
+
 module.exports.sendNtfy  = sendNtfy;
