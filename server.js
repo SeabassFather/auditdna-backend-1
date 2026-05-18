@@ -2216,6 +2216,23 @@ try { app.use('/api/email-campaigns', require('./routes/email-campaigns-v2')); c
   }catch(e){console.warn('[DEAL TRIAL] Init warn:',e.message);}
 })();
 
+
+app.get('/api/setup/brain', async (req,res)=>{
+  try{
+    await pool.query(`CREATE TABLE IF NOT EXISTS brain_events(
+      id SERIAL PRIMARY KEY,event_type VARCHAR(100) NOT NULL,
+      payload JSONB,created_at TIMESTAMPTZ DEFAULT NOW())`);
+    await pool.query(`CREATE TABLE IF NOT EXISTS brain_log(
+      id SERIAL PRIMARY KEY,event_type VARCHAR(100) NOT NULL,
+      payload JSONB,created_at TIMESTAMPTZ DEFAULT NOW())`);
+    await pool.query(
+      "INSERT INTO brain_events(event_type,payload,created_at)VALUES($1,$2,NOW())",
+      ['PLATFORM_BOOT',JSON.stringify({version:'2.0',platform:'AuditDNA',ts:new Date().toISOString()})]
+    );
+    res.json({success:true,message:'brain_events + brain_log tables created and seeded'});
+  }catch(e){res.status(500).json({error:e.message,code:e.code});}
+});
+
 // ── AUTONOMY STATUS endpoint ─────────────���─────���──────────────────────────────
 if (!app._autonomyStatusMounted) {
   app._autonomyStatusMounted = true;
