@@ -1935,7 +1935,7 @@ setInterval(async () => {
 }, 5 * 60 * 1000);
 
 
-// ── MISSING ROUTE STUBS — silence 404s from CommandSphere polling ─────��──────
+// ── MISSING ROUTE STUBS — silence 404s from CommandSphere polling ────────────
 app.get('/api/brain/live-feed', (req, res) => {
   res.json({ events: [], count: 0, ts: new Date().toISOString() });
 });
@@ -2041,36 +2041,42 @@ app.post('/api/owner/documents', async (req, res) => {
 
 
 // ── REGISTRATION ROUTES — grower/buyer/loaf public intake ──────────────────
-// ── GROWER PUBLIC REGISTRATION v5 ────────────────────────────────────────────
+
+// ── GROWER PUBLIC REGISTRATION — inline safe version ───────────────────────
 app.post('/api/growers/register-public', async (req, res) => {
-  const b=req.body||{};
-  const name=(b.companyLegal||b.company_name||'').slice(0,200).trim();
-  if(!name)return res.status(400).json({error:'Company name required'});
-  const country=(b.region||b.country||'Mexico').slice(0,100);
-  const status='pending_review';
-  // Cascading INSERT — tries most complete first, falls back on missing columns
-  const inserts=[
-    {sql:'INSERT INTO growers(company_name,country,status)VALUES($1,$2,$3)RETURNING id,company_name',vals:[name,country,status]},
-    {sql:'INSERT INTO growers(company_name,country)VALUES($1,$2)RETURNING id,company_name',vals:[name,country]},
-    {sql:'INSERT INTO growers(company_name)VALUES($1)RETURNING id,company_name',vals:[name]},
-  ];
-  for(const ins of inserts){
-    try{
-      const r=await pool.query(ins.sql,ins.vals);
-      console.log('[GROWER REG v5]',name,'->',r.rows[0].id);
-      return res.status(201).json({success:true,grower:r.rows[0],message:'Registration received. Team reviews within 24 hours.'});
-    }catch(e){
-      if(e.code!=='23502'&&e.code!=='42703')return res.status(500).json({error:e.message,code:e.code});
-      // 23502=NOT NULL, 42703=bad column — try next
-    }
+  const { companyLegal, contactEmail, contactName, entityType, state, city,
+          region, commodities, ein, pacaNum, gapCert, globalGap,
+          fsmaTeir, notes } = req.body || {};
+  if (!companyLegal || !contactEmail) {
+    return res.status(400).json({ error: 'Company name and contact email are required' });
   }
-  res.status(500).json({error:'Unable to insert grower — contact support'});
-});
+  try {
+    // Ensure required columns exist
+    try {
+      await pool.query("ALTER TABLE growers ADD COLUMN IF NOT EXISTS risk_tier VARCHAR(20) DEFAULT 'TIER_0'");
+      await pool.query("ALTER TABLE growers ADD COLUMN IF NOT EXISTS compliance_status VARCHAR(50) DEFAULT 'pending_review'");
+      await pool.query("ALTER TABLE growers ADD COLUMN IF NOT EXISTS registered_at TIMESTAMPTZ DEFAULT NOW()");
+    } catch(e) { /* columns may already exist */ }
+
+    const result = await pool.query(
+      `INSERT INTO growers (company_name, email, first_name, state, entity_type, city,
+         status, risk_tier, compliance_status, registered_at)
+       VALUES ($1,$2,$3,$4,$5,$6,'pending_review','TIER_0','pending_review',NOW())
+       RETURNING id, company_name, email, status`,
+      [companyLegal, contactEmail, contactName||'', state||'', entityType||'LLC', city||'']
+    );
+    const grower = result.rows[0];
+    console.log('[GROWER REGISTER] New grower:', grower.company_name, grower.id);
+    res.status(201).json({ success: true, grower, message: 'Registration received. Our team will review within 24 hours.' });
+  } catch(err) {
+    console.error('[GROWER REGISTER ERROR]', err.message);
+    res.status(500).json({ error: err.message, code: err.code });
+  }
 });
 
 // ── REGISTRATION ROUTES — correct mount paths ──────────────────────────────
 // Grower public registration: POST /api/growers/register-public
-// grower-public-register disabled — inline safe version below
+try { app.use('/api/growers', require('./routes/grower-public-register')); console.log('[OK] grower-public-register at /api/growers'); } catch(e){ console.warn('[WARN] grower-public-register:', e.message); }
 // Small grower program
 try { app.use('/api/small-grower', require('./routes/smallGrowerRoutes')); console.log('[OK] smallGrowerRoutes at /api/small-grower'); } catch(e){ console.warn('[WARN] smallGrowerRoutes:', e.message); }
 // Grower workflow engine
@@ -2124,7 +2130,7 @@ app.get('/api/rfq/:id', (req, res) => {
   res.json({ id: req.params.id, status: 'open', matches: [] });
 });
 
-// ── AUTONOMY STATUS endpoint ─────────────���─────���──────────────────────────────
+// ── AUTONOMY STATUS endpoint ───────────────────���──────────────────────────────
 if (!app._autonomyStatusMounted) {
   app._autonomyStatusMounted = true;
   app.get('/api/autonomy/status', (req, res) => {
