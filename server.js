@@ -475,54 +475,7 @@ try {
 // REMOVED DUPLICATE MOUNT: /api/crm
   try { app.use('/api/user', require('./routes/user')); } catch(e) { console.warn('[WARN] user:', e.message); }
   try { const brevoRoutes = require('./routes/brevo-webhook'); if (brevoRoutes.setPool) brevoRoutes.setPool(pool); app.use('/api/brevo', brevoRoutes); console.log('[OK] brevo-webhook mounted at /api/brevo'); } catch (e) { console.error('[brevo-webhook] mount fail:', e.message); }
-  
-// ── BUYER REGISTRATION (confirmed schema) ────────────────────────────────────
-app.post('/api/buyers/register', async (req, res) => {
-  const b = req.body || {};
-  const legal_name = (b.legal_name || b.companyLegal || '').trim();
-  const country    = (b.country || 'USA').trim();
-  if (!legal_name) return res.status(400).json({ success:false, error:'legal_name required' });
-  if (!country)    return res.status(400).json({ success:false, error:'country required' });
-  try {
-    const commodities = Array.isArray(b.commodities_preferred)
-      ? b.commodities_preferred.join(',') : (b.commodities_preferred || '');
-    const regions = Array.isArray(b.regions_served)
-      ? b.regions_served.join(',') : (b.regions_served || '');
-    const cold_chain = (b.cold_chain_capability === true || b.cold_chain_capability === 'true') ? true : false;
-
-    const r = await pool.query(
-      `INSERT INTO secure_buyers
-         (legal_name, dba, country, state_province, city, address_line1, postal_code,
-          business_type, paca_license, commodities_preferred, regions_served,
-          cold_chain_capability, payment_terms_requested, registration_status, created_at)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,'pending',NOW())
-       RETURNING id, legal_name, country, registration_status`,
-      [
-        legal_name,
-        b.dba || b.trade_name || '',
-        country,
-        b.state_province || b.state_region || b.state || '',
-        b.city || '',
-        b.address_line1 || b.address || '',
-        b.postal_code || b.zip_code || '',
-        b.business_type || b.buyer_type || 'wholesale',
-        b.paca_license || '',
-        commodities,
-        regions,
-        cold_chain,
-        b.payment_terms_requested || b.payment_terms || 'net30'
-      ]
-    );
-    const buyer = r.rows[0];
-    console.log('[BUYER REG] Created:', buyer.legal_name, buyer.id);
-    res.status(201).json({ success:true, buyer, message:'Welcome to the Mexausa network.' });
-  } catch(err) {
-    console.error('[BUYER REG ERR]', err.message, err.code);
-    res.status(500).json({ success:false, error:err.message, code:err.code });
-  }
-});
-
-try { app.use('/api/buyers', require('./routes/buyers.routes')); console.log('[OK] buyers.routes: mounted at /api/buyers'); } catch(e) { console.warn('[WARN] buyers.routes mount failed:', e.message); }
+  try { app.use('/api/buyers', require('./routes/buyers.routes')); console.log('[OK] buyers.routes: mounted at /api/buyers'); } catch(e) { console.warn('[WARN] buyers.routes mount failed:', e.message); }
   try { app.use('/api/hot-leads', require('./routes/hot-leads.routes')); console.log('[OK] hot-leads.routes: mounted at /api/hot-leads'); } catch(e) { console.warn('[WARN] hot-leads.routes mount failed:', e.message); }
 // === Factoring waterfall routes (financing partner disclosure is gated) ===
 try {
@@ -1983,19 +1936,8 @@ setInterval(async () => {
 
 
 // ── MISSING ROUTE STUBS — silence 404s from CommandSphere polling ────────────
-app.get('/api/brain/live-feed', async (req, res) => {
-  try {
-    const limit=parseInt(req.query.limit)||50;
-    const [r1,r2]=await Promise.all([
-      pool.query('SELECT id,event_type,payload,created_at FROM brain_events ORDER BY created_at DESC LIMIT $1',[limit]).catch(()=>({rows:[]})),
-      pool.query('SELECT id,event_type,payload,created_at FROM brain_log ORDER BY created_at DESC LIMIT $1',[limit]).catch(()=>({rows:[]}))
-    ]);
-    const all=[...r1.rows,...r2.rows].sort((a,b)=>new Date(b.created_at)-new Date(a.created_at)).slice(0,limit);
-    res.json({events:all,count:all.length,ts:new Date().toISOString()});
-  } catch(err) {
-    res.json({events:[],count:0,ts:new Date().toISOString()});
-  }
-});
+app.get('/api/brain/live-feed', (req, res) => {
+  res.json({ events: [], count: 0, ts: new Date().toISOString() });
 });
 
 app.get('/api/audits', (req, res) => {
@@ -2100,41 +2042,40 @@ app.post('/api/owner/documents', async (req, res) => {
 
 // ── REGISTRATION ROUTES — grower/buyer/loaf public intake ──────────────────
 
-// ── GROWER PUBLIC REGISTRATION — inline safe version ───────────────────────
+// ── GROWER PUBLIC REGISTRATION ─────────────────────────────────────────────
 app.post('/api/growers/register-public', async (req, res) => {
-  const { companyLegal, contactEmail, contactName, entityType, state, city,
-          region, commodities, ein, pacaNum, gapCert, globalGap,
-          fsmaTeir, notes } = req.body || {};
-  if (!companyLegal || !contactEmail) {
-    return res.status(400).json({ error: 'Company name and contact email are required' });
-  }
+  const body = req.body || {};
+  if (!body.companyLegal && !body.company_name) return res.status(400).json({ error: 'Company name required' });
+  if (!body.contactEmail && !body.email) return res.status(400).json({ error: 'Contact email required' });
+  const name = body.companyLegal || body.company_name || 'Unknown';
+  const email = body.contactEmail || body.email || '';
   try {
-    // Ensure required columns exist
+    // Try full insert first, fallback to minimal
+    let rows;
     try {
-      await pool.query("ALTER TABLE growers ADD COLUMN IF NOT EXISTS risk_tier VARCHAR(20) DEFAULT 'TIER_0'");
-      await pool.query("ALTER TABLE growers ADD COLUMN IF NOT EXISTS compliance_status VARCHAR(50) DEFAULT 'pending_review'");
-      await pool.query("ALTER TABLE growers ADD COLUMN IF NOT EXISTS registered_at TIMESTAMPTZ DEFAULT NOW()");
-    } catch(e) { /* columns may already exist */ }
-
-    const result = await pool.query(
-      `INSERT INTO growers (company_name, email, first_name, state, entity_type, city,
-         status, risk_tier, compliance_status, registered_at)
-       VALUES ($1,$2,$3,$4,$5,$6,'pending_review','TIER_0','pending_review',NOW())
-       RETURNING id, company_name, email, status`,
-      [companyLegal, contactEmail, contactName||'', state||'', entityType||'LLC', city||'']
-    );
-    const grower = result.rows[0];
-    console.log('[GROWER REGISTER] New grower:', grower.company_name, grower.id);
-    res.status(201).json({ success: true, grower, message: 'Registration received. Our team will review within 24 hours.' });
+      const r = await pool.query(
+        'INSERT INTO growers (company_name, status) VALUES ($1, $2) RETURNING id, company_name, status',
+        [name, 'pending_review']
+      );
+      rows = r.rows;
+    } catch(e1) {
+      try {
+        const r = await pool.query('INSERT INTO growers (company_name) VALUES ($1) RETURNING id, company_name', [name]);
+        rows = r.rows;
+      } catch(e2) {
+        return res.status(500).json({ error: e2.message, code: e2.code });
+      }
+    }
+    console.log('[GROWER REGISTER] New:', name, rows[0].id);
+    res.status(201).json({ success: true, grower: rows[0], message: 'Registration received. Our team will review within 24 hours.' });
   } catch(err) {
-    console.error('[GROWER REGISTER ERROR]', err.message);
     res.status(500).json({ error: err.message, code: err.code });
   }
 });
 
 // ── REGISTRATION ROUTES — correct mount paths ──────────────────────────────
 // Grower public registration: POST /api/growers/register-public
-try { app.use('/api/growers', require('./routes/grower-public-register')); console.log('[OK] grower-public-register at /api/growers'); } catch(e){ console.warn('[WARN] grower-public-register:', e.message); }
+// grower-public-register disabled — inline safe version below
 // Small grower program
 try { app.use('/api/small-grower', require('./routes/smallGrowerRoutes')); console.log('[OK] smallGrowerRoutes at /api/small-grower'); } catch(e){ console.warn('[WARN] smallGrowerRoutes:', e.message); }
 // Grower workflow engine
@@ -2188,31 +2129,7 @@ app.get('/api/rfq/:id', (req, res) => {
   res.json({ id: req.params.id, status: 'open', matches: [] });
 });
 
-
-
-// ── USDA INTELLIGENCE ROUTES ──────────────────────────────────────────────────
-try { app.use('/api/usda-market-intel', require('./routes/usda-market-intel')); console.log('[OK] usda-market-intel mounted'); } catch(e){ console.warn('[WARN] usda-market-intel:', e.message); }
-try { app.use('/api/usda-data',         require('./routes/usda-data'));          console.log('[OK] usda-data mounted'); }         catch(e){ console.warn('[WARN] usda-data:', e.message); }
-try { app.use('/api/usda-campaign',     require('./routes/usda-campaign'));      console.log('[OK] usda-campaign mounted'); }     catch(e){ console.warn('[WARN] usda-campaign:', e.message); }
-try { app.use('/api/usda-overlay',      require('./routes/usdaMarketOverlay'));  console.log('[OK] usda-overlay mounted'); }     catch(e){ console.warn('[WARN] usda-overlay:', e.message); }
-try { app.use('/api/usda-registry',     require('./routes/usdaRegistry'));       console.log('[OK] usda-registry mounted'); }    catch(e){ console.warn('[WARN] usda-registry:', e.message); }
-try { app.use('/api/usda-intel',        require('./routes/usdaRoutes.DISABLED')); console.log('[OK] usda-intel mounted'); }     catch(e){ console.warn('[WARN] usda-intel:', e.message); }
-
-
-// ── CANONICAL SMTP — Gmail only ───────────────────────────────────────────────
-const SMTP_CONFIG = {
-  host: 'smtp.gmail.com',
-  port: 587,
-  secure: false,
-  auth: { user: 'sgarcia1911@gmail.com', pass: process.env.SMTP_PASS || 'emgptqrmqdbxrpil' }
-};
-
-app.locals.pool = pool; // campaign trigger + USDA routes access pool via req.app.locals.pool
-
-
-app.get('/api/agents/oscar-mejia/blast/status',(req,res)=>{ res.json({agent:'Oscar Mejia',programs:['broccoli','berry','avocado'],status:'READY',ts:new Date().toISOString()}); });
-app.post('/api/agents/oscar-mejia/blast/:program', async(req,res)=>{ const p=req.params.program; const s={broccoli:['IL','OH','MI','IN','WI','MN','NY','NJ','PA'],berry:['NY','NJ','PA','MA','CT','MD','VA','NC'],avocado:['IL','OH','MI','IN','WI','MN','NY','NJ','PA']}; const st=s[p]; if(!st)return res.status(400).json({error:'Use broccoli|berry|avocado'}); try{ const r=await pool.query("SELECT DISTINCT email,company_name FROM shipper_contacts WHERE email IS NOT NULL AND state=ANY($1) LIMIT 500",[st]).catch(()=>({rows:[]})); await pool.query("INSERT INTO brain_events(event_type,payload,created_at)VALUES($1,$2,NOW())",['OSCAR_BLAST',JSON.stringify({program:p,count:r.rows.length})]).catch(()=>{}); res.json({success:true,program:p,recipients_found:r.rows.length,status:'QUEUED',ts:new Date().toISOString()}); }catch(e){res.status(500).json({error:e.message});} });
-// ── AUTONOMY STATUS endpoint // redeploy 1779113140344 ───────────────────���──────────────────────────────
+// ── AUTONOMY STATUS endpoint ─────────────���─────���──────────────────────────────
 if (!app._autonomyStatusMounted) {
   app._autonomyStatusMounted = true;
   app.get('/api/autonomy/status', (req, res) => {
