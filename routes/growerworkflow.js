@@ -224,6 +224,44 @@ router.post('/start', async (req, res) => {
 // GET /workflow/:growerId - Get workflow for grower
 // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
+router.get('/dashboard', async (req, res) => {
+  try {
+    const stats = await pool.query(`
+      SELECT 
+        COUNT(*) as total_workflows,
+        COUNT(*) FILTER (WHERE current_stage = 'registration') as in_registration,
+        COUNT(*) FILTER (WHERE current_stage = 'document_collection') as in_documents,
+        COUNT(*) FILTER (WHERE current_stage = 'initial_audit') as in_audit,
+        COUNT(*) FILTER (WHERE current_stage = 'compliance_review') as in_compliance,
+        COUNT(*) FILTER (WHERE current_stage = 'training') as in_training,
+        COUNT(*) FILTER (WHERE current_stage = 'certification') as in_certification,
+        COUNT(*) FILTER (WHERE current_stage = 'active') as active,
+        AVG(progress_percentage) as avg_progress
+      FROM grower_workflows
+      WHERE stage_status != 'completed'
+    `);
+
+    const taskStats = await pool.query(`
+      SELECT 
+        COUNT(*) as total_tasks,
+        COUNT(*) FILTER (WHERE status = 'pending') as pending_tasks,
+        COUNT(*) FILTER (WHERE status = 'in_progress') as in_progress_tasks,
+        COUNT(*) FILTER (WHERE status = 'completed') as completed_tasks
+      FROM workflow_tasks
+    `);
+
+    res.json({
+      success: true,
+      workflows: stats.rows[0],
+      tasks: taskStats.rows[0],
+      timestamp: new Date().toISOString()
+    });
+
+  } catch (error) {
+    console.error('[Workflow] Dashboard error:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
 router.get('/:growerId', async (req, res) => {
   try {
     const { growerId } = req.params;
@@ -434,44 +472,6 @@ router.post('/advance/:workflowId', async (req, res) => {
 // GET /workflow/dashboard - Workflow overview dashboard
 // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
-router.get('/dashboard', async (req, res) => {
-  try {
-    const stats = await pool.query(`
-      SELECT 
-        COUNT(*) as total_workflows,
-        COUNT(*) FILTER (WHERE current_stage = 'registration') as in_registration,
-        COUNT(*) FILTER (WHERE current_stage = 'document_collection') as in_documents,
-        COUNT(*) FILTER (WHERE current_stage = 'initial_audit') as in_audit,
-        COUNT(*) FILTER (WHERE current_stage = 'compliance_review') as in_compliance,
-        COUNT(*) FILTER (WHERE current_stage = 'training') as in_training,
-        COUNT(*) FILTER (WHERE current_stage = 'certification') as in_certification,
-        COUNT(*) FILTER (WHERE current_stage = 'active') as active,
-        AVG(progress_percentage) as avg_progress
-      FROM grower_workflows
-      WHERE stage_status != 'completed'
-    `);
-
-    const taskStats = await pool.query(`
-      SELECT 
-        COUNT(*) as total_tasks,
-        COUNT(*) FILTER (WHERE status = 'pending') as pending_tasks,
-        COUNT(*) FILTER (WHERE status = 'in_progress') as in_progress_tasks,
-        COUNT(*) FILTER (WHERE status = 'completed') as completed_tasks
-      FROM workflow_tasks
-    `);
-
-    res.json({
-      success: true,
-      workflows: stats.rows[0],
-      tasks: taskStats.rows[0],
-      timestamp: new Date().toISOString()
-    });
-
-  } catch (error) {
-    console.error('[Workflow] Dashboard error:', error);
-    res.status(500).json({ success: false, error: error.message });
-  }
-});
 
 // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 // EXPORT
