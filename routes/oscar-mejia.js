@@ -5,7 +5,8 @@
 
 const express = require('express');
 const router = express.Router();
-const { pool } = require('../db');
+const _db = require('../db');
+const pool = _db.pool || _db;
 
 const SEGMENTS = {
   broccoli: {
