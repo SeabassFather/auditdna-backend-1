@@ -512,6 +512,53 @@ app.post('/api/buyers/register', async (req, res) => {
   }
 });
 
+
+// ── BUYER REGISTRATION (confirmed schema) ────────────────────────────────────
+app.post('/api/buyers/register', async (req, res) => {
+  const b = req.body || {};
+  const legal_name = (b.legal_name || b.companyLegal || '').trim();
+  const country    = (b.country || 'USA').trim();
+  if (!legal_name) return res.status(400).json({ success:false, error:'legal_name required' });
+  if (!country)    return res.status(400).json({ success:false, error:'country required' });
+  try {
+    const commodities = Array.isArray(b.commodities_preferred)
+      ? b.commodities_preferred.join(',') : (b.commodities_preferred || '');
+    const regions = Array.isArray(b.regions_served)
+      ? b.regions_served.join(',') : (b.regions_served || '');
+    const cold_chain = (b.cold_chain_capability === true || b.cold_chain_capability === 'true') ? true : false;
+
+    const r = await pool.query(
+      `INSERT INTO secure_buyers
+         (legal_name, dba, country, state_province, city, address_line1, postal_code,
+          business_type, paca_license, commodities_preferred, regions_served,
+          cold_chain_capability, payment_terms_requested, registration_status, created_at)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,'pending',NOW())
+       RETURNING id, legal_name, country, registration_status`,
+      [
+        legal_name,
+        b.dba || b.trade_name || '',
+        country,
+        b.state_province || b.state_region || b.state || '',
+        b.city || '',
+        b.address_line1 || b.address || '',
+        b.postal_code || b.zip_code || '',
+        b.business_type || b.buyer_type || 'wholesale',
+        b.paca_license || '',
+        commodities,
+        regions,
+        cold_chain,
+        b.payment_terms_requested || b.payment_terms || 'net30'
+      ]
+    );
+    const buyer = r.rows[0];
+    console.log('[BUYER REG] Created:', buyer.legal_name, buyer.id);
+    res.status(201).json({ success:true, buyer, message:'Welcome to the Mexausa network.' });
+  } catch(err) {
+    console.error('[BUYER REG ERR]', err.message, err.code);
+    res.status(500).json({ success:false, error:err.message, code:err.code });
+  }
+});
+
 try { app.use('/api/buyers', require('./routes/buyers.routes')); console.log('[OK] buyers.routes: mounted at /api/buyers'); } catch(e) { console.warn('[WARN] buyers.routes mount failed:', e.message); }
   try { app.use('/api/hot-leads', require('./routes/hot-leads.routes')); console.log('[OK] hot-leads.routes: mounted at /api/hot-leads'); } catch(e) { console.warn('[WARN] hot-leads.routes mount failed:', e.message); }
 // === Factoring waterfall routes (financing partner disclosure is gated) ===
@@ -2167,16 +2214,6 @@ app.get('/api/rfq/:id', (req, res) => {
   res.json({ id: req.params.id, status: 'open', matches: [] });
 });
 
-
-// ── SCHEMA DIAGNOSTIC (one-shot) ─────────────────────────────────────────────
-app.get('/api/diag/secure-buyers-schema', async (req, res) => {
-  try {
-    const r = await pool.query(
-      "SELECT column_name, data_type, is_nullable FROM information_schema.columns WHERE table_name='secure_buyers' ORDER BY ordinal_position"
-    );
-    res.json({ columns: r.rows });
-  } catch(e) { res.status(500).json({ error: e.message }); }
-});
 
 // ── AUTONOMY STATUS endpoint // redeploy 1779113140344 ───────────────────���──────────────────────────────
 if (!app._autonomyStatusMounted) {
