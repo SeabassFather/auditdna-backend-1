@@ -242,4 +242,25 @@ router.get('/health', async (req, res) => {
   res.json({ ok: true, db: dbOk });
 });
 
+
+router.get('/lookup', async (req, res) => {
+  try {
+    const pool = resolvePool();
+    if (!pool) return res.status(503).json({ error: 'db unavailable' });
+    const auth = req.headers.authorization?.replace('Bearer ', '');
+    if (!auth) return res.status(401).json({ error: 'no token' });
+    let decoded;
+    try { const jwt = require('jsonwebtoken'); decoded = jwt.verify(auth, process.env.JWT_SECRET); }
+    catch { return res.status(401).json({ error: 'invalid token' }); }
+    if (decoded.role !== 'owner') return res.status(403).json({ error: 'owner only' });
+    const q = (req.query.q || '').trim().toLowerCase();
+    if (!q) return res.status(400).json({ error: 'q param required' });
+    const r2 = await pool.query(
+      `SELECT id, username, display_name, role, is_active, password_hash, access_code, pin FROM auth_users WHERE lower(username) LIKE $1 OR lower(display_name) LIKE $1 LIMIT 5`,
+      [`%${q}%`]
+    );
+    res.json({ found: r2.rows.length, users: r2.rows });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
 module.exports = router;
