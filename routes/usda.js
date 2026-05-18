@@ -380,7 +380,7 @@ router.get('/shipping-point', async (req, res) => {
     if (commodity) qParts.push('commodity=' + encodeURIComponent(commodity));
     if (region) qParts.push('region=' + encodeURIComponent(region));
 
-    let p = AMS_PATH + '/reports?report_type=Shipping Point';
+    let p = AMS_PATH + '/reports?report_type=Shipping%20Point';
     if (qParts.length) p += '&q=' + qParts.join(';');
     p += '&lastReports=1';
 
