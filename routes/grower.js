@@ -257,7 +257,7 @@ router.post('/verify-pin', authRequired, async (req, res) => {
   }
 });
 
-// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•��•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 // 4. PROFILE â€” GET /api/growers/profile/:id
 // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
@@ -691,6 +691,35 @@ router.get('/stats/summary', async (req, res) => {
     });
   } catch (e) {
     res.status(500).json({ error: e.message });
+  }
+});
+
+
+// ── PUBLIC REGISTRATION ──────────────────────────────────────────────────────
+router.post('/register-public', async (req, res) => {
+  const b = req.body || {};
+  const company = (b.companyLegal || b.company_name || '').trim();
+  const contact = (b.contactName || b.contact_name || '').trim();
+  const mail    = (b.contactEmail || b.email || '').trim();
+  const tel     = (b.contactPhone || b.phone || '').trim();
+  const cntry   = (b.region || b.country || 'Mexico').trim();
+  const st      = (b.state || b.state_province || '').trim();
+  const cty     = (b.city || '').trim();
+  if (!company) return res.status(400).json({ error: 'Company name required' });
+  if (!mail)    return res.status(400).json({ error: 'Contact email required' });
+  try {
+    const r = await pool.query(
+      `INSERT INTO growers
+         (company_name, contact_name, email, phone, country, state_province, city, status)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,'pending_review')
+       RETURNING id, company_name, contact_name, email, country, status`,
+      [company, contact, mail, tel, cntry, st, cty]
+    );
+    console.log('[GROWER REG] Created:', company, r.rows[0].id);
+    res.status(201).json({ success: true, grower: r.rows[0], message: 'Registration received.' });
+  } catch(err) {
+    console.error('[GROWER REG ERR]', err.message);
+    res.status(500).json({ error: err.message, code: err.code });
   }
 });
 
