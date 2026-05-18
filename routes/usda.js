@@ -355,7 +355,7 @@ router.get('/cities', (req, res) => {
 router.get('/mexico-crossings', async (req, res) => {
   try {
     const { commodity } = req.query;
-    let p = AMS_PATH + '/reports?q=slug_name=Mexico Crossing';
+    let p = AMS_PATH + '/reports?q=slug_name%3DMexico%20Crossing';
     if (commodity) p += ';commodity=' + encodeURIComponent(commodity);
     p += '&lastReports=1';
 
