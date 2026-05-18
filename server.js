@@ -1935,7 +1935,7 @@ setInterval(async () => {
 }, 5 * 60 * 1000);
 
 
-// ── MISSING ROUTE STUBS — silence 404s from CommandSphere polling ────────────
+// ── MISSING ROUTE STUBS — silence 404s from CommandSphere polling ─────��──────
 app.get('/api/brain/live-feed', (req, res) => {
   res.json({ events: [], count: 0, ts: new Date().toISOString() });
 });
@@ -2060,7 +2060,8 @@ app.post('/api/growers/register-public', async (req, res) => {
       rows = r.rows;
     } catch(e1) {
       try {
-        const r = await pool.query('INSERT INTO growers (company_name) VALUES ($1) RETURNING id, company_name', [name]);
+        const r = await pool.query('INSERT INTO growers (company_name, country) VALUES ($1, $2) RETURNING id, company_name', [name, 'Mexico']); const __ = r; // fallback
+        const _rpany_name', [name]);
         rows = r.rows;
       } catch(e2) {
         return res.status(500).json({ error: e2.message, code: e2.code });
