@@ -1830,6 +1830,110 @@ app.get('/api/admin/fix-roles', async (req, res) => {
   } catch(e){res.status(500).json({error:e.message});}
 });
 
+
+
+// ── PLATFORM HEALTH & CRASH LOG SYSTEM ──────────────────────────────────────
+const crashLog = []; // In-memory crash log (last 100 entries)
+const MAX_CRASH_LOG = 100;
+
+// POST /api/health/crash-log — frontend error boundaries report crashes here
+app.post('/api/health/crash-log', (req, res) => {
+  const { module, error, stack, component, ts, user } = req.body || {};
+  const entry = {
+    module: module || 'Unknown',
+    error: (error || '').slice(0, 300),
+    stack: (stack || '').slice(0, 500),
+    component: (component || '').slice(0, 300),
+    ts: ts || new Date().toISOString(),
+    user: user || 'unknown',
+    id: Date.now()
+  };
+  crashLog.unshift(entry);
+  if (crashLog.length > MAX_CRASH_LOG) crashLog.pop();
+  console.warn('[CRASH LOG]', entry.module, '-', entry.error.slice(0, 80));
+  res.json({ success: true, logged: true });
+});
+
+// GET /api/health/crash-log — owner dashboard reads crash history
+app.get('/api/health/crash-log', (req, res) => {
+  res.json({ logs: crashLog, count: crashLog.length });
+});
+
+// GET /api/health/status — full platform health check
+app.get('/api/health/status', async (req, res) => {
+  const checks = {};
+  const routes = [
+    ['/api/crm/growers?limit=1', 'growers'],
+    ['/api/campaigns', 'campaigns'],
+    ['/api/inbox', 'inbox'],
+    ['/api/autonomy/status', 'autonomy'],
+    ['/api/alerts/events', 'alerts'],
+  ];
+  for (const [path, name] of routes) {
+    try {
+      const r = await new Promise((resolve) => {
+        const start = Date.now();
+        const req2 = require('http').request(
+          { hostname: 'localhost', port: process.env.PORT || 5050, path, method: 'GET' },
+          (res2) => { resolve({ ok: res2.statusCode < 400, status: res2.statusCode, ms: Date.now()-start }); }
+        );
+        req2.on('error', () => resolve({ ok: false, status: 0, ms: Date.now()-start }));
+        req2.setTimeout(3000, () => { req2.destroy(); resolve({ ok: false, status: 0, ms: 3000 }); });
+        req2.end();
+      });
+      checks[name] = r;
+    } catch(e) {
+      checks[name] = { ok: false, status: 0, error: e.message };
+    }
+  }
+  const healthy = Object.values(checks).filter(c => c.ok).length;
+  const total = Object.keys(checks).length;
+  res.json({
+    status: healthy === total ? 'healthy' : 'degraded',
+    healthy, total,
+    routes: checks,
+    crashes: crashLog.slice(0, 10),
+    uptime: process.uptime(),
+    ts: new Date().toISOString()
+  });
+});
+
+// Self-repair agent — runs every 5 minutes, logs degraded routes
+setInterval(async () => {
+  try {
+    const degraded = [];
+    const routes = ['/api/crm/growers?limit=1', '/api/campaigns', '/api/inbox'];
+    for (const path of routes) {
+      try {
+        const start = Date.now();
+        await new Promise((resolve, reject) => {
+          const r = require('http').request(
+            { hostname:'localhost', port:process.env.PORT||5050, path, method:'GET' },
+            res => resolve(res.statusCode)
+          );
+          r.on('error', reject);
+          r.setTimeout(3000, () => { r.destroy(); reject(new Error('timeout')); });
+          r.end();
+        });
+      } catch(e) {
+        degraded.push(path);
+      }
+    }
+    if (degraded.length > 0) {
+      console.warn('[SELF-REPAIR] Degraded routes detected:', degraded.join(', '));
+      crashLog.unshift({
+        module: 'SELF-REPAIR AGENT',
+        error: 'Degraded routes: ' + degraded.join(', '),
+        ts: new Date().toISOString(),
+        user: 'system',
+        id: Date.now()
+      });
+    }
+  } catch(e) {
+    console.error('[SELF-REPAIR] Agent error:', e.message);
+  }
+}, 5 * 60 * 1000);
+
 // ── AUTONOMY STATUS endpoint ──────────────────────────────────────────────────
 if (!app._autonomyStatusMounted) {
   app._autonomyStatusMounted = true;
