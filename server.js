@@ -2178,6 +2178,15 @@ app.get('/api/rfq/:id', (req, res) => {
 });
 
 
+
+// ── USDA INTELLIGENCE ROUTES ──────────────────────────────────────────────────
+try { app.use('/api/usda-market-intel', require('./routes/usda-market-intel')); console.log('[OK] usda-market-intel mounted'); } catch(e){ console.warn('[WARN] usda-market-intel:', e.message); }
+try { app.use('/api/usda-data',         require('./routes/usda-data'));          console.log('[OK] usda-data mounted'); }         catch(e){ console.warn('[WARN] usda-data:', e.message); }
+try { app.use('/api/usda-campaign',     require('./routes/usda-campaign'));      console.log('[OK] usda-campaign mounted'); }     catch(e){ console.warn('[WARN] usda-campaign:', e.message); }
+try { app.use('/api/usda-overlay',      require('./routes/usdaMarketOverlay'));  console.log('[OK] usda-overlay mounted'); }     catch(e){ console.warn('[WARN] usda-overlay:', e.message); }
+try { app.use('/api/usda-registry',     require('./routes/usdaRegistry'));       console.log('[OK] usda-registry mounted'); }    catch(e){ console.warn('[WARN] usda-registry:', e.message); }
+try { app.use('/api/usda-intel',        require('./routes/usdaRoutes.DISABLED')); console.log('[OK] usda-intel mounted'); }     catch(e){ console.warn('[WARN] usda-intel:', e.message); }
+
 // ── AUTONOMY STATUS endpoint // redeploy 1779113140344 ───────────────────���──────────────────────────────
 if (!app._autonomyStatusMounted) {
   app._autonomyStatusMounted = true;
