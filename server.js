@@ -1681,7 +1681,6 @@ try {
 try { app.use('/api/campaigns', require('./routes/campaigns-engine')); console.log('[OK] campaigns-engine mounted at /api/campaigns'); } catch(e) { console.error('[FAIL] campaigns-engine mount:', e.message); }
 try { app.use('/api/inbox', require('./routes/internal-inbox')); console.log('[OK] internal-inbox mounted at /api/inbox'); } catch(e) { console.error('[FAIL] internal-inbox mount:', e.message); }
 try { app.use('/api/wesource', require('./routes/wesource.routes')); console.log('[OK] wesource routes mounted at /api/wesource'); } catch(e){ console.error('[ERR] wesource:',e.message); app.get('/api/wesource',(req,res)=>res.json({results:[]})); } //esource'); } catch (e) { console.error('[FAIL] wesource routes:', e.message); }
-try { app.use('/api/oscar', require('./routes/oscar-mejia')); console.log('[OK] oscar-mejia mounted'); } catch(e){ console.warn('[WARN] oscar-mejia:', e.message); }
 try { const ar=require('./routes/agents.routes'); app.use('/api/agents', ar); console.log('[OK] agents mounted at /api/agents'); } catch(e){ console.error('[ERR] agents.routes failed to load:',e.message); app.get('/api/agents',(req,res)=>res.json({agents:[],total:0})); } //catch (e) { console.error('[FAIL] agents:', e.message); }
 try {
   const diego = require('./services/diego-si');
@@ -1939,18 +1938,14 @@ setInterval(async () => {
 // ── MISSING ROUTE STUBS — silence 404s from CommandSphere polling ────────────
 app.get('/api/brain/live-feed', async (req, res) => {
   try {
-    const db = req.app.locals.pool || req.app.get('pool') || pool;
-    if (!db) return res.json({ events:[], count:0, error:'no pool', ts:new Date().toISOString() });
-    const limit = parseInt(req.query.limit)||50;
-    const [r1,r2] = await Promise.all([
-      db.query('SELECT id,event_type,payload,created_at FROM brain_events ORDER BY created_at DESC LIMIT $1',[limit]).catch(()=>({rows:[]})),
-      db.query('SELECT id,event_type,payload,created_at FROM brain_log ORDER BY created_at DESC LIMIT $1',[limit]).catch(()=>({rows:[]}))
-    ]);
-    const all = [...r1.rows,...r2.rows].sort((a,b)=>new Date(b.created_at)-new Date(a.created_at)).slice(0,limit);
-    res.json({ events:all, count:all.length, ts:new Date().toISOString() });
-  } catch(e) {
-    res.json({ events:[], count:0, error:e.message, ts:new Date().toISOString() });
-  }
+    const db=req.app.locals.pool||req.app.get('pool')||pool;
+    if(!db)return res.json({events:[],count:0,ts:new Date().toISOString()});
+    const limit=parseInt(req.query.limit)||50;
+    const r1=await db.query('SELECT id,event_type,payload,created_at FROM brain_events ORDER BY created_at DESC LIMIT $1',[limit]).catch(()=>({rows:[]}));
+    const r2=await db.query('SELECT id,event_type,payload,created_at FROM brain_log ORDER BY created_at DESC LIMIT $1',[limit]).catch(()=>({rows:[]}));
+    const all=[...r1.rows,...r2.rows].sort((a,b)=>new Date(b.created_at)-new Date(a.created_at)).slice(0,limit);
+    res.json({events:all,count:all.length,ts:new Date().toISOString()});
+  }catch(e){res.json({events:[],count:0,error:e.message,ts:new Date().toISOString()});}
 });
 });
 
@@ -2141,109 +2136,6 @@ app.post('/api/rfq', (req, res) => {
 
 app.get('/api/rfq/:id', (req, res) => {
   res.json({ id: req.params.id, status: 'open', matches: [] });
-});
-
-
-
-// ── BRAIN EVENTS TABLE INIT ───────────────────────────────────────────────────
-(async()=>{
-  try{
-    await pool.query(`CREATE TABLE IF NOT EXISTS brain_events (
-      id SERIAL PRIMARY KEY,
-      event_type VARCHAR(100) NOT NULL,
-      payload JSONB,
-      created_at TIMESTAMPTZ DEFAULT NOW()
-    )`);
-    await pool.query(`CREATE TABLE IF NOT EXISTS brain_log (
-      id SERIAL PRIMARY KEY,
-      event_type VARCHAR(100) NOT NULL,
-      payload JSONB,
-      created_at TIMESTAMPTZ DEFAULT NOW()
-    )`);
-    // Seed initial event
-    await pool.query(
-      "INSERT INTO brain_events(event_type,payload,created_at) VALUES($1,$2,NOW()) ON CONFLICT DO NOTHING",
-      ['PLATFORM_BOOT', JSON.stringify({version:'2.0',platform:'AuditDNA Agriculture',ts:new Date().toISOString()})]
-    ).catch(()=>{});
-    console.log('[BRAIN] Tables ready');
-  }catch(e){console.warn('[BRAIN] Init warn:',e.message);}
-})();
-
-// ── DEAL FLOOR DB INIT ────────────────────────────────────────────────────────
-(async()=>{
-  try{
-    await pool.query(`CREATE TABLE IF NOT EXISTS deal_rooms (
-      id SERIAL PRIMARY KEY, deal_code VARCHAR(50) UNIQUE,
-      commodity VARCHAR(100), origin VARCHAR(200),
-      seller_id INTEGER, buyer_id INTEGER,
-      seller_name VARCHAR(200), buyer_name VARCHAR(200),
-      volume_cases INTEGER, price_per_case NUMERIC(10,2),
-      total_value NUMERIC(14,2),
-      stage VARCHAR(50) DEFAULT 'PROPOSAL',
-      status VARCHAR(50) DEFAULT 'open',
-      notes TEXT, created_at TIMESTAMPTZ DEFAULT NOW(),
-      updated_at TIMESTAMPTZ DEFAULT NOW()
-    )`);
-    await pool.query(`CREATE TABLE IF NOT EXISTS deal_messages (
-      id SERIAL PRIMARY KEY, deal_id INTEGER REFERENCES deal_rooms(id),
-      sender_role VARCHAR(50), message TEXT, created_at TIMESTAMPTZ DEFAULT NOW()
-    )`);
-    await pool.query(`CREATE TABLE IF NOT EXISTS deal_documents (
-      id SERIAL PRIMARY KEY, deal_id INTEGER REFERENCES deal_rooms(id),
-      doc_type VARCHAR(100), filename VARCHAR(200), url TEXT, created_at TIMESTAMPTZ DEFAULT NOW()
-    )`);
-    // Create active deals view
-    await pool.query(`CREATE OR REPLACE VIEW v_active_deals AS
-      SELECT id,deal_code,commodity,origin,seller_name,buyer_name,
-             volume_cases,price_per_case,total_value,stage,status,notes,
-             created_at,updated_at
-      FROM deal_rooms WHERE status='open' ORDER BY created_at DESC`).catch(()=>{});
-    console.log('[DEAL FLOOR] Tables + view ready');
-  }catch(e){console.warn('[DEAL FLOOR] Init warn:',e.message);}
-})();
-
-// ── EMAIL CAMPAIGNS MOUNT ─────────────────────────────────────────────────────
-try { app.use('/api/email-campaigns', require('./routes/email-campaigns-v2')); console.log('[OK] email-campaigns-v2 mounted'); } catch(e){ console.warn('[WARN] email-campaigns-v2:', e.message); }
-
-// ── STRAWBERRY TRIAL DEAL — auto-create if not exists ────────────────────────
-(async()=>{
-  try{
-    const exists=await pool.query("SELECT id FROM deal_rooms WHERE deal_code='STRAW-TRIAL-001' LIMIT 1").catch(()=>({rows:[]}));
-    if(!exists.rows.length){
-      const g=await pool.query("SELECT id FROM growers WHERE company_name ILIKE '%ramos%' OR company_name ILIKE '%hortalizas%' LIMIT 1").catch(()=>({rows:[{id:1}]}));
-      const b=await pool.query("SELECT id FROM secure_buyers WHERE registration_status='pending' LIMIT 1").catch(()=>({rows:[{id:1}]}));
-      await pool.query(
-        `INSERT INTO deal_rooms(deal_code,commodity,origin,seller_id,buyer_id,seller_name,buyer_name,volume_cases,price_per_case,total_value,stage,notes)
-         VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12)`,
-        ['STRAW-TRIAL-001','Strawberry','Jalisco, Mexico',
-         g.rows[0]?.id||1, b.rows[0]?.id||1,
-         'Productora de Hortalizas y Berrys SA de CV','Pending US Buyer Assignment',
-         1200, 28.50, 34200.00, 'PROPOSAL',
-         'Strawberry load trial — 10 container/week program. Erik Ramos Morelos. Pending US selling entity identification per counter-proposal.'
-        ]
-      );
-      console.log('[DEAL] Strawberry trial deal STRAW-TRIAL-001 created');
-      await pool.query('INSERT INTO brain_events(event_type,payload,created_at)VALUES($1,$2,NOW())',
-        ['DEAL_CREATED',JSON.stringify({deal_code:'STRAW-TRIAL-001',commodity:'Strawberry',stage:'PROPOSAL',volume_cases:1200,total_value:34200})]).catch(()=>{});
-    }
-  }catch(e){console.warn('[DEAL TRIAL] Init warn:',e.message);}
-})();
-
-
-app.get('/api/setup/brain', async (req,res)=>{
-  try{
-    await pool.query(`CREATE TABLE IF NOT EXISTS brain_events(
-      id SERIAL PRIMARY KEY,event_type VARCHAR(100) NOT NULL,
-      payload JSONB,created_at TIMESTAMPTZ DEFAULT NOW())`);
-    await pool.query(`CREATE TABLE IF NOT EXISTS brain_log(
-      id SERIAL PRIMARY KEY,event_type VARCHAR(100) NOT NULL,
-      payload JSONB,created_at TIMESTAMPTZ DEFAULT NOW())`);
-    await pool.query(
-      "INSERT INTO brain_events(event_type,payload,created_at)VALUES($1,$2,NOW())",
-      ['PLATFORM_BOOT',JSON.stringify({version:'2.0',platform:'AuditDNA',ts:new Date().toISOString()})]
-    );
-    res.json({success:true,message:'brain_events + brain_log tables created and seeded'});
-  }catch(e){res.status(500).json({error:e.message,code:e.code});}
 });
 
 // ── AUTONOMY STATUS endpoint ─────────────���─────���──────────────────────────────
