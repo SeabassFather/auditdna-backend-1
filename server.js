@@ -2167,6 +2167,17 @@ app.get('/api/rfq/:id', (req, res) => {
   res.json({ id: req.params.id, status: 'open', matches: [] });
 });
 
+
+// ── SCHEMA DIAGNOSTIC (one-shot) ─────────────────────────────────────────────
+app.get('/api/diag/secure-buyers-schema', async (req, res) => {
+  try {
+    const r = await pool.query(
+      "SELECT column_name, data_type, is_nullable FROM information_schema.columns WHERE table_name='secure_buyers' ORDER BY ordinal_position"
+    );
+    res.json({ columns: r.rows });
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
 // ── AUTONOMY STATUS endpoint // redeploy 1779113140344 ───────────────────���──────────────────────────────
 if (!app._autonomyStatusMounted) {
   app._autonomyStatusMounted = true;
