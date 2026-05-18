@@ -2154,7 +2154,13 @@ app.get('/api/rfq/:id', (req, res) => {
       id SERIAL PRIMARY KEY, deal_id INTEGER REFERENCES deal_rooms(id),
       doc_type VARCHAR(100), filename VARCHAR(200), url TEXT, created_at TIMESTAMPTZ DEFAULT NOW()
     )`);
-    console.log('[DEAL FLOOR] Tables ready');
+    // Create active deals view
+    await pool.query(`CREATE OR REPLACE VIEW v_active_deals AS
+      SELECT id,deal_code,commodity,origin,seller_name,buyer_name,
+             volume_cases,price_per_case,total_value,stage,status,notes,
+             created_at,updated_at
+      FROM deal_rooms WHERE status='open' ORDER BY created_at DESC`).catch(()=>{});
+    console.log('[DEAL FLOOR] Tables + view ready');
   }catch(e){console.warn('[DEAL FLOOR] Init warn:',e.message);}
 })();
 
