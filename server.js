@@ -1934,7 +1934,45 @@ setInterval(async () => {
   }
 }, 5 * 60 * 1000);
 
-// ── AUTONOMY STATUS endpoint ──────────────────────────────────────────────────
+
+// ── MISSING ROUTE STUBS — silence 404s from CommandSphere polling ────────────
+app.get('/api/brain/live-feed', (req, res) => {
+  res.json({ events: [], count: 0, ts: new Date().toISOString() });
+});
+
+app.get('/api/audits', (req, res) => {
+  res.json({ audits: [], total: 0, page: 1 });
+});
+
+app.get('/api/deals', (req, res) => {
+  res.json({ deals: [], total: 0, stage: 'all' });
+});
+
+app.get('/api/agents', (req, res) => {
+  res.json({ agents: ['A1','A2','A3','A4','A5'], status: 'operational' });
+});
+
+app.get('/api/wesource', (req, res) => {
+  res.json({ sources: [], active: 0 });
+});
+
+app.get('/api/niner/status', (req, res) => {
+  res.json({ status: 'standby', miners: 9, active: 0 });
+});
+
+app.get('/api/admin/dashboard', (req, res) => {
+  res.json({ users: 0, sessions: 0, uptime: process.uptime() });
+});
+
+app.get('/api/user/preferences', (req, res) => {
+  res.json({ theme: 'dark', language: 'en', notifications: true });
+});
+
+app.get('/api/app/api/user/me', (req, res) => {
+  res.json({ error: 'use /api/auth/verify' });
+});
+
+// ── AUTONOMY STATUS endpoint ───────────────────���──────────────────────────────
 if (!app._autonomyStatusMounted) {
   app._autonomyStatusMounted = true;
   app.get('/api/autonomy/status', (req, res) => {
