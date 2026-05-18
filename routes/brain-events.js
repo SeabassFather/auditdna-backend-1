@@ -68,6 +68,41 @@ router.get('/events', (req, res) => {
 });
 
 // ── EMIT ENDPOINT — any module posts events here ─────────────────────────
+
+// ── BRAIN TABLE INIT (self-creating) ─────────────────────────────────────────
+let _brainTableReady = false;
+async function ensureBrainTable(db) {
+  if (_brainTableReady) return;
+  try {
+    await db.query(`CREATE TABLE IF NOT EXISTS brain_events (
+      id SERIAL PRIMARY KEY,
+      event_type VARCHAR(100) NOT NULL,
+      payload JSONB,
+      created_at TIMESTAMPTZ DEFAULT NOW()
+    )`);
+    await db.query(`CREATE TABLE IF NOT EXISTS brain_log (
+      id SERIAL PRIMARY KEY,
+      event_type VARCHAR(100) NOT NULL,
+      payload JSONB,
+      created_at TIMESTAMPTZ DEFAULT NOW()
+    )`);
+    _brainTableReady = true;
+    console.log('[BRAIN] Tables ready');
+  } catch(e) { console.warn('[BRAIN] Table init:', e.message); }
+}
+
+router.get('/setup', async (req, res) => {
+  const db = req.app.get('pool') || req.app.locals.pool;
+  if (!db) return res.status(500).json({ error: 'No pool' });
+  await ensureBrainTable(db);
+  await db.query(
+    "INSERT INTO brain_events(event_type,payload,created_at)VALUES($1,$2,NOW())",
+    ['PLATFORM_BOOT', JSON.stringify({ version:'2.0', platform:'AuditDNA Agriculture', ts: new Date().toISOString() })]
+  ).catch(e => console.warn(e.message));
+  const r = await db.query('SELECT COUNT(*) AS cnt FROM brain_events').catch(() => ({ rows:[{cnt:0}] }));
+  res.json({ success: true, total_events: r.rows[0].cnt });
+});
+
 router.post('/emit', async (req, res) => {
   const { type, module, message, data, level } = req.body || {};
   if (!type) return res.status(400).json({ error: 'type required' });
@@ -76,6 +111,7 @@ router.post('/emit', async (req, res) => {
   try {
     const db = req.app.get('pool') || req.app.locals.pool;
     if (db) {
+      await ensureBrainTable(db);
       await db.query(
         'INSERT INTO brain_events(event_type,payload,created_at) VALUES($1,$2,NOW())',
         [type, JSON.stringify({ module, message, data, level })]
