@@ -2130,6 +2130,59 @@ app.get('/api/rfq/:id', (req, res) => {
   res.json({ id: req.params.id, status: 'open', matches: [] });
 });
 
+
+// ── DEAL FLOOR DB INIT ────────────────────────────────────────────────────────
+(async()=>{
+  try{
+    await pool.query(`CREATE TABLE IF NOT EXISTS deal_rooms (
+      id SERIAL PRIMARY KEY, deal_code VARCHAR(50) UNIQUE,
+      commodity VARCHAR(100), origin VARCHAR(200),
+      seller_id INTEGER, buyer_id INTEGER,
+      seller_name VARCHAR(200), buyer_name VARCHAR(200),
+      volume_cases INTEGER, price_per_case NUMERIC(10,2),
+      total_value NUMERIC(14,2),
+      stage VARCHAR(50) DEFAULT 'PROPOSAL',
+      status VARCHAR(50) DEFAULT 'open',
+      notes TEXT, created_at TIMESTAMPTZ DEFAULT NOW(),
+      updated_at TIMESTAMPTZ DEFAULT NOW()
+    )`);
+    await pool.query(`CREATE TABLE IF NOT EXISTS deal_messages (
+      id SERIAL PRIMARY KEY, deal_id INTEGER REFERENCES deal_rooms(id),
+      sender_role VARCHAR(50), message TEXT, created_at TIMESTAMPTZ DEFAULT NOW()
+    )`);
+    await pool.query(`CREATE TABLE IF NOT EXISTS deal_documents (
+      id SERIAL PRIMARY KEY, deal_id INTEGER REFERENCES deal_rooms(id),
+      doc_type VARCHAR(100), filename VARCHAR(200), url TEXT, created_at TIMESTAMPTZ DEFAULT NOW()
+    )`);
+    console.log('[DEAL FLOOR] Tables ready');
+  }catch(e){console.warn('[DEAL FLOOR] Init warn:',e.message);}
+})();
+
+// ── EMAIL CAMPAIGNS MOUNT ─────────────────────────────────────────────────────
+try { app.use('/api/email-campaigns', require('./routes/email-campaigns-v2')); console.log('[OK] email-campaigns-v2 mounted'); } catch(e){ console.warn('[WARN] email-campaigns-v2:', e.message); }
+
+// ── STRAWBERRY TRIAL DEAL — auto-create if not exists ────────────────────────
+(async()=>{
+  try{
+    const exists=await pool.query("SELECT id FROM deal_rooms WHERE deal_code='STRAW-TRIAL-001' LIMIT 1").catch(()=>({rows:[]}));
+    if(!exists.rows.length){
+      const g=await pool.query("SELECT id FROM growers WHERE company_name ILIKE '%ramos%' OR company_name ILIKE '%hortalizas%' LIMIT 1").catch(()=>({rows:[{id:1}]}));
+      const b=await pool.query("SELECT id FROM secure_buyers WHERE registration_status='pending' LIMIT 1").catch(()=>({rows:[{id:1}]}));
+      await pool.query(
+        `INSERT INTO deal_rooms(deal_code,commodity,origin,seller_id,buyer_id,seller_name,buyer_name,volume_cases,price_per_case,total_value,stage,notes)
+         VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12)`,
+        ['STRAW-TRIAL-001','Strawberry','Jalisco, Mexico',
+         g.rows[0]?.id||1, b.rows[0]?.id||1,
+         'Productora de Hortalizas y Berrys SA de CV','Pending US Buyer Assignment',
+         1200, 28.50, 34200.00, 'PROPOSAL',
+         'Strawberry load trial — 10 container/week program. Erik Ramos Morelos. Pending US selling entity identification per counter-proposal.'
+        ]
+      );
+      console.log('[DEAL] Strawberry trial deal STRAW-TRIAL-001 created');
+    }
+  }catch(e){console.warn('[DEAL TRIAL] Init warn:',e.message);}
+})();
+
 // ── AUTONOMY STATUS endpoint ─────────────���─────���──────────────────────────────
 if (!app._autonomyStatusMounted) {
   app._autonomyStatusMounted = true;
