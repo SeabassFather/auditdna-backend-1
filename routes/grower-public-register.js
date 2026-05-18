@@ -106,7 +106,8 @@ router.post('/register-public', async (req, res) => {
   } catch (err) {
     await client.query('ROLLBACK');
     console.error('Grower public register error:', err.message);
-    return res.status(500).json({ error: 'Registration failed. Please try again or contact Saul@mexausafg.com' });
+    return console.error('[GROWER REGISTER ERROR]', err.message, err.stack?.slice(0,200));
+    res.status(500).json({ error: err.message, code: err.code, detail: err.detail });
   } finally {
     client.release();
   }
