@@ -1937,8 +1937,21 @@ setInterval(async () => {
 
 
 // ── MISSING ROUTE STUBS — silence 404s from CommandSphere polling ────────────
-app.get('/api/brain/live-feed', (req, res) => {
-  res.json({ events: [], count: 0, ts: new Date().toISOString() });
+app.get('/api/brain/live-feed', async (req, res) => {
+  try {
+    const db = req.app.locals.pool || req.app.get('pool') || pool;
+    if (!db) return res.json({ events:[], count:0, error:'no pool', ts:new Date().toISOString() });
+    const limit = parseInt(req.query.limit)||50;
+    const [r1,r2] = await Promise.all([
+      db.query('SELECT id,event_type,payload,created_at FROM brain_events ORDER BY created_at DESC LIMIT $1',[limit]).catch(()=>({rows:[]})),
+      db.query('SELECT id,event_type,payload,created_at FROM brain_log ORDER BY created_at DESC LIMIT $1',[limit]).catch(()=>({rows:[]}))
+    ]);
+    const all = [...r1.rows,...r2.rows].sort((a,b)=>new Date(b.created_at)-new Date(a.created_at)).slice(0,limit);
+    res.json({ events:all, count:all.length, ts:new Date().toISOString() });
+  } catch(e) {
+    res.json({ events:[], count:0, error:e.message, ts:new Date().toISOString() });
+  }
+});
 });
 
 app.get('/api/audits', (req, res) => {
