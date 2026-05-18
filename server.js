@@ -1983,8 +1983,24 @@ setInterval(async () => {
 
 
 // ── MISSING ROUTE STUBS — silence 404s from CommandSphere polling ────────────
-app.get('/api/brain/live-feed', (req, res) => {
-  res.json({ events: [], count: 0, ts: new Date().toISOString() });
+app.get('/api/brain/live-feed', async (req, res) => {
+  try {
+    const limit = parseInt(req.query.limit)||50;
+    const r = await pool.query(
+      'SELECT id,event_type,payload,created_at FROM brain_events ORDER BY created_at DESC LIMIT $1',
+      [limit]
+    ).catch(()=>({rows:[]}));
+    // Also check brain_log table
+    const r2 = await pool.query(
+      'SELECT id,event_type,payload,created_at FROM brain_log ORDER BY created_at DESC LIMIT $1',
+      [limit]
+    ).catch(()=>({rows:[]}));
+    const events=[...r.rows,...r2.rows].sort((a,b)=>new Date(b.created_at)-new Date(a.created_at)).slice(0,limit);
+    res.json({events,count:events.length,sources:['brain_events','brain_log'],ts:new Date().toISOString()});
+  } catch(err){
+    res.json({events:[],count:0,error:err.message,ts:new Date().toISOString()});
+  }
+});
 });
 
 app.get('/api/audits', (req, res) => {
