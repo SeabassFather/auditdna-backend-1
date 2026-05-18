@@ -2187,6 +2187,15 @@ try { app.use('/api/usda-overlay',      require('./routes/usdaMarketOverlay')); 
 try { app.use('/api/usda-registry',     require('./routes/usdaRegistry'));       console.log('[OK] usda-registry mounted'); }    catch(e){ console.warn('[WARN] usda-registry:', e.message); }
 try { app.use('/api/usda-intel',        require('./routes/usdaRoutes.DISABLED')); console.log('[OK] usda-intel mounted'); }     catch(e){ console.warn('[WARN] usda-intel:', e.message); }
 
+
+// ── CANONICAL SMTP — Gmail only ───────────────────────────────────────────────
+const SMTP_CONFIG = {
+  host: 'smtp.gmail.com',
+  port: 587,
+  secure: false,
+  auth: { user: 'sgarcia1911@gmail.com', pass: process.env.SMTP_PASS || 'emgptqrmqdbxrpil' }
+};
+
 // ── AUTONOMY STATUS endpoint // redeploy 1779113140344 ───────────────────���──────────────────────────────
 if (!app._autonomyStatusMounted) {
   app._autonomyStatusMounted = true;
