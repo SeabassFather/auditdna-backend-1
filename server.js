@@ -2130,7 +2130,7 @@ app.get('/api/rfq/:id', (req, res) => {
   res.json({ id: req.params.id, status: 'open', matches: [] });
 });
 
-// ── AUTONOMY STATUS endpoint ───────────────────���──────────────────────────────
+// ── AUTONOMY STATUS endpoint // redeploy 1779113140344 ───────────────────���──────────────────────────────
 if (!app._autonomyStatusMounted) {
   app._autonomyStatusMounted = true;
   app.get('/api/autonomy/status', (req, res) => {
