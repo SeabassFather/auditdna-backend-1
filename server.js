@@ -2234,6 +2234,10 @@ app.get('/api/agents/oscar-mejia/buyers', async (req, res) => {
   } catch(e){ res.json({agent:'Oscar Mejia',territory:'Midwest + East Coast',count:0,buyers:[]}); }
 });
 
+try { app.use('/api/loaf/platform', require('./routes/loaf-routes')); console.log('[OK] loaf-routes at /api/loaf/platform'); } catch(e){ console.warn('[WARN] loaf-routes:', e.message); }
+try { app.use('/api/email-campaigns', require('./routes/email-campaigns-v2')); console.log('[OK] email-campaigns-v2 mounted'); } catch(e){ console.warn('[WARN] email-campaigns-v2:', e.message); }
+try { app.use('/api/campaigns-engine', require('./routes/campaigns-engine')); console.log('[OK] campaigns-engine mounted'); } catch(e){ console.warn('[WARN] campaigns-engine:', e.message); }
+
 // ── AUTONOMY STATUS endpoint // redeploy 1779113140344 ───────────────────���──────────────────────────────
 if (!app._autonomyStatusMounted) {
   app._autonomyStatusMounted = true;
