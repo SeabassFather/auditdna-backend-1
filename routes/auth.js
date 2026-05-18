@@ -242,4 +242,38 @@ router.get('/health', async (req, res) => {
   res.json({ ok: true, db: dbOk });
 });
 
+
+// ----------------------------------------------------------------
+// OWNER DIAGNOSTIC — GET /api/auth/lookup?q=<username>
+// Owner-only. Returns is_active, role, access_code, pin for a user.
+// Remove after use.
+// ----------------------------------------------------------------
+router.get('/lookup', async (req, res) => {
+  try {
+    const pool = resolvePool();
+    if (!pool) return res.status(503).json({ error: 'db unavailable' });
+    const auth = req.headers.authorization?.replace('Bearer ', '');
+    if (!auth) return res.status(401).json({ error: 'no token' });
+    let decoded;
+    try {
+      const jwt = require('jsonwebtoken');
+      decoded = jwt.verify(auth, process.env.JWT_SECRET);
+    } catch { return res.status(401).json({ error: 'invalid token' }); }
+    if (decoded.role !== 'owner') return res.status(403).json({ error: 'owner only' });
+    const q = (req.query.q || '').trim().toLowerCase();
+    if (!q) return res.status(400).json({ error: 'q param required' });
+    const r2 = await pool.query(
+      `SELECT id, username, display_name, role, is_active, access_code, pin,
+              login_count, last_login, created_at
+       FROM auth_users
+       WHERE lower(username) LIKE $1 OR lower(display_name) LIKE $1
+       ORDER BY username ASC LIMIT 10`,
+      [`%${q}%`]
+    );
+    res.json({ found: r2.rows.length, users: r2.rows });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
 module.exports = router;
