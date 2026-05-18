@@ -57,70 +57,27 @@ function requireOwnerOrAdmin(req, res, next) {
 router.post('/register', async (req, res) => {
   const b = req.body || {};
   const legal_name = (b.legal_name || b.companyLegal || '').trim();
-  const country    = (b.country || 'USA').trim();
-  if (!legal_name) return res.status(400).json({ success:false, error:'legal_name required' });
-  if (!country)    return res.status(400).json({ success:false, error:'country required' });
+  const country = (b.country || 'USA').trim();
+  if (!legal_name || !country) return res.status(400).json({ success:false, error:'legal_name and country required' });
   try {
-    const result = await db.query(
-      `INSERT INTO secure_buyers
-         (legal_name, trade_name, country, state_region, city, address, zip_code,
-          buyer_type, paca_license, product_specialties, payment_terms, status)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,'PENDING')
-       RETURNING id, legal_name, country, status`,
-      [
-        legal_name,
-        b.trade_name || b.dba || '',
-        country,
-        b.state_region || b.state_province || b.state || '',
-        b.city || '',
-        b.address_line1 || b.address || '',
-        b.postal_code || b.zip_code || '',
-        b.buyer_type || b.business_type || 'BUYER',
-        b.paca_license || '',
-        Array.isArray(b.commodities_preferred) ? b.commodities_preferred.join(',') : (b.commodities_preferred||b.product_specialties||''),
-        b.payment_terms_requested || b.payment_terms || 'NET30'
-      ]
+    const commodities = Array.isArray(b.commodities_preferred) ? b.commodities_preferred.join(',') : (b.commodities_preferred || '');
+    const regions = Array.isArray(b.regions_served) ? b.regions_served.join(',') : (b.regions_served || '');
+    const cold = !!(b.cold_chain_capability === true || b.cold_chain_capability === 'true');
+    const r = await db.query(
+      `INSERT INTO secure_buyers(legal_name,dba,country,state_province,city,address_line1,postal_code,business_type,paca_license,commodities_preferred,regions_served,cold_chain_capability,payment_terms_requested,registration_status,created_at)
+       VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,'pending',NOW())
+       RETURNING id,legal_name,country,registration_status`,
+      [legal_name,b.dba||'',country,b.state_province||b.state||'',b.city||'',b.address_line1||'',b.postal_code||'',b.business_type||'wholesale',b.paca_license||'',commodities,regions,cold,b.payment_terms_requested||'net30']
     );
-    const buyer = result.rows[0];
-    console.log('[BUYER REGISTER] New buyer:', buyer.legal_name, buyer.id);
+    const buyer = r.rows[0];
+    console.log('[BUYERS] register:', buyer.legal_name, buyer.id);
     res.status(201).json({ success:true, buyer, message:'Welcome to the Mexausa network.' });
   } catch(err) {
-    console.error('[BUYER REGISTER ERROR]', err.message, err.code);
+    console.error('[BUYERS] register error:', err.message);
     res.status(500).json({ success:false, error:err.message, code:err.code });
   }
 });
-router.get('/', requireAuth, async (req, res) => {
-  try {
-    const { status, country, tier, q, limit = 200 } = req.query;
-    const params = [];
-    const where = [];
-    if (status)  { params.push(status);  where.push(`registration_status = $${params.length}`); }
-    if (country) { params.push(country); where.push(`country = $${params.length}`); }
-    if (tier)    { params.push(tier);    where.push(`credit_tier = $${params.length}`); }
-    if (q)       { params.push(`%${q}%`); where.push(`(legal_name ILIKE $${params.length} OR buyer_code ILIKE $${params.length})`); }
-    const whereSql = where.length ? 'WHERE ' + where.join(' AND ') : '';
-    params.push(parseInt(limit) || 200);
 
-    const role = String(req.user.role || '').toLowerCase();
-    const isOwner = (role === 'owner' || role === 'compliance');
-
-    // Non-owner roles see anonymized data (buyer_code + tier only, not legal_name)
-    const sql = isOwner
-      ? `SELECT * FROM secure_buyers ${whereSql} ORDER BY created_at DESC LIMIT $${params.length}`
-      : `SELECT id, buyer_code, registration_status, credit_tier, country, state_province,
-                business_type, commodities_preferred, regions_served, volume_ytd_usd,
-                deals_completed_count, credit_limit_usd, last_activity_at, created_at
-         FROM secure_buyers ${whereSql} ORDER BY created_at DESC LIMIT $${params.length}`;
-
-    const r = await db.query(sql, params);
-    res.json({ success: true, total: r.rowCount, data: r.rows, anonymized: !isOwner });
-  } catch (err) {
-    console.error('[BUYERS] list error:', err.message);
-    res.status(500).json({ success: false, error: err.message });
-  }
-});
-
-// ──────────────────────────────────────────────────────────────────────────
 // GET /api/buyers/:id   (single buyer 360° view)
 // ──────────────────────────────────────────────────────────────────────────
 router.get('/:id', requireAuth, async (req, res) => {
