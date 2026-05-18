@@ -2185,6 +2185,8 @@ try { app.use('/api/email-campaigns', require('./routes/email-campaigns-v2')); c
         ]
       );
       console.log('[DEAL] Strawberry trial deal STRAW-TRIAL-001 created');
+      await pool.query('INSERT INTO brain_events(event_type,payload,created_at)VALUES($1,$2,NOW())',
+        ['DEAL_CREATED',JSON.stringify({deal_code:'STRAW-TRIAL-001',commodity:'Strawberry',stage:'PROPOSAL',volume_cases:1200,total_value:34200})]).catch(()=>{});
     }
   }catch(e){console.warn('[DEAL TRIAL] Init warn:',e.message);}
 })();
