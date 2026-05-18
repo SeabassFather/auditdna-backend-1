@@ -1681,6 +1681,8 @@ try {
 try { app.use('/api/campaigns', require('./routes/campaigns-engine')); console.log('[OK] campaigns-engine mounted at /api/campaigns'); } catch(e) { console.error('[FAIL] campaigns-engine mount:', e.message); }
 try { app.use('/api/inbox', require('./routes/internal-inbox')); console.log('[OK] internal-inbox mounted at /api/inbox'); } catch(e) { console.error('[FAIL] internal-inbox mount:', e.message); }
 try { app.use('/api/wesource', require('./routes/wesource.routes')); console.log('[OK] wesource routes mounted at /api/wesource'); } catch(e){ console.error('[ERR] wesource:',e.message); app.get('/api/wesource',(req,res)=>res.json({results:[]})); } //esource'); } catch (e) { console.error('[FAIL] wesource routes:', e.message); }
+try { app.use('/api/oscar', require('./routes/oscar-mejia')); console.log('[OK] oscar-mejia'); } catch(e){ console.warn('[WARN] oscar-mejia:',e.message); }
+try { app.use('/api/email-campaigns', require('./routes/email-campaigns-v2')); console.log('[OK] email-campaigns-v2'); } catch(e){ console.warn('[WARN] email-campaigns-v2:',e.message); }
 try { const ar=require('./routes/agents.routes'); app.use('/api/agents', ar); console.log('[OK] agents mounted at /api/agents'); } catch(e){ console.error('[ERR] agents.routes failed to load:',e.message); app.get('/api/agents',(req,res)=>res.json({agents:[],total:0})); } //catch (e) { console.error('[FAIL] agents:', e.message); }
 try {
   const diego = require('./services/diego-si');
@@ -1935,7 +1937,7 @@ setInterval(async () => {
 }, 5 * 60 * 1000);
 
 
-// ── MISSING ROUTE STUBS — silence 404s from CommandSphere polling ────────────
+// ── MISSING ROUTE STUBS — silence 404s from CommandSphere polling ─────��──────
 app.get('/api/brain/live-feed', (req, res) => {
   res.json({ events: [], count: 0, ts: new Date().toISOString() });
 });
