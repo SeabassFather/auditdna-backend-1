@@ -55,24 +55,40 @@ function requireOwnerOrAdmin(req, res, next) {
 // Creates registration in pending status. Fires brain event.
 // ──────────────────────────────────────────────────────────────────────────
 router.post('/register', async (req, res) => {
+  const b = req.body || {};
+  const legal_name = (b.legal_name || b.companyLegal || '').trim();
+  const country    = (b.country || 'USA').trim();
+  if (!legal_name) return res.status(400).json({ success:false, error:'legal_name required' });
+  if (!country)    return res.status(400).json({ success:false, error:'country required' });
   try {
-    const {
-      legal_name, dba, country, state_province, city, address_line1, address_line2,
-      postal_code, website, year_established, business_type,
-      fein, duns_number, paca_license, state_license, sales_tax_id,
-      rfc, agace_caat, senasica_permit, padron_importadores, customs_broker_patente,
-      ruc_peru, senasa_peru_permit, adex_member,
-      rut_empresa, sag_permit,
-      nit_colombia, ica_import_permit,
-      payment_terms_requested, commodities_preferred, regions_served, cold_chain_capability::boolean,
-      contacts, trade_refs
-    } = req.body || {};
-
-    // Cast boolean fields
-    const cold_chain_bool = cold_chain_capability === true || cold_chain_capability === 'true' || cold_chain_capability === 1 ? true : false;
-
-    if (!legal_name || !country) {
-      return res.status(400).json({ success: false, error: 'legal_name and country required' });
+    const result = await db.query(
+      `INSERT INTO secure_buyers
+         (legal_name, trade_name, country, state_region, city, address, zip_code,
+          buyer_type, paca_license, product_specialties, payment_terms, status)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,'PENDING')
+       RETURNING id, legal_name, country, status`,
+      [
+        legal_name,
+        b.trade_name || b.dba || '',
+        country,
+        b.state_region || b.state_province || b.state || '',
+        b.city || '',
+        b.address_line1 || b.address || '',
+        b.postal_code || b.zip_code || '',
+        b.buyer_type || b.business_type || 'BUYER',
+        b.paca_license || '',
+        Array.isArray(b.commodities_preferred) ? b.commodities_preferred.join(',') : (b.commodities_preferred||b.product_specialties||''),
+        b.payment_terms_requested || b.payment_terms || 'NET30'
+      ]
+    );
+    const buyer = result.rows[0];
+    console.log('[BUYER REGISTER] New buyer:', buyer.legal_name, buyer.id);
+    res.status(201).json({ success:true, buyer, message:'Welcome to the Mexausa network.' });
+  } catch(err) {
+    console.error('[BUYER REGISTER ERROR]', err.message, err.code);
+    res.status(500).json({ success:false, error:err.message, code:err.code });
+  }
+});
     }
 
     const insert = await db.query(`
@@ -277,7 +293,7 @@ router.post('/:id/approve', requireAuth, requireOwnerOrAdmin, async (req, res) =
   }
 });
 
-// ──────────────────────────────────────────────────────────────────────────
+// ───────────────────────���──────────────────────────────────────────────────
 // POST /api/buyers/:id/suspend
 // ──────────────────────────────────────────────────────────────────────────
 router.post('/:id/suspend', requireAuth, requireOwnerOrAdmin, async (req, res) => {
