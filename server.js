@@ -2074,6 +2074,39 @@ app.post('/api/growers/register-public', async (req, res) => {
   }
 });
 
+
+// ── BUYER REGISTRATION — inline safe version (buyers.routes.js crashes on require) ──
+app.post('/api/buyers/register', async (req, res) => {
+  const { legal_name, country, email, state_province, city, contactName,
+          business_type, payment_terms_requested, commodities_preferred } = req.body || {};
+  if (!legal_name || !country) {
+    return res.status(400).json({ success: false, error: 'legal_name and country required' });
+  }
+  try {
+    let result;
+    try {
+      result = await pool.query(
+        `INSERT INTO secure_buyers (legal_name, country, email, state_province, city, business_type, created_at)
+         VALUES ($1,$2,$3,$4,$5,$6,NOW())
+         RETURNING id, legal_name, email, country`,
+        [legal_name, country, email||'', state_province||'', city||'', business_type||'buyer']
+      );
+    } catch(e) {
+      // Fallback minimal
+      result = await pool.query(
+        `INSERT INTO secure_buyers (legal_name, country, email) VALUES ($1,$2,$3) RETURNING id, legal_name, email`,
+        [legal_name, country, email||'']
+      );
+    }
+    const buyer = result.rows[0];
+    console.log('[BUYER REGISTER] New buyer:', buyer.legal_name, buyer.id);
+    res.status(201).json({ success: true, buyer, message: 'Registration received. Welcome to the Mexausa network.' });
+  } catch(err) {
+    console.error('[BUYER REGISTER ERROR]', err.message);
+    res.status(500).json({ error: err.message, code: err.code });
+  }
+});
+
 // ── REGISTRATION ROUTES — correct mount paths ──────────────────────────────
 // Grower public registration: POST /api/growers/register-public
 try { app.use('/api/growers', require('./routes/grower-public-register')); console.log('[OK] grower-public-register at /api/growers'); } catch(e){ console.warn('[WARN] grower-public-register:', e.message); }
