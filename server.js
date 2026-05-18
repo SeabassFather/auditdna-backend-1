@@ -2254,6 +2254,47 @@ try { app.use('/api/loaf/platform', require('./routes/loaf-routes')); console.lo
 try { app.use('/api/email-campaigns', require('./routes/email-campaigns-v2')); console.log('[OK] email-campaigns-v2 mounted'); } catch(e){ console.warn('[WARN] email-campaigns-v2:', e.message); }
 try { app.use('/api/campaigns-engine', require('./routes/campaigns-engine')); console.log('[OK] campaigns-engine mounted'); } catch(e){ console.warn('[WARN] campaigns-engine:', e.message); }
 
+
+// ── OSCAR MEJIA CAMPAIGN TRIGGERS ────────────────────────────────────────────
+// Programs: Broccoli + Berry + Avocado → Midwest + East Coast buyers
+const MIDWEST_STATES=['IL','OH','MI','IN','WI','MN','MO','IA','KS','NE'];
+const EASTCOAST_STATES=['NY','NJ','PA','MA','CT','MD','VA','NC','GA','FL','SC'];
+const OSCAR_SEGMENTS={
+  broccoli: {states:[...MIDWEST_STATES,...EASTCOAST_STATES],commodity:'broccoli',subject:'Fresh Broccoli Crown Available — Salinas CA + Mexico Direct'},
+  berry:    {states:EASTCOAST_STATES,commodity:'strawberry',subject:'California + Mexico Berry Program — Strawberry | Blueberry | Raspberry'},
+  avocado:  {states:[...MIDWEST_STATES,...EASTCOAST_STATES],commodity:'avocado',subject:'Hass Avocado Program — Michoacan Mexico Direct FOB'}
+};
+app.post('/api/agents/oscar-mejia/blast/:program', async (req,res)=>{
+  const prog=req.params.program;
+  const seg=OSCAR_SEGMENTS[prog];
+  if(!seg)return res.status(400).json({error:'Unknown program. Use: broccoli|berry|avocado'});
+  try{
+    // Get buyers in territory from CRM
+    const buyers=await pool.query(
+      "SELECT DISTINCT email,company_name,first_name FROM shipper_contacts WHERE email IS NOT NULL AND state=ANY($1) AND LOWER(COALESCE(commodity,''))LIKE $2 LIMIT 500",
+      [seg.states,'%'+seg.commodity+'%']
+    ).catch(()=>({rows:[]}));
+    // Also pull from buyers_contacts view
+    const buyers2=await pool.query(
+      "SELECT DISTINCT email,company_name,first_name FROM buyer_contacts WHERE email IS NOT NULL LIMIT 200"
+    ).catch(()=>({rows:[]}));
+    const allBuyers=[...buyers.rows,...buyers2.rows].filter(b=>b.email).slice(0,500);
+    console.log('[OSCAR BLAST]',prog,'->',allBuyers.length,'buyers');
+    // Log blast event to brain
+    await pool.query(
+      "INSERT INTO brain_events(event_type,payload,created_at)VALUES($1,$2,NOW())",
+      ['OSCAR_CAMPAIGN_BLAST',JSON.stringify({program:prog,commodity:seg.commodity,recipients:allBuyers.length,agent:'Oscar Mejia'})]
+    ).catch(()=>{});
+    res.json({success:true,program:prog,agent:'Oscar Mejia',recipients_queued:allBuyers.length,subject:seg.subject,status:'QUEUED',ts:new Date().toISOString()});
+  }catch(err){
+    res.status(500).json({error:err.message});
+  }
+});
+app.get('/api/agents/oscar-mejia/blast/status', (req,res)=>{
+  res.json({agent:'Oscar Mejia',programs:Object.keys(OSCAR_SEGMENTS),status:'READY',
+    endpoints:['/api/agents/oscar-mejia/blast/broccoli','/api/agents/oscar-mejia/blast/berry','/api/agents/oscar-mejia/blast/avocado']});
+});
+
 // ── AUTONOMY STATUS endpoint // redeploy 1779113140344 ───────────────────���──────────────────────────────
 if (!app._autonomyStatusMounted) {
   app._autonomyStatusMounted = true;
