@@ -68,9 +68,20 @@ router.get('/events', (req, res) => {
 });
 
 // ── EMIT ENDPOINT — any module posts events here ─────────────────────────
-router.post('/emit', (req, res) => {
+router.post('/emit', async (req, res) => {
   const { type, module, message, data, level } = req.body || {};
   if (!type) return res.status(400).json({ error: 'type required' });
+
+  // Persist to brain_events table
+  try {
+    const db = req.app.get('pool') || req.app.locals.pool;
+    if (db) {
+      await db.query(
+        'INSERT INTO brain_events(event_type,payload,created_at) VALUES($1,$2,NOW())',
+        [type, JSON.stringify({ module, message, data, level })]
+      ).catch(() => {});
+    }
+  } catch(_) {}
 
   broadcast({ type, module: module || 'Unknown', message: message || '', data: data || {}, level: level || 'info' });
 
