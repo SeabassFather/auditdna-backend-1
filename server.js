@@ -2041,11 +2041,13 @@ app.post('/api/owner/documents', async (req, res) => {
 
 
 // ── REGISTRATION ROUTES — grower/buyer/loaf public intake ──────────────────
-try { app.use('/api/grower/register', require('./routes/grower-public-register')); console.log('[OK] grower-public-register mounted at /api/grower/register'); } catch(e){ console.warn('[WARN] grower-public-register:', e.message); }
-try { app.use('/api/loaf', require('./routes/loaf-routes')); console.log('[OK] loaf-routes mounted at /api/loaf'); } catch(e){ console.warn('[WARN] loaf-routes:', e.message); }
-try { app.use('/api/onboarding', require('./routes/onboarding')); console.log('[OK] onboarding mounted at /api/onboarding'); } catch(e){ console.warn('[WARN] onboarding:', e.message); }
-try { app.use('/api/grower-workflow', require('./routes/growerworkflow')); console.log('[OK] growerworkflow mounted'); } catch(e){ console.warn('[WARN] growerworkflow:', e.message); }
-try { app.use('/api/small-grower', require('./routes/smallGrowerRoutes')); console.log('[OK] smallGrowerRoutes mounted'); } catch(e){ console.warn('[WARN] smallGrowerRoutes:', e.message); }
+// ── REGISTRATION ROUTES — correct mount paths ──────────────────────────────
+// Grower public registration: POST /api/growers/register-public
+try { app.use('/api/growers', require('./routes/grower-public-register')); console.log('[OK] grower-public-register at /api/growers'); } catch(e){ console.warn('[WARN] grower-public-register:', e.message); }
+// Small grower program
+try { app.use('/api/small-grower', require('./routes/smallGrowerRoutes')); console.log('[OK] smallGrowerRoutes at /api/small-grower'); } catch(e){ console.warn('[WARN] smallGrowerRoutes:', e.message); }
+// Grower workflow engine
+try { app.use('/api/grower-workflow', require('./routes/growerworkflow')); console.log('[OK] growerworkflow at /api/grower-workflow'); } catch(e){ console.warn('[WARN] growerworkflow:', e.message); }
 
 // ── AUTONOMY STATUS endpoint ───────────────────���──────────────────────────────
 if (!app._autonomyStatusMounted) {
