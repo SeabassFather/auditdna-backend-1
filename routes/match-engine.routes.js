@@ -351,62 +351,100 @@ router.post('/grower-outreach/usda-geo-refresh', async (req, res) => {
 });
 
 
-// ── GROWER-BUYER INTELLIGENCE MATCH ──────────────────────────────────────────
-// Commodity + region + volume matching across 33,971 CRM contacts
+
+// ── GROWER-BUYER INTELLIGENCE MATCH v2 ───────────────────────────────────────
+// Queries growers + shipper_contacts (27,759) vs secure_buyers
+// Commodity+region+cross-border scoring
 router.get('/grower-buyer', async (req, res) => {
-  const { commodity, region, volume, limit=50 } = req.query;
+  const { commodity, region, limit=50 } = req.query;
+  const lim = Math.min(parseInt(limit)||50, 200);
   try {
-    // Pull growers matching commodity/region
-    let growerQ = 'SELECT id,company_name,contact_name,email,state_province,country,commodity,status FROM growers WHERE status IS NOT NULL';
-    const gParams=[];
-    if(commodity){gParams.push('%'+commodity.toLowerCase()+'%');growerQ+=' AND LOWER(COALESCE(commodity,\'\'))LIKE $'+gParams.length;}
-    if(region){gParams.push('%'+region+'%');growerQ+=' AND (LOWER(country)LIKE $'+gParams.length+' OR LOWER(state_province)LIKE $'+gParams.length+')';}
-    growerQ+=' LIMIT '+Math.min(parseInt(limit)||50,200);
+    // Query 1: registered growers table
+    let growerQ = `SELECT id, company_name AS name, email, state_province AS state,
+      country, commodity, 'grower' AS source
+      FROM growers WHERE company_name IS NOT NULL`;
+    const gP = [];
+    if (commodity) { gP.push('%'+commodity.toLowerCase()+'%'); growerQ += ' AND LOWER(COALESCE(commodity,company_name,\'\')) LIKE  = router;
++gP.length; }
+    if (region)    { gP.push('%'+region.toLowerCase()+'%'); growerQ += ' AND (LOWER(country) LIKE  = router;
++gP.length+' OR LOWER(state_province) LIKE  = router;
++gP.length+')'; }
+    growerQ += ' LIMIT '+lim;
 
-    // Pull buyers matching commodity
-    let buyerQ='SELECT id,legal_name,country,state_province,commodities_preferred,business_type,registration_status FROM secure_buyers WHERE registration_status IS NOT NULL';
-    const bParams=[];
-    if(commodity){bParams.push('%'+commodity.toLowerCase()+'%');buyerQ+=' AND LOWER(COALESCE(commodities_preferred,\'\'))LIKE $'+bParams.length;}
-    buyerQ+=' LIMIT '+Math.min(parseInt(limit)||50,200);
+    // Query 2: shipper_contacts (27,759 — primary commodity-tagged source)
+    let shipQ = `SELECT id, company_name AS name, email, state AS state,
+      country, commodity, 'shipper' AS source
+      FROM shipper_contacts WHERE company_name IS NOT NULL AND email IS NOT NULL`;
+    const sP = [];
+    if (commodity) { sP.push('%'+commodity.toLowerCase()+'%'); shipQ += ' AND LOWER(COALESCE(commodity,\'\')) LIKE  = router;
++sP.length; }
+    if (region)    { sP.push('%'+region.toLowerCase()+'%'); shipQ += ' AND (LOWER(country) LIKE  = router;
++sP.length+' OR LOWER(state) LIKE  = router;
++sP.length+')'; }
+    shipQ += ' LIMIT '+lim;
 
-    const [growers,buyers]=await Promise.all([
-      pool.query(growerQ,gParams).catch(()=>({rows:[]})),
-      pool.query(buyerQ,bParams).catch(()=>({rows:[]}))
+    // Query 3: secure_buyers
+    let buyQ = `SELECT id, legal_name AS name, country, state_province AS state,
+      commodities_preferred AS commodity, business_type, registration_status
+      FROM secure_buyers`;
+    const bP = [];
+    if (commodity) { bP.push('%'+commodity.toLowerCase()+'%'); buyQ += ' WHERE LOWER(COALESCE(commodities_preferred,\'\')) LIKE  = router;
++bP.length; }
+    buyQ += ' LIMIT '+lim;
+
+    const [gr, sc, bu] = await Promise.all([
+      pool.query(growerQ, gP).catch(() => ({ rows: [] })),
+      pool.query(shipQ, sP).catch(() => ({ rows: [] })),
+      pool.query(buyQ, bP).catch(() => ({ rows: [] })),
     ]);
 
-    // Build matches: pair each grower with compatible buyers
-    const matches=[];
-    growers.rows.forEach(g=>{
-      buyers.rows.forEach(b=>{
-        const score=
-          (commodity&&(g.commodity||'').toLowerCase().includes(commodity.toLowerCase())?40:20)+
-          (b.commodities_preferred&&(b.commodities_preferred||'').toLowerCase().includes((g.commodity||'').toLowerCase())?30:0)+
-          (g.country===b.country?20:g.country==='Mexico'&&b.country==='USA'?15:5);
-        if(score>=35){
+    const sellers = [...gr.rows, ...sc.rows];
+    const buyers  = bu.rows;
+
+    // Score: commodity match(40) + buyer commodity match(30) + cross-border(15-20) + base(10)
+    const matches = [];
+    sellers.forEach(s => {
+      buyers.forEach(b => {
+        const cmod = commodity || s.commodity || '';
+        const score =
+          (cmod && (s.commodity||'').toLowerCase().includes(cmod.toLowerCase()) ? 40 : 10) +
+          (cmod && (b.commodity||'').toLowerCase().includes(cmod.toLowerCase()) ? 30 : 0) +
+          (s.country === 'Mexico' && b.country === 'USA' ? 20 : s.country === b.country ? 15 : 5);
+        if (score >= 25) {
           matches.push({
-            grower_id:g.id,grower:g.company_name,grower_region:g.state_province+', '+g.country,
-            buyer_id:b.id,buyer:b.legal_name,buyer_region:b.state_province+', '+b.country,
-            commodity:commodity||g.commodity||'Mixed',match_score:score,
-            status:'POTENTIAL',created_at:new Date().toISOString()
+            seller_id: s.id, seller: s.name, seller_state: s.state+', '+s.country,
+            seller_source: s.source, seller_commodity: s.commodity,
+            buyer_id: b.id, buyer: b.name, buyer_state: b.state+', '+b.country,
+            commodity: cmod || s.commodity || 'Mixed',
+            match_score: score, status: 'POTENTIAL',
+            ts: new Date().toISOString()
           });
         }
       });
     });
 
-    // Sort by score descending
-    matches.sort((a,b)=>b.match_score-a.match_score);
+    matches.sort((a,b) => b.match_score - a.match_score);
+
+    // Log brain event
+    pool.query(
+      'INSERT INTO brain_events(event_type,payload,created_at) VALUES($1,$2,NOW())',
+      ['MATCH_ENGINE_RUN', JSON.stringify({ commodity, region, sellers: sellers.length, buyers: buyers.length, matches: matches.length })]
+    ).catch(() => {});
 
     res.json({
-      success:true,count:matches.length,
-      growers_scanned:growers.rows.length,buyers_scanned:buyers.rows.length,
-      algorithm:'commodity+region+volume',
-      filters:{commodity:commodity||'all',region:region||'all'},
-      matches:matches.slice(0,parseInt(limit)||50),
-      ts:new Date().toISOString()
+      success: true, count: matches.length,
+      sellers_scanned: sellers.length,
+      buyers_scanned: buyers.length,
+      growers_scanned: gr.rows.length,
+      shippers_scanned: sc.rows.length,
+      algorithm: 'commodity+region+cross-border v2',
+      filters: { commodity: commodity||'all', region: region||'all' },
+      matches: matches.slice(0, lim),
+      ts: new Date().toISOString()
     });
-  } catch(err){
-    console.error('[MATCH] grower-buyer error:',err.message);
-    res.status(500).json({error:err.message});
+  } catch(err) {
+    console.error('[MATCH] grower-buyer error:', err.message);
+    res.status(500).json({ error: err.message });
   }
 });
 
