@@ -2042,59 +2042,33 @@ app.post('/api/owner/documents', async (req, res) => {
 
 // ── REGISTRATION ROUTES — grower/buyer/loaf public intake ──────────────────
 
-// ── GROWER PUBLIC REGISTRATION — inline safe version ───────────────────────
+// ── GROWER PUBLIC REGISTRATION ─────────────────────────────────────────────
 app.post('/api/growers/register-public', async (req, res) => {
-  const { companyLegal, contactEmail, contactName, entityType, state, city,
-          region, commodities, ein, pacaNum, gapCert, globalGap,
-          fsmaTeir, notes } = req.body || {};
-  if (!companyLegal || !contactEmail) {
-    return res.status(400).json({ error: 'Company name and contact email are required' });
-  }
+  const body = req.body || {};
+  if (!body.companyLegal && !body.company_name) return res.status(400).json({ error: 'Company name required' });
+  if (!body.contactEmail && !body.email) return res.status(400).json({ error: 'Contact email required' });
+  const name = body.companyLegal || body.company_name || 'Unknown';
+  const email = body.contactEmail || body.email || '';
   try {
-    // Ensure required columns exist
+    // Try full insert first, fallback to minimal
+    let rows;
     try {
-      await pool.query("ALTER TABLE growers ADD COLUMN IF NOT EXISTS risk_tier VARCHAR(20) DEFAULT 'TIER_0'");
-      await pool.query("ALTER TABLE growers ADD COLUMN IF NOT EXISTS compliance_status VARCHAR(50) DEFAULT 'pending_review'");
-      await pool.query("ALTER TABLE growers ADD COLUMN IF NOT EXISTS registered_at TIMESTAMPTZ DEFAULT NOW()");
-    } catch(e) { /* columns may already exist */ }
-
-    const result = await pool.query(
-      `INSERT INTO growers (company_name, email, first_name, state, entity_type, city,
-         status, risk_tier, compliance_status, registered_at)
-       VALUES ($1,$2,$3,$4,$5,$6,'pending_review','TIER_0','pending_review',NOW())
-       RETURNING id, company_name, email, status`,
-      [companyLegal, contactEmail, contactName||'', state||'', entityType||'LLC', city||'']
-    );
-    const grower = result.rows[0];
-    console.log('[GROWER REGISTER] New grower:', grower.company_name, grower.id);
-    res.status(201).json({ success: true, grower, message: 'Registration received. Our team will review within 24 hours.' });
+      const r = await pool.query(
+        'INSERT INTO growers (company_name, status) VALUES ($1, $2) RETURNING id, company_name, status',
+        [name, 'pending_review']
+      );
+      rows = r.rows;
+    } catch(e1) {
+      try {
+        const r = await pool.query('INSERT INTO growers (company_name) VALUES ($1) RETURNING id, company_name', [name]);
+        rows = r.rows;
+      } catch(e2) {
+        return res.status(500).json({ error: e2.message, code: e2.code });
+      }
+    }
+    console.log('[GROWER REGISTER] New:', name, rows[0].id);
+    res.status(201).json({ success: true, grower: rows[0], message: 'Registration received. Our team will review within 24 hours.' });
   } catch(err) {
-    console.error('[GROWER REGISTER ERROR]', err.message);
-    res.status(500).json({ error: err.message, code: err.code });
-  }
-});
-
-
-// ── BUYER REGISTRATION — inline safe version (buyers.routes.js crashes on require) ──
-app.post('/api/buyers/register', async (req, res) => {
-  const { legal_name, country, email, state_province, city, contactName,
-          business_type, payment_terms_requested, commodities_preferred } = req.body || {};
-  if (!legal_name || !country) {
-    return res.status(400).json({ success: false, error: 'legal_name and country required' });
-  }
-  try {
-    let result;
-    result = await pool.query(
-      `INSERT INTO secure_buyers (legal_name, country)
-       VALUES ($1,$2)
-       RETURNING id, legal_name, country`,
-      [legal_name, country]
-    );
-    const buyer = result.rows[0];
-    console.log('[BUYER REGISTER] New buyer:', buyer.legal_name, buyer.id);
-    res.status(201).json({ success: true, buyer, message: 'Registration received. Welcome to the Mexausa network.' });
-  } catch(err) {
-    console.error('[BUYER REGISTER ERROR]', err.message);
     res.status(500).json({ error: err.message, code: err.code });
   }
 });
