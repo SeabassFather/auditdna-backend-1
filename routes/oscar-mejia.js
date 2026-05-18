@@ -30,6 +30,14 @@ const SEGMENTS = {
     pack: '8x1lb clamshell | 12x6oz clamshell',
     price_ref: 'USDA AMS terminal markets'
   },
+  canada: {
+    states: ['BC','ON','AB','QC','MB','SK'],
+    commodity: 'avocado',
+    subject: 'Mexausa Food Group — Avocado + Berry Program Canada',
+    origin: 'Michoacan MX + Baja CA MX',
+    pack: '25lb Hass + 12x6oz Berry',
+    price_ref: 'USDA AMS + AAFC Canada'
+  },
   avocado: {
     states: ['IL','OH','MI','IN','WI','MN','MO','IA','NY','NJ','PA','MA','CT','VA','NC'],
     commodity: 'avocado',
