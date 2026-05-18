@@ -1,4 +1,6 @@
 const express = require('express');
+const _db = require('../db');
+const pool = _db.pool || _db;
 const router = express.Router();
 
 // In-memory data stores
