@@ -485,13 +485,12 @@ app.post('/api/buyers/register', async (req, res) => {
   try {
     const r = await pool.query(
       `INSERT INTO secure_buyers
-         (legal_name, trade_name, country, state_region, city, buyer_type,
+         (legal_name, country, state_region, city, buyer_type,
           paca_license, product_specialties, payment_terms, status)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,'PENDING')
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,'PENDING')
        RETURNING id, legal_name, country, status`,
       [
         legal_name,
-        b.trade_name || b.dba || '',
         country,
         b.state_region || b.state_province || b.state || '',
         b.city || '',
