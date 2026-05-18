@@ -71,6 +71,8 @@ router.post('/register', async (req, res) => {
     );
     const buyer = r.rows[0];
     console.log('[BUYERS] register:', buyer.legal_name, buyer.id);
+    db.query('INSERT INTO brain_events(event_type,payload,created_at)VALUES($1,$2,NOW())',
+      ['BUYER_REGISTERED',JSON.stringify({id:buyer.id,legal_name:buyer.legal_name,country:buyer.country})]).catch(()=>{});
     res.status(201).json({ success:true, buyer, message:'Welcome to the Mexausa network.' });
   } catch(err) {
     console.error('[BUYERS] register error:', err.message);
