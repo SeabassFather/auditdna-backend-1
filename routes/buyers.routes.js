@@ -64,9 +64,12 @@ router.post('/register', async (req, res) => {
       ruc_peru, senasa_peru_permit, adex_member,
       rut_empresa, sag_permit,
       nit_colombia, ica_import_permit,
-      payment_terms_requested, commodities_preferred, regions_served, cold_chain_capability,
+      payment_terms_requested, commodities_preferred, regions_served, cold_chain_capability::boolean,
       contacts, trade_refs
     } = req.body || {};
+
+    // Cast boolean fields
+    const cold_chain_bool = cold_chain_capability === true || cold_chain_capability === 'true' || cold_chain_capability === 1 ? true : false;
 
     if (!legal_name || !country) {
       return res.status(400).json({ success: false, error: 'legal_name and country required' });
