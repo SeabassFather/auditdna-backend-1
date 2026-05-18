@@ -2196,6 +2196,8 @@ const SMTP_CONFIG = {
   auth: { user: 'sgarcia1911@gmail.com', pass: process.env.SMTP_PASS || 'emgptqrmqdbxrpil' }
 };
 
+app.locals.pool = pool; // campaign trigger + USDA routes access pool via req.app.locals.pool
+
 // ── AUTONOMY STATUS endpoint // redeploy 1779113140344 ───────────────────���──────────────────────────────
 if (!app._autonomyStatusMounted) {
   app._autonomyStatusMounted = true;
