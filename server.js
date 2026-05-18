@@ -1819,6 +1819,17 @@ try {
   }
 } catch(e) { console.error('[FAIL] PlatformGuard:', e.message); }
 
+
+// Fix Rudy and Carlos roles to sales
+app.get('/api/admin/fix-roles', async (req, res) => {
+  if (req.query.secret !== 'MFG2026migrate') return res.status(403).json({error:'forbidden'});
+  try {
+    const r1 = await pool.query("UPDATE auth_users SET role='sales', updated_at=NOW() WHERE username='rudy' RETURNING id,username,role");
+    const r2 = await pool.query("UPDATE auth_users SET role='sales', updated_at=NOW() WHERE username='carlos' RETURNING id,username,role");
+    res.json({success:true, rudy:r1.rows[0], carlos:r2.rows[0]});
+  } catch(e){res.status(500).json({error:e.message});}
+});
+
 // ── AUTONOMY STATUS endpoint ──────────────────────────────────────────────────
 if (!app._autonomyStatusMounted) {
   app._autonomyStatusMounted = true;
