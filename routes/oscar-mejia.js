@@ -8,6 +8,11 @@ const router = express.Router();
 const _db = require('../db');
 const pool = _db.pool || _db;
 
+
+// Standard inspection clause — appended to all outbound communications
+const INSPECTION_CLAUSE = 'All shipments subject to USDA AMS inspection at point of origin, port of entry, and delivery as agreed by all parties. Rejection rights apply upon failed inspection.';
+const COMPANY_FOOTER = 'Mexausa Food Group, Inc. | EIN: 88-1698129 | Salinas, CA | mexausafg.com | FSMA 204 Compliant | AuditDNA Verified';
+
 const SEGMENTS = {
   broccoli: {
     states: ['IL','OH','MI','IN','WI','MN','MO','IA','NY','NJ','PA','MA','CT','MD','VA','NC','GA'],
@@ -115,6 +120,8 @@ router.post('/blast/:program', async (req, res) => {
       recipients_queued: allBuyers.length,
       territory: seg.states,
       status: 'QUEUED',
+      inspection_clause: INSPECTION_CLAUSE,
+      footer: COMPANY_FOOTER,
       ts: new Date().toISOString()
     });
   } catch(err) {
