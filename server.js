@@ -2039,6 +2039,14 @@ app.post('/api/owner/documents', async (req, res) => {
   } catch(e) { res.status(401).json({ error: 'Invalid token' }); }
 });
 
+
+// ── REGISTRATION ROUTES — grower/buyer/loaf public intake ──────────────────
+try { app.use('/api/grower/register', require('./routes/grower-public-register')); console.log('[OK] grower-public-register mounted at /api/grower/register'); } catch(e){ console.warn('[WARN] grower-public-register:', e.message); }
+try { app.use('/api/loaf', require('./routes/loaf-routes')); console.log('[OK] loaf-routes mounted at /api/loaf'); } catch(e){ console.warn('[WARN] loaf-routes:', e.message); }
+try { app.use('/api/onboarding', require('./routes/onboarding')); console.log('[OK] onboarding mounted at /api/onboarding'); } catch(e){ console.warn('[WARN] onboarding:', e.message); }
+try { app.use('/api/grower-workflow', require('./routes/growerworkflow')); console.log('[OK] growerworkflow mounted'); } catch(e){ console.warn('[WARN] growerworkflow:', e.message); }
+try { app.use('/api/small-grower', require('./routes/smallGrowerRoutes')); console.log('[OK] smallGrowerRoutes mounted'); } catch(e){ console.warn('[WARN] smallGrowerRoutes:', e.message); }
+
 // ── AUTONOMY STATUS endpoint ───────────────────���──────────────────────────────
 if (!app._autonomyStatusMounted) {
   app._autonomyStatusMounted = true;
