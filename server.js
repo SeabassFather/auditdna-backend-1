@@ -2041,37 +2041,31 @@ app.post('/api/owner/documents', async (req, res) => {
 
 
 // ── REGISTRATION ROUTES — grower/buyer/loaf public intake ──────────────────
-
-// ── GROWER PUBLIC REGISTRATION ─────────────────────────────────────────────
+// ── GROWER PUBLIC REGISTRATION v5 ────────────────────────────────────────────
 app.post('/api/growers/register-public', async (req, res) => {
-  const body = req.body || {};
-  if (!body.companyLegal && !body.company_name) return res.status(400).json({ error: 'Company name required' });
-  if (!body.contactEmail && !body.email) return res.status(400).json({ error: 'Contact email required' });
-  const name = body.companyLegal || body.company_name || 'Unknown';
-  const email = body.contactEmail || body.email || '';
-  try {
-    // Try full insert first, fallback to minimal
-    let rows;
-    try {
-      const r = await pool.query(
-        'INSERT INTO growers (company_name, status) VALUES ($1, $2) RETURNING id, company_name, status',
-        [name, 'pending_review']
-      );
-      rows = r.rows;
-    } catch(e1) {
-      try {
-        const r = await pool.query('INSERT INTO growers (company_name, country) VALUES ($1, $2) RETURNING id, company_name', [name, 'Mexico']); const __ = r; // fallback
-        const _rpany_name', [name]);
-        rows = r.rows;
-      } catch(e2) {
-        return res.status(500).json({ error: e2.message, code: e2.code });
-      }
+  const b=req.body||{};
+  const name=(b.companyLegal||b.company_name||'').slice(0,200).trim();
+  if(!name)return res.status(400).json({error:'Company name required'});
+  const country=(b.region||b.country||'Mexico').slice(0,100);
+  const status='pending_review';
+  // Cascading INSERT — tries most complete first, falls back on missing columns
+  const inserts=[
+    {sql:'INSERT INTO growers(company_name,country,status)VALUES($1,$2,$3)RETURNING id,company_name',vals:[name,country,status]},
+    {sql:'INSERT INTO growers(company_name,country)VALUES($1,$2)RETURNING id,company_name',vals:[name,country]},
+    {sql:'INSERT INTO growers(company_name)VALUES($1)RETURNING id,company_name',vals:[name]},
+  ];
+  for(const ins of inserts){
+    try{
+      const r=await pool.query(ins.sql,ins.vals);
+      console.log('[GROWER REG v5]',name,'->',r.rows[0].id);
+      return res.status(201).json({success:true,grower:r.rows[0],message:'Registration received. Team reviews within 24 hours.'});
+    }catch(e){
+      if(e.code!=='23502'&&e.code!=='42703')return res.status(500).json({error:e.message,code:e.code});
+      // 23502=NOT NULL, 42703=bad column — try next
     }
-    console.log('[GROWER REGISTER] New:', name, rows[0].id);
-    res.status(201).json({ success: true, grower: rows[0], message: 'Registration received. Our team will review within 24 hours.' });
-  } catch(err) {
-    res.status(500).json({ error: err.message, code: err.code });
   }
+  res.status(500).json({error:'Unable to insert grower — contact support'});
+});
 });
 
 // ── REGISTRATION ROUTES — correct mount paths ──────────────────────────────
