@@ -350,4 +350,64 @@ router.post('/grower-outreach/usda-geo-refresh', async (req, res) => {
   }
 });
 
+
+// ── GROWER-BUYER INTELLIGENCE MATCH ──────────────────────────────────────────
+// Commodity + region + volume matching across 33,971 CRM contacts
+router.get('/grower-buyer', async (req, res) => {
+  const { commodity, region, volume, limit=50 } = req.query;
+  try {
+    // Pull growers matching commodity/region
+    let growerQ = 'SELECT id,company_name,contact_name,email,state_province,country,commodity,status FROM growers WHERE status IS NOT NULL';
+    const gParams=[];
+    if(commodity){gParams.push('%'+commodity.toLowerCase()+'%');growerQ+=' AND LOWER(COALESCE(commodity,\'\'))LIKE $'+gParams.length;}
+    if(region){gParams.push('%'+region+'%');growerQ+=' AND (LOWER(country)LIKE $'+gParams.length+' OR LOWER(state_province)LIKE $'+gParams.length+')';}
+    growerQ+=' LIMIT '+Math.min(parseInt(limit)||50,200);
+
+    // Pull buyers matching commodity
+    let buyerQ='SELECT id,legal_name,country,state_province,commodities_preferred,business_type,registration_status FROM secure_buyers WHERE registration_status IS NOT NULL';
+    const bParams=[];
+    if(commodity){bParams.push('%'+commodity.toLowerCase()+'%');buyerQ+=' AND LOWER(COALESCE(commodities_preferred,\'\'))LIKE $'+bParams.length;}
+    buyerQ+=' LIMIT '+Math.min(parseInt(limit)||50,200);
+
+    const [growers,buyers]=await Promise.all([
+      pool.query(growerQ,gParams).catch(()=>({rows:[]})),
+      pool.query(buyerQ,bParams).catch(()=>({rows:[]}))
+    ]);
+
+    // Build matches: pair each grower with compatible buyers
+    const matches=[];
+    growers.rows.forEach(g=>{
+      buyers.rows.forEach(b=>{
+        const score=
+          (commodity&&(g.commodity||'').toLowerCase().includes(commodity.toLowerCase())?40:20)+
+          (b.commodities_preferred&&(b.commodities_preferred||'').toLowerCase().includes((g.commodity||'').toLowerCase())?30:0)+
+          (g.country===b.country?20:g.country==='Mexico'&&b.country==='USA'?15:5);
+        if(score>=35){
+          matches.push({
+            grower_id:g.id,grower:g.company_name,grower_region:g.state_province+', '+g.country,
+            buyer_id:b.id,buyer:b.legal_name,buyer_region:b.state_province+', '+b.country,
+            commodity:commodity||g.commodity||'Mixed',match_score:score,
+            status:'POTENTIAL',created_at:new Date().toISOString()
+          });
+        }
+      });
+    });
+
+    // Sort by score descending
+    matches.sort((a,b)=>b.match_score-a.match_score);
+
+    res.json({
+      success:true,count:matches.length,
+      growers_scanned:growers.rows.length,buyers_scanned:buyers.rows.length,
+      algorithm:'commodity+region+volume',
+      filters:{commodity:commodity||'all',region:region||'all'},
+      matches:matches.slice(0,parseInt(limit)||50),
+      ts:new Date().toISOString()
+    });
+  } catch(err){
+    console.error('[MATCH] grower-buyer error:',err.message);
+    res.status(500).json({error:err.message});
+  }
+});
+
 module.exports = router;
