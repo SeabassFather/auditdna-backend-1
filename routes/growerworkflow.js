@@ -5,7 +5,8 @@
 
 const express = require('express');
 const router = express.Router();
-const { pool } = require('../db');
+const _db = require('../db');
+const pool = _db.pool || _db.query ? _db : { query: _db, connect: () => Promise.resolve({ query: _db, release: ()=>{} }) };
 
 // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 // WORKFLOW STAGES
