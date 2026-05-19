@@ -539,4 +539,89 @@ router.post('/dispatch', async (req, res) => {
   }
 });
 
+
+// =============================================================================
+// A1-A15 AUTONOMOUS AGENT TICK ENGINE
+// Each agent has a tickInterval (seconds). Runs on its own schedule.
+// Context: pool, logEvent, queueAction provided via getCtx()
+// =============================================================================
+
+const agentTimers = {};
+const agentStats  = {};
+
+function startAgentTicker(agent, poolRef) {
+  if (!agent?.code || !agent?.tick) return;
+  const intervalMs = (agent.tickInterval || 300) * 1000;
+
+  agentStats[agent.code] = {
+    code: agent.code, name: agent.name,
+    status: 'ACTIVE', runs: 0, errors: 0,
+    lastRun: null, nextRun: new Date(Date.now() + intervalMs).toISOString(),
+  };
+
+  // Initial tick after 10s stagger (avoids boot flood)
+  const offset = Object.keys(agentTimers).length * 2000 + 10000;
+  setTimeout(async () => {
+    await runAgentTick(agent, poolRef);
+    agentTimers[agent.code] = setInterval(
+      () => runAgentTick(agent, poolRef),
+      intervalMs
+    );
+  }, offset);
+}
+
+async function runAgentTick(agent, poolRef) {
+  const p = poolRef?.() || pool || null;
+  if (!p) { agentStats[agent.code].status = 'DEGRADED'; return; }
+  try {
+    const ctx = getCtx(p);
+    await agent.tick(ctx);
+    agentStats[agent.code].runs++;
+    agentStats[agent.code].lastRun = new Date().toISOString();
+    agentStats[agent.code].status = 'ACTIVE';
+  } catch(e) {
+    agentStats[agent.code].errors++;
+    agentStats[agent.code].status = 'ERROR';
+    agentStats[agent.code].lastError = e.message?.substring(0,120);
+    console.warn(`[AGENT ${agent.code}] tick error:`, e.message?.substring(0,80));
+  }
+}
+
+// Start all A1-A15 agents
+if (Array.isArray(autonomyAgents) && autonomyAgents.length > 0) {
+  autonomyAgents.forEach(a => startAgentTicker(a, () => pool || global.db));
+  console.log(`[AGENT TICKER] ${autonomyAgents.length} agents scheduled (A1-A15)`);
+} else {
+  console.warn('[AGENT TICKER] No agents loaded — check autonomy/agents.js');
+}
+
+// =============================================================================
+// AGENT STATUS endpoint — GET /api/autonomy/agents
+// =============================================================================
+router.get('/agents', (req, res) => {
+  res.json({
+    ok: true,
+    agents: Object.values(agentStats),
+    count: Object.keys(agentStats).length,
+    ts: new Date().toISOString(),
+  });
+});
+
+// =============================================================================
+// MANUAL TICK endpoint — POST /api/autonomy/agents/:code/tick
+// =============================================================================
+router.post('/agents/:code/tick', async (req, res) => {
+  const agent = Array.isArray(autonomyAgents)
+    ? autonomyAgents.find(a => a.code === req.params.code.toUpperCase())
+    : null;
+  if (!agent) return res.status(404).json({ error: 'Agent not found' });
+  try {
+    await runAgentTick(agent, () => pool || global.db);
+    res.json({ ok: true, agent: agentStats[agent.code] });
+  } catch(e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+
 module.exports = router;
