@@ -263,11 +263,6 @@ router.get('/lookup', async (req, res) => {
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
-
-router.get('/db-tables', async (req, res) => {
-  try {
-    const pool = resolvePool();
-    if (!pool) return res.status(503).json({ error: 'no pool' });
     const auth = req.headers.authorization?.replace('Bearer ','');
     if (!auth) return res.status(401).json({ error: 'no token' });
     const jwt = require('jsonwebtoken');
