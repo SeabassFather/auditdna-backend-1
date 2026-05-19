@@ -1571,9 +1571,9 @@ try {
 
 
   // ════════════════════════════════════════════════════════════════════════════
-  // FULL SYSTEM WIRE-UP — 2026-05-19
-  // All routes mounted with try/catch — server boots even if one route fails
+  // FULL SYSTEM WIRE-UP — 2026-05-19 (deferred — loads after listen starts)
   // ════════════════════════════════════════════════════════════════════════════
+  setImmediate(() => {
   const _mount = (path, file) => {
     try {
       app.use(path, require(file));
@@ -1642,6 +1642,8 @@ try {
   _mount('/api/emergency',         './routes/emergency-alert');
   _mount('/api/ai',                './routes/Aicowboysroutes');
   _mount('/api/ollama',            './routes/ollama');
+  console.log('[DEFERRED] All 46 routes mounted');
+  }); // end setImmediate
 
 
 __server.listen(PORT, () => {
