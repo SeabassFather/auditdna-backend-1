@@ -17,14 +17,14 @@ const router = express.Router();
 // Resilient pool resolver — works whether db.js exports a function,
 // an object with getPool, or pool is set by server.js.
 function resolvePool() {
-  if (pool) return pool;
+  if (typeof pool !== 'undefined' && pool) return pool;
   try {
     const dbModule = require('../db');
-const pool = require('../db');
     const getPool = dbModule.getPool || dbModule;
     if (typeof getPool === 'function') return getPool();
+    if (dbModule && dbModule.query) return dbModule;
   } catch (_) {}
-  return null;
+  return global.db || null;
 }
 
 // Handles BOTH bcrypt-hashed ("$2b$...") and plain-text stored values.
