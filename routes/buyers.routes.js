@@ -332,8 +332,7 @@ router.post('/demand-signal', async (req, res) => {
         if (pool) {
             await pool.query(
                 `INSERT INTO demand_signals (commodity, volume_lbs, price_target, urgency, weeks_out, notes, type, created_at)
-                 VALUES ($1,$2,$3,$4,$5,$6,$7,NOW())
-                 ON CONFLICT DO NOTHING`,
+                 VALUES ($1,$2,$3,$4,$5,$6,$7,NOW())`,
                 [signal.commodity, signal.volume||signal.targetVol||0, signal.price||signal.priceTarget||0,
                  signal.urgency||'MEDIUM', signal.weeks||2, signal.notes||'', signal.type||'DEMAND']
             ).catch(() => {});
