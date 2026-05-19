@@ -1,118 +1,74 @@
-// TraceSafe Small Grower Compliance API
+// routes/tracesafe.js — TraceSafe Small Grower Compliance API
 'use strict';
-
-function registerTraceSafeRoutes(app, db) {
-  // POST /api/tracesafe/growers — enroll small grower
-  app.post('/api/tracesafe/growers', async (req, res) => {
-    try {
-      const g = req.body;
-      const id = g.id || `SG-${Date.now().toString(36).toUpperCase().slice(-6)}`;
-      try {
-        await db.query(`
-          INSERT INTO tracesafe_growers (id, name, region, country, commodity, hectares,
-            annual_revenue, tier, aci_score, fund_balance, cert_goal, cert_cost,
-            contact, phone, language, enrolled_at, payload)
-          VALUES ($1,$2,$3,$4,$5,$6,$7,'C',30,0,$8,$9,$10,$11,$12,NOW(),$13)
-          ON CONFLICT (id) DO NOTHING`,
-          [id, g.name, g.region, g.country, g.commodity, g.hectares||0,
-           g.annualRevenue||0, g.certGoal, g.certCost||0, g.contact, g.phone,
-           g.language||'es', JSON.stringify(g)]
-        );
-      } catch(dbErr) { console.warn('tracesafe_growers insert:', dbErr.message); }
-      res.json({ success:true, id, name:g.name, tier:'C', aciScore:30 });
-    } catch(err) { res.status(500).json({ error:err.message }); }
-  });
-
-  // GET /api/tracesafe/growers
-  app.get('/api/tracesafe/growers', async (req, res) => {
-    try {
-      const { tier, country, limit=100 } = req.query;
-      let q = 'SELECT * FROM tracesafe_growers';
-      const params=[]; const conds=[];
-      if(tier)    { conds.push(`tier=$${params.length+1}`); params.push(tier); }
-      if(country) { conds.push(`country=$${params.length+1}`); params.push(country); }
-      if(conds.length) q+=' WHERE '+conds.join(' AND ');
-      q+=` ORDER BY enrolled_at DESC LIMIT $${params.length+1}`; params.push(+limit);
-      const r = await db.query(q,params);
-      res.json({ growers:r.rows, total:r.rowCount });
-    } catch(err) { res.status(500).json({ error:err.message, growers:[] }); }
-  });
-
-  // POST /api/tracesafe/fund/credit — record fund credit on transaction
-  app.post('/api/tracesafe/fund/credit', async (req, res) => {
-    try {
-      const { growerId, transactionAmount, tier } = req.body;
-      const rates = { C:0.01, B:0.015, A:0.02 };
-      const credit = (transactionAmount||0) * (rates[tier]||0.01);
-      try {
-        await db.query(
-          'UPDATE tracesafe_growers SET fund_balance = fund_balance + $1 WHERE id=$2',
-          [credit, growerId]
-        );
-      } catch(dbErr) { console.warn('fund credit:', dbErr.message); }
-      res.json({ success:true, growerId, credit, transactionAmount });
-    } catch(err) { res.status(500).json({ error:err.message }); }
-  });
-
-  // PUT /api/tracesafe/growers/:id/tier — update tier after review
-  app.put('/api/tracesafe/growers/:id/tier', async (req, res) => {
-    try {
-      const { tier, aciScore } = req.body;
-      await db.query('UPDATE tracesafe_growers SET tier=$1, aci_score=$2 WHERE id=$3',[tier,aciScore,req.params.id]);
-      res.json({ success:true, id:req.params.id, tier, aciScore });
-    } catch(err) { res.status(500).json({ error:err.message }); }
-  });
-
-  console.log('[TraceSafe] Routes registered: /api/tracesafe/*');
-}
-
-async function createTraceSafeTable(db) {
-  await db.query(`
-    CREATE TABLE IF NOT EXISTS tracesafe_growers (
-      id              VARCHAR(30) PRIMARY KEY,
-      name            VARCHAR(200) NOT NULL,
-      region          VARCHAR(100),
-      country         VARCHAR(5),
-      commodity       VARCHAR(100),
-      hectares        NUMERIC DEFAULT 0,
-      annual_revenue  NUMERIC DEFAULT 0,
-      tier            VARCHAR(2) DEFAULT 'C',
-      aci_score       INTEGER DEFAULT 30,
-      fund_balance    NUMERIC DEFAULT 0,
-      cert_goal       VARCHAR(100),
-      cert_cost       NUMERIC DEFAULT 0,
-      contact         VARCHAR(200),
-      phone           VARCHAR(30),
-      language        VARCHAR(5) DEFAULT 'es',
-      enrolled_at     TIMESTAMPTZ DEFAULT NOW(),
-      payload         JSONB
-    );
-    CREATE INDEX IF NOT EXISTS idx_ts_tier    ON tracesafe_growers(tier);
-    CREATE INDEX IF NOT EXISTS idx_ts_country ON tracesafe_growers(country);
-    CREATE INDEX IF NOT EXISTS idx_ts_aci     ON tracesafe_growers(aci_score DESC);
-  `);
-  console.log('[TraceSafe] Table ready: tracesafe_growers');
-}
-
-
-// ── Express Router export (for legacy app.use() mounting) ────────────────────
 const express = require('express');
-const _tracesafeRouter = express.Router();
+const router  = express.Router();
+let _pool = null;
+router.use((req,res,next) => { _pool = req.app.get('pool') || _pool; next(); });
 
-// Re-export as both function-based and router-based
-_tracesafeRouter.post('/growers', async (req, res) => {
+const ensureTable = async (pool) => {
+  await pool.query(`CREATE TABLE IF NOT EXISTS tracesafe_growers (
+    id VARCHAR(20) PRIMARY KEY, name VARCHAR(200), region VARCHAR(120),
+    country VARCHAR(10), commodity VARCHAR(120), hectares NUMERIC,
+    annual_revenue NUMERIC, tier VARCHAR(5) DEFAULT 'C',
+    aci_score INTEGER DEFAULT 30, fund_balance NUMERIC DEFAULT 0,
+    cert_goal VARCHAR(80), cert_cost NUMERIC, contact VARCHAR(200),
+    phone VARCHAR(40), language VARCHAR(10) DEFAULT 'es',
+    enrolled_at TIMESTAMPTZ DEFAULT NOW(), payload JSONB
+  )`).catch(()=>{});
+};
+
+// GET /api/tracesafe/growers
+router.get('/growers', async (req, res) => {
+  if (!_pool) return res.json({ growers: [] });
   try {
-    const g = req.body;
-    const id = g.id || `SG-${Date.now().toString(36).toUpperCase().slice(-6)}`;
-    res.json({ success:true, id, name:g.name, status:'Pending', tier:'C', aciScore:30 });
-  } catch(err) { res.status(500).json({ error:err.message }); }
+    await ensureTable(_pool);
+    const r = await _pool.query('SELECT * FROM tracesafe_growers ORDER BY enrolled_at DESC LIMIT 100');
+    res.json({ growers: r.rows, count: r.rows.length });
+  } catch(e) { res.status(500).json({ error: e.message }); }
 });
 
-_tracesafeRouter.get('/growers', async (req, res) => {
-  res.json({ growers:[], total:0, source:'tracesafe-router' });
+// POST /api/tracesafe/growers
+router.post('/growers', async (req, res) => {
+  const g = req.body;
+  const id = g.id || `SG-${Date.now().toString(36).toUpperCase().slice(-6)}`;
+  if (!_pool) return res.status(503).json({ error: 'db unavailable' });
+  try {
+    await ensureTable(_pool);
+    const r = await _pool.query(`
+      INSERT INTO tracesafe_growers (id,name,region,country,commodity,hectares,
+        annual_revenue,tier,aci_score,fund_balance,cert_goal,cert_cost,
+        contact,phone,language,enrolled_at,payload)
+      VALUES ($1,$2,$3,$4,$5,$6,$7,'C',30,0,$8,$9,$10,$11,$12,NOW(),$13)
+      ON CONFLICT (id) DO UPDATE SET name=EXCLUDED.name, payload=EXCLUDED.payload
+      RETURNING *`,
+      [id,g.name,g.region||'',g.country||'MX',g.commodity||'',
+       g.hectares||0,g.annual_revenue||0,g.cert_goal||'',g.cert_cost||0,
+       g.contact||'',g.phone||'',g.language||'es',JSON.stringify(g)]
+    );
+    res.status(201).json({ grower: r.rows[0] });
+  } catch(e) { res.status(500).json({ error: e.message }); }
 });
 
-module.exports = _tracesafeRouter;
-module.exports.registerTraceSafeRoutes = registerTraceSafeRoutes;
-module.exports.createTraceSafeTable = createTraceSafeTable;
+// GET /api/tracesafe/growers/:id
+router.get('/growers/:id', async (req, res) => {
+  if (!_pool) return res.status(503).json({ error: 'db unavailable' });
+  try {
+    const r = await _pool.query('SELECT * FROM tracesafe_growers WHERE id=$1', [req.params.id]);
+    if (!r.rows.length) return res.status(404).json({ error: 'Not found' });
+    res.json({ grower: r.rows[0] });
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
 
+// PATCH /api/tracesafe/growers/:id/score
+router.patch('/growers/:id/score', async (req, res) => {
+  if (!_pool) return res.status(503).json({ error: 'db unavailable' });
+  try {
+    const r = await _pool.query(
+      'UPDATE tracesafe_growers SET aci_score=$1 WHERE id=$2 RETURNING *',
+      [req.body.score, req.params.id]
+    );
+    res.json({ grower: r.rows[0] });
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
+module.exports = router;
