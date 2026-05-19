@@ -32,5 +32,47 @@ router.post('/quality', (req, res) => {
     res.status(201).json({ data: inspection });
 });
 
+
+// ── Crew tracking ────────────────────────────────────────────────────────────
+let crewRecords = [];
+let pieceRateRecords = [];
+
+router.get('/crew', (req, res) => res.json({ data: crewRecords }));
+
+router.post('/crew', (req, res) => {
+    const { name, role, field, status, hours, payRate } = req.body;
+    if (!name) return res.status(400).json({ error: 'name required' });
+    const record = {
+        id: crewRecords.length + 1,
+        crewId: `CRW-${Date.now().toString().slice(-8)}`,
+        name, role: role || 'Picker', field: field || '',
+        status: status || 'Active',
+        hours: parseFloat(hours || 0),
+        payRate: parseFloat(payRate || 15),
+        totalPay: parseFloat(hours || 0) * parseFloat(payRate || 15),
+        ts: new Date().toISOString()
+    };
+    crewRecords.unshift(record);
+    res.status(201).json({ data: record });
+});
+
+// ── Piece-rate tracking ───────────────────────────────────────────────────────
+router.get('/piece-rates', (req, res) => res.json({ data: pieceRateRecords }));
+
+router.post('/piece-rate', (req, res) => {
+    const { name, commodity, pieces, rate } = req.body;
+    if (!name) return res.status(400).json({ error: 'name required' });
+    const record = {
+        id: pieceRateRecords.length + 1,
+        name, commodity: commodity || '',
+        pieces: parseInt(pieces || 0),
+        rate: parseFloat(rate || 0.08),
+        totalPay: parseInt(pieces || 0) * parseFloat(rate || 0.08),
+        ts: new Date().toISOString()
+    };
+    pieceRateRecords.unshift(record);
+    res.status(201).json({ data: record });
+});
+
 module.exports = router;
 
