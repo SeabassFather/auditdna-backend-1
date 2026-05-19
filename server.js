@@ -22,6 +22,7 @@
 // ===============================================================
 
 const express = require('express');
+const { runStartupMigrations } = require('./migrations/startup-tables');
 const cors = require('cors');
 const helmet = require('helmet');
 const compression = require('compression');
