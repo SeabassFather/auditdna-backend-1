@@ -263,4 +263,23 @@ router.get('/lookup', async (req, res) => {
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
+
+router.get('/db-tables', async (req, res) => {
+  try {
+    const pool = resolvePool();
+    if (!pool) return res.status(503).json({ error: 'no pool' });
+    const auth = req.headers.authorization?.replace('Bearer ','');
+    if (!auth) return res.status(401).json({ error: 'no token' });
+    const jwt = require('jsonwebtoken');
+    let dec; try { dec = jwt.verify(auth, process.env.JWT_SECRET); } catch { return res.status(401).json({ error: 'bad token' }); }
+    if (dec.role !== 'owner') return res.status(403).json({ error: 'owner only' });
+    const tables = ['buyer_wants','demand_signals','lot_fingerprints','cold_chain_shipments','cold_chain_logs','flash_sales','grower_certifications','platform_notifications','weather_alerts'];
+    const results = {};
+    for (const t of tables) {
+      const r = await pool.query(`SELECT EXISTS(SELECT 1 FROM information_schema.tables WHERE table_schema='public' AND table_name=$1)`,[t]);
+      results[t] = r.rows[0].exists;
+    }
+    res.json({ tables: results });
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
 module.exports = router;
