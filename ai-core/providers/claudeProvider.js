@@ -9,7 +9,15 @@
 
 const Anthropic = require('@anthropic-ai/sdk');
 
-const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+// Lazy client — only created when first used (safe if ANTHROPIC_API_KEY not set at boot)
+let _client = null;
+function getClient() {
+  if (_client) return _client;
+  const key = process.env.ANTHROPIC_API_KEY;
+  if (!key) throw new Error('ANTHROPIC_API_KEY not set in Railway environment variables');
+  _client = new Anthropic({ apiKey: key });
+  return _client;
+}
 
 // ---------------------------------------------------------------------------
 // Tool definitions — AuditDNA Agriculture data layer
@@ -316,7 +324,7 @@ Never fabricate data. If tools return empty results, say so.`;
 
     while (iterations < MAX_ITER) {
       iterations++;
-      const response = await client.messages.create({
+      const response = await getClient().messages.create({
         model: 'claude-sonnet-4-20250514',
         max_tokens: 4096,
         system: systemPrompt,
@@ -370,7 +378,7 @@ Never fabricate data. If tools return empty results, say so.`;
 
   // Simple completion — no tools, just text
   async complete(systemPrompt, userPrompt, maxTokens = 2048) {
-    const r = await client.messages.create({
+    const r = await getClient().messages.create({
       model: 'claude-sonnet-4-20250514',
       max_tokens: maxTokens,
       system: systemPrompt,
@@ -381,7 +389,7 @@ Never fabricate data. If tools return empty results, say so.`;
 
   // Stream — for real-time Brain outputs
   async stream(systemPrompt, userPrompt, onChunk) {
-    const stream = await client.messages.stream({
+    const stream = await getClient().messages.stream({
       model: 'claude-sonnet-4-20250514',
       max_tokens: 2048,
       system: systemPrompt,
