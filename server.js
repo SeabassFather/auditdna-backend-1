@@ -23,7 +23,21 @@
 
 const express = require('express');
 const { runStartupMigrations } = require('./migrations/startup-tables');
-const orchestrator = require('./ai-core/orchestrator');
+// Orchestrator — guarded require (crashes gracefully if ai-core fails to load)
+let orchestrator;
+try {
+  orchestrator = require('./ai-core/orchestrator');
+  console.log('[OK] orchestrator loaded');
+} catch(e) {
+  console.warn('[WARN] orchestrator load failed:', e.message);
+  // Fallback no-op orchestrator so server boots without AI
+  orchestrator = {
+    dispatch: async (t,p) => ({ taskType:t, status:'AI_UNAVAILABLE', output:{} }),
+    setPool: (p) => {},
+    health: () => ({ ok: false, reason: 'orchestrator not loaded' }),
+    status: () => ({ version:'fallback', metrics:{}, activeTasks:[] }),
+  };
+}
 const cors = require('cors');
 const helmet = require('helmet');
 const compression = require('compression');
