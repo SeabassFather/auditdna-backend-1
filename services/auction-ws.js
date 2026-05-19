@@ -199,6 +199,48 @@ router.post('/emit/:rfqId', express.json(), (req, res) => {
   res.json({ ok: true, sent });
 });
 
+
+// ── Lot management ────────────────────────────────────────────────────────────
+const auctionLots = [];
+const auctionBids = [];
+
+router.get('/lots', (req, res) => {
+    res.json({ lots: auctionLots, count: auctionLots.length });
+});
+
+router.post('/lots', (req, res) => {
+    const { commodity, volume, grade, origin, startPrice, reserve, ends } = req.body;
+    if (!commodity) return res.status(400).json({ error: 'commodity required' });
+    const lot = {
+        id: `AUC-${Date.now()}`,
+        commodity, volume: parseFloat(volume || 0),
+        grade: grade || 'Grade A', origin: origin || '',
+        currentBid: parseFloat(startPrice || 0),
+        startPrice: parseFloat(startPrice || 0),
+        reserve: parseFloat(reserve || 0),
+        status: 'ACTIVE',
+        ends: ends || (Date.now() + 3600000),
+        bids: [],
+        createdAt: new Date().toISOString()
+    };
+    auctionLots.unshift(lot);
+    res.status(201).json({ lot });
+});
+
+router.post('/bid', (req, res) => {
+    const { lotId, amount, bidder } = req.body;
+    if (!lotId || !amount) return res.status(400).json({ error: 'lotId and amount required' });
+    const lot = auctionLots.find(l => l.id === lotId);
+    if (!lot) return res.status(404).json({ error: 'Lot not found' });
+    const bid = parseFloat(amount);
+    if (bid <= lot.currentBid) return res.status(400).json({ error: 'Bid must exceed current bid' });
+    const bidRecord = { bidder: bidder || 'Anonymous', amount: bid, time: new Date().toLocaleTimeString(), ts: new Date().toISOString() };
+    lot.currentBid = bid;
+    lot.bids.unshift(bidRecord);
+    auctionBids.push({ lotId, ...bidRecord });
+    res.json({ ok: true, lot, bid: bidRecord });
+});
+
 module.exports = {
   router, attach,
   emitNewBid, emitBidRevised, emitPhaseChange, emitRFQLocked, emitDistress,
