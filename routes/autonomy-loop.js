@@ -21,6 +21,32 @@
 // =============================================================================
 
 const express = require('express');
+
+// ── A1-A15 Agent integration ──────────────────────────────────────────────────
+let autonomyAgents = [];
+try { autonomyAgents = require('../autonomy/agents'); } catch(e) { console.warn('[AutonLoop] agents:', e.message); }
+
+function getCtx(pool) {
+  return {
+    pool,
+    sleepMode: false,
+    logEvent: async (type, level, data) => {
+      if (!pool) return;
+      await pool.query(
+        `INSERT INTO brain_logs (event_type,level,title,payload,created_at) VALUES ($1,$2,$3,$4,NOW()) ON CONFLICT DO NOTHING`,
+        [type, level, data?.title||'', JSON.stringify(data||{})]
+      ).catch(()=>{});
+    },
+    queueAction: async (action_type, data) => {
+      if (!pool) return;
+      await pool.query(
+        `INSERT INTO autonomy_queue (action_type,target_email,target_id,reason,payload,status,created_at) VALUES ($1,$2,$3,$4,$5,'PENDING',NOW())`,
+        [action_type, data.target_email||null, data.target_id||null, data.reason||'', JSON.stringify(data.payload||{})]
+      ).catch(()=>{});
+    }
+  };
+}
+
 let pool; try { pool = require('../db'); } catch(e) {} pool = pool || global.db;
 const router = express.Router();
 
@@ -455,6 +481,61 @@ router.get('/health', async (req, res) => {
     });
   } catch (e) {
     res.json({ ok: false, service: 'autonomy-loop', version: '3D', error: e.message });
+  }
+});
+
+
+// ── GET /api/autonomy/status — agent loop status ─────────────────────────────
+router.get('/status', (req, res) => {
+  res.json({
+    ok: true,
+    agents: autonomyAgents.map(a => ({ code: a.code, name: a.name, tickInterval: a.tickInterval })),
+    count: autonomyAgents.length,
+    ts: new Date().toISOString()
+  });
+});
+
+// ── POST /api/autonomy/tick/:code — manually tick one agent ───────────────────
+router.post('/tick/:code', async (req, res) => {
+  const pool = req.app.get('pool');
+  const agent = autonomyAgents.find(a => a.code === req.params.code.toUpperCase());
+  if (!agent) return res.status(404).json({ error: 'Agent not found', available: autonomyAgents.map(a=>a.code) });
+  try {
+    await agent.tick(getCtx(pool));
+    res.json({ ok: true, agent: agent.code, name: agent.name, ts: new Date().toISOString() });
+  } catch(e) {
+    res.status(500).json({ error: e.message, agent: agent.code });
+  }
+});
+
+// ── POST /api/autonomy/tick-all — tick all A1-A15 ─────────────────────────────
+router.post('/tick-all', async (req, res) => {
+  const pool = req.app.get('pool');
+  const ctx  = getCtx(pool);
+  const results = [];
+  for (const agent of autonomyAgents) {
+    try {
+      await agent.tick(ctx);
+      results.push({ code: agent.code, ok: true });
+    } catch(e) {
+      results.push({ code: agent.code, ok: false, error: e.message });
+    }
+  }
+  res.json({ ok: true, results, ts: new Date().toISOString() });
+});
+
+// ── POST /api/autonomy/dispatch — dispatch Claude agent task ──────────────────
+router.post('/dispatch', async (req, res) => {
+  const { taskType, payload, agentId } = req.body;
+  if (!taskType && !agentId) return res.status(400).json({ error: 'taskType or agentId required' });
+  try {
+    const orchestrator = require('../ai-core/orchestrator');
+    const result = agentId
+      ? await orchestrator.dispatchClaude(agentId, payload || {})
+      : await orchestrator.dispatch(taskType, payload || {});
+    res.json({ ok: true, result });
+  } catch(e) {
+    res.status(500).json({ error: e.message });
   }
 });
 
