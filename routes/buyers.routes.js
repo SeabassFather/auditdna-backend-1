@@ -274,4 +274,73 @@ router.post('/:id/suggest-tier', requireAuth, async (req, res) => {
   }
 });
 
+
+// ── Buyer wants & demand signals ─────────────────────────────────────────────
+const buyerWants = [];
+const demandSignals = [];
+
+router.get('/wants', async (req, res) => {
+    try {
+        const pool = req.app.get('pool');
+        if (pool) {
+            const r = await pool.query(
+                `SELECT id, commodity, volume_lbs_needed AS volume, price_target_cwt AS price,
+                        preferred_origin AS origin, buyer_email, status, created_at
+                 FROM buyer_wants WHERE status = 'OPEN' ORDER BY created_at DESC LIMIT 100`
+            ).catch(() => ({ rows: [] }));
+            if (r.rows.length) return res.json({ wants: r.rows });
+        }
+    } catch (_) {}
+    res.json({ wants: buyerWants });
+});
+
+router.post('/want', async (req, res) => {
+    const { commodity, volume, price, origin, buyer, contact } = req.body;
+    if (!commodity) return res.status(400).json({ error: 'commodity required' });
+    const want = {
+        id: `BW-${Date.now()}`, commodity,
+        volume_lbs_needed: parseFloat(volume || 0),
+        price_target_cwt: parseFloat(price || 0),
+        preferred_origin: origin || 'US',
+        buyer_email: contact || buyer || '',
+        status: 'OPEN',
+        created_at: new Date().toISOString()
+    };
+    try {
+        const pool = req.app.get('pool');
+        if (pool) {
+            const r = await pool.query(
+                `INSERT INTO buyer_wants (commodity, volume_lbs_needed, price_target_cwt, preferred_origin, buyer_email, status)
+                 VALUES ($1,$2,$3,$4,$5,'OPEN') RETURNING *`,
+                [commodity, want.volume_lbs_needed, want.price_target_cwt, want.preferred_origin, want.buyer_email]
+            ).catch(() => ({ rows: [] }));
+            if (r.rows.length) return res.status(201).json({ want: r.rows[0] });
+        }
+    } catch (_) {}
+    buyerWants.unshift(want);
+    res.status(201).json({ want });
+});
+
+router.post('/demand-signal', async (req, res) => {
+    const signal = {
+        id: `SIG-${Date.now()}`,
+        ...req.body,
+        created_at: new Date().toISOString()
+    };
+    try {
+        const pool = req.app.get('pool');
+        if (pool) {
+            await pool.query(
+                `INSERT INTO demand_signals (commodity, volume_lbs, price_target, urgency, weeks_out, notes, type, created_at)
+                 VALUES ($1,$2,$3,$4,$5,$6,$7,NOW())
+                 ON CONFLICT DO NOTHING`,
+                [signal.commodity, signal.volume||signal.targetVol||0, signal.price||signal.priceTarget||0,
+                 signal.urgency||'MEDIUM', signal.weeks||2, signal.notes||'', signal.type||'DEMAND']
+            ).catch(() => {});
+        }
+    } catch (_) {}
+    demandSignals.unshift(signal);
+    res.status(201).json({ signal });
+});
+
 module.exports = router;
