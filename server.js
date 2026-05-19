@@ -1552,6 +1552,81 @@ try {
   try { app.use('/api/cold-chain',   require('./routes/cold-chain'));      console.log('[OK] cold-chain'); }   catch(e){ console.warn('[WARN] cold-chain:', e.message); }
   try { app.use('/api/traceability/fingerprint', require('./routes/lot-fingerprint')); console.log('[OK] lot-fingerprint'); } catch(e){ console.warn('[WARN] lot-fingerprint:', e.message); }
 
+
+  // ════════════════════════════════════════════════════════════════════════════
+  // FULL SYSTEM WIRE-UP — 2026-05-19
+  // All routes mounted with try/catch — server boots even if one route fails
+  // ════════════════════════════════════════════════════════════════════════════
+  const _mount = (path, file) => {
+    try {
+      app.use(path, require(file));
+      // console.log('[MOUNT OK]', path);
+    } catch(e) {
+      console.warn('[MOUNT WARN]', path, '—', e.message.substring(0, 60));
+    }
+  };
+
+  // Intelligence + Data
+  _mount('/api/terminal-markets',  './routes/terminal-markets');
+  _mount('/api/ag-intel',          './routes/ag_Intel');
+  _mount('/api/ag_Intel',          './routes/ag_Intel');
+  _mount('/api/intelligence',      './routes/ag_Intel');
+  _mount('/api/usda-data',         './routes/usda-data');
+  _mount('/api/usda-market-intel', './routes/usda-market-intel');
+  _mount('/api/nass',              './routes/usda');
+  _mount('/api/usda',              './routes/usda');
+  _mount('/api/datalake',          './routes/data-lake');
+  _mount('/api/buyer-segments',    './routes/buyer-segments');
+
+  // Field + Produce Operations
+  _mount('/api/field-agents',      './routes/field-agents');
+  _mount('/api/field-agent',       './routes/field-agents');
+  _mount('/api/product-market',    './routes/product-market');
+  _mount('/api/marketplace',       './routes/product-market');
+  _mount('/api/lifecycle',         './routes/loaf-routes');
+  _mount('/api/tracesafe',         './routes/tracesafe');
+
+  // Finance + Credit
+  _mount('/api/accounting',        './routes/accounting');
+  _mount('/api/financial',         './routes/financial');
+  _mount('/api/credit-apps',       './routes/credit-apps');
+  _mount('/api/bci-finance',       './routes/bci-finance');
+  _mount('/api/fx',                './routes/fx');
+  _mount('/api/risk',              './routes/multiVerification.routes');
+  _mount('/api/borrowers',         './routes/onboarding');
+  _mount('/api/portal',            './routes/auth-portal');
+
+  // Compliance + Certifications
+  _mount('/api/globalcompliance',  './routes/globalCompliance');
+  _mount('/api/complianceroutes',  './routes/Complianceroutes');
+  _mount('/api/certifications',    './routes/certifications');
+  _mount('/api/lab',               './routes/labTestWorkflow');
+
+  // Communications + Notifications
+  _mount('/api/notifications',     './routes/notifications.routes');
+  _mount('/api/admin-notifications','./routes/audit-notifications');
+  _mount('/api/email',             './routes/AiemailRoute');
+  _mount('/api/zadarma-sync',      './routes/voice-crm');
+  _mount('/api/Zadarma-sync',      './routes/voice-crm');
+  _mount('/api/sessions',          './routes/sessionRoutes');
+
+  // Trade + Sourcing
+  _mount('/api/trade-registry',    './routes/trade-registry');
+  _mount('/api/call-for-tender',   './routes/rfq-engine');
+  _mount('/api/purchase-orders',   './routes/rfq-engine');
+  _mount('/api/deal-documents',    './routes/deals');
+  _mount('/api/search',            './routes/commodity-search');
+
+  // Platform + Gov
+  _mount('/api/tenants',           './routes/tenants');
+  _mount('/api/watch',             './routes/watch');
+  _mount('/api/ping-spot',         './routes/ping-spot');
+  _mount('/api/gov',               './routes/gov-office');
+  _mount('/api/emergency',         './routes/emergency-alert');
+  _mount('/api/ai',                './routes/Aicowboysroutes');
+  _mount('/api/ollama',            './routes/ollama');
+
+
 __server.listen(PORT, () => {
   // ============================================================
   // 2026-05-01: Auto-start swarm Phase 4 coordinator
