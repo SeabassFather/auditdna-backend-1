@@ -546,7 +546,7 @@ class Brain extends EventEmitter {
     }
     return count;
   }
-}
+  // (class continues below)
 
 // Singleton
   // ── setPool — connect DB pool to Brain, orchestrator, claudeProvider ──────
@@ -629,6 +629,8 @@ class Brain extends EventEmitter {
     }
   }
 
+
+}
 
 const brain = new Brain();
 module.exports = brain;
