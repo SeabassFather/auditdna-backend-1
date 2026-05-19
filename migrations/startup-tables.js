@@ -122,6 +122,29 @@ async function runStartupMigrations(pool) {
        created_at TIMESTAMPTZ DEFAULT NOW()
      )`,
 
+
+    // Brain logs (Brain.ping + agent events)
+    `CREATE TABLE IF NOT EXISTS brain_logs (
+       id SERIAL PRIMARY KEY,
+       event_type VARCHAR(60),
+       level VARCHAR(20) DEFAULT 'info',
+       title VARCHAR(300),
+       payload JSONB,
+       created_at TIMESTAMPTZ DEFAULT NOW()
+     )`,
+
+    // Autonomy queue (A1-A15 action queue)
+    `CREATE TABLE IF NOT EXISTS autonomy_queue (
+       id SERIAL PRIMARY KEY,
+       action_type VARCHAR(60),
+       target_email VARCHAR(200),
+       target_id VARCHAR(80),
+       reason TEXT,
+       payload JSONB,
+       status VARCHAR(20) DEFAULT 'PENDING',
+       processed_at TIMESTAMPTZ,
+       created_at TIMESTAMPTZ DEFAULT NOW()
+     )`,
     // Auction lots (in-memory in service, DB backup)
     `CREATE TABLE IF NOT EXISTS auction_lots (
        id SERIAL PRIMARY KEY,
