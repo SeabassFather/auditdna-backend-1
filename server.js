@@ -1545,6 +1545,12 @@ try {
   console.error('[NADINE] init failed:', err.message);
 }
 
+  // ── Routes wired 2026-05-19 ──────────────────────────────────────────────────
+  try { app.use('/api/field-ops',    require('./routes/fieldOps'));        console.log('[OK] field-ops'); }    catch(e){ console.warn('[WARN] field-ops:', e.message); }
+  try { app.use('/api/flash-sale',   require('./routes/flash-sale'));      console.log('[OK] flash-sale'); }   catch(e){ console.warn('[WARN] flash-sale:', e.message); }
+  try { app.use('/api/cold-chain',   require('./routes/cold-chain'));      console.log('[OK] cold-chain'); }   catch(e){ console.warn('[WARN] cold-chain:', e.message); }
+  try { app.use('/api/traceability/fingerprint', require('./routes/lot-fingerprint')); console.log('[OK] lot-fingerprint'); } catch(e){ console.warn('[WARN] lot-fingerprint:', e.message); }
+
 __server.listen(PORT, () => {
   // ============================================================
   // 2026-05-01: Auto-start swarm Phase 4 coordinator
