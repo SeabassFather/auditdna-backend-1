@@ -9,6 +9,12 @@
 
 const EventEmitter = require('events');
 const executionEngine = require('./ai-core/orchestrator/executionEngine');
+// ── Wired 2026-05-19 — orchestrator + claudeProvider + autonomy agents ────────
+const orchestrator   = require('./ai-core/orchestrator');
+const claudeProvider = require('./ai-core/providers/claudeProvider');
+let   autonomyAgents = [];
+try { autonomyAgents = require('./autonomy/agents'); } catch(e) { console.warn('[Brain] autonomy agents:', e.message); }
+
 
 class Brain extends EventEmitter {
   constructor() {
@@ -543,6 +549,87 @@ class Brain extends EventEmitter {
 }
 
 // Singleton
+  // ── setPool — connect DB pool to Brain, orchestrator, claudeProvider ──────
+  setPool(pool) {
+    this._pool = pool;
+    try { orchestrator.setPool(pool); } catch(e) { console.warn('[Brain] orchestrator.setPool:', e.message); }
+    console.log('[Brain v4.0] Pool connected — orchestrator + claudeProvider wired');
+    this.startAgentLoop();
+  }
+
+  // ── startAgentLoop — tick A1–A15 on their schedules ──────────────────────
+  startAgentLoop() {
+    if (!this._pool || !autonomyAgents.length) return;
+    const ctx = {
+      pool: this._pool,
+      logEvent: async (type, level, data) => {
+        await this._pool.query(
+          `INSERT INTO brain_logs (event_type,level,title,payload,created_at)
+           VALUES ($1,$2,$3,$4,NOW()) ON CONFLICT DO NOTHING`,
+          [type, level, data?.title||'', JSON.stringify(data||{})]
+        ).catch(()=>{});
+      },
+      queueAction: async (action_type, data) => {
+        await this._pool.query(
+          `INSERT INTO autonomy_queue (action_type, target_email, target_id, reason, payload, status, created_at)
+           VALUES ($1,$2,$3,$4,$5,'PENDING',NOW())`,
+          [action_type, data.target_email||null, data.target_id||null,
+           data.reason||'', JSON.stringify(data.payload||{})]
+        ).catch(()=>{});
+      },
+      sleepMode: false,
+    };
+
+    for (const agent of autonomyAgents) {
+      if (!agent.tick || !agent.tickInterval) continue;
+      const tickAgent = async () => {
+        try { await agent.tick(ctx); }
+        catch(e) { console.warn(`[Brain] Agent ${agent.code} tick error:`, e.message); }
+      };
+      // Stagger startup — prevent thundering herd
+      const stagger = (autonomyAgents.indexOf(agent) + 1) * 3000;
+      setTimeout(() => {
+        tickAgent();
+        setInterval(tickAgent, (agent.tickInterval || 600) * 1000);
+      }, stagger);
+    }
+    console.log(`[Brain v4.0] Agent loop started — ${autonomyAgents.length} agents (A1–A15)`);
+  }
+
+  // ── ping — frontend Brain ping handler ────────────────────────────────────
+  ping(module, event, data) {
+    this.metrics.totalTasks++;
+    this.emit('ping', { module, event, data, ts: Date.now() });
+    if (this._pool && event) {
+      this._pool.query(
+        `INSERT INTO brain_logs (event_type,level,title,payload,created_at)
+         VALUES ($1,'info',$2,$3,NOW()) ON CONFLICT DO NOTHING`,
+        ['PING', `${module}:${event}`, JSON.stringify(data||{})]
+      ).catch(()=>{});
+    }
+  }
+
+  // ── dispatchAI — route a task to the orchestrator ─────────────────────────
+  async dispatchAI(taskType, payload = {}) {
+    try {
+      return await orchestrator.dispatch(taskType, payload);
+    } catch(e) {
+      console.warn('[Brain] dispatchAI error:', e.message);
+      return { error: e.message };
+    }
+  }
+
+  // ── dispatchClaude — direct Claude tool-use agent call ────────────────────
+  async dispatchClaude(agentId, payload = {}) {
+    try {
+      return await claudeProvider.runAgent(agentId, payload, this._pool);
+    } catch(e) {
+      console.warn('[Brain] dispatchClaude error:', e.message);
+      return { error: e.message };
+    }
+  }
+
+
 const brain = new Brain();
 module.exports = brain;
 
