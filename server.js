@@ -23,6 +23,7 @@
 
 const express = require('express');
 const { runStartupMigrations } = require('./migrations/startup-tables');
+const orchestrator = require('./ai-core/orchestrator');
 const cors = require('cors');
 const helmet = require('helmet');
 const compression = require('compression');
@@ -195,6 +196,8 @@ app.set('smtp', sharedTransporter);
 
 if (typeof brain?.setAI   === 'function') brain.setAI(aiHelper);
 if (typeof brain?.setPool === 'function') brain.setPool(pool);
+  try { orchestrator.setPool(pool); console.log('[Server] orchestrator pool wired'); } catch(e) { console.warn('[Server] orchestrator:', e.message); }
+  runStartupMigrations(pool).catch(e => console.warn('[Migrations]', e.message));
 
 // ===============================================================
 // CORE MIDDLEWARE -- SECURED
