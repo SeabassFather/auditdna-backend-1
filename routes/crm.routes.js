@@ -50,11 +50,13 @@ router.get('/all-contacts', async (req, res) => {
       growers,
       buyers,
       shippers,
+      crm,
       total,
       breakdown: {
         growers: growers.length,
         buyers: buyers.length,
-        shippers: shippers.length
+        shippers: shippers.length,
+        crm: crm.length
       }
     });
   } catch (error) {
