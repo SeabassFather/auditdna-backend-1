@@ -354,6 +354,7 @@ app.use('/api/evelyn', evelynRoutes);
 const margieRoutes = require('./routes/margie.routes');
 app.use('/api/margie', margieRoutes);
 app.use('/api/auth', authRoutes);
+try { app.use('/api/admin', require('./routes/seed-users')); console.log('[OK] seed-users mounted'); } catch(e) { console.error('[FAIL] seed-users:', e.message); }
 try { app.use('/api', require('./routes/stub-routes')); console.log('[OK] stub-routes mounted'); } catch(e){ console.warn('[WARN] stub-routes:', e.message); }
 try { app.use('/api/alerts', require('./routes/platform-alerts')); console.log('[OK] /api/alerts mounted'); } catch(e){ console.warn('[SKIP] platform-alerts:', e.message); }
 // LOAF Lifecycle Intelligence API
