@@ -58,4 +58,67 @@ router.post('/', async (req, res) => {
   } catch(e) { res.status(500).json({ error: e.message }); }
 });
 
+
+router.post('/setup-table', async (req, res) => {
+  const pool = req.app.get('db') || global.db;
+  if (!pool) return res.status(500).json({ error: 'No DB pool' });
+  try {
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS land_listings (
+        id SERIAL PRIMARY KEY,
+        title VARCHAR(255),
+        property_type VARCHAR(100),
+        description TEXT,
+        price_usd NUMERIC,
+        price_mxn NUMERIC,
+        region VARCHAR(100),
+        state VARCHAR(100),
+        municipality VARCHAR(100),
+        address TEXT,
+        lat NUMERIC,
+        lng NUMERIC,
+        size_sqm NUMERIC,
+        size_hectares NUMERIC,
+        bedrooms INTEGER,
+        bathrooms INTEGER,
+        parking INTEGER,
+        ocean_front BOOLEAN DEFAULT false,
+        ocean_view BOOLEAN DEFAULT false,
+        beach_access BOOLEAN DEFAULT false,
+        pool BOOLEAN DEFAULT false,
+        dock BOOLEAN DEFAULT false,
+        platform VARCHAR(20) DEFAULT 'both',
+        featured BOOLEAN DEFAULT false,
+        status VARCHAR(20) DEFAULT 'active',
+        water_rights TEXT,
+        current_crop TEXT,
+        soil_type TEXT,
+        certifications TEXT,
+        water_risk_score NUMERIC,
+        food_security_zone TEXT,
+        loaf_production_value NUMERIC,
+        irrigated_hectares NUMERIC,
+        well_depth_meters NUMERIC,
+        annual_yield_tons NUMERIC,
+        agent_name VARCHAR(100),
+        agent_phone VARCHAR(50),
+        agent_email VARCHAR(100),
+        ref_id VARCHAR(50),
+        video_url TEXT,
+        virtual_tour_url TEXT,
+        images JSONB DEFAULT '[]',
+        created_at TIMESTAMPTZ DEFAULT NOW(),
+        updated_at TIMESTAMPTZ DEFAULT NOW()
+      );
+      CREATE INDEX IF NOT EXISTS idx_ll_status ON land_listings(status);
+      CREATE INDEX IF NOT EXISTS idx_ll_platform ON land_listings(platform);
+      CREATE INDEX IF NOT EXISTS idx_ll_region ON land_listings(region);
+    `);
+    res.json({ ok: true, message: 'land_listings table ready' });
+  } catch(e) {
+    console.error('[land-listings] setup-table error:', e.message);
+    res.status(500).json({ error: e.message });
+  }
+});
+
 module.exports = router;
