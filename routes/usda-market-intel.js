@@ -20,21 +20,8 @@
 const express = require('express');
 const router  = express.Router();
 const path    = require('path');
-const { Pool } = require('pg');
-require('dotenv').config({ path: path.join(__dirname, '..', '.env') });
-
-const usdaPool = new Pool({
-  host:     process.env.DB_HOST     || 'process.env.DB_HOST',
-  port:     Number(process.env.DB_PORT || 5432),
-  database: process.env.DB_NAME     || 'auditdna',
-  user:     process.env.DB_USER     || 'postgres',
-  password: process.env.DB_PASSWORD,
-  max:      5,
-  idleTimeoutMillis: 30000,
-  connectionTimeoutMillis: 8000,
-});
-usdaPool.on('error', err => console.error('[USDA-INTEL] Pool error:', err.message));
-const db = () => usdaPool;
+// Use shared global.db pool — no standalone pool needed
+const db = () => global.db;
 
 const USDA_KEY = process.env.USDA_API_KEY || '4F158DB1-85C2-3243-BFFA-58B53FB40D23';
 const NASS_BASE = 'https://quickstats.nass.usda.gov/api/api_GET/';
@@ -682,5 +669,5 @@ router.get('/stats', (req, res) => {
 });
 
 module.exports = router;
-process.on('exit', () => usdaPool.end().catch(() => {}));
+
 
