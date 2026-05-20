@@ -30,16 +30,18 @@ router.get('/all-contacts', async (req, res) => {
   try {
     console.log('[CRM] /all-contacts - loading growers + buyers + shippers...');
 
-    const [g, b, s] = await Promise.all([
+    const [g, b, s, crm4] = await Promise.all([
       db.query('SELECT * FROM growers ORDER BY created_at DESC LIMIT 50000'),
       db.query('SELECT * FROM buyers ORDER BY created_at DESC LIMIT 50000'),
-      db.query('SELECT * FROM shipper_contacts ORDER BY created_at DESC LIMIT 50000')
+      db.query('SELECT * FROM shipper_contacts ORDER BY created_at DESC LIMIT 50000'),
+      db.query('SELECT * FROM crm_contacts ORDER BY created_at DESC LIMIT 50000')
     ]);
 
     const growers  = g.rows;
     const buyers   = b.rows;
     const shippers = s.rows;
-    const total    = growers.length + buyers.length + shippers.length;
+    const crm      = crm4.rows;
+    const total    = growers.length + buyers.length + shippers.length + crm.length;
 
     console.log(`[CRM] /all-contacts OK - growers:${growers.length} buyers:${buyers.length} shippers:${shippers.length} total:${total}`);
 
