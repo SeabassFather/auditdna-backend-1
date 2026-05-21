@@ -527,7 +527,7 @@ router.post("/inventory-post", async (req, res) => {
          variety,grade,pack_type,pack_size,end_use,harvest_status,certifications,available_from,available_to,grower_username} = req.body;
   try {
     const db=getDb(), ts=new Date().toISOString(), commodityClean=(commodity||'').split('/')[0].trim().toLowerCase();
-    await db.query('ALTER TABLE loaf_inventory ADD COLUMN IF NOT EXISTS variety VARCHAR(100),ADD COLUMN IF NOT EXISTS grade VARCHAR(80),ADD COLUMN IF NOT EXISTS pack_type VARCHAR(80),ADD COLUMN IF NOT EXISTS pack_size VARCHAR(80),ADD COLUMN IF NOT EXISTS end_use VARCHAR(200),ADD COLUMN IF NOT EXISTS harvest_status VARCHAR(80),ADD COLUMN IF NOT EXISTS certifications TEXT,ADD COLUMN IF NOT EXISTS available_from DATE,ADD COLUMN IF NOT EXISTS available_to DATE,ADD COLUMN IF NOT EXISTS grower_username VARCHAR(100),ADD COLUMN IF NOT EXISTS status VARCHAR(30) DEFAULT 'active'').catch(()=>{});
+    await db.query(`ALTER TABLE loaf_inventory ADD COLUMN IF NOT EXISTS variety VARCHAR(100),ADD COLUMN IF NOT EXISTS grade VARCHAR(80),ADD COLUMN IF NOT EXISTS pack_type VARCHAR(80),ADD COLUMN IF NOT EXISTS pack_size VARCHAR(80),ADD COLUMN IF NOT EXISTS end_use VARCHAR(200),ADD COLUMN IF NOT EXISTS harvest_status VARCHAR(80),ADD COLUMN IF NOT EXISTS certifications TEXT,ADD COLUMN IF NOT EXISTS available_from DATE,ADD COLUMN IF NOT EXISTS available_to DATE,ADD COLUMN IF NOT EXISTS grower_username VARCHAR(100),ADD COLUMN IF NOT EXISTS status VARCHAR(30) DEFAULT 'active'')`).catch(()=>{});
     await db.query(`INSERT INTO loaf_inventory (name,phone,commodity,volume,price,location,condition,notes,lat,lng,radius,country,commission_pct,created_at,variety,grade,pack_type,pack_size,end_use,harvest_status,certifications,available_from,available_to,grower_username,status) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23,$24,'active')`,[name,phone,commodity,volume,price,location,condition||'Available',notes||'',lat||null,lng||null,radius||100,country||'MX',commission_pct||'1.5',ts,variety||'',grade||'',pack_type||'',pack_size||'',end_use||'General',harvest_status||'available now',certifications||'',available_from||null,available_to||null,grower_username||name||'']).catch(()=>{});
     await db.query(`INSERT INTO user_activity_log (username,display_name,role,event_type,module,description,meta) VALUES ($1,$2,'grower','INVENTORY_POSTED','LOAF',$3,$4)`,[grower_username||name||'loaf_grower',name||'Grower',`Posted: ${commodity}${variety?' '+variety:''} | ${volume} @ ${price} | ${location}`,JSON.stringify({commodity,variety,grade,pack_type,pack_size,end_use,harvest_status})]).catch(()=>{});
     try{if(global.brain)global.brain.ping('LOAF_INVENTORY_POSTED',{commodity,variety,grade,end_use,volume,price,location});}catch(_){}
@@ -547,48 +547,6 @@ router.get("/inventory",async(req,res)=>{
 
 router.get("/buyer-needs",async(req,res)=>{
   try{const db=getDb();const rows=await db.query(`SELECT id,commodity,volume,max_price,location,delivery,needed_by,created_at,'VERIFIED BUYER' AS buyer_label FROM loaf_buyer_needs WHERE COALESCE(status,'active')='active' ORDER BY created_at DESC LIMIT 50`).catch(()=>({rows:[]}));res.json({ok:true,needs:rows.rows});}catch(e){res.json({ok:false,needs:[]});}
-
-
-      // Query CRM for matched buyers and ping them
-      try {
-        const buyers = await db.query(
-          `SELECT email, first_name, company_name FROM contacts
-           WHERE (commodities ILIKE $1 OR commodity ILIKE $1 OR company_name ILIKE $2)
-           AND email IS NOT NULL AND email != ''
-           AND (crmtype = 'buyer' OR crm_type = 'buyer' OR role ILIKE '%buyer%' OR role ILIKE '%wholesale%' OR role ILIKE '%distributor%')
-           LIMIT 150`,
-          [`%${commodityClean}%`, `%produce%`]
-        ).catch(()=>({rows:[]}));
-
-        let pinged = 0;
-        for (const buyer of (buyers.rows||[])) {
-          try {
-            await fetch(`${process.env.REACT_APP_API_URL||'http://localhost:5050'}/api/gmail/send`, {
-              method:'POST', headers:{'Content-Type':'application/json'},
-              body: JSON.stringify({
-                to: buyer.email,
-                subject: subject,
-                body: `Hi ${buyer.first_name||buyer.company_name||''},
-
-${body}
-
-This alert was sent because you are registered as a produce buyer on the LOAF network.
-To unsubscribe reply STOP.`
-              })
-            });
-            pinged++;
-          } catch(_) {}
-        }
-        res.json({ ok: true, pinged, commodity, radius: radiusMi, ts });
-      } catch(e) {
-        res.json({ ok: true, pinged: 0, note: 'Posted — buyer ping pending', error: e.message });
-      }
-    } else {
-      res.json({ ok: true, ts });
-    }
-  } catch(e) {
-    res.status(500).json({ error: e.message });
-  }
 });
 
 // ============================================================================
