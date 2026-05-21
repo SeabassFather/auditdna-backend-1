@@ -247,18 +247,32 @@ router.get('/health', async (req, res) => {
 
 
 
-// One-time fix: ensure hector (Devan) account has correct password hash
+// ── STARTUP SEED — ensure owner + key admin accounts are always accessible ──
 (async () => {
   try {
     const pool = resolvePool();
     if (!pool) return;
     const bcryptjs = require('bcrypt');
-    const ph = await bcryptjs.hash('Devan2026Hector#', 10);
-    await pool.query(
-      `UPDATE auth_users SET password_hash=$1, is_active=true WHERE username='hector'`,
-      [ph]
-    );
-  } catch(_) {}
+
+    const users = [
+      { username: 'saul',    password: '060905Dsg#321', access_code: '060905Dsg#321', pin: '060905',    display_name: 'Saul Garcia',   role: 'owner' },
+      { username: 'pablo',   password: 'Admin2026!',    access_code: 'Admin2026!',    pin: '0505',     display_name: 'Pablo Alatorre', role: 'admin' },
+      { username: 'denisse', password: 'Velazquez#321', access_code: 'Velazquez#321', pin: '2908',     display_name: 'Denisse Velazquez', role: 'admin' },
+      { username: 'hector',  password: 'Devan2026Hector#', access_code: 'Devan2026Hector#', pin: '0000', display_name: 'Hector',       role: 'admin_sales' },
+    ];
+
+    for (const u of users) {
+      const ph = await bcryptjs.hash(u.password, 10);
+      await pool.query(
+        `INSERT INTO auth_users (username, password_hash, access_code, pin, display_name, role, is_active)
+         VALUES ($1,$2,$3,$4,$5,$6,true)
+         ON CONFLICT (username) DO UPDATE
+           SET password_hash=$2, access_code=$3, pin=$4, display_name=$5, role=$6, is_active=true`,
+        [u.username, ph, u.access_code, u.pin, u.display_name, u.role]
+      );
+    }
+    console.log('[AUTH SEED] owner + admin accounts seeded OK');
+  } catch(e) { console.warn('[AUTH SEED] seed failed:', e.message); }
 })();
 
 
