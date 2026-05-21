@@ -132,37 +132,35 @@ router.post('/commodity-blast', async (req, res) => {
       ).catch(()=>({rows:[]}));
 
       const nodemailer = require('nodemailer');
-      const transporter = nodemailer.createTransport(SMTP_CONFIG);
+      const transporter = nodemailer.createTransport({
+        host: process.env.SMTP_HOST || 'smtp-relay.brevo.com',
+        port: parseInt(process.env.SMTP_PORT || '587'),
+        secure: false,
+        auth: { user: process.env.BREVO_SMTP_USER || process.env.SMTP_USER || '', pass: process.env.BREVO_API_KEY || process.env.SMTP_PASS || '' }
+      });
       let sent = 0, failed = 0;
 
-      // Always notify Saul first
-      await transporter.sendMail({
-        from: '"Mexausa LOAF" <sgarcia1911@gmail.com>',
-        to: 'sgarcia1911@gmail.com',
-        subject: `[BLAST FIRED] ${subject} — ${buyers.rows.length} buyers targeted`,
-        html: html
-      }).catch(()=>{});
+      // [PATCHED] Pre-blast per-trigger Gmail notification REMOVED — completion report only
 
       for (const buyer of buyers.rows) {
         try {
           await transporter.sendMail({
-            from: '"Mexausa Food Group" <sgarcia1911@gmail.com>',
+            from: '"Mexausa Food Group" <saul@mexausafg.com>',
             to: buyer.email,
             subject: subject,
             html: html.replace('Hi,', `Hi ${buyer.first_name||buyer.company_name||''},`)
           });
           sent++;
-          // Small delay to avoid Gmail rate limiting
           await new Promise(r => setTimeout(r, 120));
         } catch(e) { failed++; }
       }
 
-      // Final report to Saul
+      // Single completion report to saul@mexausafg.com only
       await transporter.sendMail({
-        from: '"Mexausa LOAF" <sgarcia1911@gmail.com>',
-        to: 'sgarcia1911@gmail.com',
-        subject: `[BLAST COMPLETE] ${commodity} — ${sent} emails sent, ${failed} failed`,
-        html: `<p>Blast complete for <strong>${commodity}</strong>.</p><p>Sent: ${sent}<br>Failed: ${failed}<br>Total targeted: ${buyers.rows.length}<br>Regions: ${targetRegions.join(', ')}</p>`
+        from: '"Mexausa LOAF" <saul@mexausafg.com>',
+        to: 'saul@mexausafg.com',
+        subject: `[BLAST COMPLETE] ${commodity} — ${sent} sent / ${failed} bounced of ${buyers.rows.length} targeted`,
+        html: `<p>Blast complete for <strong>${commodity}</strong>.</p><p>Sent: ${sent}<br>Bounced/Failed: ${failed}<br>Total targeted: ${buyers.rows.length}<br>Regions: ${targetRegions.join(', ')}</p>`
       }).catch(()=>{});
 
       console.log(`[LOAF BLAST] ${commodity} complete: ${sent} sent, ${failed} failed`);
