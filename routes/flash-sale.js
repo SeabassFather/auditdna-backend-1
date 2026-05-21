@@ -127,8 +127,7 @@ router.post('/run-expiry', async (_req, res) => {
     if (r.rows.length) {
       await mail(
         `[FLASH EXPIRED] ${r.rows.length} sale(s) expired`,
-        r.rows.map(f=>`${f.commodity} — ${f.volume} — Grower: ${f.grower_name}`).join('
-')
+        r.rows.map(f=>`${f.commodity} — ${f.volume} — Grower: ${f.grower_name}`).join('\n')
       );
     }
     res.json({ok:true,expired:r.rows.length});
