@@ -359,37 +359,27 @@ router.get('/grower-buyer', async (req, res) => {
   const { commodity, region, limit=50 } = req.query;
   const lim = Math.min(parseInt(limit)||50, 200);
   try {
-    // Query 1: registered growers table
     let growerQ = `SELECT id, company_name AS name, email, state_province AS state,
       country, commodity, 'grower' AS source
       FROM growers WHERE company_name IS NOT NULL`;
     const gP = [];
-    if (commodity) { gP.push('%'+commodity.toLowerCase()+'%'); growerQ += ' AND LOWER(COALESCE(commodity,company_name,\'\')) LIKE  = router;
-+gP.length; }
-    if (region)    { gP.push('%'+region.toLowerCase()+'%'); growerQ += ' AND (LOWER(country) LIKE  = router;
-+gP.length+' OR LOWER(state_province) LIKE  = router;
-+gP.length+')'; }
+    if (commodity) { gP.push('%'+commodity.toLowerCase()+'%'); growerQ += ' AND LOWER(COALESCE(commodity,company_name,\'\')) LIKE $'+gP.length; }
+    if (region)    { gP.push('%'+region.toLowerCase()+'%'); growerQ += ' AND (LOWER(country) LIKE $'+gP.length+' OR LOWER(state_province) LIKE $'+gP.length+')'; }
     growerQ += ' LIMIT '+lim;
 
-    // Query 2: shipper_contacts (27,759 — primary commodity-tagged source)
     let shipQ = `SELECT id, company_name AS name, email, state AS state,
       country, commodity, 'shipper' AS source
       FROM shipper_contacts WHERE company_name IS NOT NULL AND email IS NOT NULL`;
     const sP = [];
-    if (commodity) { sP.push('%'+commodity.toLowerCase()+'%'); shipQ += ' AND LOWER(COALESCE(commodity,\'\')) LIKE  = router;
-+sP.length; }
-    if (region)    { sP.push('%'+region.toLowerCase()+'%'); shipQ += ' AND (LOWER(country) LIKE  = router;
-+sP.length+' OR LOWER(state) LIKE  = router;
-+sP.length+')'; }
+    if (commodity) { sP.push('%'+commodity.toLowerCase()+'%'); shipQ += ' AND LOWER(COALESCE(commodity,\'\')) LIKE $'+sP.length; }
+    if (region)    { sP.push('%'+region.toLowerCase()+'%'); shipQ += ' AND (LOWER(country) LIKE $'+sP.length+' OR LOWER(state) LIKE $'+sP.length+')'; }
     shipQ += ' LIMIT '+lim;
 
-    // Query 3: secure_buyers
     let buyQ = `SELECT id, legal_name AS name, country, state_province AS state,
       commodities_preferred AS commodity, business_type, registration_status
       FROM secure_buyers`;
     const bP = [];
-    if (commodity) { bP.push('%'+commodity.toLowerCase()+'%'); buyQ += ' WHERE LOWER(COALESCE(commodities_preferred,\'\')) LIKE  = router;
-+bP.length; }
+    if (commodity) { bP.push('%'+commodity.toLowerCase()+'%'); buyQ += ' WHERE LOWER(COALESCE(commodities_preferred,\'\')) LIKE $'+bP.length; }
     buyQ += ' LIMIT '+lim;
 
     const [gr, sc, bu] = await Promise.all([
@@ -401,7 +391,6 @@ router.get('/grower-buyer', async (req, res) => {
     const sellers = [...gr.rows, ...sc.rows];
     const buyers  = bu.rows;
 
-    // Score: commodity match(40) + buyer commodity match(30) + cross-border(15-20) + base(10)
     const matches = [];
     sellers.forEach(s => {
       buyers.forEach(b => {
@@ -425,7 +414,6 @@ router.get('/grower-buyer', async (req, res) => {
 
     matches.sort((a,b) => b.match_score - a.match_score);
 
-    // Log brain event
     pool.query(
       'INSERT INTO brain_events(event_type,payload,created_at) VALUES($1,$2,NOW())',
       ['MATCH_ENGINE_RUN', JSON.stringify({ commodity, region, sellers: sellers.length, buyers: buyers.length, matches: matches.length })]
