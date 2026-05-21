@@ -73,8 +73,7 @@ CRM MATCH:
   Name: ${contact.first_name} ${contact.last_name}
   Company: ${contact.company_name}
   Email: ${contact.email}
-  Type: ${contact.crmtype}`:'
-No CRM match — new contact'}
+  Type: ${contact.crmtype}`:'\nNo CRM match — new contact'}
 
 Time: ${ts}`
       );
