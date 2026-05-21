@@ -216,9 +216,7 @@ Commodity: ${deal.commodity}
 Value: $${tv.toLocaleString()}
 Grower: ${deal.grower_name}
 Buyer: ${deal.buyer_name}
-${po_number?'PO: '+po_number+'
-':''}${invoice_number?'Invoice: '+invoice_number+'
-':''}Commission: $${deal.commission_amt}
+${po_number?'PO: '+po_number+'\n':''}${invoice_number?'Invoice: '+invoice_number+'\n':''}Commission: $${deal.commission_amt}
 Mexausa earns when PAID.`
     );
 
