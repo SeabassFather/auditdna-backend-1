@@ -243,4 +243,52 @@ router.get('/health', async (req, res) => {
 });
 
 
+
+
+// GET /api/auth/diag-users — show all auth_users (non-hashed fields only)
+router.get('/diag-users', async (req, res) => {
+  try {
+    const pool = resolvePool();
+    const r = await pool.query('SELECT id, username, display_name, role, is_active, access_code, pin, tier FROM auth_users ORDER BY id');
+    res.json({ count: r.rows.length, users: r.rows });
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
+// POST /api/auth/fix-all-users — upsert all known team members
+router.post('/fix-all-users', async (req, res) => {
+  if (req.body.key !== 'MFGFixUsers2026') return res.status(403).json({ error: 'forbidden' });
+  const pool = resolvePool();
+  const bcryptjs = require('bcrypt');
+  const TEAM = [
+    { username:'saul.garcia',    password:'Dsg060905#321',   access_code:'060905Dsg#321',   pin:'0609051974', display_name:'Saul Garcia',        role:'owner',       tier:'owner',  is_active:true },
+    { username:'pablo.alatorre', password:'Pablo2026#MFG',   access_code:'Pablo2026#MFG',   pin:'2026',       display_name:'Pablo Alatorre',     role:'admin',       tier:'admin',  is_active:true },
+    { username:'osvaldo.gut',    password:'Osvaldo2026#MFG', access_code:'Osvaldo2026#MFG', pin:'1234',       display_name:'Osvaldo Gutierrez',  role:'admin',       tier:'admin',  is_active:true },
+    { username:'denisse.vel',    password:'Velazquez#321',   access_code:'Velazquez#321',   pin:'2908',       display_name:'Denisse Velazquez',  role:'admin',       tier:'admin',  is_active:true },
+    { username:'luis.sales',     password:'Luis2026#MFG',    access_code:'Luis2026#MFG',    pin:'5566',       display_name:'Luis',               role:'admin_sales', tier:'sales',  is_active:true },
+    { username:'hector.sales',   password:'Hector2026#MFG',  access_code:'Hector2026#MFG',  pin:'7788',       display_name:'Hector',             role:'admin_sales', tier:'sales',  is_active:true },
+    { username:'oscar.mejia',    password:'Oscar2026#MFG',   access_code:'Oscar2026#MFG',   pin:'5588',       display_name:'Oscar Mejia',        role:'admin_sales', tier:'sales',  is_active:true },
+  ];
+  const results = { ok:[], failed:[] };
+  for (const u of TEAM) {
+    try {
+      const ph = await bcryptjs.hash(u.password, 10);
+      await pool.query(
+        `INSERT INTO auth_users (username, password_hash, access_code, pin, display_name, role, tier, is_active)
+          VALUES ($1,$2,$3,$4,$5,$6,$7,$8)
+          ON CONFLICT (username) DO UPDATE SET
+            password_hash=EXCLUDED.password_hash,
+            access_code=EXCLUDED.access_code,
+            pin=EXCLUDED.pin,
+            display_name=EXCLUDED.display_name,
+            role=EXCLUDED.role,
+            tier=EXCLUDED.tier,
+            is_active=EXCLUDED.is_active`,
+        [u.username, ph, u.access_code, u.pin, u.display_name, u.role, u.tier, u.is_active]
+      );
+      results.ok.push(u.username);
+    } catch(e) { results.failed.push({ username: u.username, err: e.message }); }
+  }
+  res.json(results);
+});
+
 module.exports = router;
